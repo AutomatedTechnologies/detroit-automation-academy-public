@@ -65,6 +65,11 @@ jobs:
           # Copy all root HTML and shell scripts (dynamic collection)
           cp *.html deployment/ || echo "No HTML files found"
           cp *.sh deployment/   || echo "No shell scripts found"
+
+          # Copy public checkout pages and browser assets over the root site.
+          if [ -d "public" ]; then
+            cp -r public/* deployment/
+          fi
           
           # Copy system metadata
           cp CNAME deployment/               || echo "CNAME not found"

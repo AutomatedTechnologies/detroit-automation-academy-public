@@ -1,0 +1,58 @@
+name: Verify and deploy checkout service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/checkout/**'
+      - 'public/js/checkout.js'
+      - 'public/success.html'
+      - '.github/workflows/deploy-checkout.yml'
+  pull_request:
+    paths:
+      - 'services/checkout/**'
+      - 'public/js/checkout.js'
+      - 'public/success.html'
+      - '.github/workflows/deploy-checkout.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/checkout
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-package-lock
+      - run: npm test
+      - run: docker build --tag daa-checkout:test .
+
+  deploy:
+    needs: verify
+    if: github.event_name == 'push' && vars.DEPLOY_CHECKOUT == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: daa-checkout
+          region: ${{ vars.GCP_REGION || 'us-central1' }}
+          source: services/checkout
+          env_vars: |
+            CLIENT_URL=${{ vars.CLIENT_URL || 'https://detroitautomationacademy.com' }}
+            STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
+            STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}
+            STRIPE_PRICE_EDUCATOR=${{ secrets.STRIPE_PRICE_EDUCATOR }}
+            STRIPE_PRICE_ACADEMY=${{ secrets.STRIPE_PRICE_ACADEMY }}

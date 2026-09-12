@@ -64,6 +64,10 @@ public/
 resources/
 .hugo_build.lock
 
+# Public checkout assets
+!public/
+!public/**
+
 # Testing
 .pytest_cache/
 .tox/

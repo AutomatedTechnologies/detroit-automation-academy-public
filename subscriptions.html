@@ -207,7 +207,7 @@
                     <li>Equipment Lists & Setup Guides</li>
                     <li>Quality Checklists</li>
                 </ul>
-                <button class="cta-button" onclick="openCheckout('Educator Pack', 29)">Subscribe Now</button>
+                <button class="cta-button" type="button" data-checkout-plan="educator">Subscribe Now</button>
             </div>
 
             <!-- Tier 2 -->
@@ -223,7 +223,7 @@
                     <li>Marketing & Branding Package</li>
                     <li>Stakeholder Comms Templates</li>
                 </ul>
-                <button class="cta-button" onclick="openCheckout('Academy-in-a-Box', 149)">Launch Your Academy</button>
+                <button class="cta-button" type="button" data-checkout-plan="academy">Launch Your Academy</button>
                 <p style="font-size: 11px; margin-top: 12px; text-align: center;"><a href="https://guides.detroitautomationacademy.com/EDUCATIONAL_PARTNER_LICENSE.md" style="color: var(--daa-fg-muted); text-decoration: underline;">View License Agreement</a></p>
             </div>
 
@@ -253,42 +253,23 @@
             
             <form id="checkout-form" style="display: flex; flex-direction: column; gap: 12px; text-align: left;">
                 <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; opacity: 0.7;">Organization Name</label>
-                <input required type="text" placeholder="e.g. Detroit STEM Club" style="padding: 12px; border-radius: 8px; border: 1px solid var(--daa-border); background: var(--daa-bg); color: var(--daa-fg);">
+                <input id="organization-name" name="organization_name" required type="text" placeholder="e.g. Detroit STEM Club" style="padding: 12px; border-radius: 8px; border: 1px solid var(--daa-border); background: var(--daa-bg); color: var(--daa-fg);">
                 
                 <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; opacity: 0.7;">Billing Email</label>
-                <input required type="email" placeholder="billing@org.com" style="padding: 12px; border-radius: 8px; border: 1px solid var(--daa-border); background: var(--daa-bg); color: var(--daa-fg);">
+                <input id="billing-email" name="email" required type="email" placeholder="billing@org.com" style="padding: 12px; border-radius: 8px; border: 1px solid var(--daa-border); background: var(--daa-bg); color: var(--daa-fg);">
                 
                 <div style="margin-top: 12px; padding: 16px; background: rgba(102, 204, 0, 0.1); border-radius: 8px; font-size: 13px; color: var(--daa-accent); border: 1px solid var(--daa-accent);">
                     🛡️ Secure payment powered by Automated Technologies.
                 </div>
                 
-                <button type="submit" class="cta-button" style="margin-top: 166px; padding: 16px; background: var(--daa-primary); color: white;">Complete Subscription</button>
+                <button id="checkout-submit" type="submit" class="cta-button" style="margin-top: 12px; padding: 16px; background: var(--daa-primary); color: white;">Continue to secure checkout</button>
+                <p id="checkout-error" role="alert" style="display: none; color: #ff6b6b; font-size: 13px;"></p>
                 <button type="button" onclick="closeCheckout()" style="background: transparent; border: none; color: var(--daa-fg-muted); cursor: pointer; font-size: 13px; margin-top: 8px;">Cancel</button>
             </form>
         </div>
     </div>
 
-    <script>
-        function openCheckout(tier, price) {
-            document.getElementById('modal-tier-name').innerText = tier;
-            document.getElementById('modal-tier-price').innerText = `$${price}/mo`;
-            document.getElementById('checkout-modal').style.display = 'flex';
-        }
-
-        function closeCheckout() {
-            document.getElementById('checkout-modal').style.display = 'none';
-        }
-
-        function contactSales(tier) {
-            window.location.href = `mailto:info@detroitautomationacademy.com?subject=Enterprise Inquiry: ${tier}`;
-        }
-
-        document.getElementById('checkout-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert("Thank you for your interest! In this prototype, subscriptions are recorded but not processed. A representative will contact you shortly.");
-            closeCheckout();
-        });
-    </script>
+    <script src="public/js/checkout.js" defer></script>
 
         <footer>
         <div class="footer-links">

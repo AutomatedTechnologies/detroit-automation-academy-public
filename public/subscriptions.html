@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="generator" content="Agentic Design Corp">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscriptions - Detroit Automation Academy</title>
+    
+    <link rel="stylesheet" href="branding/palette.css">
+    <style>
+        /* ── Standardized Header/Footer Styles ── */
+        header {
+            background: rgba(13, 17, 23, 0.88);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--daa-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: background 0.3s;
+        }
+
+        body.light-mode header {
+            background: rgba(245, 247, 250, 0.92);
+        }
+
+        footer {
+            background: var(--daa-bg-card);
+            border-top: 1px solid var(--daa-border);
+            color: var(--daa-fg-muted);
+            padding: 32px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .footer-links {
+            margin-bottom: 14px;
+        }
+
+        .footer-links a {
+            color: var(--daa-fg-muted);
+            text-decoration: none;
+            margin: 0 14px;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--daa-accent);
+        }
+
+        /* ── Circuit background ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(var(--daa-border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--daa-border) 1px, transparent 1px);
+            background-size: 52px 52px;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Courier New', Courier, monospace; line-height: 1.6; color: var(--daa-fg); background: var(--daa-bg); 
+            transition: background 0.3s, color 0.3s;
+        }
+        
+        nav { max-width: 1200px; margin: 0 auto; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-family: 'Courier New', Courier, monospace; font-weight: 700; font-size: 24px; color: var(--daa-primary); }
+        .nav-links { display: flex; gap: 24px; list-style: none; }
+        .nav-links a { text-decoration: none; color: var(--daa-fg); font-weight: 500; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--daa-primary); }
+        .cta-button { background: var(--daa-primary); color: var(--daa-bg); padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; transition: background 0.3s; display: inline-block; border: none; cursor: pointer; }
+        .cta-button:hover { background: #0052A3; }
+        
+        .hero { background: linear-gradient(135deg, var(--daa-primary) 0%, var(--daa-primary-dark, #0052A3) 100%); color: var(--daa-bg); padding: 60px 32px; text-align: center; }
+        .hero h1 { font-family: 'Courier New', Courier, monospace; font-size: 42px; font-weight: 800; margin-bottom: 16px; }
+        .hero p { font-size: 18px; max-width: 800px; margin: 0 auto 32px; opacity: 0.9; }
+
+        .pricing-section { max-width: 1200px; margin: 64px auto; padding: 0 32px; }
+        .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+        .pricing-card { background: var(--daa-card); border-radius: 16px; padding: 40px; box-shadow: 0 4px 20px var(--daa-shadow); display: flex; flex-direction: column; position: relative; transition: transform 0.3s; border: 1px solid var(--daa-bg); }
+        .pricing-card:hover { transform: translateY(-8px); }
+        .pricing-card.popular { border: 2px solid var(--daa-primary); }
+        .popular-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--daa-primary); color: var(--daa-bg); padding: 4px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+        
+        .tier-name { font-family: 'Courier New', Courier, monospace; font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--daa-fg); }
+        .price { font-family: 'Courier New', Courier, monospace; font-size: 48px; font-weight: 800; margin-bottom: 24px; color: var(--daa-primary); }
+        .price span { font-size: 18px; font-weight: 500; color: var(--daa-fg-muted); }
+        
+        .features { list-style: none; margin-bottom: 32px; flex-grow: 1; }
+        .features li { margin-bottom: 12px; font-size: 15px; display: flex; align-items: flex-start; }
+        .features li::before { content: "✅"; margin-right: 12px; font-size: 14px; }
+        
+        .feature-description { font-size: 14px; color: var(--daa-fg-muted); margin-bottom: 24px; }
+
+        @media (max-width: 992px) { .pricing-grid { grid-template-columns: 1fr; max-width: 500px; margin: 0 auto; } }
+
+        /* ── Reactive Logo Animations ── */
+        .logo-reactive #gear {
+            transform-origin: 100px 100px;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .logo-reactive:hover #gear {
+            transform: rotate(90deg);
+        }
+
+        .logo-reactive #circuits path {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 0.6s ease;
+        }
+
+        .logo-reactive:hover #circuits path {
+            stroke-dashoffset: 100;
+        }
+    </style>
+</head>
+<body class="dark-mode">
+        <header>
+        <nav>
+            <div class="logo">
+                <a href="index.html?v=2026040220">
+                    <svg class="logo-reactive" viewBox="0 0 1000 250" width="180" height="45" xmlns="http://www.w3.org/2000/svg">
+                        <g transform="translate(25, 25)">
+                            <g id="gear">
+                                <circle cx="100" cy="100" r="75" fill="none" stroke="#00f0ff" stroke-width="4" />
+                                <polygon points="100,30 130,40 140,70 130,100 140,130 100,170 70,160 60,130 70,100 60,70 100,30" fill="none" stroke="#00f0ff" stroke-width="3" stroke-linejoin="round" />
+                            </g>
+                            <g id="circuits" stroke="#00f0ff" stroke-width="3" fill="none" stroke-linecap="round">
+                                <path d="M 100 30 L 100 15 L 85 10" />
+                                <path d="M 130 70 L 155 50 L 170 55" />
+                                <path d="M 140 130 L 160 155 L 165 170" />
+                                <path d="M 60 160 L 30 180 L 20 175" />
+                                <path d="M 60 70 L 35 50 L 25 60" />
+                            </g>
+                        </g>
+                        <g transform="translate(260, 110)">
+                            <text font-family="'Courier New', Courier, monospace" font-weight="800" font-size="64">
+                                <tspan x="0" y="0" fill="#f8fafc">DETROIT</tspan>
+                                <tspan x="0" y="75" font-size="54" font-weight="700" fill="#00f0ff">AUTOMATION ACADEMY</tspan>
+                            </text>
+                        </g>
+                    </svg>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html?v=2026040220">🏠 Home</a></li>
+                <li><a href="https://blog.detroitautomationacademy.com">📝 Blog</a></li>
+                <li><a href="dashboard.html?v=2026040220">📊 Dashboard</a></li>
+                <li><a href="students.html?v=2026040220">👨‍🎓 Students</a></li>
+                <li><a href="instructors.html?v=2026040220">👨‍🏫 Instructors</a></li>
+                <li><a href="partners.html?v=2026040220">💼 Partners</a></li>
+                <li><a href="https://enroll.detroitautomationacademy.com" style="color: #39ff14; font-weight: 800; border: 1px solid #39ff14; padding: 5px 12px; border-radius: 6px;">Enroll</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <script>
+        (function () {
+            const saved = localStorage.getItem('daa-theme');
+            const body = document.body;
+            const btn = document.getElementById('theme-toggle');
+            if (saved === 'light') {
+                body.classList.add('light-mode');
+                if (btn) btn.textContent = '🌙 Dark Mode';
+            }
+            document.addEventListener('DOMContentLoaded', function () {
+                const toggle = document.getElementById('theme-toggle');
+                if (!toggle) return;
+                toggle.addEventListener('click', function () {
+                    const isLight = document.body.classList.toggle('light-mode');
+                    this.textContent = isLight ? '🌙 Dark Mode' : '☀️ Light Mode';
+                    localStorage.setItem('daa-theme', isLight ? 'light' : 'dark');
+                    // Update SVG logo text color
+                    const main = document.getElementById('logo-text-main');
+                    const sub = document.getElementById('logo-text-sub');
+                    if (main) {
+                        main.setAttribute('fill', isLight ? '#1A1F2E' : 'var(--daa-fg)');
+                    }
+                    if (sub) {
+                        sub.setAttribute('fill', isLight ? '#0055BB' : 'var(--daa-primary)');
+                    }
+                });
+            });
+        })();
+    </script>
+
+    <section class="hero">
+        <h1>Empower Your Organization with DAA</h1>
+        <p>Scale automation education with our proven curriculum, operational framework, and AI-driven platform.</p>
+    </section>
+
+    <section class="pricing-section">
+        <div class="pricing-grid">
+            <!-- Tier 1 -->
+            <div class="pricing-card">
+                <h3 class="tier-name">Educator Pack</h3>
+                <p class="feature-description">Perfect for individual teachers and small youth clubs.</p>
+                <div class="price">$29<span>/mo</span></div>
+                <ul class="features">
+                    <li>Full STEM Session Curriculum</li>
+                    <li>Detailed Lesson Plans</li>
+                    <li>Equipment Lists & Setup Guides</li>
+                    <li>Quality Checklists</li>
+                </ul>
+                <button class="cta-button" type="button" data-checkout-plan="educator">Subscribe Now</button>
+            </div>
+
+            <!-- Tier 2 -->
+            <div class="pricing-card popular">
+                <div class="popular-badge">Most Scalable</div>
+                <h3 class="tier-name">Academy-in-a-Box</h3>
+                <p class="feature-description">Everything you need to run a local DAA chapter.</p>
+                <div class="price">$149<span>/mo</span></div>
+                <ul class="features">
+                    <li>Everything in Educator Pack</li>
+                    <li>18-Doc Execution Framework</li>
+                    <li>Delegation & Task Matrices</li>
+                    <li>Marketing & Branding Package</li>
+                    <li>Stakeholder Comms Templates</li>
+                </ul>
+                <button class="cta-button" type="button" data-checkout-plan="academy">Launch Your Academy</button>
+                <p style="font-size: 11px; margin-top: 12px; text-align: center;"><a href="https://guides.detroitautomationacademy.com/EDUCATIONAL_PARTNER_LICENSE.md" style="color: var(--daa-fg-muted); text-decoration: underline;">View License Agreement</a></p>
+            </div>
+
+            <!-- Tier 3 -->
+            <div class="pricing-card">
+                <h3 class="tier-name">Automation Engine</h3>
+                <p class="feature-description">Enterprise-grade platform for large organizations.</p>
+                <div class="price">$499<span>/mo</span></div>
+                <ul class="features">
+                    <li>Everything in Academy-in-a-Box</li>
+                    <li>Detroit Automation Academy Registration Enterprise License</li>
+                    <li>AI Agent Integration (CTO/COO)</li>
+                    <li>Multi-tenant Dashboard</li>
+                    <li>Monthly Consulting Call</li>
+                </ul>
+                <button class="cta-button" onclick="contactSales('Automation Engine')">Go Enterprise</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Checkout Modal ── -->
+    <div id="checkout-modal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+        <div style="background: var(--daa-bg-card); padding: 40px; border-radius: 20px; max-width: 450px; width: 90%; border: 1px solid var(--daa-border); box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 16px;">💎</div>
+            <h2 id="modal-tier-name" style="font-family: 'Courier New', Courier, monospace; font-size: 24px; margin-bottom: 8px;">Checkout</h2>
+            <p id="modal-tier-price" style="font-size: 18px; color: var(--daa-primary); font-weight: 700; margin-bottom: 24px;">$0/mo</p>
+            
+            <form id="checkout-form" style="display: flex; flex-direction: column; gap: 12px; text-align: left;">
+                <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; opacity: 0.7;">Organization Name</label>
+                <input id="organization-name" name="organization_name" required type="text" placeholder="e.g. Detroit STEM Club" style="padding: 12px; border-radius: 8px; border: 1px solid var(--daa-border); background: var(--daa-bg); color: var(--daa-fg);">
+                
+                <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; opacity: 0.7;">Billing Email</label>
+                <input id="billing-email" name="email" required type="email" placeholder="billing@org.com" style="padding: 12px; border-radius: 8px; border: 1px solid var(--daa-border); background: var(--daa-bg); color: var(--daa-fg);">
+                
+                <div style="margin-top: 12px; padding: 16px; background: rgba(102, 204, 0, 0.1); border-radius: 8px; font-size: 13px; color: var(--daa-accent); border: 1px solid var(--daa-accent);">
+                    🛡️ Secure payment powered by Automated Technologies.
+                </div>
+                
+                <button id="checkout-submit" type="submit" class="cta-button" style="margin-top: 12px; padding: 16px; background: var(--daa-primary); color: white;">Continue to secure checkout</button>
+                <p id="checkout-error" role="alert" style="display: none; color: #ff6b6b; font-size: 13px;"></p>
+                <button type="button" onclick="closeCheckout()" style="background: transparent; border: none; color: var(--daa-fg-muted); cursor: pointer; font-size: 13px; margin-top: 8px;">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/checkout.js" defer></script>
+
+        <footer>
+        <div class="footer-links">
+            <a href="https://blog.detroitautomationacademy.com">Blog</a>
+            <a href="dashboard.html?v=2026040220">Dashboard</a>
+            <a href="https://status.detroitautomationacademy.com">System Status</a>
+            <a href="https://github.com/smit4786/detroit-automation-academy-public" target="_blank">GitHub</a>
+            <a href="mailto:info@detroitautomationacademy.com">Contact</a>
+        </div>
+        <p>© 2026 Detroit Automation Academy. All rights reserved. |
+           Automation skills for Detroit's future, built by Detroiters.</p>
+    </footer>
+</body>
+</html>
