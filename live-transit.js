@@ -1784,24 +1784,30 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   var ICO_FINDME = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
   var ICO_FULL = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
   var NAV_STEPS_TOUCH = [
-    ['\u2194', 'Drag', 'Move around the city'],
-    ['+', 'Pinch', 'Zoom in and out'],
-    ['\u27F3', 'Two-finger twist', 'Rotate the view'],
-    ['\u25CF', 'Tap a bus', 'Vehicle number, model, speed and heading'],
-    [ICO_FINDME, 'Find me', 'Center the map on your location'],
-    [ICO_FULL, 'Fullscreen', 'Fill the screen with the map'],
-    ['\u29E9', 'Routes', 'Filter by group or individual route'],
-    ['\u2302', 'Reset view', 'Return to the full-system view']
+    ['\u2194', 'Drag', 'Move around the city. The map is a true-scale 3D model of Detroit — every street, every route corridor, every stop is where it actually is.'],
+    ['+', 'Pinch', 'Zoom in and out. Zoom close enough and the glowing pillars resolve into true-scale 3D bus models with windows and wheels.'],
+    ['\u27F3', 'Two-finger twist', 'Rotate the view. Tilt to see the elevated route guideways — each route floats at its own height so crossings read as clean overpasses.'],
+    ['\u25CF', 'Tap a bus', 'Opens the bus card: vehicle number, route, destination, speed, heading, and how fresh the position reading is. Tap Follow to track it.'],
+    ['\u25A0', 'Bus badges', 'Each bus carries a bus-shaped badge showing its route number, bordered in the route\u2019s color. Badges declutter automatically when buses cluster.'],
+    ['\u29E9', 'Routes', 'Filter by group (DDOT, SMART, People Mover) or individual route. Routes with no live buses are dimmed or hidden automatically.'],
+    ['\u25C8', 'Plan trip', 'Enter two points and get a transit itinerary with real routes, transfers, and walking legs — built on the same schedule data as the map.'],
+    ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops and intersections from the rider\u2019s seat, ordered by travel direction.'],
+    [ICO_FINDME, 'Find me', 'Center the map on your location. "Routes near me" then shows only routes with a stop within 1,250 m of you.'],
+    [ICO_FULL, 'Fullscreen', 'Fill the screen with the map.'],
+    ['\u2302', 'Reset view', 'Return to the full-system view.']
   ];
   var NAV_STEPS_DESK = [
-    ['\u27F3', 'Drag', 'Orbit the view'],
-    ['+', 'Scroll', 'Zoom in and out'],
-    ['\u2194', 'Right-drag', 'Pan across the city'],
-    ['\u25CF', 'Click a bus', 'Vehicle number, model, speed and heading'],
-    [ICO_FINDME, 'Find me', 'Center the map on your location'],
-    [ICO_FULL, 'Fullscreen', 'Fill the screen with the map'],
-    ['\u29E9', 'Routes', 'Filter by group or individual route'],
-    ['\u2302', 'Reset view', 'Return to the full-system view']
+    ['\u27F3', 'Drag', 'Orbit the view. The map is a true-scale 3D model of Detroit — every street, every route corridor, every stop is where it actually is.'],
+    ['+', 'Scroll', 'Zoom in and out. Zoom close enough and the glowing pillars resolve into true-scale 3D bus models with windows and wheels.'],
+    ['\u2194', 'Right-drag', 'Pan across the city. Tilt to see the elevated route guideways — each route floats at its own height so crossings read as clean overpasses.'],
+    ['\u25CF', 'Click a bus', 'Opens the bus card: vehicle number, route, destination, speed, heading, and how fresh the position reading is. Click Follow to track it.'],
+    ['\u25A0', 'Bus badges', 'Each bus carries a bus-shaped badge showing its route number, bordered in the route\u2019s color. Badges declutter automatically when buses cluster.'],
+    ['\u29E9', 'Routes', 'Filter by group (DDOT, SMART, People Mover) or individual route. Routes with no live buses are dimmed or hidden automatically.'],
+    ['\u25C8', 'Plan trip', 'Enter two points and get a transit itinerary with real routes, transfers, and walking legs — built on the same schedule data as the map.'],
+    ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops and intersections from the rider\u2019s seat, ordered by travel direction.'],
+    [ICO_FINDME, 'Find me', 'Center the map on your location. "Routes near me" then shows only routes with a stop within 1,250 m of you.'],
+    [ICO_FULL, 'Fullscreen', 'Fill the screen with the map.'],
+    ['\u2302', 'Reset view', 'Return to the full-system view.']
   ];
   function buildNavOverlay() {
     var host = $('nav-steps');
