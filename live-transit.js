@@ -740,10 +740,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     for (var k = 0; k < n; k++) {
       var b = busSlots[k];
       writeBusMatrices(k, b, 1);
-      pillarGlowIM.setColorAt(k, b.color);
-      pillarCoreIM.setColorAt(k, b.color);
-      pillarBeaconIM.setColorAt(k, b.color);
-      pillarRingIM.setColorAt(k, b.color);
+      // Itinerary focus: darken pillars for routes not in the active trip.
+      var pc = b.color;
+      if (itineraryDims(b.vehicle.route_id)) {
+        pc = b.color.clone().multiplyScalar(0.25);
+      }
+      pillarGlowIM.setColorAt(k, pc);
+      pillarCoreIM.setColorAt(k, pc);
+      pillarBeaconIM.setColorAt(k, pc);
+      pillarRingIM.setColorAt(k, pc);
     }
     pillarMeshes.forEach(function (im) {
       im.count = n;
@@ -788,6 +793,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         sp.userData.pri = (selectedVehicleId && bs.vehicle.vehicle_id === selectedVehicleId) ? 0 : 1;
         sp.scale.set(h * bt.aspect, h, 1);
         sp.position.set(bs.x, yBase, bs.z);
+        // Itinerary focus: dim badges for routes not in the active trip.
+        sp.material.opacity = itineraryDims(bs.vehicle.route_id) ? 0.2 : 1;
         sp.visible = true;
       } else {
         sp.visible = false;
@@ -2443,6 +2450,18 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
     tripMats.length = 0;
     tripGroup.visible = false;
+    // Clear itinerary focus: restore full opacity to all routes.
+    itineraryRoutes = {};
+    if (typeof applyFilters === 'function') applyFilters();
+  }
+  // Routes in the currently selected trip itinerary. Empty object = no trip
+  // active, no dimming. Populated by highlightJourney from the journey legs.
+  var itineraryRoutes = {};
+  function itineraryActive() {
+    return Object.keys(itineraryRoutes).length > 0;
+  }
+  function itineraryDims(rid) {
+    return itineraryActive() && !itineraryRoutes[rid];
   }
   function clearTrip() {
     tripFrom = null; tripTo = null;
@@ -3117,6 +3136,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   function highlightJourney(j) {
     clearTripHighlight();
     if (!j) return;
+    // Populate itinerary focus: routes in this journey stay bright, others dim.
+    itineraryRoutes = {};
+    mergeWalkLegs(j.legs).forEach(function (leg) {
+      if (leg.type === 'bus' && leg.routeId) itineraryRoutes[leg.routeId] = true;
+    });
+    if (typeof applyFilters === 'function') applyFilters();
     mergeWalkLegs(j.legs).forEach(function (leg) {
       if (leg.type === 'bus') {
         var sl = busLegSlice(leg);
@@ -3368,7 +3393,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // both dim — the map never implies a route is active before live data
     // proves it. ('not-running' is additionally hidden when hideIdle is on.)
     // Opacity composes with the street-view guideway fade (dimmed x faded).
-    var dim = runningState[rid] !== 'running' && g.visible;
+    var dim = (runningState[rid] !== 'running' && g.visible) || itineraryDims(rid);
     g.userData.guideMats.forEach(function (e) {
       if (e.dimmed === dim) return; // unchanged: never touch the material (needsUpdate forces a shader recompile)
       e.dimmed = dim;
