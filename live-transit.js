@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261011-0228';
+  var STAMP = '20261010-2345';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -3222,7 +3222,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // setters (all on / all off); they never gate individual routes.
   // filterState.hideIdle (default ON): fully hide routes confirmed not-running.
   // filterState.nearMe: only routes with a stop within NEAR_ME_M of you.
-  var filterState = { groups: {}, routes: {}, hideIdle: true, nearMe: false, runningOnly: false };
+  var filterState = { groups: {}, routes: {}, hideIdle: true, nearMe: false };
   var NEAR_ME_M = 1250;
   var nearMeSet = null;   // rid -> true, rebuilt when you move or toggle
   var userXZ = null;      // your projected position, set by onLocated
@@ -3449,8 +3449,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     });
     var idle = $('hide-idle-toggle');
     if (idle) idle.setAttribute('aria-pressed', String(!!filterState.hideIdle));
-    var ro = $('running-only-toggle');
-    if (ro) ro.setAttribute('aria-pressed', String(!!filterState.runningOnly));
     var pmT = $('pm-toggle');
     if (pmT) pmT.setAttribute('aria-pressed', String(!!pmVisible));
   }
@@ -3526,12 +3524,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       });
       sec.appendChild(head);
       sec.appendChild(list);
-      var empty = document.createElement('p');
-      empty.className = 'f-empty';
-      empty.id = 'fempty-' + g.id;
-      empty.textContent = 'No routes running right now.';
-      empty.hidden = true;
-      sec.appendChild(empty);
       if (g.id === 'smart') {
         var betaNote = document.createElement('p');
         betaNote.className = 'f-beta-note';
@@ -3563,14 +3555,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     $('hide-idle-toggle').addEventListener('click', function () {
       filterState.hideIdle = !filterState.hideIdle;
       applyFilters();
-      syncFilterUI();
-    });
-    // "Running only" is a panel display filter only: it hides confirmed-idle
-    // route chips from the list. It never touches filterState.routes, so the
-    // map and the user's toggle choices are unaffected.
-    $('running-only-toggle').addEventListener('click', function () {
-      filterState.runningOnly = !filterState.runningOnly;
-      updateCounts();
       syncFilterUI();
     });
     $('nearme-toggle').addEventListener('click', function () {
@@ -3768,30 +3752,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (el) el.textContent = String(liveCounts[rid] || 0);
       var nr = runningState[rid] === 'not-running';
       var chip = document.querySelector('.f-chip[data-route="' + rid + '"]');
-      if (chip) {
-        chip.classList.toggle('not-running', nr);
-        // "Running only" list filter (display only): hide chips whose live
-        // bus count is zero. Uses the per-poll liveCounts (same number the
-        // chip displays), so the filter tracks "currently running" from the
-        // first successful poll instead of waiting out the 3-poll idle
-        // hysteresis that runningState uses for map rendering. Before the
-        // first poll (!liveEverOk) nothing hides. aria-pressed is untouched,
-        // so toggle choices survive the filter.
-        var hasBus = (liveCounts[rid] || 0) > 0;
-        chip.hidden = filterState.runningOnly && liveEverOk && !hasBus;
-      }
+      if (chip) chip.classList.toggle('not-running', nr);
       var tag = $('idle-' + rid);
       if (tag) tag.hidden = !nr;
     });
     groupOrder.forEach(function (gid) {
-      var rids = groupRoutes[gid] || [];
-      var fempty = $('fempty-' + gid);
-      if (fempty) {
-        var anyVisible = !filterState.runningOnly || !liveEverOk || rids.some(function (rid) {
-          return (liveCounts[rid] || 0) > 0;
-        });
-        fempty.hidden = !filterState.runningOnly || anyVisible;
-      }
       var el = $('fgc-' + gid);
       if (!el) return;
       if (!liveEverOk) { el.textContent = '–'; return; }
