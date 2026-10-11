@@ -3512,7 +3512,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         b.setAttribute('aria-pressed', 'true');
         b.dataset.route = rid;
         b.innerHTML = '<i style="background:' + route.color + '"></i><b>' +
-          rid + ' · ' + route.name + '</b><span class="cnt" id="cnt-' + rid + '">–</span>' +
+          route.name + ' - ' + rid + '</b><span class="cnt" id="cnt-' + rid + '">–</span>' +
           '<span class="idle-tag" id="idle-' + rid + '" hidden>not running</span>';
         b.addEventListener('click', function () {
           filterState.routes[rid] = !filterState.routes[rid];
@@ -4843,7 +4843,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         });
         if (longest) {
           var mid = longest[Math.floor(longest.length / 2)];
-          var label = makeLabel(route.id + ' · ' + route.name, route.color);
+          var label = makeLabel(route.name + ' - ' + route.id, route.color);
           label.position.set(mid[0], 1050, mid[1]);
           grp.add(label);
           var tetherGeo = new THREE.BufferGeometry().setFromPoints([
@@ -4894,6 +4894,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       })();
       /* LANDMARK-MASSING-END */
 
+      // Alphabetize route lists by route name.
+      routeOrder.sort(function (a, b) {
+        return (routeNames[a] || '').localeCompare(routeNames[b] || '');
+      });
       buildFilterPanel(data.groups);
       applyFilters();
       syncFilterUI();
