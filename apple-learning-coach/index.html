@@ -16,13 +16,16 @@
   .apl a { color: #0071e3; text-decoration: none; }
   .apl a:hover { text-decoration: underline; }
 
-  /* Local sticky nav */
-  .apl-localnav { position: sticky; top: 0; z-index: 60; background: rgba(255,255,255,.72); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid rgba(0,0,0,.1); }
-  .apl-localnav .apl-wrap { display: flex; align-items: center; justify-content: space-between; height: 52px; padding-top: 0; padding-bottom: 0; }
-  .apl-localnav .brand { font-size: .95rem; font-weight: 600; color: #1d1d1f; letter-spacing: -.01em; }
-  .apl-localnav nav { display: flex; gap: 1.5rem; }
-  .apl-localnav nav a { font-size: .8rem; color: #1d1d1f; opacity: .8; }
-  .apl-localnav nav a:hover { opacity: 1; text-decoration: none; }
+  /* Navigation — Apple style: slim, translucent, sticky */
+  .apl-nav { position: sticky; top: 0; z-index: 60; background: rgba(255,255,255,.72); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid rgba(0,0,0,.1); }
+  .apl-nav-inner { display: flex; align-items: center; height: 52px; gap: 1.25rem; }
+  .apl-nav-brand { font-size: .95rem; font-weight: 600; color: #1d1d1f !important; letter-spacing: -.01em; white-space: nowrap; }
+  .apl-nav-brand:hover { text-decoration: none; }
+  .apl-nav-links { display: flex; gap: 1.4rem; margin-left: auto; }
+  .apl-nav-links a { font-size: .82rem; color: #1d1d1f !important; opacity: .75; white-space: nowrap; }
+  .apl-nav-links a:hover { opacity: 1; text-decoration: none; }
+  .apl-nav-cta { background: #0071e3; color: #fff !important; border-radius: 999px; padding: .42rem 1rem; font-size: .82rem; font-weight: 500; white-space: nowrap; }
+  .apl-nav-cta:hover { background: #0077ed; text-decoration: none; }
 
   /* Hero */
   .apl-hero { text-align: center; padding: 5.5rem 0 4.5rem !important; background: #fff; }
@@ -83,7 +86,9 @@
   .apl-fine a { color: #6e6e73; }
 
   @media (max-width: 760px) {
-    .apl-localnav nav { display: none; }
+    .apl-nav-inner { gap: .9rem; overflow-x: auto; scrollbar-width: none; }
+    .apl-nav-inner::-webkit-scrollbar { display: none; }
+    .apl-nav-links { gap: 1rem; margin-left: 0; }
     .apl-cards { grid-template-columns: 1fr; }
     .apl-steps { flex-direction: column; gap: 1.75rem; align-items: stretch; }
     .apl-step { text-align: left; display: flex; gap: 1rem; align-items: flex-start; padding: 0; }
@@ -118,17 +123,17 @@
 
 <div class="apl">
 
-  <div class="apl-localnav">
-    <div class="apl-wrap">
-      <span class="brand">Justin Smith &nbsp;·&nbsp; Apple Learning Coach</span>
-      <nav>
+  <nav class="apl-nav" aria-label="Page">
+    <div class="apl-wrap apl-nav-inner">
+      <a class="apl-nav-brand" href="#">Justin Smith</a>
+      <div class="apl-nav-links">
         <a href="#timeline">Timeline</a>
         <a href="#portfolio">Portfolio</a>
         <a href="#journals">Journals</a>
-        <a href="#contact">Contact</a>
-      </nav>
+      </div>
+      <a class="apl-nav-cta" href="mailto:dbkr@umich.edu">Say hello</a>
     </div>
-  </div>
+  </nav>
 
   <section class="apl-hero">
     <div class="apl-wrap">
