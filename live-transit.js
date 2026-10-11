@@ -3162,6 +3162,36 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
   $('trip-btn').addEventListener('click', function () { tapBuzz(); setTripMode(!tripMode); });
   $('trip-close').addEventListener('click', function () { setTripMode(false); });
+
+  // Ride Along widget wiring.
+  var rideWidget = null, rideMode = false;
+  function setRideMode(on) {
+    rideMode = on;
+    $('ride-btn').setAttribute('aria-pressed', on ? 'true' : 'false');
+    $('ride-card').hidden = !on;
+    if (on && !rideWidget && typeof RideAlong !== 'undefined') {
+      rideWidget = RideAlong.create($('ride-along-mount'));
+      // Feed cached route/stop data if already loaded.
+      if (typeof routeById !== 'undefined' && typeof stopData !== 'undefined') {
+        var rts = Object.keys(routeById).map(function (id) { return routeById[id]; });
+        rideWidget.setData({ routes: rts, stops: stopData });
+      }
+      if (typeof lastVehicles !== 'undefined' && lastVehicles) {
+        rideWidget.setVehicles(lastVehicles);
+      }
+    }
+    if (on && rideWidget) rideWidget.refresh();
+  }
+  $('ride-btn').addEventListener('click', function () { tapBuzz(); setRideMode(!rideMode); });
+  $('ride-close').addEventListener('click', function () { setRideMode(false); });
+  // Expose for the vehicle poll to push updates.
+  window.__rideWidget = function () { return rideWidget; };
+  window.__setRideData = function (routes, stops) {
+    if (rideWidget) rideWidget.setData({ routes: routes, stops: stops });
+  };
+  window.__setRideVehicles = function (vehicles) {
+    if (rideWidget) rideWidget.setVehicles(vehicles);
+  };
   function tripMiniLabel() {
     if (typeof tripJourneys !== 'undefined' && tripJourneys.length && tripJourneys[tripSel]) {
       var j = tripJourneys[tripSel];
@@ -4565,6 +4595,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         if (!d || !Array.isArray(d.vehicles)) throw new Error('bad payload');
         lastVehicles = d.vehicles;
         liveEverOk = true;
+        if (typeof window.__setRideVehicles === 'function') window.__setRideVehicles(d.vehicles);
         liveCounts = countByRoute(d.vehicles); // raw counts first: filters must not starve the state engine
         var n = updateBuses(d.vehicles);
         if (updateRunningState()) {
@@ -4861,6 +4892,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       // Stops are rebuilt from stopData by rebuildStops() (per-route colors,
       // paper-white hubs) whenever filters change; see the stops section.
       stopData = data.stops || [];
+      if (typeof window.__setRideData === 'function') {
+        window.__setRideData(data.routes || [], stopData);
+      }
 
       // People Mover static layer: built once, toggled independently of the
       // DDOT route filters. Absent (fetch failed) the map simply has no PM layer.
