@@ -23,8 +23,8 @@
   /* Map the current path to its lane for the active state. */
   function activeLane(path) {
     if (/^\/watch\//.test(path)) return 'Watch';
-    if (/^\/signal\//.test(path)) return 'Read';
-    if (/^\/live-transit\.html/.test(path)) return 'Do';
+    if (/^\/(signal|press|live-transit-detroit|notes)\//.test(path) || /^\/voter-guide/.test(path)) return 'Read';
+    if (/^\/(live-transit\.html|district\.html)/.test(path)) return 'Do';
     if (/^\/apple-learning-coach\//.test(path)) return 'Bio';
     return null;
   }
