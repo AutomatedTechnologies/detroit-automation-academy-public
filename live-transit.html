@@ -143,6 +143,9 @@
   .f-chip.not-running { opacity: .55; }
   .f-chip .idle-tag { color: #FFB000; font-size: .68rem; border: 1px solid rgba(255,176,0,.45); border-radius: 999px; padding: .05rem .45rem; white-space: nowrap; }
   .f-chip .idle-tag[hidden] { display: none; }
+.f-chip[hidden] { display: none; }
+.f-empty { color: #9AA0A6; font-size: .78rem; padding: .35rem .2rem 0; margin: 0; }
+.f-empty[hidden] { display: none; }
   .f-idle-row { margin-bottom: .55rem; }
   .f-idle-row button { display: flex; align-items: center; gap: .55rem; width: 100%; background: rgba(245,242,234,.04); border: 1px solid rgba(245,242,234,.1); color: #F5F2EA; border-radius: 10px; padding: .5rem .7rem; cursor: pointer; font-size: .82rem; font-family: "Inter", sans-serif; }
   .f-idle-row button b { font-weight: 600; flex: 1; text-align: left; }
@@ -370,7 +373,8 @@
         <div class="f-body">
           <button class="f-group-head f-near" id="nearme-toggle" aria-pressed="false" title="Show only routes with a stop within 1250 m of you"><span class="f-box"></span><b>Routes near me</b><span class="f-count" id="nearme-sub">1250 m</span></button>
         <div class="f-idle-row">
-          <button id="hide-idle-toggle" aria-pressed="true"><span class="f-box"></span><b>Hide non-running routes</b></button>
+          <button id="hide-idle-toggle" aria-pressed="true" title="Hide routes with no buses from the 3D map"><span class="f-box"></span><b>Hide non-running routes</b></button>
+          <button id="running-only-toggle" aria-pressed="false" title="Show only routes with buses on the road right now in this list"><span class="f-box"></span><b>Running only</b></button>
         </div>
         <p class="f-note">Routes with no live buses reporting are dimmed or hidden automatically. DDOT schedule data is current through Feb 7, 2027 &mdash; this page shows live bus positions; the trip planner uses scheduled times.</p>
         <div id="filter-groups"></div>
@@ -531,6 +535,6 @@
 <script>
   window.FORGE_LIVE_PROXY = "https://forge-line-live-proxy.netlify.app";
 </script>
-<script type="module" src="live-transit.js?v=20261010-2345"></script>
+<script type="module" src="live-transit.js?v=20261011-0228"></script>
 </body>
 </html>
