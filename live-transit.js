@@ -353,20 +353,35 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var col = '#' + (rc ? rc.getHexString() : '9aa0a6');
     var label = String(rid);
     var c = document.createElement('canvas');
-    var mc = c.getContext('2d');
-    mc.font = '700 36px system-ui, -apple-system, sans-serif';
-    var tw = Math.ceil(mc.measureText(label).width);
-    c.width = tw + 60; c.height = 72;
+    // Bus silhouette (top-down): fixed proportions read as a bus at any zoom.
+    var W = 168, H = 84;
+    c.width = W; c.height = H;
     var x = c.getContext('2d');
+    // Wheels: small dark blocks on both flanks.
+    x.fillStyle = 'rgba(5,7,10,0.95)';
+    x.fillRect(18, 0, 16, 10);
+    x.fillRect(W - 34, 0, 16, 10);
+    x.fillRect(18, H - 10, 16, 10);
+    x.fillRect(W - 34, H - 10, 16, 10);
+    // Body.
     x.fillStyle = 'rgba(9,13,17,0.88)';
     x.beginPath();
-    if (x.roundRect) x.roundRect(4, 4, c.width - 8, 64, 16); else x.rect(4, 4, c.width - 8, 64);
+    if (x.roundRect) x.roundRect(8, 6, W - 16, H - 12, 14); else x.rect(8, 6, W - 16, H - 12);
     x.fill();
     x.lineWidth = 4; x.strokeStyle = col; x.stroke();
+    // Windshield: light band across the front.
+    x.fillStyle = 'rgba(180,200,215,0.35)';
+    x.fillRect(20, 14, W - 40, 10);
+    // Route number centered on the body.
     x.fillStyle = '#ffffff';
-    x.font = '700 36px system-ui, -apple-system, sans-serif';
+    x.font = '700 30px system-ui, -apple-system, sans-serif';
     x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillText(label, c.width / 2, 38);
+    // Shrink font for long route ids so the number stays inside the body.
+    var tw = x.measureText(label).width;
+    if (tw > W - 48) {
+      x.font = '700 ' + Math.floor(30 * (W - 48) / tw) + 'px system-ui, -apple-system, sans-serif';
+    }
+    x.fillText(label, W / 2, H / 2 + 8);
     var tex = new THREE.CanvasTexture(c);
     tex.anisotropy = 4;
     t = { tex: tex, aspect: c.width / c.height };
