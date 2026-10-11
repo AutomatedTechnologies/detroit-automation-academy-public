@@ -89,7 +89,7 @@
   .filter-panel.minimized .f-body { display: none; }
   .filter-panel.minimized { max-height: none; }
   #panel-min { min-width: 2rem; padding: .3rem .5rem; font-size: .9rem; line-height: 1; }
-  .resize-grip { position: absolute; left: 0; bottom: 0; width: 28px; height: 28px; cursor: nwse-resize; touch-action: none; z-index: 6; }
+  .resize-grip { position: sticky; bottom: 0; left: 0; width: 28px; height: 28px; margin-bottom: -28px; cursor: nwse-resize; touch-action: none; z-index: 6; }
   .resize-grip::before { content: ""; position: absolute; left: 7px; bottom: 7px; width: 11px; height: 11px; border-left: 2px solid rgba(245,242,234,.55); border-bottom: 2px solid rgba(245,242,234,.55); border-bottom-left-radius: 5px; }
   .filter-panel.minimized .resize-grip { display: none; }
   .filter-panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: .6rem; }
