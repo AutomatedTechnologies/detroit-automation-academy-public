@@ -1,5 +1,5 @@
 /* Detroit Automation Academy — platform navigation, single source.
- * v2.1 (2026-10-10): audience lanes; Blog retired -> Notes (Watch / Read / Do / About / Subscribe).
+ * v2.2 (2026-10-11): flat lanes (dropdown layers removed), Bio added.
  * Renders the site header into #daa-nav. Works from any host serving this
  * file at site root (detroitautomationacademy.com, Netlify dev/uat).
  * data-audience hooks (viewer|reader|user|visitor|subscriber) are stable
@@ -10,34 +10,22 @@
 
   var NEWSLETTER_URL = 'https://www.linkedin.com/newsletters/7508391258638311424/';
 
-  /* Audience lanes. Order is the nav order. */
+  /* Audience lanes. Order is the nav order. Flat — no dropdown layers. */
   var LANES = [
     { label: 'Watch', href: '/watch/', audience: 'viewer' },
-    {
-      label: 'Read', audience: 'reader', children: [
-        { label: 'The Signal', href: '/signal/' },
-        { label: 'The Press', href: '/press/' },
-        { label: 'Live Transit Detroit', href: '/live-transit-detroit/' },
-        { label: 'Notes', href: '/notes/' },
-        { label: 'Voter Guide', href: '/voter-guide.html' }
-      ]
-    },
-    {
-      label: 'Do', audience: 'user', children: [
-        { label: 'Live Transit Map', href: '/live-transit.html' },
-        { label: '3D Training District', href: '/district.html' },
-        { label: 'Programs', href: '/#programs' }
-      ]
-    },
+    { label: 'Read', href: '/signal/', audience: 'reader' },
+    { label: 'Do', href: '/live-transit.html', audience: 'user' },
     { label: 'About', href: '/#mission', audience: 'visitor' },
+    { label: 'Bio', href: '/apple-learning-coach/', audience: 'visitor' },
     { label: 'Subscribe', href: NEWSLETTER_URL, audience: 'subscriber', external: true }
   ];
 
   /* Map the current path to its lane for the active state. */
   function activeLane(path) {
     if (/^\/watch\//.test(path)) return 'Watch';
-    if (/^\/(signal|press|live-transit-detroit|notes)\//.test(path) || /^\/voter-guide/.test(path)) return 'Read';
-    if (/^\/(live-transit\.html|district\.html)/.test(path)) return 'Do';
+    if (/^\/signal\//.test(path)) return 'Read';
+    if (/^\/live-transit\.html/.test(path)) return 'Do';
+    if (/^\/apple-learning-coach\//.test(path)) return 'Bio';
     return null;
   }
 
@@ -49,18 +37,9 @@
   function renderLane(lane, active) {
     var isActive = active === lane.label;
     var act = isActive ? ' data-active="true"' : '';
-    if (!lane.children) {
-      var ext = lane.external ? ' target="_blank" rel="noopener"' : '';
-      return '<a class="lane"' + act + ' data-audience="' + lane.audience +
-        '" href="' + esc(lane.href) + '"' + ext + '>' + esc(lane.label) + '</a>';
-    }
-    var kids = lane.children.map(function (c) {
-      return '<a href="' + esc(c.href) + '">' + esc(c.label) + '</a>';
-    }).join('');
-    return '<div class="lane-group"' + act + ' data-audience="' + lane.audience + '">' +
-      '<button class="lane-label" type="button" aria-haspopup="true" aria-expanded="false"' +
-      (isActive ? ' data-active="true"' : '') + '>' + esc(lane.label) + '</button>' +
-      '<div class="lane-items">' + kids + '</div></div>';
+    var ext = lane.external ? ' target="_blank" rel="noopener"' : '';
+    return '<a class="lane"' + act + ' data-audience="' + lane.audience +
+      '" href="' + esc(lane.href) + '"' + ext + '>' + esc(lane.label) + '</a>';
   }
 
   function build() {
@@ -99,46 +78,6 @@
         }
       });
     }
-
-    /* Touch dropdown toggles for lane groups (desktop hover / focus-within
-     * is CSS-driven; this covers tap). */
-    var groups = mount.querySelectorAll('.lane-group');
-    Array.prototype.forEach.call(groups, function (g) {
-      var btn = g.querySelector('.lane-label');
-      if (!btn) return;
-      btn.addEventListener('click', function () {
-        var willOpen = !g.classList.contains('open');
-        Array.prototype.forEach.call(groups, function (o) {
-          o.classList.remove('open');
-          var b = o.querySelector('.lane-label');
-          if (b) b.setAttribute('aria-expanded', 'false');
-        });
-        if (willOpen) {
-          g.classList.add('open');
-          btn.setAttribute('aria-expanded', 'true');
-        }
-      });
-    });
-
-    /* Close open dropdowns on outside tap / Escape. */
-    document.addEventListener('click', function (e) {
-      if (!e.target.closest || !e.target.closest('.lane-group')) {
-        Array.prototype.forEach.call(groups, function (g) {
-          g.classList.remove('open');
-          var b = g.querySelector('.lane-label');
-          if (b) b.setAttribute('aria-expanded', 'false');
-        });
-      }
-    });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') {
-        Array.prototype.forEach.call(groups, function (g) {
-          g.classList.remove('open');
-          var b = g.querySelector('.lane-label');
-          if (b) b.setAttribute('aria-expanded', 'false');
-        });
-      }
-    });
   }
 
   if (document.readyState === 'loading') {
@@ -147,4 +86,3 @@
     build();
   }
 })();
-
