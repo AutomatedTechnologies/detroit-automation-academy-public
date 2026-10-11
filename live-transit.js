@@ -3770,10 +3770,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var chip = document.querySelector('.f-chip[data-route="' + rid + '"]');
       if (chip) {
         chip.classList.toggle('not-running', nr);
-        // "Running only" list filter (display only): hide confirmed-idle chips.
-        // 'unknown' (pre-first-poll) never hides. aria-pressed is untouched,
+        // "Running only" list filter (display only): hide chips whose live
+        // bus count is zero. Uses the per-poll liveCounts (same number the
+        // chip displays), so the filter tracks "currently running" from the
+        // first successful poll instead of waiting out the 3-poll idle
+        // hysteresis that runningState uses for map rendering. Before the
+        // first poll (!liveEverOk) nothing hides. aria-pressed is untouched,
         // so toggle choices survive the filter.
-        chip.hidden = filterState.runningOnly && nr;
+        var hasBus = (liveCounts[rid] || 0) > 0;
+        chip.hidden = filterState.runningOnly && liveEverOk && !hasBus;
       }
       var tag = $('idle-' + rid);
       if (tag) tag.hidden = !nr;
@@ -3782,8 +3787,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var rids = groupRoutes[gid] || [];
       var fempty = $('fempty-' + gid);
       if (fempty) {
-        var anyVisible = !filterState.runningOnly || rids.some(function (rid) {
-          return runningState[rid] !== 'not-running';
+        var anyVisible = !filterState.runningOnly || !liveEverOk || rids.some(function (rid) {
+          return (liveCounts[rid] || 0) > 0;
         });
         fempty.hidden = !filterState.runningOnly || anyVisible;
       }
