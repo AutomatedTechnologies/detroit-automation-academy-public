@@ -57,6 +57,7 @@
 <style>
   .map-stage { position: relative; height: calc(100vh - 72px); height: calc(100svh - 72px); min-height: 540px; background: #0C1116; overflow: hidden; }
   #live-map { position: absolute; inset: 0; }
+  #live-map:focus-visible { outline: 2px solid #E85D1A; outline-offset: -2px; }
   #live-map canvas { display: block; width: 100% !important; height: 100% !important; }
   .map-ui { position: absolute; inset: 0; pointer-events: none; font-family: "Inter", sans-serif; }
   .map-ui > * { pointer-events: auto; }
@@ -344,7 +345,7 @@
 
 <main id="top">
   <section class="map-stage" aria-label="Live 3D transit map">
-    <div id="live-map" role="img" aria-label="3D map of DDOT routes with live bus positions and SMART route snapshots"></div>
+    <div id="live-map" tabindex="0" role="img" aria-label="3D map of DDOT routes with live bus positions and SMART route snapshots"></div>
     <div class="map-ui">
       <div class="map-head">
         <div class="map-title">
@@ -541,6 +542,6 @@
   window.FORGE_LIVE_PROXY = "https://forge-line-live-proxy.netlify.app";
 </script>
 <script src="ride-along.js?v=20261012-1045"></script>
-<script type="module" src="live-transit.js?v=20261012-1417"></script>
+<script type="module" src="live-transit.js?v=20261012-1445"></script>
 </body>
 </html>
