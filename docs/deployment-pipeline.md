@@ -83,4 +83,4 @@ directly — the fix goes through the pipeline like everything else.
 - `signal/` is never touched by site deploys.
 
 
-**2026-10-12:** Netlify git linkage restored via API (GitHub App installation). Dev and UAT auto-deploy on branch push again; verified by push-triggered builds on both branches.
+**2026-10-12:** Netlify git linkage restored via API (GitHub App installation). Dev and UAT auto-deploy on branch push again; verified by push-triggered builds on both branches (API link + build hooks).
