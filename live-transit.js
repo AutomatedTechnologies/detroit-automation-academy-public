@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261012-1318';
+  var STAMP = '20261012-1344';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -3815,12 +3815,29 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     return best;
   }
 
+  var _filterReturnFocus = null;
   function togglePanel(force) {
     var panel = $('filter-panel');
     var btn = $('filter-btn');
     var show = (typeof force === 'boolean') ? force : panel.hidden;
+    var wasHidden = panel.hidden;
     panel.hidden = !show;
     btn.setAttribute('aria-expanded', String(show));
+    if (show && wasHidden) {
+      // Move focus into the panel on open: remember the opener, then
+      // focus the first control (Show all).
+      if (document.activeElement && !panel.contains(document.activeElement)) _filterReturnFocus = document.activeElement;
+      var first = $('filter-all');
+      if (first) first.focus();
+    } else if (!show && !wasHidden) {
+      // Return focus to the opener on close when focus was inside the
+      // panel (Escape via the document handler calls togglePanel(false));
+      // fall back to the Routes button so focus is not lost to <body>.
+      var hadFocus = panel.contains(document.activeElement);
+      if (hadFocus && _filterReturnFocus && _filterReturnFocus !== document.body && document.contains(_filterReturnFocus)) _filterReturnFocus.focus();
+      else if (hadFocus) btn.focus();
+      _filterReturnFocus = null;
+    }
   }
 
   // --- header badge ------------------------------------------------------------
