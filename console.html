@@ -110,6 +110,7 @@
   <div id="gate">
     <h1>Forge<span class="dot">·</span>Console</h1>
     <p class="sub">Owner access. This page is unlisted and never linked.</p>
+    <p class="hint">Token check: no hash is shipped in this page. A SHA-256 hash in a public repository can be brute-forced offline, and a client-side comparison is not authentication. Phase 4 of the voice-auth plan moves token verification server-side (see voice-auth-daa-integration.md); until then the token entered here is held in memory only and is sent as a Bearer token to the telemetry collector, which validates it server-side. Publishing still requires the owner-held GitHub token, which is never in this file.</p>
     <input type="password" id="tokenInput" placeholder="Owner token" autocomplete="off" aria-label="Owner token">
     <div><button class="btn" id="unlockBtn" type="button">Unlock</button></div>
     <p class="err" id="gateErr" role="alert"></p>
@@ -295,17 +296,16 @@
   'use strict';
   /* Refuse to run inside someone else's iframe. */
   if (window.top !== window.self) { window.top.location = window.self.location; }
-  var TOKEN_HASH = '3588c1ec5b4fac904080bce8dea8ce2829b12bdbcb25e620df4a72fd7a4cbc8b'; /* production */
+  /* Token hash removed 2026-10-12 (repair: token-hash). The SHA-256 hash of the
+     owner token previously shipped in this public repository, where it was
+     brute-forceable offline, and the comparison ran entirely client-side.
+     Phase 4 of the voice-auth plan (voice-auth-daa-integration.md) moves
+     token verification server-side (argon2id hash held server-side only).
+     Do not re-add a hash or any other token verifier to this file, and do
+     not commit a replacement secret here. Until Phase 4, the token entered
+     at the gate is held in memory only (ownerToken) and validated
+     server-side where it is used as a Bearer token. */
   var ownerToken = null;
-
-  function hex(buf) {
-    return Array.prototype.map.call(new Uint8Array(buf), function (b) {
-      return ('0' + b.toString(16)).slice(-2);
-    }).join('');
-  }
-  function sha256(str) {
-    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)).then(hex);
-  }
 
   var gate = document.getElementById('gate'),
       app = document.getElementById('app'),
@@ -316,18 +316,15 @@
     gateErr.textContent = '';
     var t = tokenInput.value.trim();
     if (!t) { gateErr.textContent = 'Enter the owner token.'; return; }
-    sha256(t).then(function (h) {
-      if (h === TOKEN_HASH) {
-        ownerToken = t;
-        try { sessionStorage.setItem('daa_owner', '1'); } catch (e) {}
-        gate.hidden = true; app.hidden = false;
-        startAutoLock();
-        initApp();
-      } else {
-        gateErr.textContent = 'Wrong token.';
-        tokenInput.value = '';
-      }
-    }).catch(function () { gateErr.textContent = 'Crypto unavailable in this browser.'; });
+    /* No client-side token comparison: see the token-hash removal note
+       above. Verification moves server-side in Phase 4 of the voice-auth
+       plan; the token is validated server-side where it is used. */
+    ownerToken = t;
+    tokenInput.value = '';
+    try { sessionStorage.setItem('daa_owner', '1'); } catch (e) {}
+    gate.hidden = true; app.hidden = false;
+    startAutoLock();
+    initApp();
   }
   document.getElementById('unlockBtn').addEventListener('click', unlock);
   tokenInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') unlock(); });
