@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261010-2345';
+  var STAMP = '20261012-0132';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -4721,7 +4721,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       .catch(function () { return null; }), // static layer is optional: map works without it
     fetch('smart-routes-3d.json?v=' + STAMP, { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
-      .catch(function () { return null; }) // SMART layer is optional: map works DDOT-only without it
+      .catch(function () { return null; }), // SMART layer is optional: map works DDOT-only without it
+    fetch('qline-3d.json?v=' + STAMP, { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; }) // QLINE layer is optional
   ])
     .then(function (all) {
       var data = all[0];
@@ -4730,6 +4733,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       streetNameData = all[3];
       var pmData = all[4];
       var smartData = all[5];
+      var qlineData = all[6];
       // SMART routes via the Transit API: merged into the DDOT dataset so
       // route groups, filters, stops, and labels all work unchanged. The
       // proxy serves SMART vehicle snapshots on the same /api/vehicles feed;
@@ -4745,6 +4749,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         smartData.routes.forEach(function (r) { r.color = '#c30915'; });
         data.routes = (data.routes || []).concat(smartData.routes);
         data.stops = (data.stops || []).concat(smartData.stops || []);
+      }
+      // QLINE streetcar: merged like SMART. The proxy serves QLINE vehicle
+      // positions on the same /api/vehicles feed with agency='qline' and
+      // route_id='QLINE'. Absent file: the map runs without QLINE, no errors.
+      if (qlineData && Array.isArray(qlineData.routes) && qlineData.routes.length) {
+        data.groups = (data.groups || []).concat(qlineData.groups || []);
+        data.routes = (data.routes || []).concat(qlineData.routes);
+        data.stops = (data.stops || []).concat(qlineData.stops || []);
       }
       proj = {
         lat0: data.projection.lat0,
