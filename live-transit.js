@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261012-0146';
+  var STAMP = '20261012-0153';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -3536,6 +3536,34 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var host = $('filter-groups');
     host.innerHTML = '';
     groups.forEach(function (g) {
+      // Single-route groups (QLINE): skip the group header entirely and
+      // render the route chip directly. A group wrapper with its own
+      // checkbox is visual noise for one route.
+      if (g.routes.length === 1) {
+        var rid = g.routes[0];
+        var route = routeById[rid];
+        if (!route) return;
+        var gOn = (g.id === 'connect-ten');
+        filterState.groups[g.id] = gOn;
+        filterState.routes[rid] = gOn;
+        var b = document.createElement('button');
+        b.className = 'route-chip f-chip f-single';
+        b.setAttribute('aria-pressed', 'true');
+        b.dataset.route = rid;
+        var chipName = (route.name === rid) ? route.name : route.name + ' - ' + rid;
+        b.innerHTML = '<i style="background:' + route.color + '"></i><b>' +
+          chipName + '</b><span class="cnt" id="cnt-' + rid + '">–</span>' +
+          '<span class="idle-tag" id="idle-' + rid + '" hidden>not running</span>';
+        b.addEventListener('click', function () {
+          filterState.routes[rid] = !filterState.routes[rid];
+          filterState.groups[g.id] = filterState.routes[rid];
+          delete nearMeAdded[rid];
+          applyFilters();
+          syncFilterUI();
+        });
+        host.appendChild(b);
+        return;
+      }
       // Calm default: only the ConnectTen core network is on. The panel
       // opens as an accordion (3 rows); route chips expand per group.
       // SMART is a separate beta group, default OFF until the user opts in;
@@ -3590,8 +3618,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         b.className = 'route-chip f-chip';
         b.setAttribute('aria-pressed', 'true');
         b.dataset.route = rid;
+        // Route display name: "name - number" unless they're identical (QLINE).
+        var chipName = (route.name === rid) ? route.name : route.name + ' - ' + rid;
         b.innerHTML = '<i style="background:' + route.color + '"></i><b>' +
-          route.name + ' - ' + rid + '</b><span class="cnt" id="cnt-' + rid + '">–</span>' +
+          chipName + '</b><span class="cnt" id="cnt-' + rid + '">–</span>' +
           '<span class="idle-tag" id="idle-' + rid + '" hidden>not running</span>';
         b.addEventListener('click', function () {
           filterState.routes[rid] = !filterState.routes[rid];
@@ -4935,7 +4965,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         });
         if (longest) {
           var mid = longest[Math.floor(longest.length / 2)];
-          var label = makeLabel(route.name + ' - ' + route.id, route.color);
+          // Route display name: "name - number" unless they're identical (QLINE).
+          var displayName = (route.name === route.id) ? route.name : route.name + ' - ' + route.id;
+          var label = makeLabel(displayName, route.color);
           label.position.set(mid[0], 1050, mid[1]);
           grp.add(label);
           var tetherGeo = new THREE.BufferGeometry().setFromPoints([
