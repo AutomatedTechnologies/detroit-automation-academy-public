@@ -81,3 +81,6 @@ directly — the fix goes through the pipeline like everything else.
 - Diff local files against the repo before pushing (2026-10-09 incident).
 - Byte verification ≠ UAT. A deploy is done only after behavioral verification.
 - `signal/` is never touched by site deploys.
+
+
+**2026-10-12:** Netlify git linkage restored via API (GitHub App installation). Dev and UAT auto-deploy on branch push again; verified by push-triggered builds on both branches.
