@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261012-0844';
+  var STAMP = '20261012-1242';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -2416,7 +2416,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
   var tripOriginMark = tripMarker(0xffb000); // Amber = origin
   var tripDestMark = tripMarker(0xffffff);   // Paper = destination
-  var HINT_DEFAULT = 'drag&nbsp;·&nbsp;orbit&nbsp;&nbsp;&nbsp;scroll&nbsp;·&nbsp;zoom&nbsp;&nbsp;&nbsp;tap bus or stop&nbsp;·&nbsp;details';
+  var HINT_DEFAULT = 'drag&nbsp;·&nbsp;orbit&nbsp;&nbsp;&nbsp;scroll&nbsp;·&nbsp;zoom&nbsp;&nbsp;&nbsp;tap bus or stop&nbsp;·&nbsp;details&nbsp;&nbsp;&nbsp;Tab to Browse for keyboard bus search · +/− buttons zoom';
 
   function setTripMode(on) {
     tripMode = on;
