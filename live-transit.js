@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261012-0201';
+  var STAMP = '20261012-0652';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -100,7 +100,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   var STREET_BOUNDS = { lonW: -83.3431083, lonE: -82.8992288, latN: 42.47997522924901, latS: 42.25539743550126 };
   // SMART service-area bounds: the expanded street mosaic (Downriver south,
   // suburbs west) that fades in with the SMART filter group.
-  var SMART_BOUNDS = { lonW: -83.385, lonE: -82.8992288, latN: 42.47997522924901, latS: 42.178 };
+  var SMART_BOUNDS = { lonW: -83.5759857, lonE: -82.7183765, latN: 42.7345818, latS: 42.1141802 };
 
   // --- path smoothing ---------------------------------------------------
   // Chaikin corner-cutting: each iteration replaces every segment with two
