@@ -44,6 +44,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="ride-along.css?v=20261011-2204">
 <link rel="stylesheet" href="styles.css?v=20261010-2130">
 <script type="importmap">
 {
@@ -337,7 +338,7 @@
 <body>
 
 <div id="daa-nav"></div>
-<script src="/nav.js?v=20261010-2150"></script>
+<script src="/nav.js?v=20261011-0357"></script>
 
 <main>
   <section class="map-stage" aria-label="Live 3D transit map">
@@ -356,6 +357,7 @@
           </div>
           <button class="filter-btn" id="filter-btn" aria-expanded="false" aria-controls="filter-panel"><span class="filter-ico">⧩</span> Routes</button>
           <button class="filter-btn" id="trip-btn" aria-pressed="false"><span class="filter-ico">◈</span> Plan trip</button>
+          <button class="filter-btn" id="ride-btn" aria-pressed="false"><span class="filter-ico">◉</span> Ride along</button>
         </div>
       </div>
       <div class="filter-panel" id="filter-panel" hidden>
@@ -439,6 +441,10 @@
           <div class="sel-eyebrow">Live on these routes</div>
           <div id="stop-live-list"></div>
         </div>
+      </div>
+      <div class="bus-card" id="ride-card" hidden>
+        <button class="close" id="ride-close" aria-label="Close ride along">×</button>
+        <div id="ride-along-mount"></div>
       </div>
       <div class="bus-card" id="trip-card" hidden>
         <button class="close" id="trip-close" aria-label="Close trip planner">×</button>
@@ -531,6 +537,7 @@
 <script>
   window.FORGE_LIVE_PROXY = "https://forge-line-live-proxy.netlify.app";
 </script>
-<script type="module" src="live-transit.js?v=20261010-2345"></script>
+<script src="ride-along.js?v=20261011-2204"></script>
+<script type="module" src="live-transit.js?v=20261012-0132"></script>
 </body>
 </html>
