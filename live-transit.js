@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261012-1445';
+  var STAMP = '20261012-1524';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -3289,7 +3289,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         rideWidget.setData({ routes: rts, stops: stopData });
       }
       if (typeof lastVehicles !== 'undefined' && lastVehicles) {
-        rideWidget.setVehicles(lastVehicles);
+        window.__setRideVehicles(lastVehicles);
       }
     }
     if (on && rideWidget) rideWidget.refresh();
@@ -3302,7 +3302,21 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (rideWidget) rideWidget.setData({ routes: routes, stops: stops });
   };
   window.__setRideVehicles = function (vehicles) {
-    if (rideWidget) rideWidget.setVehicles(vehicles);
+    if (!rideWidget) return;
+    // The proxy feed carries lat/lon; the Ride Along widget works in
+    // projected x/z (its data contract). Merge the projection onto a copy
+    // of each record — the raw feed objects are shared with the map
+    // renderer and must not be mutated. Speed arrives as speed_mph.
+    var mapped = (vehicles || []).map(function (v) {
+      if (v.lat == null || v.lon == null || !proj || typeof project !== 'function') return v;
+      var p = project(v.lat, v.lon);
+      var out = {};
+      for (var k in v) out[k] = v[k];
+      out.x = p[0]; out.z = p[1];
+      if (out.speed == null && v.speed_mph != null) out.speed = v.speed_mph;
+      return out;
+    });
+    rideWidget.setVehicles(mapped);
   };
   function tripMiniLabel() {
     if (typeof tripJourneys !== 'undefined' && tripJourneys.length && tripJourneys[tripSel]) {
