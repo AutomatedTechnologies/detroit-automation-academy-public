@@ -247,6 +247,7 @@
       return;
     }
     var sel = el('select', 'ra-select');
+    sel.setAttribute('aria-label', 'Choose a bus to ride');
     sel.appendChild(el('option', '', '-- choose a bus --'));
     var self = this;
     // Alphabetize by route name, then vehicle id.
