@@ -37,7 +37,8 @@
   function renderLane(lane, active) {
     var isActive = active === lane.label;
     var act = isActive ? ' data-active="true" aria-current="page"' : '';
-    var ext = lane.external ? ' target="_blank" rel="noopener"' : '';
+    var ext = lane.external ?
+      ' target="_blank" rel="noopener" aria-label="' + esc(lane.label) + ', opens in new tab"' : '';
     return '<a class="lane"' + act + ' data-audience="' + lane.audience +
       '" href="' + esc(lane.href) + '"' + ext + '>' + esc(lane.label) + '</a>';
   }
