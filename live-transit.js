@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261012-1242';
+  var STAMP = '20261012-1318';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -1522,6 +1522,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       _followPrev.set(sl.x, 0, sl.z);
     }
   }
+  var _busReturnFocus = null;
+  var _stopReturnFocus = null;
   function showBus(v) {
     if (!v) return;
     var isReselect = (v.vehicle_id === selectedVehicleId);
@@ -1550,6 +1552,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var when = v.updated_at ? new Date(v.updated_at) : null;
     $('bus-card-updated').textContent = (when && !isNaN(when)) ? when.toLocaleTimeString() : '–';
     $('bus-card').hidden = false;
+    // Dialog focus: remember the opener only on a fresh open, then move
+    // focus into the card. Arrow-key cycling re-enters showBus with the
+    // card already focused, so the original opener is preserved.
+    if (_busReturnFocus === null && document.activeElement && !$('bus-card').contains(document.activeElement)) _busReturnFocus = document.activeElement;
+    $('bus-card').focus();
     // D1a: on mobile the card opens as a compact route/vehicle bar; tap to expand.
     setBusCardCompact(DisplayBounds.get().deviceClass === 'mobile');
     refreshBusInfo(); // in-scene label beside the bus
@@ -1574,14 +1581,19 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
   }
   function hideBus() {
+    var _hadFocus = $('bus-card').contains(document.activeElement);
     selectedVehicleId = null;
     followSuppressed = false;
     setFollow(null); // stop tracking
     $('bus-card').hidden = true;
+    // Return focus to the opener when focus was inside the dialog.
+    if (_hadFocus && _busReturnFocus && _busReturnFocus !== document.body && document.contains(_busReturnFocus)) _busReturnFocus.focus();
+    _busReturnFocus = null;
     busInfoSprite.visible = false;
     renderBusInstances(); // shrink the indicator back
   }
   $('bus-close').addEventListener('click', hideBus);
+  $('bus-card').addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); hideBus(); } });
   // --- D1a compact bar + D2b Follow button ---------------------------------
   // On mobile the bus card opens collapsed to a route/vehicle bar; tapping
   // the bar expands the full details. The Follow button toggles tracking on
@@ -2292,6 +2304,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       host.appendChild(chip);
     });
     $('stop-card').hidden = false;
+    // Dialog focus: same pattern as showBus above.
+    if (_stopReturnFocus === null && document.activeElement && !$('stop-card').contains(document.activeElement)) _stopReturnFocus = document.activeElement;
+    $('stop-card').focus();
     // Selection ring hugs the ground for DDOT stops, the guideway deck for
     // People Mover stations (their pins stand on the elevated loop).
     stopHighlight.position.set(st.x, st.pm ? PM_DECK_Y + 4 : 20, st.z);
@@ -2349,13 +2364,18 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     });
   }
   function hideStop() {
+    var _hadFocus = $('stop-card').contains(document.activeElement);
     setStopSelectedColor(selectedStopIndex, false);
     selectedStopIndex = -1;
     selectedStop = null;
     $('stop-card').hidden = true;
+    // Return focus to the opener when focus was inside the dialog.
+    if (_hadFocus && _stopReturnFocus && _stopReturnFocus !== document.body && document.contains(_stopReturnFocus)) _stopReturnFocus.focus();
+    _stopReturnFocus = null;
     stopHighlight.visible = false;
   }
   $('stop-close').addEventListener('click', hideStop);
+  $('stop-card').addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); hideStop(); } });
 
   // --- trip planning (RAPTOR, scheduled times) -------------------------------
   // Phase 1: client-side RAPTOR over the compact timetable
