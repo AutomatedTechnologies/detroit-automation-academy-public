@@ -406,7 +406,7 @@
           </div>
         </div>
       </div>
-      <div class="bus-card" id="bus-card" hidden>
+      <div class="bus-card" id="bus-card" role="dialog" aria-label="Bus details" tabindex="-1" hidden>
         <button class="close" id="bus-close" aria-label="Close bus details">×</button>
         <div class="bus-compactbar" id="bus-compactbar">
           <button class="bus-expand" id="bus-expand" aria-label="Expand bus details">
@@ -429,7 +429,7 @@
           <dt>Updated</dt><dd id="bus-card-updated">–</dd>
         </dl>
       </div>
-      <div class="bus-card" id="stop-card" hidden>
+      <div class="bus-card" id="stop-card" role="dialog" aria-label="Stop details" tabindex="-1" hidden>
         <button class="close" id="stop-close" aria-label="Close stop details">×</button>
         <div class="sel-eyebrow">Stop</div>
         <h2><span id="stop-title">Stop</span></h2>
@@ -539,6 +539,6 @@
   window.FORGE_LIVE_PROXY = "https://forge-line-live-proxy.netlify.app";
 </script>
 <script src="ride-along.js?v=20261012-1045"></script>
-<script type="module" src="live-transit.js?v=20261012-1242"></script>
+<script type="module" src="live-transit.js?v=20261012-1318"></script>
 </body>
 </html>
