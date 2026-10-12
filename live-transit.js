@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261012-1344';
+  var STAMP = '20261012-1417';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -31,6 +31,18 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   var container = document.getElementById('live-map');
   if (!container) return;
   var $ = function (id) { return document.getElementById(id); };
+  // Shared screen-reader announcements (defect sr-status): one polite live
+  // region (#sr-status in live-transit.html) for dynamic changes that have
+  // no visible live region of their own — card opens, trip results, and
+  // filter changes. Clearing first, then setting in a timeout, makes a
+  // repeated identical message announce again.
+  var _srFilterShown = null;
+  function announceSr(msg) {
+    var el = $('sr-status');
+    if (!el || !msg) return;
+    el.textContent = '';
+    setTimeout(function () { el.textContent = msg; }, 30);
+  }
 
   function fail(msg) {
     container.innerHTML = '<div class="map-fallback"><p>' + msg + '</p></div>';
@@ -1557,6 +1569,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // card already focused, so the original opener is preserved.
     if (_busReturnFocus === null && document.activeElement && !$('bus-card').contains(document.activeElement)) _busReturnFocus = document.activeElement;
     $('bus-card').focus();
+    announceSr('Bus details opened. ' + compactTitle + '. Vehicle ' + (v.vehicle_id || 'unknown') + '.');
     // D1a: on mobile the card opens as a compact route/vehicle bar; tap to expand.
     setBusCardCompact(DisplayBounds.get().deviceClass === 'mobile');
     refreshBusInfo(); // in-scene label beside the bus
@@ -2307,6 +2320,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // Dialog focus: same pattern as showBus above.
     if (_stopReturnFocus === null && document.activeElement && !$('stop-card').contains(document.activeElement)) _stopReturnFocus = document.activeElement;
     $('stop-card').focus();
+    announceSr('Stop details opened. ' + (st.n || 'Stop') + '. ' + (st.r || []).length + ((st.r || []).length === 1 ? ' route serves this stop.' : ' routes serve this stop.'));
     // Selection ring hugs the ground for DDOT stops, the guideway deck for
     // People Mover stations (their pins stand on the elevated loop).
     stopHighlight.position.set(st.x, st.pm ? PM_DECK_Y + 4 : 20, st.z);
@@ -2979,6 +2993,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         ? 'No scheduled DDOT service at this time.'
         : 'No scheduled trip found between these stops right now. Try a different pair or time.';
       host.appendChild(none);
+      announceSr(none.textContent);
       return;
     }
     var list = document.createElement('div');
@@ -2989,6 +3004,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     det.id = 'trip-detail';
     host.appendChild(det);
     renderTripDetail();
+    announceSr(tripJourneys.length + (tripJourneys.length === 1 ? ' scheduled trip' : ' scheduled trips') + ' found. First trip: ' + tripJourneys[0].durationMin + ' minutes, ' + tripJourneys[0].departClock + ' to ' + tripJourneys[0].arriveClock + '.');
   }
   function tripOptionEl(j, i) {
     var b = document.createElement('button');
@@ -3532,6 +3548,16 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     refreshHeaderCount();
     syncTransitBadge();
     syncStreetExt();
+    // Announce filter changes through #sr-status, but only when the number
+    // of shown routes actually changes — applyFilters also runs on every
+    // live poll, and repeating an unchanged count would spam screen readers.
+    // The first call just records the baseline shown count.
+    var _shownNow = 0;
+    routeOrder.forEach(function (rid) { if (routeShown(rid)) _shownNow++; });
+    if (_srFilterShown !== null && _shownNow !== _srFilterShown) {
+      announceSr(_shownNow + (_shownNow === 1 ? ' route' : ' routes') + ' shown on the map.');
+    }
+    _srFilterShown = _shownNow;
   }
 
   function syncFilterUI() {
