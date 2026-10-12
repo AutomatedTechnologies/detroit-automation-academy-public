@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261010-2345';
+  var STAMP = '20261012-0132';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -353,20 +353,35 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var col = '#' + (rc ? rc.getHexString() : '9aa0a6');
     var label = String(rid);
     var c = document.createElement('canvas');
-    var mc = c.getContext('2d');
-    mc.font = '700 36px system-ui, -apple-system, sans-serif';
-    var tw = Math.ceil(mc.measureText(label).width);
-    c.width = tw + 60; c.height = 72;
+    // Bus silhouette (top-down): fixed proportions read as a bus at any zoom.
+    var W = 168, H = 84;
+    c.width = W; c.height = H;
     var x = c.getContext('2d');
+    // Wheels: small dark blocks on both flanks.
+    x.fillStyle = 'rgba(5,7,10,0.95)';
+    x.fillRect(18, 0, 16, 10);
+    x.fillRect(W - 34, 0, 16, 10);
+    x.fillRect(18, H - 10, 16, 10);
+    x.fillRect(W - 34, H - 10, 16, 10);
+    // Body.
     x.fillStyle = 'rgba(9,13,17,0.88)';
     x.beginPath();
-    if (x.roundRect) x.roundRect(4, 4, c.width - 8, 64, 16); else x.rect(4, 4, c.width - 8, 64);
+    if (x.roundRect) x.roundRect(8, 6, W - 16, H - 12, 14); else x.rect(8, 6, W - 16, H - 12);
     x.fill();
     x.lineWidth = 4; x.strokeStyle = col; x.stroke();
+    // Windshield: light band across the front.
+    x.fillStyle = 'rgba(180,200,215,0.35)';
+    x.fillRect(20, 14, W - 40, 10);
+    // Route number centered on the body.
     x.fillStyle = '#ffffff';
-    x.font = '700 36px system-ui, -apple-system, sans-serif';
+    x.font = '700 30px system-ui, -apple-system, sans-serif';
     x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillText(label, c.width / 2, 38);
+    // Shrink font for long route ids so the number stays inside the body.
+    var tw = x.measureText(label).width;
+    if (tw > W - 48) {
+      x.font = '700 ' + Math.floor(30 * (W - 48) / tw) + 'px system-ui, -apple-system, sans-serif';
+    }
+    x.fillText(label, W / 2, H / 2 + 8);
     var tex = new THREE.CanvasTexture(c);
     tex.anisotropy = 4;
     t = { tex: tex, aspect: c.width / c.height };
@@ -725,10 +740,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     for (var k = 0; k < n; k++) {
       var b = busSlots[k];
       writeBusMatrices(k, b, 1);
-      pillarGlowIM.setColorAt(k, b.color);
-      pillarCoreIM.setColorAt(k, b.color);
-      pillarBeaconIM.setColorAt(k, b.color);
-      pillarRingIM.setColorAt(k, b.color);
+      // Itinerary focus: darken pillars for routes not in the active trip.
+      var pc = b.color;
+      if (itineraryDims(b.vehicle.route_id)) {
+        pc = b.color.clone().multiplyScalar(0.25);
+      }
+      pillarGlowIM.setColorAt(k, pc);
+      pillarCoreIM.setColorAt(k, pc);
+      pillarBeaconIM.setColorAt(k, pc);
+      pillarRingIM.setColorAt(k, pc);
     }
     pillarMeshes.forEach(function (im) {
       im.count = n;
@@ -773,6 +793,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         sp.userData.pri = (selectedVehicleId && bs.vehicle.vehicle_id === selectedVehicleId) ? 0 : 1;
         sp.scale.set(h * bt.aspect, h, 1);
         sp.position.set(bs.x, yBase, bs.z);
+        // Itinerary focus: dim badges for routes not in the active trip.
+        sp.material.opacity = itineraryDims(bs.vehicle.route_id) ? 0.2 : 1;
         sp.visible = true;
       } else {
         sp.visible = false;
@@ -1769,24 +1791,30 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   var ICO_FINDME = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
   var ICO_FULL = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
   var NAV_STEPS_TOUCH = [
-    ['\u2194', 'Drag', 'Move around the city'],
-    ['+', 'Pinch', 'Zoom in and out'],
-    ['\u27F3', 'Two-finger twist', 'Rotate the view'],
-    ['\u25CF', 'Tap a bus', 'Vehicle number, model, speed and heading'],
-    [ICO_FINDME, 'Find me', 'Center the map on your location'],
-    [ICO_FULL, 'Fullscreen', 'Fill the screen with the map'],
-    ['\u29E9', 'Routes', 'Filter by group or individual route'],
-    ['\u2302', 'Reset view', 'Return to the full-system view']
+    ['\u2194', 'Drag', 'Move around the city. The map is a true-scale 3D model of Detroit — every street, every route corridor, every stop is where it actually is.'],
+    ['+', 'Pinch', 'Zoom in and out. Zoom close enough and the glowing pillars resolve into true-scale 3D bus models with windows and wheels.'],
+    ['\u27F3', 'Two-finger twist', 'Rotate the view. Tilt to see the elevated route guideways — each route floats at its own height so crossings read as clean overpasses.'],
+    ['\u25CF', 'Tap a bus', 'Opens the bus card: vehicle number, route, destination, speed, heading, and how fresh the position reading is. Tap Follow to track it.'],
+    ['\u25A0', 'Bus badges', 'Each bus carries a bus-shaped badge showing its route number, bordered in the route\u2019s color. Badges declutter automatically when buses cluster.'],
+    ['\u29E9', 'Routes', 'Filter by group (DDOT, SMART, People Mover) or individual route. Routes with no live buses are dimmed or hidden automatically.'],
+    ['\u25C8', 'Plan trip', 'Enter two points and get a transit itinerary with real routes, transfers, and walking legs — built on the same schedule data as the map.'],
+    ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops and intersections from the rider\u2019s seat, ordered by travel direction.'],
+    [ICO_FINDME, 'Find me', 'Center the map on your location. "Routes near me" then shows only routes with a stop within 1,250 m of you.'],
+    [ICO_FULL, 'Fullscreen', 'Fill the screen with the map.'],
+    ['\u2302', 'Reset view', 'Return to the full-system view.']
   ];
   var NAV_STEPS_DESK = [
-    ['\u27F3', 'Drag', 'Orbit the view'],
-    ['+', 'Scroll', 'Zoom in and out'],
-    ['\u2194', 'Right-drag', 'Pan across the city'],
-    ['\u25CF', 'Click a bus', 'Vehicle number, model, speed and heading'],
-    [ICO_FINDME, 'Find me', 'Center the map on your location'],
-    [ICO_FULL, 'Fullscreen', 'Fill the screen with the map'],
-    ['\u29E9', 'Routes', 'Filter by group or individual route'],
-    ['\u2302', 'Reset view', 'Return to the full-system view']
+    ['\u27F3', 'Drag', 'Orbit the view. The map is a true-scale 3D model of Detroit — every street, every route corridor, every stop is where it actually is.'],
+    ['+', 'Scroll', 'Zoom in and out. Zoom close enough and the glowing pillars resolve into true-scale 3D bus models with windows and wheels.'],
+    ['\u2194', 'Right-drag', 'Pan across the city. Tilt to see the elevated route guideways — each route floats at its own height so crossings read as clean overpasses.'],
+    ['\u25CF', 'Click a bus', 'Opens the bus card: vehicle number, route, destination, speed, heading, and how fresh the position reading is. Click Follow to track it.'],
+    ['\u25A0', 'Bus badges', 'Each bus carries a bus-shaped badge showing its route number, bordered in the route\u2019s color. Badges declutter automatically when buses cluster.'],
+    ['\u29E9', 'Routes', 'Filter by group (DDOT, SMART, People Mover) or individual route. Routes with no live buses are dimmed or hidden automatically.'],
+    ['\u25C8', 'Plan trip', 'Enter two points and get a transit itinerary with real routes, transfers, and walking legs — built on the same schedule data as the map.'],
+    ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops and intersections from the rider\u2019s seat, ordered by travel direction.'],
+    [ICO_FINDME, 'Find me', 'Center the map on your location. "Routes near me" then shows only routes with a stop within 1,250 m of you.'],
+    [ICO_FULL, 'Fullscreen', 'Fill the screen with the map.'],
+    ['\u2302', 'Reset view', 'Return to the full-system view.']
   ];
   function buildNavOverlay() {
     var host = $('nav-steps');
@@ -2422,6 +2450,18 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
     tripMats.length = 0;
     tripGroup.visible = false;
+    // Clear itinerary focus: restore full opacity to all routes.
+    itineraryRoutes = {};
+    if (typeof applyFilters === 'function') applyFilters();
+  }
+  // Routes in the currently selected trip itinerary. Empty object = no trip
+  // active, no dimming. Populated by highlightJourney from the journey legs.
+  var itineraryRoutes = {};
+  function itineraryActive() {
+    return Object.keys(itineraryRoutes).length > 0;
+  }
+  function itineraryDims(rid) {
+    return itineraryActive() && !itineraryRoutes[rid];
   }
   function clearTrip() {
     tripFrom = null; tripTo = null;
@@ -3096,6 +3136,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   function highlightJourney(j) {
     clearTripHighlight();
     if (!j) return;
+    // Populate itinerary focus: routes in this journey stay bright, others dim.
+    itineraryRoutes = {};
+    mergeWalkLegs(j.legs).forEach(function (leg) {
+      if (leg.type === 'bus' && leg.routeId) itineraryRoutes[leg.routeId] = true;
+    });
+    if (typeof applyFilters === 'function') applyFilters();
     mergeWalkLegs(j.legs).forEach(function (leg) {
       if (leg.type === 'bus') {
         var sl = busLegSlice(leg);
@@ -3162,6 +3208,36 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
   $('trip-btn').addEventListener('click', function () { tapBuzz(); setTripMode(!tripMode); });
   $('trip-close').addEventListener('click', function () { setTripMode(false); });
+
+  // Ride Along widget wiring.
+  var rideWidget = null, rideMode = false;
+  function setRideMode(on) {
+    rideMode = on;
+    $('ride-btn').setAttribute('aria-pressed', on ? 'true' : 'false');
+    $('ride-card').hidden = !on;
+    if (on && !rideWidget && typeof RideAlong !== 'undefined') {
+      rideWidget = RideAlong.create($('ride-along-mount'));
+      // Feed cached route/stop data if already loaded.
+      if (typeof routeById !== 'undefined' && typeof stopData !== 'undefined') {
+        var rts = Object.keys(routeById).map(function (id) { return routeById[id]; });
+        rideWidget.setData({ routes: rts, stops: stopData });
+      }
+      if (typeof lastVehicles !== 'undefined' && lastVehicles) {
+        rideWidget.setVehicles(lastVehicles);
+      }
+    }
+    if (on && rideWidget) rideWidget.refresh();
+  }
+  $('ride-btn').addEventListener('click', function () { tapBuzz(); setRideMode(!rideMode); });
+  $('ride-close').addEventListener('click', function () { setRideMode(false); });
+  // Expose for the vehicle poll to push updates.
+  window.__rideWidget = function () { return rideWidget; };
+  window.__setRideData = function (routes, stops) {
+    if (rideWidget) rideWidget.setData({ routes: routes, stops: stops });
+  };
+  window.__setRideVehicles = function (vehicles) {
+    if (rideWidget) rideWidget.setVehicles(vehicles);
+  };
   function tripMiniLabel() {
     if (typeof tripJourneys !== 'undefined' && tripJourneys.length && tripJourneys[tripSel]) {
       var j = tripJourneys[tripSel];
@@ -3317,7 +3393,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // both dim — the map never implies a route is active before live data
     // proves it. ('not-running' is additionally hidden when hideIdle is on.)
     // Opacity composes with the street-view guideway fade (dimmed x faded).
-    var dim = runningState[rid] !== 'running' && g.visible;
+    var dim = (runningState[rid] !== 'running' && g.visible) || itineraryDims(rid);
     g.userData.guideMats.forEach(function (e) {
       if (e.dimmed === dim) return; // unchanged: never touch the material (needsUpdate forces a shader recompile)
       e.dimmed = dim;
@@ -3512,7 +3588,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         b.setAttribute('aria-pressed', 'true');
         b.dataset.route = rid;
         b.innerHTML = '<i style="background:' + route.color + '"></i><b>' +
-          rid + ' · ' + route.name + '</b><span class="cnt" id="cnt-' + rid + '">–</span>' +
+          route.name + ' - ' + rid + '</b><span class="cnt" id="cnt-' + rid + '">–</span>' +
           '<span class="idle-tag" id="idle-' + rid + '" hidden>not running</span>';
         b.addEventListener('click', function () {
           filterState.routes[rid] = !filterState.routes[rid];
@@ -4565,6 +4641,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         if (!d || !Array.isArray(d.vehicles)) throw new Error('bad payload');
         lastVehicles = d.vehicles;
         liveEverOk = true;
+        if (typeof window.__setRideVehicles === 'function') window.__setRideVehicles(d.vehicles);
         liveCounts = countByRoute(d.vehicles); // raw counts first: filters must not starve the state engine
         var n = updateBuses(d.vehicles);
         if (updateRunningState()) {
@@ -4644,7 +4721,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       .catch(function () { return null; }), // static layer is optional: map works without it
     fetch('smart-routes-3d.json?v=' + STAMP, { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
-      .catch(function () { return null; }) // SMART layer is optional: map works DDOT-only without it
+      .catch(function () { return null; }), // SMART layer is optional: map works DDOT-only without it
+    fetch('qline-3d.json?v=' + STAMP, { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; }) // QLINE layer is optional
   ])
     .then(function (all) {
       var data = all[0];
@@ -4653,6 +4733,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       streetNameData = all[3];
       var pmData = all[4];
       var smartData = all[5];
+      var qlineData = all[6];
       // SMART routes via the Transit API: merged into the DDOT dataset so
       // route groups, filters, stops, and labels all work unchanged. The
       // proxy serves SMART vehicle snapshots on the same /api/vehicles feed;
@@ -4668,6 +4749,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         smartData.routes.forEach(function (r) { r.color = '#c30915'; });
         data.routes = (data.routes || []).concat(smartData.routes);
         data.stops = (data.stops || []).concat(smartData.stops || []);
+      }
+      // QLINE streetcar: merged like SMART. The proxy serves QLINE vehicle
+      // positions on the same /api/vehicles feed with agency='qline' and
+      // route_id='QLINE'. Absent file: the map runs without QLINE, no errors.
+      if (qlineData && Array.isArray(qlineData.routes) && qlineData.routes.length) {
+        data.groups = (data.groups || []).concat(qlineData.groups || []);
+        data.routes = (data.routes || []).concat(qlineData.routes);
+        data.stops = (data.stops || []).concat(qlineData.stops || []);
       }
       proj = {
         lat0: data.projection.lat0,
@@ -4843,7 +4932,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         });
         if (longest) {
           var mid = longest[Math.floor(longest.length / 2)];
-          var label = makeLabel(route.id + ' · ' + route.name, route.color);
+          var label = makeLabel(route.name + ' - ' + route.id, route.color);
           label.position.set(mid[0], 1050, mid[1]);
           grp.add(label);
           var tetherGeo = new THREE.BufferGeometry().setFromPoints([
@@ -4861,6 +4950,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       // Stops are rebuilt from stopData by rebuildStops() (per-route colors,
       // paper-white hubs) whenever filters change; see the stops section.
       stopData = data.stops || [];
+      if (typeof window.__setRideData === 'function') {
+        window.__setRideData(data.routes || [], stopData);
+      }
 
       // People Mover static layer: built once, toggled independently of the
       // DDOT route filters. Absent (fetch failed) the map simply has no PM layer.
@@ -4894,6 +4986,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       })();
       /* LANDMARK-MASSING-END */
 
+      // Alphabetize route lists by route name.
+      routeOrder.sort(function (a, b) {
+        return (routeNames[a] || '').localeCompare(routeNames[b] || '');
+      });
       buildFilterPanel(data.groups);
       applyFilters();
       syncFilterUI();
