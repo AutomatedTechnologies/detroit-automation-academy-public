@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261012-1417';
+  var STAMP = '20261012-1445';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -1804,6 +1804,36 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   $('zoom-in').addEventListener('click', function () { zoomStep(1); });
   $('zoom-out').addEventListener('click', function () { zoomStep(-1); });
   $('view-reset').addEventListener('click', resetView);
+  // Keyboard camera (defect keyboard-camera): arrow keys pan and +/-
+  // zoom when #live-map has focus (tabindex="0" in the HTML; the canvas
+  // is its only child, so keydown events from the map reach this listener
+  // and events from overlay controls, which are siblings, do not).
+  // ArrowLeft/ArrowRight yield to the existing bus/stop cycling handler
+  // (the document keydown handler below) while a card selection is
+  // active, so the two bindings never act on the same keypress.
+  container.addEventListener('keydown', function (e) {
+    if (e.key === '+' || e.key === '=') { zoomStep(1); e.preventDefault(); e.stopPropagation(); return; }
+    if (e.key === '-' || e.key === '_') { zoomStep(-1); e.preventDefault(); e.stopPropagation(); return; }
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && (selectedVehicleId || selectedStop)) return;
+    var dist = camera.position.distanceTo(controls.target);
+    var step = Math.max(50, dist * 0.12);
+    var fwd = new THREE.Vector3();
+    fwd.subVectors(controls.target, camera.position); fwd.y = 0;
+    if (fwd.lengthSq() === 0) return;
+    fwd.normalize();
+    var right = new THREE.Vector3(-fwd.z, 0, fwd.x);
+    var move = new THREE.Vector3();
+    if (e.key === 'ArrowUp') move.addScaledVector(fwd, step);
+    else if (e.key === 'ArrowDown') move.addScaledVector(fwd, -step);
+    else if (e.key === 'ArrowRight') move.addScaledVector(right, step);
+    else move.addScaledVector(right, -step);
+    camera.position.add(move);
+    controls.target.add(move);
+    if (typeof controls.update === 'function') controls.update();
+    e.preventDefault();
+    e.stopPropagation();
+  });
   if (isTouch) {
     var hint = document.querySelector('.map-hint');
     if (hint) {
