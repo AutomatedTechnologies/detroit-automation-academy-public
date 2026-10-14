@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261014-1520';
+  var STAMP = '20261014-1614';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -2218,7 +2218,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // 75m + 28m per serving route, so a 13-route mega-hub towers over a
   // single-route stop the way it should. Single-route pylons take their
   // route's color; multi-route hubs draw paper-white. One draw call.
-  var STOP_MAX = 5120;
+  var STOP_MAX = 16384; // merged registry capacity: DDOT+SMART+QLINE stops (10,583 at 2026-10-14 adoption) plus headroom
   var stopIM = new THREE.InstancedMesh(
     new THREE.CylinderGeometry(14, 18, 1, 8),
     new THREE.MeshLambertMaterial({ color: 0xffffff }), STOP_MAX);
