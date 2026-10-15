@@ -869,9 +869,15 @@
 </footer>
 
 <script>
-  window.FORGE_LIVE_PROXY = "https://forge-line-live-proxy.netlify.app";
+  // Live feed base (2026-10-15 migration): the page's two feed fetches
+  // resolve under this base as live-data/vehicles.json and
+  // live-data/alerts.json — static files in this repo, republished on
+  // a 5-minute cadence by the live-feed GitHub Actions workflow. The
+  // variable name is retained from the Netlify proxy era; that proxy
+  // was quota-paused on 2026-10-15 and is no longer consumed.
+  window.FORGE_LIVE_PROXY = "live-data";
 </script>
 <script src="ride-along.js?v=20261015-1256"></script>
-<script type="module" src="live-transit.js?v=20261015-1502"></script>
+<script type="module" src="live-transit.js?v=20261015-1554"></script>
 </body>
 </html>
