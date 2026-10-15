@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-1502';
+  var STAMP = '20261015-1554';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -5488,7 +5488,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (!proxy) { setHeader(null, 'connecting…', false); return; }
     var ctrl = new AbortController();
     var timer = setTimeout(function () { ctrl.abort(); }, 20000);
-    fetch(proxy + '/api/vehicles', { cache: 'no-store', signal: ctrl.signal })
+    fetch(proxy + '/vehicles.json', { cache: 'no-store', signal: ctrl.signal })
       .then(function (r) { clearTimeout(timer); if (!r.ok) throw new Error('http ' + r.status); return r.json(); },
             function (e) { clearTimeout(timer); throw e; })
       .then(function (d) {
@@ -5990,7 +5990,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (!proxy) return;
     var ctrl = new AbortController();
     var timer = setTimeout(function () { ctrl.abort(); }, 15000);
-    fetch(proxy + '/api/alerts', { cache: 'no-store', signal: ctrl.signal })
+    fetch(proxy + '/alerts.json', { cache: 'no-store', signal: ctrl.signal })
       .then(function (r) { clearTimeout(timer); if (!r.ok) throw new Error('http ' + r.status); return r.json(); },
             function (e) { clearTimeout(timer); throw e; })
       .then(function (d) {
