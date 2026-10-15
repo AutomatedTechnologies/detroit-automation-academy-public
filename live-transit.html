@@ -207,6 +207,18 @@
   .stop-live-row i { width: .7rem; height: .7rem; border-radius: 3px; display: inline-block; flex: none; }
   .stop-live-row b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .stop-live-row span { margin-left: auto; color: #9AA0A6; font-size: .75rem; flex: none; font-variant-numeric: tabular-nums; }
+  .stop-live-row .stop-live-bus { margin-left: 0; color: #9AA0A6; }
+  .bus-upcoming { margin-top: .6rem; }
+  .bus-upcoming[hidden] { display: none; }
+  #bus-card.compact .bus-upcoming { display: none; }
+  .suggest-tile { margin-top: .7rem; }
+  .suggest-tile[hidden] { display: none; }
+  .beta-row { display: flex; align-items: center; gap: .5rem; font-size: .85rem; padding: .22rem 0; color: #F5F2EA; }
+  .beta-row b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .beta-row span { margin-left: auto; color: #9AA0A6; font-size: .75rem; flex: none; font-variant-numeric: tabular-nums; }
+  .beta-note { margin: .2rem 0 0; font-size: .8rem; color: #9AA0A6; line-height: 1.4; font-family: "Inter", sans-serif; }
+  .beta-sub { font-size: .75rem; color: #9AA0A6; padding: 0 0 .2rem; font-family: "Inter", sans-serif; }
+  #beta-tiles-toggle:focus-visible { outline: 2px solid #FFB000; outline-offset: 2px; }
   .bus-card h2 { font-family: "Space Grotesk", sans-serif; font-size: 1.05rem; margin: 0 0 .4rem; color: #F5F2EA; display: flex; align-items: center; gap: .5rem; padding-right: 1.7rem; }
   .bus-card h2 span { overflow-wrap: break-word; min-width: 0; }
   .bus-card h2 i { width: .8rem; height: .8rem; border-radius: 3px; display: inline-block; }
@@ -492,6 +504,10 @@
         <div class="f-idle-row">
           <button id="hide-idle-toggle" aria-pressed="true"><span class="f-box"></span><b>Hide non-running routes</b></button>
         </div>
+        <div class="f-idle-row">
+          <button id="beta-tiles-toggle" aria-pressed="false"><span class="f-box"></span><b>Beta tiles</b></button>
+        </div>
+        <p class="f-beta-note" id="beta-tiles-note" hidden>Beta: a Suggest transfer tile in the trip planner, bus numbers on stop cards, and upcoming stops on the bus card &mdash; all computed from live bus positions.</p>
         <p class="f-note">Routes with no live buses reporting are dimmed or hidden automatically. DDOT schedule data is current through Feb 7, 2027 &mdash; this page shows live bus positions; the trip planner uses scheduled times.</p>
         <div id="filter-groups"></div>
         <div class="f-static">
@@ -545,6 +561,10 @@
           <dt>Heading</dt><dd id="bus-heading">–</dd>
           <dt>Updated</dt><dd id="bus-card-updated">–</dd>
         </dl>
+        <div class="bus-upcoming" id="bus-upcoming" hidden>
+          <div class="sel-eyebrow">Upcoming stops &middot; beta</div>
+          <div id="bus-upcoming-list"></div>
+        </div>
       </div>
       <div class="bus-card" id="stop-card" role="dialog" aria-label="Stop details" tabindex="-1" hidden>
         <button class="close" id="stop-close" aria-label="Close stop details">×</button>
@@ -592,6 +612,11 @@
           <div class="trip-time">
             <button id="trip-now-btn" aria-pressed="true">Leave now</button>
             <input type="time" id="trip-time-input" aria-label="Departure time">
+          </div>
+          <div class="suggest-tile" id="suggest-tile" hidden>
+            <div class="sel-eyebrow">Suggest transfer &middot; beta</div>
+            <div id="suggest-list"></div>
+            <p class="f-note" id="suggest-note"></p>
           </div>
           <div id="trip-results"></div>
         </div>
@@ -677,6 +702,6 @@
   window.FORGE_LIVE_PROXY = "https://forge-line-live-proxy.netlify.app";
 </script>
 <script src="ride-along.js?v=20261012-1045"></script>
-<script type="module" src="live-transit.js?v=20261014-2246"></script>
+<script type="module" src="live-transit.js?v=20261014-2306"></script>
 </body>
 </html>
