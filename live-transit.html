@@ -137,6 +137,9 @@
   .f-near[aria-pressed="false"] .f-box { background: transparent; }
   #pm-toggle[aria-pressed="true"] { border-color: rgba(232,93,26,.45); }
   #pm-toggle[aria-pressed="false"] .f-box { background: transparent; }
+  #mogo-toggle[aria-pressed="true"] { border-color: rgba(232,93,26,.45); }
+  #mogo-toggle[aria-pressed="false"] .f-box { background: transparent; }
+  #mogo-toggle:focus-visible { outline: 2px solid #FFB000; outline-offset: 2px; }
   .f-check[aria-pressed="mixed"] .f-box::after { content: ""; position: absolute; left: 2px; right: 2px; top: 50%; height: 2px; margin-top: -1px; background: #E85D1A; border-radius: 1px; }
   .f-group.off .f-routes { opacity: .35; }
   .f-routes { display: flex; flex-wrap: wrap; gap: .4rem; padding: .55rem .1rem 0; }
@@ -377,6 +380,9 @@
   .trip-leg-alert .fx-moved { color: #4D96FF; }
   .trip-leg-alert .fx-info { color: #9AA0A6; }
   .trip-alert-top { background: rgba(179,38,30,.16); border: 1px solid rgba(255,120,110,.55); border-radius: 10px; padding: .55rem .7rem; margin-bottom: .6rem; font-size: .78rem; color: #F5F2EA; }
+  .stop-mogo { margin-top: .7rem; }
+  .stop-mogo[hidden] { display: none; }
+  .stop-mogo-note { color: #9AA0A6; font-size: .78rem; line-height: 1.5; margin: .5rem 0 0; }
   .stop-alerts { margin-top: .7rem; }
   .stop-alerts[hidden] { display: none; }
   .stop-alerts h3 { margin: 0 0 .4rem; font-size: .8rem; color: #F5F2EA; font-family: "Inter", sans-serif; }
@@ -513,6 +519,8 @@
         <div class="f-static">
           <button class="f-group-head" id="pm-toggle" aria-pressed="true" title="Show the People Mover downtown loop and stations"><span class="f-box"></span><b>People Mover loop</b><span class="f-count">static</span></button>
           <p class="f-note">No live feed exists for the People Mover &mdash; stations and the downtown loop are schedule geometry from the agency&rsquo;s GTFS. Positions are real; no vehicles are shown.</p>
+          <button class="f-group-head" id="mogo-toggle" aria-pressed="false" title="Show MoGo bikeshare stations with live bike and dock availability"><span class="f-box"></span><b>MoGo bikeshare</b><span class="f-count" id="mogo-count">loading</span></button>
+          <p class="f-note">Live availability from MoGo&rsquo;s public GBFS feed, refreshed every minute. Marker height and color show bikes available; a ring means an e-assist bike is available; counts appear at close zoom. Short, grey markers are stations whose feed reports are stale &mdash; their counts may be out of date.</p>
         </div>
         </div>
         <div class="resize-grip" id="panel-resize" aria-hidden="true"></div>
@@ -571,13 +579,18 @@
         <div class="sel-eyebrow">Stop</div>
         <h2><span id="stop-title">Stop</span></h2>
         <dl>
-          <dt>Stop ID</dt><dd id="stop-id">–</dd>
-          <dt>Serving</dt><dd id="stop-nroutes">–</dd>
+          <dt id="stop-id-dt">Stop ID</dt><dd id="stop-id">–</dd>
+          <dt id="stop-nroutes-dt">Serving</dt><dd id="stop-nroutes">–</dd>
         </dl>
         <div class="stop-routes" id="stop-routes"></div>
         <div class="stop-live" id="stop-live" hidden>
           <div class="sel-eyebrow">Live on these routes</div>
           <div id="stop-live-list"></div>
+        </div>
+        <div class="stop-mogo" id="stop-mogo" hidden>
+          <div class="sel-eyebrow">MoGo bikeshare</div>
+          <dl id="stop-mogo-dl"></dl>
+          <p class="stop-mogo-note" id="stop-mogo-note"></p>
         </div>
         <div class="stop-alerts" id="stop-alerts" hidden>
           <h3>Service alerts for this stop</h3>
@@ -642,10 +655,16 @@
       <div class="map-toast" id="map-toast" role="status" hidden></div>
       <div id="sr-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
       <div id="alerts-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+      <div id="mogo-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
       <section id="alerts-sr" class="sr-only" aria-label="Active service alerts, text form">
         <h2>Active service alerts</h2>
         <ul id="alerts-sr-list"></ul>
         <p id="alerts-sr-sources"></p>
+      </section>
+      <section id="mogo-sr" class="sr-only" aria-label="MoGo bikeshare availability, text form">
+        <h2>MoGo bikeshare stations</h2>
+        <ul id="mogo-sr-list"></ul>
+        <p id="mogo-sr-note"></p>
       </section>
       <div class="nav-overlay" id="nav-overlay" hidden>
         <div class="nav-card" role="dialog" aria-label="Help">
@@ -702,6 +721,6 @@
   window.FORGE_LIVE_PROXY = "https://forge-line-live-proxy.netlify.app";
 </script>
 <script src="ride-along.js?v=20261012-1045"></script>
-<script type="module" src="live-transit.js?v=20261014-2306"></script>
+<script type="module" src="live-transit.js?v=20261014-2309"></script>
 </body>
 </html>
