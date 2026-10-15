@@ -140,6 +140,14 @@
   #mogo-toggle[aria-pressed="true"] { border-color: rgba(232,93,26,.45); }
   #mogo-toggle[aria-pressed="false"] .f-box { background: transparent; }
   #mogo-toggle:focus-visible { outline: 2px solid #FFB000; outline-offset: 2px; }
+  #places-head { margin-top: .6rem; }
+  #places-sb-toggle, #places-pf-toggle { margin-top: .35rem; }
+  #places-sb-toggle[aria-pressed="true"], #places-pf-toggle[aria-pressed="true"] { border-color: rgba(232,93,26,.45); }
+  #places-sb-toggle[aria-pressed="false"] .f-box, #places-pf-toggle[aria-pressed="false"] .f-box { background: transparent; }
+  #places-sb-toggle:focus-visible, #places-pf-toggle:focus-visible { outline: 2px solid #FFB000; outline-offset: 2px; }
+  .stop-place { margin-top: .7rem; }
+  .stop-place[hidden] { display: none; }
+  .stop-place-note { color: #9AA0A6; font-size: .78rem; line-height: 1.5; margin: .5rem 0 0; }
   .f-check[aria-pressed="mixed"] .f-box::after { content: ""; position: absolute; left: 2px; right: 2px; top: 50%; height: 2px; margin-top: -1px; background: #E85D1A; border-radius: 1px; }
   .f-group.off .f-routes { opacity: .35; }
   .f-routes { display: flex; flex-wrap: wrap; gap: .4rem; padding: .55rem .1rem 0; }
@@ -536,6 +544,10 @@
           <p class="f-note">No live feed exists for the People Mover &mdash; stations and the downtown loop are schedule geometry from the agency&rsquo;s GTFS. Positions are real; no vehicles are shown.</p>
           <button class="f-group-head" id="mogo-toggle" aria-pressed="false" title="Show MoGo bikeshare stations with live bike and dock availability"><span class="f-box"></span><b>MoGo bikeshare</b><span class="f-count" id="mogo-count">loading</span></button>
           <p class="f-note">Live availability from MoGo&rsquo;s public GBFS feed, refreshed every minute. Marker height and color show bikes available; a ring means an e-assist bike is available; counts appear at close zoom. Short, grey markers are stations whose feed reports are stale &mdash; their counts may be out of date.</p>
+          <div class="f-group-head" id="places-head"><b>Places</b><span class="f-count" id="places-count">42 locations</span></div>
+          <button class="f-group-head" id="places-sb-toggle" aria-pressed="false" title="Show Starbucks coffee shops"><span class="f-box"></span><b>Starbucks</b><span class="f-count" id="places-sb-count">31</span></button>
+          <button class="f-group-head" id="places-pf-toggle" aria-pressed="false" title="Show Planet Fitness gyms"><span class="f-box"></span><b>Planet Fitness</b><span class="f-count" id="places-pf-count">11</span></button>
+          <p class="f-note">Starbucks and Planet Fitness locations from OpenStreetMap (&copy; OpenStreetMap contributors, ODbL), within the map&rsquo;s street boundary. Flat discs colored by brand carry letter badges at close zoom &mdash; S for Starbucks, PF for Planet Fitness. Community map data may not list every location; licensed counters inside other stores are the likeliest gaps.</p>
         </div>
         </div>
         <div class="resize-grip" id="panel-resize" aria-hidden="true"></div>
@@ -607,6 +619,11 @@
           <dl id="stop-mogo-dl"></dl>
           <p class="stop-mogo-note" id="stop-mogo-note"></p>
         </div>
+        <div class="stop-place" id="stop-place" hidden>
+          <div class="sel-eyebrow">Place</div>
+          <dl id="stop-place-dl"></dl>
+          <p class="stop-place-note" id="stop-place-note"></p>
+        </div>
         <p class="stop-smart-note" id="stop-smart-note" hidden></p>
         <div class="stop-alerts" id="stop-alerts" hidden>
           <h3>Service alerts for this stop</h3>
@@ -672,6 +689,7 @@
       <div id="sr-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
       <div id="alerts-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
       <div id="mogo-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+      <div id="places-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
       <section id="alerts-sr" class="sr-only" aria-label="Active service alerts, text form">
         <h2>Active service alerts</h2>
         <ul id="alerts-sr-list"></ul>
@@ -681,6 +699,11 @@
         <h2>MoGo bikeshare stations</h2>
         <ul id="mogo-sr-list"></ul>
         <p id="mogo-sr-note"></p>
+      </section>
+      <section id="places-sr" class="sr-only" aria-label="Places, text form">
+        <h2>Places</h2>
+        <ul id="places-sr-list"></ul>
+        <p id="places-sr-note"></p>
       </section>
       <div class="nav-overlay" id="nav-overlay" hidden>
         <div class="nav-card" role="dialog" aria-label="Help">
@@ -737,6 +760,6 @@
   window.FORGE_LIVE_PROXY = "https://forge-line-live-proxy.netlify.app";
 </script>
 <script src="ride-along.js?v=20261012-1045"></script>
-<script type="module" src="live-transit.js?v=20261015-0002"></script>
+<script type="module" src="live-transit.js?v=20261015-0313"></script>
 </body>
 </html>
