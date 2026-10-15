@@ -204,6 +204,20 @@
   body.chrome-no-bar #map-bar { display: none; }
   body.chrome-no-rail .map-tools { display: none; }
   body.chrome-no-hint .map-hint { display: none; }
+  /* App lock (route-filters-missing fix, stamp 20261015-1437): while
+     the app script is running (it sets .app-lock on <html> and <body>
+     at boot), the document does not scroll, so the top bar — the only
+     entry to the route filter panel, the planner, ride-along, and the
+     home link — can never be scrolled above the visible area. The
+     rules mirror the max-mode presentation lock (html/body
+     .pseudo-full-lock below): iOS Safari does not honor overflow:
+     hidden on body as a scroll lock, so the body is also position:
+     fixed; under the lock the saved scroll offset is always 0, so the
+     fixed body rests exactly at the document top and the resting
+     layout is unchanged. With the script absent the classes are never
+     set and the static page scrolls as before. */
+  html.app-lock { overflow: hidden; overscroll-behavior: none; }
+  body.app-lock { overflow: hidden; overscroll-behavior: none; position: fixed; left: 0; right: 0; width: 100%; }
   .map-tools #tools-toggle svg { transition: transform .18s; }
   .map-tools.collapsed #tools-toggle svg { transform: rotate(180deg); }
   /* Fullscreen toggle — max mode (fullscreen-fix, stamp 20261015-1150).
@@ -869,6 +883,6 @@
   window.FORGE_LIVE_PROXY = "https://forge-line-live-proxy.netlify.app";
 </script>
 <script src="ride-along.js?v=20261015-1256"></script>
-<script type="module" src="live-transit.js?v=20261015-1330"></script>
+<script type="module" src="live-transit.js?v=20261015-1437"></script>
 </body>
 </html>
