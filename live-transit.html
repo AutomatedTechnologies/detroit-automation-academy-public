@@ -92,15 +92,11 @@
   .map-bar .map-live span { margin-top: 0; }
   .map-bar .map-live strong { font-size: .95rem; }
   .map-bar .map-live #bus-updated { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-  .map-bar .map-live #smart-pill-note { color: #FFB000; font-weight: 600; flex: none; }
-  .map-bar .transit-badge { margin-top: 0; }
   .map-live .live-dot { display: inline-block; width: .55rem; height: .55rem; border-radius: 50%; background: #2ECC71; margin-right: .45rem; animation: pulse 2s infinite; vertical-align: baseline; }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
   .map-live strong { font-family: "Space Grotesk", sans-serif; font-size: 1.15rem; color: #F5F2EA; }
   .map-live span { display: block; color: #9AA0A6; font-size: .75rem; margin-top: .15rem; }
   .map-live .feed-warn { color: #FFB000; }
-  .transit-badge { display: inline-block; margin-top: .3rem; font-size: .6rem; letter-spacing: .03em; color: #9AA0A6; text-decoration: none; font-weight: 400; }
-  .transit-badge:hover { color: #F5F2EA; text-decoration: underline; }
   .route-chip { display: inline-flex; align-items: center; gap: .5rem; background: rgba(12,17,22,.82); border: 1px solid rgba(245,242,234,.16); color: #F5F2EA; border-radius: 999px; padding: .5rem .85rem; font-size: .82rem; cursor: pointer; backdrop-filter: blur(6px); transition: opacity .15s, border-color .15s; }
   .route-chip i { width: .7rem; height: .7rem; border-radius: 3px; display: inline-block; }
   .route-chip b { font-weight: 600; }
@@ -143,7 +139,6 @@
   .f-head-btns { display: flex; gap: .4rem; }
   .f-group { margin-bottom: .7rem; }
   .f-group:last-child { margin-bottom: 0; }
-  .f-beta-note { margin: .35rem .1rem 0; font-size: .68rem; color: #9AA0A6; line-height: 1.35; font-family: "Inter", sans-serif; }
   .f-group-head { display: flex; align-items: center; gap: .55rem; width: 100%; background: rgba(245,242,234,.04); border: 1px solid rgba(245,242,234,.1); color: #F5F2EA; border-radius: 10px; padding: .5rem .7rem; font-size: .85rem; font-family: "Inter", sans-serif; box-sizing: border-box; }
   button.f-group-head { cursor: pointer; text-align: left; }
   .f-group-head b { font-weight: 600; flex: 1; text-align: left; }
@@ -319,8 +314,6 @@
   .stop-live-row i { width: .7rem; height: .7rem; border-radius: 3px; display: inline-block; flex: none; }
   .stop-live-row b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .stop-live-row span { margin-left: auto; color: #9AA0A6; font-size: .75rem; flex: none; font-variant-numeric: tabular-nums; }
-  .stop-smart-note { margin-top: .55rem; font-size: .78rem; line-height: 1.4; color: #9AA0A6; font-family: "Inter", sans-serif; }
-  .stop-smart-note[hidden] { display: none; }
   .stop-live-row .stop-live-bus { margin-left: 0; color: #9AA0A6; }
   .bus-upcoming { margin-top: .6rem; }
   .bus-upcoming[hidden] { display: none; }
@@ -879,6 +872,6 @@
   window.FORGE_LIVE_PROXY = "https://forge-line-live-proxy.netlify.app";
 </script>
 <script src="ride-along.js?v=20261015-1256"></script>
-<script type="module" src="live-transit.js?v=20261015-1458"></script>
+<script type="module" src="live-transit.js?v=20261015-1502"></script>
 </body>
 </html>
