@@ -72,6 +72,12 @@ jobs:
             cp -r watch deployment/ || echo "watch copy failed"
           fi
 
+          # Copy live transit feed data (static JSON published by the
+          # live-feed workflow; consumed by live-transit.html)
+          if [ -d "live-data" ]; then
+            cp -r live-data deployment/ || echo "live-data copy failed"
+          fi
+
           # Copy asset directories
           cp -r assets deployment/   || (mkdir -p deployment/assets   && echo "assets dir created empty")
           cp -r branding deployment/ || (mkdir -p deployment/branding && echo "branding dir created empty")
