@@ -293,6 +293,9 @@
   .suggest-tile { margin-top: .7rem; }
   .suggest-tile[hidden] { display: none; }
   .beta-row { display: flex; align-items: center; gap: .5rem; font-size: .85rem; padding: .22rem 0; color: #F5F2EA; }
+  button.beta-suggest-row { width: 100%; background: none; border: 0; font: inherit; text-align: left; cursor: pointer; }
+  button.beta-suggest-row:hover b { text-decoration: underline; }
+  button.beta-suggest-row:focus-visible { outline: 2px solid #FFB000; outline-offset: 2px; }
   .beta-row b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .beta-row span { margin-left: auto; color: #9AA0A6; font-size: .75rem; flex: none; font-variant-numeric: tabular-nums; }
   .beta-note { margin: .2rem 0 0; font-size: .8rem; color: #9AA0A6; line-height: 1.4; font-family: "Inter", sans-serif; }
@@ -845,6 +848,6 @@
   window.FORGE_LIVE_PROXY = "https://forge-line-live-proxy.netlify.app";
 </script>
 <script src="ride-along.js?v=20261015-1107"></script>
-<script type="module" src="live-transit.js?v=20261015-1130"></script>
+<script type="module" src="live-transit.js?v=20261015-1158"></script>
 </body>
 </html>
