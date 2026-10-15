@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-0313';
+  var STAMP = '20261015-0323';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -1714,6 +1714,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var when = v.updated_at ? new Date(v.updated_at) : null;
     $('bus-card-updated').textContent = (when && !isNaN(when)) ? when.toLocaleTimeString() : '–';
     $('bus-card').hidden = false;
+    // Ride Along: while ride mode is on, a bus selection from any surface
+    // (map tap, Browse list, arrow keys — all funnel through showBus)
+    // boards that bus in the widget, so the rider's-seat view follows the
+    // selection instead of waiting for the card's own dropdown.
+    var rideBoarded = false;
+    if (rideMode && rideWidget) rideBoarded = boardRideBus(v.vehicle_id, false);
     // Dialog focus: remember the opener only on a fresh open, then move
     // focus into the card. Arrow-key cycling re-enters showBus with the
     // card already focused, so the original opener is preserved.
@@ -1736,12 +1742,26 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (_bs) {
         TransitionEngine.go({
           vantage: TransitionEngine.vantageForBus(_bs.x, _bs.z),
-          follow: (isReselect && followSuppressed) ? 'hold'
+          // A bus boarded for Ride Along is an explicit ride intent: the
+          // camera centers on it and follow engages on every device class
+          // (overriding the mobile hold), unless the rider explicitly
+          // toggled follow OFF for this same selection.
+          follow: (rideBoarded && !(isReselect && followSuppressed)) ? 'engage'
+            : (isReselect && followSuppressed) ? 'hold'
             : (DisplayBounds.get().deviceClass === 'mobile' ? 'hold' : 'engage'),
           vehicleId: v.vehicle_id,
           slot: _bs
         });
       }
+    } else if (rideBoarded) {
+      // The trip cinematic owns the camera right now; followTick defers to
+      // it frame-by-frame, so engaging follow here is safe and takes over
+      // framing when the fly-through ends.
+      var _fs = null;
+      for (var _fi = 0; _fi < busSlots.length; _fi++) {
+        if (busSlots[_fi].vehicle && busSlots[_fi].vehicle.vehicle_id === v.vehicle_id) { _fs = busSlots[_fi]; break; }
+      }
+      if (_fs) setFollow(v.vehicle_id, _fs);
     }
   }
   function hideBus() {
@@ -2029,7 +2049,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     ['\u25A0', 'Bus badges', 'Each bus carries a bus-shaped badge showing its route number, bordered in the route\u2019s color. Badges declutter automatically when buses cluster.'],
     ['\u29E9', 'Routes', 'Filter by group (DDOT, SMART, People Mover) or individual route. Routes with no live buses are dimmed or hidden automatically.'],
     ['\u25C8', 'Plan trip', 'Enter two points and get a transit itinerary with real routes, transfers, and walking legs — built on the same schedule data as the map.'],
-    ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops and intersections from the rider\u2019s seat, ordered by travel direction.'],
+    ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops and intersections from the rider\u2019s seat, ordered by travel direction. If a bus is already selected it rides that bus; selecting a bus on the map while Ride along is open rides it too, and the camera follows it.'],
     [ICO_FINDME, 'Find me', 'Center the map on your location. "Routes near me" then shows only routes with a stop within 1,250 m of you.'],
     [ICO_FULL, 'Fullscreen', 'Fill the screen with the map.'],
     ['\u2302', 'Reset view', 'Return to the full-system view.']
@@ -2042,7 +2062,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     ['\u25A0', 'Bus badges', 'Each bus carries a bus-shaped badge showing its route number, bordered in the route\u2019s color. Badges declutter automatically when buses cluster.'],
     ['\u29E9', 'Routes', 'Filter by group (DDOT, SMART, People Mover) or individual route. Routes with no live buses are dimmed or hidden automatically.'],
     ['\u25C8', 'Plan trip', 'Enter two points and get a transit itinerary with real routes, transfers, and walking legs — built on the same schedule data as the map.'],
-    ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops and intersections from the rider\u2019s seat, ordered by travel direction.'],
+    ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops and intersections from the rider\u2019s seat, ordered by travel direction. If a bus is already selected it rides that bus; selecting a bus on the map while Ride along is open rides it too, and the camera follows it.'],
     [ICO_FINDME, 'Find me', 'Center the map on your location. "Routes near me" then shows only routes with a stop within 1,250 m of you.'],
     [ICO_FULL, 'Fullscreen', 'Fill the screen with the map.'],
     ['\u2302', 'Reset view', 'Return to the full-system view.']
@@ -3535,12 +3555,53 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
   // Ride Along widget wiring.
   var rideWidget = null, rideMode = false;
+  // Put the camera on a ridden bus: glide to its vantage and engage the
+  // follow loop, so the bus stays centered as it moves. Boarding is an
+  // explicit ride intent, so it clears any follow suppression left over
+  // from the plain selection flow. While a trip fly-through owns the
+  // camera, follow is engaged directly — followTick defers to the
+  // cinematic frame-by-frame and takes over framing when it ends.
+  function rideFollowBus(vid) {
+    var sl = null;
+    for (var i = 0; i < busSlots.length; i++) {
+      if (busSlots[i].vehicle && busSlots[i].vehicle.vehicle_id === vid) { sl = busSlots[i]; break; }
+    }
+    if (!sl) { refreshFollowBtn(); return; }
+    followSuppressed = false;
+    if (typeof tripFly !== 'undefined' && tripFly) { setFollow(vid, sl); return; }
+    TransitionEngine.go({
+      vantage: TransitionEngine.vantageForBus(sl.x, sl.z),
+      follow: 'engage',
+      vehicleId: vid,
+      slot: sl
+    });
+  }
+  var _rideBoardMute = false; // board() fires onBoard; boardRideBus does its own camera work
+  // Board a bus in the ride widget. Returns false (no-op) when the widget
+  // does not know the vehicle — never board a bus the picker cannot show.
+  function boardRideBus(vid, engageCamera) {
+    if (!rideWidget || !vid) return false;
+    var known = false;
+    for (var i = 0; i < rideWidget.vehicles.length; i++) {
+      if (rideWidget.vehicles[i].vehicle_id === vid) { known = true; break; }
+    }
+    if (!known) return false;
+    _rideBoardMute = true;
+    try { rideWidget.board(vid); } finally { _rideBoardMute = false; }
+    if (engageCamera) rideFollowBus(vid);
+    return true;
+  }
   function setRideMode(on) {
     rideMode = on;
     $('ride-btn').setAttribute('aria-pressed', on ? 'true' : 'false');
     $('ride-card').hidden = !on;
     if (on && !rideWidget && typeof RideAlong !== 'undefined') {
       rideWidget = RideAlong.create($('ride-along-mount'));
+      // Camera hooks: boarding from the card's own dropdown also puts the
+      // camera on the bus; getting off releases a follow this engagement
+      // started.
+      rideWidget.onBoard = function (vid) { if (!_rideBoardMute) rideFollowBus(vid); };
+      rideWidget.onAlight = function (vid) { if (followVId === vid) setFollow(null); };
       // Feed cached route/stop data if already loaded.
       if (typeof routeById !== 'undefined' && typeof stopData !== 'undefined') {
         var rts = Object.keys(routeById).map(function (id) { return routeById[id]; });
@@ -3551,6 +3612,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       }
     }
     if (on && rideWidget) rideWidget.refresh();
+    // Respect the in-focus bus: if a bus is already selected when Ride
+    // Along is switched on, ride THAT bus — no second selection in the
+    // card's dropdown. (The selected bus survives a stop selection, so
+    // this also covers select bus -> tap a stop -> Ride along.)
+    if (on && rideWidget && selectedVehicleId) boardRideBus(selectedVehicleId, true);
   }
   $('ride-btn').addEventListener('click', function () { tapBuzz(); setRideMode(!rideMode); });
   $('ride-close').addEventListener('click', function () { setRideMode(false); });
