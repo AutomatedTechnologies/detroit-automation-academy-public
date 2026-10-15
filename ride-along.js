@@ -143,6 +143,18 @@
 
   // ---- widget ----
 
+  // Route identity label — the naming convention (settled 2026-10-11):
+  // "Name - Number" ("Greenfield - 10"); when the name equals the id
+  // (QLINE) or the id is not numeric, the name stands alone — never
+  // "QLINE - QLINE". Twin of routeLabel() in live-transit.js.
+  function routeLabel(route) {
+    if (!route) return '';
+    var name = route.name || route.id;
+    if (name === route.id) return name;
+    if (/^\d+$/.test(route.id)) return name + ' - ' + route.id;
+    return name;
+  }
+
   function RideAlong(mount) {
     this.mount = mount;
     this.routes = [];
@@ -274,7 +286,7 @@
       var route = self.routeById[v.route_id];
       return {
         v: v,
-        label: (route ? route.name + ' - ' + route.id : v.route_id) +
+        label: (route ? routeLabel(route) : v.route_id) +
           ' · Bus ' + v.vehicle_id +
           (v.destination ? ' → ' + v.destination : '')
       };
@@ -302,7 +314,7 @@
     if (!body) return;
     body.innerHTML = '';
     body.appendChild(el('p', 'ra-empty',
-      'Bus ' + v.vehicle_id + ' is on route ' + v.route_id +
+      'Bus ' + v.vehicle_id + ' is on route ' + (this.routeById[v.route_id] ? routeLabel(this.routeById[v.route_id]) : v.route_id) +
       ', but the route path is not loaded yet.'));
   };
 
@@ -315,7 +327,7 @@
     var dot = el('i', 'ra-dot');
     dot.style.background = route.color || '#9aa0a6';
     head.appendChild(dot);
-    head.appendChild(el('b', 'ra-route', route.name + ' - ' + route.id));
+    head.appendChild(el('b', 'ra-route', routeLabel(route)));
     if (v.destination) head.appendChild(el('span', 'ra-dest', '→ ' + v.destination));
     body.appendChild(head);
     body.appendChild(el('p', 'ra-bus', 'Bus ' + v.vehicle_id +
