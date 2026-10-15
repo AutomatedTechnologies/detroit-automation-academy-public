@@ -1,65 +1,64 @@
 {
-  "generated_at": "2026-10-15T23:00:27.007Z",
+  "generated_at": "2026-10-15T23:10:22.500Z",
   "count": 4,
   "vehicles": [
     {
       "agency": "qline",
       "route_id": "QLINE",
       "vehicle_id": "287",
-      "lat": 42.34046173095703,
-      "lon": -83.05335998535156,
-      "bearing": 149,
+      "lat": 42.329959869384766,
+      "lon": -83.04566955566406,
+      "bearing": 140,
       "speed_mph": null,
-      "updated_at": "2026-10-15T22:59:54.000Z"
+      "updated_at": "2026-10-15T23:09:55.000Z"
     },
     {
       "agency": "qline",
       "route_id": "QLINE",
       "vehicle_id": "290",
-      "lat": 42.3525505065918,
-      "lon": -83.06120300292969,
-      "bearing": 333,
+      "lat": 42.370609283447266,
+      "lon": -83.07357788085938,
+      "bearing": 335,
       "speed_mph": null,
-      "updated_at": "2026-10-15T22:59:56.000Z"
+      "updated_at": "2026-10-15T23:09:50.000Z"
     },
     {
       "agency": "qline",
       "route_id": "QLINE",
       "vehicle_id": "291",
-      "lat": 42.37181854248047,
-      "lon": -83.07430267333984,
-      "bearing": 334,
+      "lat": 42.3550910949707,
+      "lon": -83.06336975097656,
+      "bearing": 155,
       "speed_mph": null,
-      "updated_at": "2026-10-15T22:59:58.000Z"
+      "updated_at": "2026-10-15T23:09:55.000Z"
     },
     {
       "agency": "qline",
       "route_id": "QLINE",
       "vehicle_id": "292",
-      "lat": 42.32992935180664,
-      "lon": -83.04547119140625,
-      "bearing": 313,
+      "lat": 42.345401763916016,
+      "lon": -83.0564193725586,
+      "bearing": 334,
       "speed_mph": null,
-      "updated_at": "2026-10-15T22:59:57.000Z"
+      "updated_at": "2026-10-15T23:09:58.000Z"
     }
   ],
   "sources": {
     "ddot": {
       "ok": true,
-      "at": "2026-10-15T23:00:27.007Z",
+      "at": "2026-10-15T23:10:22.500Z",
       "vehicles": 0,
       "batches_ok": 4,
       "batches_failed": 0
     },
     "smart": {
       "ok": false,
-      "removed": true,
-      "at": "2026-10-15T23:00:27.007Z",
-      "reason": "SMART removed from Live Transit Detroit 2026-10-15"
+      "at": "2026-10-15T23:10:22.500Z",
+      "reason": "Swiftly SMART feed: HTTP 401 from https://api.goswift.ly/real-time/smart/gtfs-rt-vehicle-positions"
     },
     "qline": {
       "ok": true,
-      "at": "2026-10-15T23:00:27.007Z",
+      "at": "2026-10-15T23:10:22.500Z",
       "vehicles": 4
     }
   }
