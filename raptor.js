@@ -213,13 +213,24 @@ export function plan(tt, fromSeeds, toIdx, when) {
         var trips = pat.trips;
         for (var ti = 0; ti < trips.length; ti++) {
           var t = trips[ti];
-          if (t.s !== svc && t.s !== prevSvc) continue;
-          if (depA(t, pos) < prevArr[p]) continue; // cannot catch
+          // A previous-service-day trip runs into the query day only
+          // past midnight: feed times are service-day seconds, so map
+          // them into the query day's frame (-86400) before comparing.
+          // A previous-day trip ending before midnight maps entirely
+          // into yesterday and can never be caught — it does not run
+          // today, and must not be planned at face value.
+          var shift = 0;
+          if (t.s !== svc) {
+            if (t.s !== prevSvc) continue;
+            shift = -86400;
+          }
+          if (depA(t, pos) + shift < prevArr[p]) continue; // cannot catch
           for (var j = pos + 1; j < pat.stops.length; j++) {
             var s = pat.stops[j];
-            if (arrA(t, j) < arr[s]) {
-              arr[s] = arrA(t, j);
-              ali[s] = { trip: t, board: p, boardPos: pos, alightPos: j };
+            var aA = arrA(t, j) + shift;
+            if (aA < arr[s]) {
+              arr[s] = aA;
+              ali[s] = { trip: t, board: p, boardPos: pos, alightPos: j, shift: shift };
               improved.add(s);
             }
           }
@@ -280,6 +291,7 @@ function buildJourney(tt, k, target, seedOf, alight, walkPar, liveCtx) {
       var bSec = (hasL2 ? t.depL2[a.boardPos] : t.dep[a.boardPos]);
       var aSec = (hasL2 ? t.arrL2[a.alightPos] : t.arr[a.alightPos]);
       if (ld && !ld.disrupted && ld.delaySec) { bSec += ld.delaySec; aSec += ld.delaySec; }
+      if (a.shift) { bSec += a.shift; aSec += a.shift; }
       legs.unshift({
         type: 'bus', routeId: r.id, routeName: r.name, color: r.color,
         board: a.board, alight: cur,
