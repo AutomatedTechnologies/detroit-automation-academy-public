@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-1458';
+  var STAMP = '20261015-1502';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -133,9 +133,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // Street-map coverage bounds (WGS84). Streets are drawn as vector
   // geometry from U.S. Census TIGER/Line 2025 (see build scripts); no raster tiles.
   var STREET_BOUNDS = { lonW: -83.3431083, lonE: -82.8992288, latN: 42.47997522924901, latS: 42.25539743550126 };
-  // SMART service-area bounds: the expanded street mosaic (Downriver south,
-  // suburbs west) that fades in with the SMART filter group.
-  var SMART_BOUNDS = { lonW: -83.385, lonE: -82.8992288, latN: 42.47997522924901, latS: 42.178 };
+  // Street-mosaic bounds: the expanded mosaic (Downriver south, suburbs
+  // west). The ground plane and the coverage border are drawn to this
+  // extent; the core street tiers render inside STREET_BOUNDS.
+  var MOSAIC_BOUNDS = { lonW: -83.385, lonE: -82.8992288, latN: 42.47997522924901, latS: 42.178 };
 
   // --- path smoothing ---------------------------------------------------
   // Chaikin corner-cutting: each iteration replaces every segment with two
@@ -455,145 +456,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   busInfoSprite.visible = false;
   busInfoSprite.renderOrder = 41;
   scene.add(busInfoSprite);
-  // === SMART SNAPSHOT-AGE LABELING (graft, 2026-10-14) =====================
-  // SMART positions come from per-route Transit API snapshots held in
-  // ephemeral proxy memory (48h TTL), so they can be far older than the
-  // poll time while DDOT/QLINE positions are live. This graft states the
-  // SMART data's age in text wherever SMART data is presented: the SMART
-  // group header, the SMART beta note, the live-count pill, SMART stop
-  // cards, and the tapped-bus label. Text only, by design: the alerts
-  // layer already uses dimmed/faded rendering for REDUCED_SERVICE, so
-  // age is never carried by appearance. DDOT and QLINE are never touched.
-  // Age source: sources.smart.oldest_snapshot_at (the proxy's oldest
-  // per-route snapshot time: per-source granularity, the stalest SMART
-  // data being shown), falling back to the oldest updated_at among SMART
-  // vehicles. Age is measured against the payload's own generated_at, so
-  // client clock skew cannot distort it. When SMART is served by a live
-  // source (via !== 'transit') and no snapshot field exists, age stays
-  // unknown and nothing is labelled.
-  var smartAge = { band: 'unknown', ageMin: null, snapshotAtMs: null, count: 0,
-                   routesWithData: null, routesTotal: null, partial: false, via: null };
-
-  // --- PURE LOGIC START (extracted and unit-tested in Node) ---
-  function smartSnapshotAt(d) {
-    var sm = d && d.sources && d.sources.smart;
-    if (sm && sm.oldest_snapshot_at) {
-      var t = new Date(sm.oldest_snapshot_at).getTime();
-      if (!isNaN(t)) return t;
-    }
-    if (sm && sm.via && sm.via !== 'transit') return null; // live source: no snapshot semantics
-    var oldest = null;
-    var vs = (d && Array.isArray(d.vehicles)) ? d.vehicles : [];
-    for (var i = 0; i < vs.length; i++) {
-      if (vs[i].agency !== 'smart' || !vs[i].updated_at) continue;
-      var vt = new Date(vs[i].updated_at).getTime();
-      if (isNaN(vt)) continue;
-      if (oldest == null || vt < oldest) oldest = vt;
-    }
-    return oldest;
-  }
-  function computeSmartAge(d) {
-    var out = { band: 'unknown', ageMin: null, snapshotAtMs: null, count: 0,
-                routesWithData: null, routesTotal: null, partial: false, via: null };
-    var sm = d && d.sources && d.sources.smart;
-    if (!sm) return out;
-    out.via = sm.via || null;
-    out.count = (typeof sm.vehicles === 'number') ? sm.vehicles : 0;
-    out.routesWithData = (typeof sm.routes_with_data === 'number') ? sm.routes_with_data : null;
-    out.routesTotal = (typeof sm.routes === 'number') ? sm.routes : null;
-    out.partial = !!(out.routesTotal && out.routesWithData != null && out.routesWithData < out.routesTotal);
-    if (!out.count) return out; // no SMART vehicles shown: zero-state, nothing to label
-    var at = smartSnapshotAt(d);
-    if (at == null) return out;
-    var ref = d.generated_at ? new Date(d.generated_at).getTime() : NaN;
-    if (isNaN(ref)) ref = Date.now();
-    var ageMin = Math.max(0, (ref - at) / 60000);
-    out.snapshotAtMs = at;
-    out.ageMin = ageMin;
-    out.band = ageMin <= 5 ? 'fresh' : (ageMin <= 60 ? 'snapshot' : 'stale');
-    return out;
-  }
-  function formatClock12(ms) {
-    var d = new Date(ms);
-    var h = d.getHours();
-    var ap = h < 12 ? 'AM' : 'PM';
-    var h12 = h % 12; if (h12 === 0) h12 = 12;
-    var m = d.getMinutes();
-    return h12 + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
-  }
-  function formatAgeLong(ageMin) {
-    var n = Math.round(ageMin);
-    if (n < 60) return n + ' min';
-    var h = Math.floor(n / 60), r = n % 60;
-    return r ? (h + ' h ' + r + ' min') : (h + ' h');
-  }
-  function smartHeaderText(age) {
-    if (!age || age.band === 'unknown') return '';
-    var parts = [];
-    if (age.partial) parts.push(age.routesWithData + ' of ' + age.routesTotal + ' routes');
-    if (age.band === 'snapshot') parts.push('as of ' + formatClock12(age.snapshotAtMs));
-    else if (age.band === 'stale') parts.push(formatAgeLong(age.ageMin) + ' old');
-    return parts.join(' \u00b7 ');
-  }
-  function smartNoteText(age) {
-    if (!age || age.band === 'unknown') return '';
-    var s = [];
-    if (age.partial) s.push(age.routesWithData + ' of ' + age.routesTotal + ' SMART routes are reporting.');
-    if (age.band === 'snapshot') s.push('SMART positions as of ' + formatClock12(age.snapshotAtMs) + '.');
-    else if (age.band === 'stale') s.push('SMART data is ' + formatAgeLong(age.ageMin) + ' old \u2014 positions may have moved.');
-    return s.join(' ');
-  }
-  function smartStopNoteText(age) {
-    if (!age) return '';
-    if (age.band === 'snapshot') return 'SMART positions as of ' + formatClock12(age.snapshotAtMs) + ' \u2014 snapshot, not live GPS.';
-    if (age.band === 'stale') return 'SMART data is ' + formatAgeLong(age.ageMin) + ' old \u2014 buses may have moved from the positions shown.';
-    return '';
-  }
-  function smartPillText(age) {
-    if (!age || age.band !== 'stale') return '';
-    return 'SMART ' + age.count + ' (stale)';
-  }
-  // Suffix for the tapped-bus label: this vehicle's position is a Transit
-  // snapshot position, not a live GPS fix. Per-vehicle, from its own
-  // updated_at, matching the age text drawn beside it.
-  function smartVehicleSuffix(v, nowMs, via) {
-    if (!v || v.agency !== 'smart' || via !== 'transit' || !v.updated_at) return '';
-    var t = new Date(v.updated_at).getTime();
-    if (isNaN(t)) return '';
-    return ((nowMs - t) / 60000 > 5) ? ' \u00b7 snapshot' : '';
-  }
-  // --- PURE LOGIC END ---
-
-  function applySmartAgeUI() {
-    var hl = $('smart-age-label');
-    if (hl) hl.textContent = smartHeaderText(smartAge);
-    var nt = $('smart-age-note');
-    if (nt) { var ntx = smartNoteText(smartAge); nt.textContent = ntx ? ' ' + ntx : ''; }
-    var pn = $('smart-pill-note');
-    if (pn) {
-      var pt = smartPillText(smartAge);
-      pn.textContent = pt;
-      pn.hidden = !pt;
-    }
-    renderStopSmartNote();
-  }
-  function stopServedBySmart(st) {
-    if (!st || !Array.isArray(st.r)) return false;
-    var sr = (typeof groupRoutes !== 'undefined' && groupRoutes.smart) || [];
-    for (var i = 0; i < st.r.length; i++) { if (sr.indexOf(st.r[i]) >= 0) return true; }
-    return false;
-  }
-  function renderStopSmartNote() {
-    var el = $('stop-smart-note');
-    if (!el) return;
-    var txt = '';
-    if (typeof selectedStop !== 'undefined' && selectedStop && stopServedBySmart(selectedStop)) {
-      txt = smartStopNoteText(smartAge);
-    }
-    el.textContent = txt;
-    el.hidden = !txt;
-  }
-  // === END SMART SNAPSHOT-AGE LABELING ===
 
   function busAgeText(v) {
     if (!v.updated_at) return '–';
@@ -605,7 +467,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var dest = formatDest(v.route_id, v.destination);
     var line1 = routeLabel(v.route_id) + (dest ? ' → ' + dest : '');
     var spd = (v.speed_mph != null && !isNaN(v.speed_mph)) ? Math.round(v.speed_mph) + ' mph' : '–';
-    var line2 = 'Bus ' + (v.vehicle_id || '–') + ' · ' + spd + ' · ' + busAgeText(v) + smartVehicleSuffix(v, Date.now(), smartAge.via);
+    var line2 = 'Bus ' + (v.vehicle_id || '–') + ' · ' + spd + ' · ' + busAgeText(v);
     var c = document.createElement('canvas');
     var m = c.getContext('2d');
     m.font = '700 34px system-ui, -apple-system, sans-serif';
@@ -2564,14 +2426,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   function inCoverage(lat, lon) {
     if (lat <= STREET_BOUNDS.latN && lat >= STREET_BOUNDS.latS &&
         lon >= STREET_BOUNDS.lonW && lon <= STREET_BOUNDS.lonE) return true;
-    // SMART suburbs: covered only while the SMART group is displayed, so
-    // "routes near you" and other location features work in the suburbs
-    // with SMART enabled and stay Detroit-scoped when it is off.
-    try {
-      if (groupSelState('smart') !== 'none' &&
-          lat <= SMART_BOUNDS.latN && lat >= SMART_BOUNDS.latS &&
-          lon >= SMART_BOUNDS.lonW && lon <= SMART_BOUNDS.lonE) return true;
-    } catch (e) {}
     return false;
   }
   // --- 3D user representation (scaffold) -----------------------------------------
@@ -2786,8 +2640,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // Supplies Ride Along's upcoming-stops list with per-stop times from
   // the best source the data supports, per agency (ARCHITECTURE.md):
   // DDOT — the vehicle's matched timetable trip via the delay engine.
-  // SMART — snapshot positions (S6): sequence only, the boundary named
-  // in the view. QLINE — no stop times published to this view:
+  // QLINE — no stop times published to this view:
   // sequence only, named. Coverage boundaries are stated in the view,
   // never presented as a generic empty state (S4).
   //
@@ -2819,10 +2672,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // scheduled (arr) — are shifted by the vehicle's measured delay.
   function rideTimesFor(v) {
     if (!v) return null;
-    if (v.agency === 'smart') {
-      var ageTxt = (smartAge && smartAge.ageMin != null) ? Math.round(smartAge.ageMin) + ' min old' : 'not current';
-      return { byStop: {}, onlyIds: null, note: 'SMART positions are a snapshot (' + ageTxt + '), not a live fix. Stops are listed in order; stop times are not published for SMART buses in this view.' };
-    }
     if (v.agency === 'qline') {
       return { byStop: {}, onlyIds: null, note: 'QLINE stop times are not published to this view. Stops are listed in order.' };
     }
@@ -2870,7 +2719,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // 75m + 28m per serving route, so a 13-route mega-hub towers over a
   // single-route stop the way it should. Single-route pylons take their
   // route's color; multi-route hubs draw paper-white. One draw call.
-  var STOP_MAX = 16384; // merged registry capacity: DDOT+SMART+QLINE stops (10,583 at 2026-10-14 adoption) plus headroom
+  var STOP_MAX = 16384; // merged registry capacity: DDOT stops + SMART tombstone segment + QLINE stops (10,583) plus headroom
   var stopIM = new THREE.InstancedMesh(
     new THREE.CylinderGeometry(14, 18, 1, 8),
     new THREE.MeshLambertMaterial({ color: 0xffffff }), STOP_MAX);
@@ -3050,7 +2899,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   function renderStopLive() {
     var host = $('stop-live'), list = $('stop-live-list');
     if (!host || !list) return;
-    renderStopSmartNote();
     if (!selectedStop || !lastVehicles || !lastVehicles.length) {
       host.hidden = true; return;
     }
@@ -3399,13 +3247,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
   // The scheduled timetable covers only the DDOT segment of the merged
   // stop registry: buildIndex derives tt.nStops from the timetable
-  // (5,116) while the registry carries 10,583 stops (DDOT first, then
-  // SMART, then QLINE). A SMART/QLINE stop can therefore never be a
-  // planner endpoint as-is, and plan() fails silently for one. Map an
-  // out-of-coverage stop to the nearest covered stop within 400 m —
-  // agency twins at one intersection sit metres apart (SMART
-  // "Woodward & Warren" vs the DDOT stop of the same name) — or return
-  // -1 when no covered stop is that close.
+  // (5,116) while the registry carries 10,583 records (DDOT stops, the
+  // SMART tombstone segment, then QLINE stops). A QLINE stop can
+  // therefore never be a planner endpoint as-is, and plan() fails
+  // silently for one. Map an out-of-coverage stop to the nearest
+  // covered stop within 400 m — stops at one intersection sit metres
+  // apart — or return -1 when no covered stop is that close.
   function coveredStopIdx(idx, tt) {
     if (idx == null || idx < 0) return -1;
     if (!tt || idx < tt.nStops) return idx;
@@ -4439,23 +4286,22 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
   }
 
-  // --- SMART street extension -------------------------------------------------
+  // --- Street extension tier --------------------------------------------------
   // Street segments outside STREET_BOUNDS (Downriver, western suburbs) live
-  // in streetExt, a group that fades in/out with the SMART filter toggle.
-  // SMART defaults off, so the group starts invisible.
+  // in streetExt. The group was displayed only with the SMART filter group;
+  // since the SMART removal (2026-10-15) it stays hidden permanently.
   var streetExt = null;          // THREE.Group (assigned in buildStreets)
   var streetExtLocal = null;     // extension local tier (own LOD rule)
   var streetExtMats = [];        // {mat, baseOpacity} faded together
   var streetExtFade = 0, streetExtFadeTarget = 0;
   var streetExtFadeFrom = 0, streetExtFadeT0 = 0, streetExtFadeDur = 1;
   var STREET_EXT_FADE_MS = 900;
-  // Called from applyFilters: starts (or reverses) the fade when the SMART
-  // group's displayed state changes. Reversing mid-fade continues from the
-  // current opacity — never a snap.
+  // Called from applyFilters. The fade target has been permanently 0
+  // since the SMART removal; the machinery is retained so the group's
+  // hidden state is explicit rather than incidental.
   function syncStreetExt() {
     if (!streetExt) return;
-    var on = false;
-    try { on = groupSelState('smart') !== 'none'; } catch (e) {}
+    var on = false; // permanent since the SMART removal (2026-10-15)
     var target = on ? 1 : 0;
     if (target === streetExtFadeTarget) return;
     streetExtFadeFrom = streetExtFade;
@@ -4483,17 +4329,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
   }
 
-  var transitDataOn = false;
-  // Transit badge: minimum-size attribution, shown only when Transit-derived
-  // SMART data is both flowing and actually displayed (SMART group not
-  // filtered off). Never obscures the map: it lives in the header counter box.
-  function syncTransitBadge() {
-    var badge = $('transit-badge');
-    if (!badge) return;
-    var smartShown = false;
-    try { smartShown = groupSelState('smart') !== 'none'; } catch (e) {}
-    badge.style.display = (transitDataOn && smartShown) ? '' : 'none';
-  }
   function applyFilters() {
     routeOrder.forEach(function (rid) {
       if (routeGroups[rid]) routeGroups[rid].visible = routeShown(rid);
@@ -4505,7 +4340,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     rebuildStops();
     if (lastVehicles) updateBuses(lastVehicles);
     refreshHeaderCount();
-    syncTransitBadge();
     syncStreetExt();
     // Announce filter changes through #sr-status, but only when the number
     // of shown routes actually changes — applyFilters also runs on every
@@ -4545,17 +4379,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     groups.forEach(function (g) {
       // Calm default: only the ConnectTen core network is on. The panel
       // opens as an accordion (3 rows); route chips expand per group.
-      // SMART is a separate beta group, default OFF until the user opts in;
-      // the choice persists in localStorage once made.
       var gOn = (g.id === 'connect-ten');
       var gLabel = g.name;
-      if (g.id === 'smart') {
-        gLabel = g.name + ' (beta)';
-        try {
-          var savedSmart = localStorage.getItem('lt-smart-on');
-          gOn = (savedSmart === '1');
-        } catch (e) { gOn = false; }
-      }
       filterState.groups[g.id] = gOn;
       var sec = document.createElement('div');
       sec.className = 'f-group';
@@ -4570,7 +4395,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       check.addEventListener('click', function () {
         var on = groupSelState(g.id) !== 'all'; // all-on -> switch off; else switch on
         filterState.groups[g.id] = on;
-        if (g.id === 'smart') { try { localStorage.setItem('lt-smart-on', on ? '1' : '0'); } catch (e) {} }
         g.routes.forEach(function (rid) { filterState.routes[rid] = on; delete nearMeAdded[rid]; });
         applyFilters();
         syncFilterUI();
@@ -4581,7 +4405,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       label.setAttribute('aria-label', 'Expand ' + gLabel + ' routes');
       label.innerHTML = '<b>' + gLabel + '</b>' +
         '<span class="f-count" id="fgc-' + g.id + '">–</span>' +
-        (g.id === 'smart' ? '<span class="f-count" id="smart-age-label"></span>' : '') +
         '<span class="f-chev">▾</span>';
       label.addEventListener('click', function () {
         var open = sec.classList.toggle('open');
@@ -4618,25 +4441,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       });
       sec.appendChild(head);
       sec.appendChild(list);
-      if (g.id === 'smart') {
-        var betaNote = document.createElement('p');
-        betaNote.className = 'f-beta-note';
-        betaNote.textContent = 'Beta: all 45 routes have map lines. Vehicle positions via the Transit API.';
-        var smartAgeNote = document.createElement('span');
-        smartAgeNote.id = 'smart-age-note';
-        betaNote.appendChild(smartAgeNote);
-        sec.appendChild(betaNote);
-      }
       host.appendChild(sec);
     });
-    applySmartAgeUI();
     $('filter-all').addEventListener('click', function () {
       // "Show all" means all: the near-me proximity restriction must not
       // override it, so near-me is switched off first.
       if (filterState.nearMe) setNearMe(false);
       groupOrder.forEach(function (gid) { filterState.groups[gid] = true; });
       routeOrder.forEach(function (rid) { filterState.routes[rid] = true; });
-      try { localStorage.setItem('lt-smart-on', '1'); } catch (e) {}
       applyFilters();
       syncFilterUI();
     });
@@ -4646,7 +4458,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (filterState.nearMe) setNearMe(false);
       groupOrder.forEach(function (gid) { filterState.groups[gid] = false; });
       routeOrder.forEach(function (rid) { filterState.routes[rid] = false; });
-      try { localStorage.setItem('lt-smart-on', '0'); } catch (e) {}
       applyFilters();
       syncFilterUI();
     });
@@ -5699,11 +5510,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         refreshFilterCounts();
         lastTotal = n;
         setHeader(n, 'updated ' + fmtTime(d.generated_at ? new Date(d.generated_at) : null), false);
-        // SMART REMOVED 2026-10-15: no Transit-API data is displayed, so
-        // the Transit attribution badge never shows and no SMART snapshot
-        // age is computed. (The age-labeling graft is removed in the
-        // excision step; transitDataOn stays false permanently.)
-        transitDataOn = false;
+        // SMART REMOVED 2026-10-15: no Transit-API data is displayed;
+        // the Transit attribution badge and the SMART age labeling were
+        // removed with the SMART segment.
       })
       .catch(function () {
         var text = liveEverOk
@@ -5715,7 +5524,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
   // --- service alerts (phase 1) — presentation: Map-Native (concept B) ------
   // Consumes the proxy's /api/alerts (DDOT BusTime bulletins, kind
-  // 'realtime'; SMART smartbus.org board, kind 'planned'). Presentation
+  // 'realtime'). Presentation
   // follows concept B as selected 2026-10-14: there is NO global strip.
   // Alerts live where they apply — severity badges on route chips, alert
   // bands in the stop card, "what changed" lines in the planner, and
@@ -5733,7 +5542,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     ACCESSIBILITY_ISSUE: 2, STOP_MOVED: 2, MODIFIED_SERVICE: 2,
     ADDITIONAL_SERVICE: 1, OTHER_EFFECT: 1, UNKNOWN_EFFECT: 0, NO_EFFECT: 0
   };
-  var ALERT_AGENCY = { ddot: 'DDOT', smart: 'SMART', qline: 'QLINE' };
+  var ALERT_AGENCY = { ddot: 'DDOT', qline: 'QLINE' };
   // The five-effect vocabulary (design samples, shared table). cls keys
   // the CSS treatments; css is the glyph color used on map sprites.
   var ALERT_FX = {
@@ -7015,8 +6824,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // with brand or name matching Starbucks / Planet Fitness. "Within map
   // boundaries" = inside the street-mosaic extent in
   // assets/detroit-streets.json (lat 42.178–42.47997522924901,
-  // lon −83.385–−82.8992288); the extent declared in smart-routes-3d.json
-  // is stale and was not used. Raw pull 118 elements, 44 inside the
+  // lon −83.385–−82.8992288); the extent declared in the removed SMART dataset
+  // was stale and was not used. Raw pull 118 elements, 44 inside the
   // boundary, 2 building-way/node duplicate pairs deduplicated to a final
   // 42 locations: 31 Starbucks, 11 Planet Fitness. Baking record and the
   // coverage spot checks (OSM reads ~85–88% of in-boundary storefronts;
@@ -7643,7 +7452,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       }
       tombstoneStops.length = SMART_SEGMENT_STOPS;
       data.stops = (data.stops || []).concat(tombstoneStops);
-      // QLINE streetcar: merged like SMART. The proxy serves QLINE vehicle
+      // QLINE streetcar: merged in the same pattern. The proxy serves QLINE vehicle
       // positions on the same /api/vehicles feed with agency='qline' and
       // route_id='QLINE'. Absent file: the map runs without QLINE, no errors.
       if (qlineData && Array.isArray(qlineData.routes) && qlineData.routes.length) {
@@ -7660,16 +7469,16 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
       // Vector street map, drawn ourselves: dark ground + tiered Census
       // TIGER/Line highway geometry. Crisp at every zoom; no raster tiles.
-      // The mosaic spans SMART_BOUNDS; segments inside STREET_BOUNDS render
-      // always, segments outside live in streetExt and fade with the SMART
-      // filter toggle (see syncStreetExt).
+      // The mosaic spans MOSAIC_BOUNDS; segments inside STREET_BOUNDS render
+      // always, segments outside live in streetExt, which has stayed
+      // hidden since the SMART removal (see syncStreetExt).
       var streetLocal = null;
       (function buildStreets() {
-        // Ground covers the full SMART bbox permanently. #0d1319 against the
+        // Ground covers the full mosaic bbox permanently. #0d1319 against the
         // #0c1116 scene background is near-identical, so the larger ground is
         // visually a no-op while the extension is hidden.
-        var gnw = project(SMART_BOUNDS.latN, SMART_BOUNDS.lonW);
-        var gse = project(SMART_BOUNDS.latS, SMART_BOUNDS.lonE);
+        var gnw = project(MOSAIC_BOUNDS.latN, MOSAIC_BOUNDS.lonW);
+        var gse = project(MOSAIC_BOUNDS.latS, MOSAIC_BOUNDS.lonE);
         var gw = gse[0] - gnw[0], gh = gse[1] - gnw[1];
         var ground = new THREE.Mesh(
           new THREE.PlaneGeometry(gw, gh),
@@ -7703,11 +7512,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           border.name = 'safe-zone-border';
           scene.add(border);
         })();
-        // Extension group: hidden until the SMART toggle fades it in.
+        // Extension group: permanently hidden since the SMART removal.
         streetExt = new THREE.Group();
         streetExt.visible = false;
         scene.add(streetExt);
-        // Expanded-bounds border: same amber language at the SMART bounds,
+        // Expanded-bounds border: same amber language at the mosaic bounds,
         // faded with the extension group so both states read correctly.
         (function addExtBorder() {
           var x0 = gnw[0], x1 = gse[0], z0 = gnw[1], z1 = gse[1], yB = 20;
