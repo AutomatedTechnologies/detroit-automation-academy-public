@@ -1,15 +1,12 @@
 name: Swiftly leg test (temporary)
 
-# TEMPORARY verification workflow (round 2), 2026-10-15. Round 1
-# (run 38821825120) showed the key is rejected with
-# "Authorization: Bearer <key>" on every SMART surface (HTTP 401).
-# Swiftly's own integration examples document two other credential
-# forms: the raw key in the Authorization header (third-party
-# integrator configs published for this API) and an ?apiKey= query
-# parameter (Swiftly's VTA coding-challenge doc). This round probes
-# ONLY the granted Vehicle Positions endpoint, one request per form,
-# status code only -- response bodies are discarded unread. The key
-# value is never printed (GitHub masks it in logs regardless).
+# TEMPORARY verification workflow (round 3 -- negative controls),
+# 2026-10-15. Round 2 showed the placed key returns 403 (not 401)
+# in raw-header and apiKey forms against the granted VP endpoint.
+# These controls use a deliberately BOGUS key value (the real key is
+# not used, touched, or risked) to distinguish "403 = the server read
+# the credential but the key lacks this agency" from "403 = a mere
+# format gate". Status codes only; bodies discarded unread.
 
 on:
   workflow_dispatch:
@@ -21,14 +18,15 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Auth-format probes on the granted VP endpoint (status only)
-        env:
-          SWIFTLY_KEY: ${{ secrets.SWIFTLY_KEY }}
+      - name: Negative-control probes (bogus key value)
         run: |
           URL="https://api.goswift.ly/real-time/smart/gtfs-rt-vehicle-positions"
-          c1="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "Authorization: Bearer $SWIFTLY_KEY" "$URL")"
-          echo "form bearer-header -> HTTP $c1"
-          c2="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "Authorization: $SWIFTLY_KEY" "$URL")"
-          echo "form raw-header -> HTTP $c2"
-          c3="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$URL?apiKey=$SWIFTLY_KEY")"
-          echo "form apiKey-query -> HTTP $c3"
+          BOGUS="bogus-control-value-not-a-key"
+          c1="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "Authorization: $BOGUS" "$URL")"
+          echo "control raw-header bogus -> HTTP $c1"
+          c2="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "Authorization: Bearer $BOGUS" "$URL")"
+          echo "control bearer-header bogus -> HTTP $c2"
+          c3="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$URL?apiKey=$BOGUS")"
+          echo "control apiKey-query bogus -> HTTP $c3"
+          c4="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$URL")"
+          echo "control no-credential -> HTTP $c4"
