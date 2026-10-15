@@ -1,64 +1,64 @@
 {
-  "generated_at": "2026-10-15T23:10:22.500Z",
+  "generated_at": "2026-10-15T23:14:46.693Z",
   "count": 4,
   "vehicles": [
     {
       "agency": "qline",
       "route_id": "QLINE",
       "vehicle_id": "287",
-      "lat": 42.329959869384766,
-      "lon": -83.04566955566406,
-      "bearing": 140,
+      "lat": 42.32997131347656,
+      "lon": -83.04566192626953,
+      "bearing": 324,
       "speed_mph": null,
-      "updated_at": "2026-10-15T23:09:55.000Z"
+      "updated_at": "2026-10-15T23:14:26.000Z"
     },
     {
       "agency": "qline",
       "route_id": "QLINE",
       "vehicle_id": "290",
-      "lat": 42.370609283447266,
-      "lon": -83.07357788085938,
-      "bearing": 335,
+      "lat": 42.37181854248047,
+      "lon": -83.07433319091797,
+      "bearing": 334,
       "speed_mph": null,
-      "updated_at": "2026-10-15T23:09:50.000Z"
+      "updated_at": "2026-10-15T23:14:24.000Z"
     },
     {
       "agency": "qline",
       "route_id": "QLINE",
       "vehicle_id": "291",
-      "lat": 42.3550910949707,
-      "lon": -83.06336975097656,
-      "bearing": 155,
+      "lat": 42.34238815307617,
+      "lon": -83.0546875,
+      "bearing": 154,
       "speed_mph": null,
-      "updated_at": "2026-10-15T23:09:55.000Z"
+      "updated_at": "2026-10-15T23:14:25.000Z"
     },
     {
       "agency": "qline",
       "route_id": "QLINE",
       "vehicle_id": "292",
-      "lat": 42.345401763916016,
-      "lon": -83.0564193725586,
-      "bearing": 334,
+      "lat": 42.3525505065918,
+      "lon": -83.06120300292969,
+      "bearing": 332,
       "speed_mph": null,
-      "updated_at": "2026-10-15T23:09:58.000Z"
+      "updated_at": "2026-10-15T23:14:28.000Z"
     }
   ],
   "sources": {
     "ddot": {
       "ok": true,
-      "at": "2026-10-15T23:10:22.500Z",
+      "at": "2026-10-15T23:14:46.693Z",
       "vehicles": 0,
       "batches_ok": 4,
       "batches_failed": 0
     },
     "smart": {
       "ok": false,
-      "at": "2026-10-15T23:10:22.500Z",
-      "reason": "Swiftly SMART feed: HTTP 401 from https://api.goswift.ly/real-time/smart/gtfs-rt-vehicle-positions"
+      "at": "2026-10-15T23:14:46.693Z",
+      "reason": "Swiftly SMART feed: HTTP 403 from https://api.goswift.ly/real-time/smart/gtfs-rt-vehicle-positions"
     },
     "qline": {
       "ok": true,
-      "at": "2026-10-15T23:10:22.500Z",
+      "at": "2026-10-15T23:14:46.693Z",
       "vehicles": 4
     }
   }
