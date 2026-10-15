@@ -210,6 +210,8 @@
   .stop-live-row i { width: .7rem; height: .7rem; border-radius: 3px; display: inline-block; flex: none; }
   .stop-live-row b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .stop-live-row span { margin-left: auto; color: #9AA0A6; font-size: .75rem; flex: none; font-variant-numeric: tabular-nums; }
+  .stop-smart-note { margin-top: .55rem; font-size: .78rem; line-height: 1.4; color: #9AA0A6; font-family: "Inter", sans-serif; }
+  .stop-smart-note[hidden] { display: none; }
   .stop-live-row .stop-live-bus { margin-left: 0; color: #9AA0A6; }
   .bus-upcoming { margin-top: .6rem; }
   .bus-upcoming[hidden] { display: none; }
@@ -489,6 +491,7 @@
           <div class="map-live" id="map-live">
             <div><span class="live-dot"></span><strong id="bus-total" aria-live="polite" aria-atomic="true">–</strong> buses on the road</div>
             <span id="bus-updated">connecting…</span>
+            <span id="smart-pill-note" hidden></span>
             <a id="transit-badge" class="transit-badge" href="https://transitapp.com" target="_blank" rel="noopener" style="display:none">Powered by Transit</a>
           </div>
           <button class="filter-btn" id="filter-btn" aria-expanded="false" aria-controls="filter-panel"><span class="filter-ico">⧩</span> Routes</button>
@@ -592,6 +595,7 @@
           <dl id="stop-mogo-dl"></dl>
           <p class="stop-mogo-note" id="stop-mogo-note"></p>
         </div>
+        <p class="stop-smart-note" id="stop-smart-note" hidden></p>
         <div class="stop-alerts" id="stop-alerts" hidden>
           <h3>Service alerts for this stop</h3>
           <div id="stop-alerts-list"></div>
@@ -721,6 +725,6 @@
   window.FORGE_LIVE_PROXY = "https://forge-line-live-proxy.netlify.app";
 </script>
 <script src="ride-along.js?v=20261012-1045"></script>
-<script type="module" src="live-transit.js?v=20261014-2313"></script>
+<script type="module" src="live-transit.js?v=20261014-2319"></script>
 </body>
 </html>
