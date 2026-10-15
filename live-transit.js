@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261014-2319';
+  var STAMP = '20261014-2322';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -6128,7 +6128,16 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     });
     var note = $('stop-mogo-note');
     var bits = [];
-    if (m.address) bits.push(m.address);
+    // Address bit: this feed's address field duplicates the station name
+    // for nearly every station (74 of 81 in the pinned 2026-10-14
+    // snapshot; most of the rest differ only by the feed's leading '*'
+    // marker), so printing it verbatim put a garbled name-duplicate —
+    // asterisk included — ahead of the status sentence, directly under
+    // the Docks row. Show the address only when it says something the
+    // card title does not.
+    var addrBit = (m.address || '').replace(/^\*\s*/, '');
+    var nameBit = (m.title || '').replace(/^\*\s*/, '');
+    if (addrBit && addrBit !== nameBit) bits.push(addrBit);
     bits.push(m.status);
     bits.push('Availability ' + m.updated + '.');
     note.textContent = bits.join(' ');
