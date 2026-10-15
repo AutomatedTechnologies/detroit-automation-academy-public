@@ -206,6 +206,37 @@
   .map-tools.collapsed #tools-toggle svg { transform: rotate(180deg); }
   .map-stage.pseudo-full { position: fixed; inset: 0; height: 100vh; height: 100dvh; z-index: 60; }
   body.pseudo-full-lock { overflow: hidden; }
+  /* Map gesture containment (2026-10-15, all states): a pinch or drag that
+     starts on the map must move the camera, never zoom or scroll the page.
+     Until now this treatment existed only under body.fs-lock (fullscreen):
+     in the normal state the canvas was the only protected surface
+     (OrbitControls sets touch-action:none on it inline), while the bar,
+     the rail, the hint, the toast and the cards all kept the browser
+     defaults — rail buttons even carry touch-action:manipulation, which
+     allows pinch-zoom — so a pinch starting on the chrome zoomed the page
+     itself and a drag scrolled it (2026-10-15 screenshot: page zoomed,
+     bar and rail pushed off-screen, below-fold content bleeding in,
+     clipped on the left). These rules apply the fs-lock set permanently,
+     scoped to the stage subtree, and add the toast, the no-WebGL fallback
+     and the ride-along wrap, which the fs-lock set predates or omits.
+     touch-action is never set on .map-stage or .map-ui themselves: it
+     intersects across ancestors, so a none there would also kill the
+     panels' pan-y (the 2026-10-05 lesson). Scrollable surfaces keep
+     pan-y plus overscroll containment, so their own scrolling works and
+     never chains to the document. The viewport meta is deliberately
+     unchanged: pinch zoom stays available on the rest of the page. */
+  .map-stage #live-map,
+  .map-stage .map-bar,
+  .map-stage .map-hint,
+  .map-stage .map-tools,
+  .map-stage .map-toast,
+  .map-stage .map-fallback { touch-action: none; }
+  .map-stage .bus-card { touch-action: pan-y; overscroll-behavior: contain; }
+  .map-stage .filter-panel,
+  .map-stage .browse-panel,
+  .map-stage .nav-card,
+  .map-stage #trip-search-results,
+  .map-stage .ra-wrap { touch-action: pan-y; overscroll-behavior: contain; }
   /* Fullscreen gesture lock — iOS Safari treats an unconsumed downward swipe
      as "swipe down to exit fullscreen". While fullscreen is active, consume
      all touch gestures on the map chrome so a stray swipe can't drop out of
@@ -814,6 +845,6 @@
   window.FORGE_LIVE_PROXY = "https://forge-line-live-proxy.netlify.app";
 </script>
 <script src="ride-along.js?v=20261015-1107"></script>
-<script type="module" src="live-transit.js?v=20261015-1107"></script>
+<script type="module" src="live-transit.js?v=20261015-1130"></script>
 </body>
 </html>
