@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-1249';
+  var STAMP = '20261015-1256';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -1251,6 +1251,81 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (streetTween) { streetTween = null; if (!tripFly) controls.enabled = true; }
     setFollow(null); // user takes the camera: stop tracking the bus
   });
+
+  // --- Camera memory (2026-10-15) ---------------------------------------
+  // Opening a card flies the camera to the card's subject (bus, stop,
+  // place); the rider's own framing — where they were looking, at their
+  // zoom — is otherwise lost, and closing the card strands the camera at
+  // the subject. One snapshot repairs that: it is taken on the transition
+  // INTO a card session (the first card opened while no card session is
+  // active — showBus / showStop / setRideMode(true) / setTripMode(true)
+  // call camMemTake) and restored by camMemOnSettled, which exclRestore
+  // calls once a close leaves nothing showing. Chained cards never
+  // overwrite it: when a covering card closes, the exclusion stack
+  // restores the covered card and the session (and its snapshot) simply
+  // continues; the revert fires only when the LAST card closes. The
+  // snapshot lives in a variable only — never persisted.
+  //
+  // Rules around the snapshot:
+  // - A framing gliding INTO place counts at its destination: if a glide
+  //   is in flight when the snapshot is taken or refreshed, the glide's
+  //   target framing is the rider's framing, not a mid-flight point.
+  // - Manual camera moves while a card is open (drag, wheel, the rail's
+  //   zoom buttons) never touch the snapshot: closing the card reverts
+  //   them, per the directed behavior.
+  // - Explicit camera actions are not card opens and are never reverted:
+  //   Home/Reset and a successful locate REDEFINE the preserved framing
+  //   (camMemRefresh, called by resetView and onLocated) — if a card is
+  //   open over them, closing it returns to the framing they chose.
+  // - A follow session is live-driven: engaging follow under a held
+  //   snapshot marks it follow-owned. A card close that leaves follow
+  //   running (the ride card) does NOT restore — follow owns the camera
+  //   and the snapshot stays held; the bus card's close ends follow
+  //   first (hideBus), so its restore fires normally, back to the fixed
+  //   pre-follow framing however far the bus has since travelled. If
+  //   follow instead ends with no card showing (the bus left the set,
+  //   the rider grabbed the camera), the snapshot is dropped
+  //   unrestored: the session that preserved it is over, and the camera
+  //   stays where the rider's hands or the bus left it.
+  // - Restore clamps the preserved distance into the controls' CURRENT
+  //   limits (street view widens minDistance while it is active, so a
+  //   framing preserved inside street view must not be restored past
+  //   the limit in force at close). A card that never moved the camera
+  //   (planner open, ride open without boarding) restores as a no-op.
+  var camMem = null; // {pos, tgt, followOwned}
+  function camMemFraming() {
+    if (streetTween) return { pos: streetTween.toPos.clone(), tgt: streetTween.toTgt.clone() };
+    return { pos: camera.position.clone(), tgt: controls.target.clone() };
+  }
+  function camMemTake() {
+    if (camMem) return;
+    if (typeof tripFly !== 'undefined' && tripFly) return; // the cinematic owns the camera
+    var cur = visibleSurface();
+    if (cur === 'stop' || cur === 'bus' || cur === 'trip' || cur === 'ride') return;
+    var f = camMemFraming();
+    camMem = { pos: f.pos, tgt: f.tgt, followOwned: !!followVId };
+  }
+  function camMemRefresh() {
+    if (!camMem) return;
+    var f = camMemFraming();
+    camMem.pos = f.pos;
+    camMem.tgt = f.tgt;
+  }
+  function camMemOnSettled() {
+    if (!camMem) return;
+    if (visibleSurface()) return;
+    if (followVId) return; // follow owns the camera; the snapshot stays held
+    if (typeof tripFly !== 'undefined' && tripFly) return; // cinematic owns the camera
+    var mem = camMem;
+    camMem = null;
+    var off = mem.pos.clone().sub(mem.tgt);
+    var len = off.length();
+    var cl = Math.max(controls.minDistance, Math.min(controls.maxDistance, len));
+    var pos = (len > 0 && cl !== len) ? mem.tgt.clone().add(off.setLength(cl)) : mem.pos;
+    if (pos.distanceTo(camera.position) < 0.5 && mem.tgt.distanceTo(controls.target) < 0.5) return;
+    var dist = camera.position.distanceTo(pos);
+    glideTo(pos, mem.tgt, Math.min(1600, Math.max(600, dist * 0.35)));
+  }
   // --- TransitionEngine (Phase 2) -----------------------------------------
   // After-touch camera transitions: every selection intent flows through one
   // path that frames the subject at the DisplayBounds safe-frame center
@@ -1698,6 +1773,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // sync wherever tracking starts or stops.
   function setFollow(vid, slot) {
     followVId = vid || null;
+    // Camera memory: follow engaged under a held snapshot marks the
+    // session follow-owned; follow ending with no card showing drops a
+    // follow-owned snapshot unrestored (see the camera-memory block).
+    if (followVId) { if (camMem) camMem.followOwned = true; }
+    else if (camMem && camMem.followOwned && !visibleSurface()) camMem = null;
     // Cursor-anchored zoom re-anchors the orbit target to the cursor ray on
     // every wheel tick, which fights followTick's bus-anchored target and
     // teleports the camera off the bus. Track-centered zoom while following.
@@ -1803,12 +1883,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (name === 'stop' && typeof renderStopLive === 'function') renderStopLive();
       return;
     }
+    camMemOnSettled();
   }
 
   var _busReturnFocus = null;
   var _stopReturnFocus = null;
   function showBus(v) {
     if (!v) return;
+    camMemTake();
     exclCover('bus');
     var isReselect = (v.vehicle_id === selectedVehicleId);
     tapBuzz();
@@ -2122,6 +2204,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     cancelStreetTween();
     camera.position.copy(homePos);
     controls.target.copy(homeTarget);
+    camMemRefresh();
   }
   $('zoom-in').addEventListener('click', function () { zoomStep(1); });
   $('zoom-out').addEventListener('click', function () { zoomStep(-1); });
@@ -2607,6 +2690,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     } else {
       TransitionEngine.go({ vantage: TransitionEngine.vantageForBus(p[0], p[1]) });
     }
+    // Camera memory (R6): a successful locate redefines the preserved
+    // framing — camMemFraming counts the in-flight glide at its
+    // destination; the tripFly branch above has already landed.
+    camMemRefresh();
     youMarker.setAccuracy(accMeters);
     youMarker.group.visible = true;
     locateBtn.setAttribute('aria-pressed', 'true');
@@ -2866,6 +2953,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (!st) return;
     setFollow(null); // a stop selection ends bus tracking
     if (typeof tripMode !== 'undefined' && tripMode) { tripStopTapped(st); return; }
+    camMemTake();
     exclCover('stop');
     tapBuzz();
     setStopSelectedColor(selectedStopIndex, false);
@@ -3064,6 +3152,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     tripMode = on;
     $('trip-btn').setAttribute('aria-pressed', on ? 'true' : 'false');
     if (on) {
+      camMemTake();
       exclCover('trip');
       cancelTripFly();
       $('trip-card').classList.remove('min');
@@ -4016,7 +4105,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
   function setRideMode(on) {
     rideMode = on;
-    if (on) exclCover('ride');
+    if (on) { camMemTake(); exclCover('ride'); }
     $('ride-btn').setAttribute('aria-pressed', on ? 'true' : 'false');
     $('ride-card').hidden = !on;
     if (on && !rideWidget && typeof RideAlong !== 'undefined') {
