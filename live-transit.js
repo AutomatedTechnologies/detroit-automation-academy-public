@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-1158';
+  var STAMP = '20261015-1204';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -2316,52 +2316,122 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     return document.body.classList.contains('chrome-no-' + name);
   }
 
-  // --- fullscreen toggle (native API, CSS fallback for iOS Safari) -----------------
+  // --- fullscreen toggle (native API where offered; maximized view where not) ---
+  // Behavior contract (files/fullscreen-fix/fullscreen-fix.md):
+  //   states: off | native (the stage element in the Fullscreen API) |
+  //   max (the stage pinned to the shell frame, document locked).
+  //   The button never claims a state that did not occur: the pressed
+  //   state and the label are written only by the fullscreenchange
+  //   events and by the max-mode transitions — never synchronously
+  //   after a request is issued — and where the element API does not
+  //   exist (iPhone Safari) the control is labeled "expanded view",
+  //   not fullscreen. Capability is detected on the stage element
+  //   itself: document.*FullscreenEnabled is true on iPhone (it
+  //   reflects video fullscreen) and must not be trusted for page
+  //   elements. Frame discipline (S5): the toggle owns no frame
+  //   geometry — native mode presents the stage's existing frame, max
+  //   mode pins it to the shell frame values in the CSS above, and
+  //   camera framing is untouched (a resize notification is all that
+  //   fires on a transition).
   var stage = document.querySelector('.map-stage');
   var fullBtn = $('view-full');
+  var FS_REQ_NAMES = ['requestFullscreen', 'webkitRequestFullscreen', 'webkitRequestFullScreen'];
+  function fsRequestName() {
+    for (var i = 0; i < FS_REQ_NAMES.length; i++) {
+      if (stage && typeof stage[FS_REQ_NAMES[i]] === 'function') return FS_REQ_NAMES[i];
+    }
+    return null;
+  }
+  var fsNativeCapable = !!fsRequestName();
   function nativeFsEl() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
-  function fsActive() { return !!nativeFsEl() || stage.classList.contains('pseudo-full'); }
+  function maxActive() { return stage.classList.contains('pseudo-full'); }
+  function fsActive() { return !!nativeFsEl() || maxActive(); }
   function setFsBtn() {
     var on = fsActive();
     fullBtn.setAttribute('aria-pressed', String(on));
-    fullBtn.setAttribute('aria-label', on ? 'Exit fullscreen' : 'Enter fullscreen');
+    fullBtn.setAttribute('aria-label', on
+      ? (nativeFsEl() ? 'Exit fullscreen' : 'Exit expanded view')
+      : (fsNativeCapable ? 'Enter fullscreen' : 'Enter expanded view'));
   }
-  function setPseudoFull(on) {
-    stage.classList.toggle('pseudo-full', on);
-    document.body.classList.toggle('pseudo-full-lock', on);
-    setFsBtn();
-    syncFsLock();
-    notifyMapResize();
-  }
-  fullBtn.addEventListener('click', function () {
-    if (nativeFsEl()) {
-      var exit = document.exitFullscreen || document.webkitExitFullscreen;
-      if (exit) exit.call(document);
-      return;
-    }
-    if (stage.classList.contains('pseudo-full')) { setPseudoFull(false); return; }
-    var el = document.documentElement;
-    var req = el.requestFullscreen || el.webkitRequestFullscreen;
-    if (req) {
-      try {
-        var p = req.call(el);
-        if (p && p.catch) p.catch(function () { setPseudoFull(true); });
-      } catch (e) { setPseudoFull(true); }
-    } else {
-      setPseudoFull(true);
-    }
-    setFsBtn();
-  });
   function notifyMapResize() {
     try { window.dispatchEvent(new Event('resize')); } catch (e) {}
   }
-  function onFsChange() { setFsBtn(); syncFsLock(); notifyMapResize(); }
   function syncFsLock() { document.body.classList.toggle('fs-lock', fsActive()); }
+
+  // Max mode. The scroll lock: iOS Safari does not honor
+  // overflow:hidden on body as a scroll lock, so the body is also
+  // position:fixed at the saved scroll offset (the .pseudo-full-lock
+  // rules in the HTML) and the offset is restored on exit. fs-lock
+  // rides along via syncFsLock, composing with the permanent gesture
+  // containment deployed 20261015-1130: no touch-action is set here,
+  // and nothing is set on an ancestor of a scrollable panel.
+  var maxScrollY = 0;
+  var fsFallbackNote = false; // set when max mode is a failed-native fallback
+  function setMaxMode(on) {
+    if (on === maxActive()) { setFsBtn(); syncFsLock(); return; }
+    if (on) {
+      maxScrollY = window.scrollY || window.pageYOffset || 0;
+      stage.classList.add('pseudo-full');
+      document.documentElement.classList.add('pseudo-full-lock');
+      document.body.classList.add('pseudo-full-lock');
+      document.body.style.top = (-maxScrollY) + 'px';
+    } else {
+      stage.classList.remove('pseudo-full');
+      document.documentElement.classList.remove('pseudo-full-lock');
+      document.body.classList.remove('pseudo-full-lock');
+      document.body.style.top = '';
+      window.scrollTo(0, maxScrollY);
+    }
+    setFsBtn();
+    syncFsLock();
+    notifyMapResize();
+    if (on && fsFallbackNote) announceSr('Fullscreen unavailable. Expanded view on.');
+    else announceSr(on ? 'Expanded view on.' : 'Expanded view off.');
+    fsFallbackNote = false;
+  }
+  function enterNative() {
+    var name = fsRequestName();
+    if (!name) { setMaxMode(true); return; }
+    var p;
+    try {
+      // navigationUI:'hide' asks Chrome-class browsers to keep their
+      // own UI out of the presentation; an engine that rejects the
+      // options argument falls through to the no-argument call.
+      p = (name === 'requestFullscreen') ? stage[name]({ navigationUI: 'hide' }) : stage[name]();
+    } catch (e) {
+      try { p = stage[name](); } catch (e2) { fsFallbackNote = true; setMaxMode(true); return; }
+    }
+    if (p && p.catch) p.catch(function () { if (!fsActive()) { fsFallbackNote = true; setMaxMode(true); } });
+    // No state is written here: fullscreenchange confirms the transition.
+  }
+  function exitNative() {
+    var exit = document.exitFullscreen || document.webkitExitFullscreen;
+    if (!exit) return;
+    try { var p = exit.call(document); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+  }
+  fullBtn.addEventListener('click', function () {
+    if (nativeFsEl()) { exitNative(); return; }
+    if (maxActive()) { setMaxMode(false); return; }
+    if (fsNativeCapable) enterNative(); else setMaxMode(true);
+  });
+  var fsWasNative = false;
+  function onFsChange() {
+    var isNative = !!nativeFsEl();
+    setFsBtn(); syncFsLock(); notifyMapResize();
+    if (isNative !== fsWasNative) {
+      fsWasNative = isNative;
+      announceSr(isNative ? 'Fullscreen on.' : 'Fullscreen off.');
+    }
+  }
   document.addEventListener('fullscreenchange', onFsChange);
   document.addEventListener('webkitfullscreenchange', onFsChange);
+  function onFsError() { if (!fsActive()) { fsFallbackNote = true; setMaxMode(true); } }
+  document.addEventListener('fullscreenerror', onFsError);
+  document.addEventListener('webkitfullscreenerror', onFsError);
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && stage.classList.contains('pseudo-full')) setPseudoFull(false);
+    if (e.key === 'Escape' && maxActive()) setMaxMode(false);
   });
+  setFsBtn();
   // Keyboard selection: arrows cycle buses/stops when a card is open,
   // Escape clears. (OrbitControls doesn't bind arrows — no conflict.)
   document.addEventListener('keydown', function (e) {
