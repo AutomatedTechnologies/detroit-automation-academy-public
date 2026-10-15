@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-0429';
+  var STAMP = '20261015-0505';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -63,10 +63,19 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   scene.fog = new THREE.Fog(0x0c1116, 32000, 75000);
 
   var camera = new THREE.PerspectiveCamera(42, 1, 100, 140000);
-  camera.position.set(0, 8500, 16500);
+  // Home framing (2026-10-15, Accessible Detroit): the first-load view
+  // centers the downtown hub (Campus Martius, 42.3314, -83.0458 in scene
+  // units) where the radial corridors converge, at a 35-degree elevation
+  // and ~20.5 km distance — steeper and wider than the old origin-centered
+  // framing, so a first-time car-free user sees the useful whole (hub,
+  // Midtown, the Woodward spine north) legibly at a glance. Distance stays
+  // under 22,000 so the local-street tier remains in the home view.
+  // homePos/homeTarget below clone these values, so the rail's Home/Reset
+  // control returns to exactly this framing.
+  camera.position.set(8448, 11758, 22332);
 
   var controls = new OrbitControls(camera, renderer.domElement);
-  controls.target.set(0, 0, 0);
+  controls.target.set(8448, 0, 5539);
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
   // Pinch/wheel zoom anchors to the fingers/cursor, not the orbit target —
