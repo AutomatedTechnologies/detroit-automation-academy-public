@@ -232,6 +232,18 @@
   .bus-card dd { margin: 0; color: #F5F2EA; font-variant-numeric: tabular-nums; }
   .bus-card .close { position: absolute; top: .5rem; right: .6rem; background: none; border: none; color: #9AA0A6; font-size: 1.1rem; cursor: pointer; line-height: 1; padding: .25rem; }
   .bus-card .close:hover { color: #F5F2EA; }
+  /* Clear-selection control: the selection cards' close buttons were ~26px
+     and, on mobile, painted under the .map-tools rail — the rail carries
+     z-index 4, the cards carried none, and the cards' backdrop-filter traps
+     the button inside the card's stacking context, so no z-index on the
+     button itself could lift it out. Raise the two selection cards above
+     the rail (filter/browse panels are 5, nav overlay 8, toast 9 — 6 keeps
+     those above the cards) and give their close buttons a full 44px touch
+     target (2.75rem, the .map-tools button size). Colors unchanged. */
+  #stop-card, #bus-card { z-index: 6; }
+  #stop-card .close, #bus-card .close { min-width: 2.75rem; min-height: 2.75rem; padding: .55rem; font-size: 1.3rem; top: .3rem; right: .3rem; border-radius: 10px; touch-action: manipulation; }
+  #stop-card h2, #bus-card h2 { padding-right: 3.1rem; }
+  #stop-card .close:focus-visible, #bus-card .close:focus-visible { outline: 2px solid #FFB000; outline-offset: 2px; }
   /* D1a: mobile compact bar — the card opens collapsed to route + vehicle. */
   .bus-compactbar { display: none; }
   #bus-card.compact .bus-compactbar { display: flex; align-items: center; gap: .6rem; }
@@ -551,7 +563,7 @@
         </div>
       </div>
       <div class="bus-card" id="bus-card" role="dialog" aria-label="Bus details" tabindex="-1" hidden>
-        <button class="close" id="bus-close" aria-label="Close bus details">×</button>
+        <button class="close" id="bus-close" aria-label="Clear selection and close">×</button>
         <div class="bus-compactbar" id="bus-compactbar">
           <button class="bus-expand" id="bus-expand" aria-label="Expand bus details">
             <i id="bus-chip-c"></i>
@@ -578,7 +590,7 @@
         </div>
       </div>
       <div class="bus-card" id="stop-card" role="dialog" aria-label="Stop details" tabindex="-1" hidden>
-        <button class="close" id="stop-close" aria-label="Close stop details">×</button>
+        <button class="close" id="stop-close" aria-label="Clear selection and close">×</button>
         <div class="sel-eyebrow">Stop</div>
         <h2><span id="stop-title">Stop</span></h2>
         <dl>
@@ -725,6 +737,6 @@
   window.FORGE_LIVE_PROXY = "https://forge-line-live-proxy.netlify.app";
 </script>
 <script src="ride-along.js?v=20261012-1045"></script>
-<script type="module" src="live-transit.js?v=20261014-2322"></script>
+<script type="module" src="live-transit.js?v=20261015-0002"></script>
 </body>
 </html>
