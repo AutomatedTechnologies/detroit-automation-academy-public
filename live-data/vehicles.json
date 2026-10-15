@@ -1,0 +1,55 @@
+{
+  "generated_at": "2026-10-15T19:51:06.386Z",
+  "count": 3,
+  "vehicles": [
+    {
+      "agency": "qline",
+      "route_id": "QLINE",
+      "vehicle_id": "287",
+      "lat": 42.339569091796875,
+      "lon": -83.0524673461914,
+      "bearing": 333,
+      "speed_mph": null,
+      "updated_at": "2026-10-15T19:50:54.000Z"
+    },
+    {
+      "agency": "qline",
+      "route_id": "QLINE",
+      "vehicle_id": "290",
+      "lat": 42.3565788269043,
+      "lon": -83.06432342529297,
+      "bearing": 158,
+      "speed_mph": null,
+      "updated_at": "2026-10-15T19:50:52.000Z"
+    },
+    {
+      "agency": "qline",
+      "route_id": "QLINE",
+      "vehicle_id": "291",
+      "lat": 42.33913040161133,
+      "lon": -83.05245971679688,
+      "bearing": 152,
+      "speed_mph": null,
+      "updated_at": "2026-10-15T19:50:54.000Z"
+    }
+  ],
+  "sources": {
+    "ddot": {
+      "ok": false,
+      "at": "2026-10-15T19:51:06.386Z",
+      "reason": "DDOT_BUSTIME_KEY secret not configured",
+      "configured": false
+    },
+    "smart": {
+      "ok": false,
+      "removed": true,
+      "at": "2026-10-15T19:51:06.386Z",
+      "reason": "SMART removed from Live Transit Detroit 2026-10-15"
+    },
+    "qline": {
+      "ok": true,
+      "at": "2026-10-15T19:51:06.386Z",
+      "vehicles": 3
+    }
+  }
+}
