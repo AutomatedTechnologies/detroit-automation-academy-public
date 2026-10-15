@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261014-2322';
+  var STAMP = '20261015-0002';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -2613,6 +2613,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (_hadFocus && _stopReturnFocus && _stopReturnFocus !== document.body && document.contains(_stopReturnFocus)) _stopReturnFocus.focus();
     _stopReturnFocus = null;
     stopHighlight.visible = false;
+    // Restore the generic row labels now, not on the next open: the MoGo
+    // path relabels them ("Station ID"/"Bikes"), and renderStopMogo's
+    // non-MoGo branch is the existing restore path.
+    if (typeof renderStopMogo === 'function') renderStopMogo(null);
   }
   $('stop-close').addEventListener('click', hideStop);
   $('stop-card').addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); hideStop(); } });
