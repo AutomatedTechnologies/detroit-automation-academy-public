@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-0002';
+  var STAMP = '20261015-0313';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -1440,6 +1440,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       pin.position.y = PM_DECK_Y + (300 * stopYS) / 2;
     }
     if (typeof mogoRescale === 'function') mogoRescale();
+    if (typeof placesRescale === 'function') placesRescale();
     // NOTE 2026-10-06: stop distance-fade (opacity easing) reverted — it
     // correlated with renderer crashes in testing. Stops stay fully opaque
     // until a safer quieting mechanism is validated.
@@ -1620,6 +1621,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // People Mover pins. (No-op while the layer is off or feed down.)
     var mg = (typeof pickMogoStation === 'function') ? pickMogoStation(e.clientX, e.clientY, isTouch) : null;
     if (mg) { showStop(mg); return; }
+    // Places (Starbucks / Planet Fitness): same direct-pick precedence,
+    // after MoGo. (No-op while both brand toggles are off.)
+    var pl = (typeof pickPlace === 'function') ? pickPlace(e.clientX, e.clientY, isTouch) : null;
+    if (pl) { showStop(pl); return; }
     if (isTouch) {
       // Raycast missed everything: nearest-on-screen fallbacks, as before.
       var _r = renderer.domElement.getBoundingClientRect();
@@ -2527,11 +2532,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     });
     if (typeof renderStopAlerts === 'function') renderStopAlerts(st);
     if (typeof renderStopMogo === 'function') renderStopMogo(st);
+    if (typeof renderStopPlace === 'function') renderStopPlace(st);
     $('stop-card').hidden = false;
     // Dialog focus: same pattern as showBus above.
     if (_stopReturnFocus === null && document.activeElement && !$('stop-card').contains(document.activeElement)) _stopReturnFocus = document.activeElement;
     $('stop-card').focus();
-    if (st.mogo && st.station) {
+    if (st.place && typeof placesCardText === 'function') {
+      announceSr(placesCardText(st));
+    } else if (st.mogo && st.station) {
       announceSr('Bikeshare station details opened. ' + (st.n || 'Station') + '. ' +
         (typeof mogoCardModel === 'function' ? mogoCardModel(st.station, Date.now()).bikesLine + '. ' : '') +
         (typeof mogoStatusSentence === 'function' ? mogoStatusSentence(st.station) : ''));
@@ -2617,6 +2625,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // path relabels them ("Station ID"/"Bikes"), and renderStopMogo's
     // non-MoGo branch is the existing restore path.
     if (typeof renderStopMogo === 'function') renderStopMogo(null);
+    if (typeof renderStopPlace === 'function') renderStopPlace(null);
   }
   $('stop-close').addEventListener('click', hideStop);
   $('stop-card').addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); hideStop(); } });
@@ -6276,6 +6285,346 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
   }, 500);
 
+  // --- Places layer: Starbucks + Planet Fitness ------------------------------
+  // Coffee shops and gyms as a static layer over the same street map, on the
+  // MoGo layer's pattern: its own THREE group, its own filter-panel toggles,
+  // details in the shared stop card, screen-reader text surfaces. Unlike
+  // MoGo there is no live feed and no staleness: the dataset is baked at
+  // build time into places.json (repo root) and fetched lazily the first
+  // time either brand toggle is enabled.
+  //
+  // Source data: OpenStreetMap, via the Overpass API (© OpenStreetMap
+  // contributors, ODbL — attribution ships in the dataset, the filter-panel
+  // note, and every place card). Query: amenity=cafe / leisure=fitness_centre
+  // with brand or name matching Starbucks / Planet Fitness. "Within map
+  // boundaries" = inside the street-mosaic extent in
+  // assets/detroit-streets.json (lat 42.178–42.47997522924901,
+  // lon −83.385–−82.8992288); the extent declared in smart-routes-3d.json
+  // is stale and was not used. Raw pull 118 elements, 44 inside the
+  // boundary, 2 building-way/node duplicate pairs deduplicated to a final
+  // 42 locations: 31 Starbucks, 11 Planet Fitness. Baking record and the
+  // coverage spot checks (OSM reads ~85–88% of in-boundary storefronts;
+  // licensed counters inside other stores are the likeliest gaps) live in
+  // the places-layer build report.
+  //
+  // Visual identity: a flat disc, wider and flatter than every pylon on the
+  // map (stops and MoGo stations are cylinders on the stop family's height
+  // scale; a place is a puck 16 units tall and 64–72 across), colored per
+  // brand AND lettered — a canvas badge reading "S" or "PF" appears at
+  // close zoom on the same declutter rule as the MoGo count badges, so
+  // identity is never carried by color alone. The card and the SR list
+  // state brand and address in words wherever the data carries them.
+  var PLACES_DATA_URL = 'places.json?v=' + STAMP;
+  var PLACES_DISC_H = 16;   // place puck height before the stop family's zoom scale
+  var PLACES_BRANDS = {
+    starbucks:     { name: 'Starbucks',      kind: 'Coffee shop',    badge: 'S',  color: '#00704A' },
+    planetfitness: { name: 'Planet Fitness', kind: 'Fitness centre', badge: 'PF', color: '#5E2590' }
+  };
+  var placesData = null;          // parsed places.json once loaded
+  var placesLoadState = 'idle';   // idle | loading | ok | error
+  var placesOn = { starbucks: false, planetfitness: false }; // DEFAULT OFF, session-only (no localStorage) — Justin's MoGo rulings, 2026-10-14
+  var placesGroup = null, placesDiscIM = null;
+  var placesBadges = [];          // one THREE.Sprite per rendered place
+  var placesPickList = [];        // {id, n, x, z, r: [], place: true, pdata}
+  var placesBadgeTexCache = {};
+  var _placesM4 = null, _placesP3 = null, _placesQ = null, _placesS3 = null, _placesCol = null, _placesV3 = null;
+
+  function placesEnabledPlaces() {
+    if (!placesData || !Array.isArray(placesData.places)) return [];
+    return placesData.places.filter(function (p) { return !!placesOn[p.brand]; });
+  }
+
+  // --- data -------------------------------------------------------------------
+  // Static site file, fetched once, lazily, on the first enable of either
+  // brand toggle (the MoGo layer fetches on enable too — there the feed is
+  // live; here the fetch is the whole load). Failure is an honest state:
+  // toggles read "unavailable", the SR note says the data could not be
+  // loaded, and the next enable retries.
+  function placesEnsureData() {
+    if (placesData || placesLoadState === 'loading') return;
+    placesLoadState = 'loading';
+    placesSyncToggles();
+    fetch(PLACES_DATA_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('places http ' + r.status);
+        return r.json();
+      })
+      .then(function (d) {
+        if (!d || !Array.isArray(d.places)) throw new Error('bad places payload');
+        placesData = d;
+        placesLoadState = 'ok';
+        try { placesWriteMarkers(); } catch (e) { /* marker failure must not break the load */ }
+        try { renderPlacesSr(); } catch (e) { /* SR failure must not break the load */ }
+        try { placesSyncToggles(); } catch (e) { /* toggle failure must not break the load */ }
+      })
+      .catch(function () {
+        placesLoadState = 'error';
+        try { renderPlacesSr(); } catch (e) { /* SR failure must not break the load */ }
+        try { placesSyncToggles(); } catch (e) { /* toggle failure must not break the load */ }
+        placesAnnounce('Places data could not be loaded.');
+      });
+  }
+
+  // --- rendering ---------------------------------------------------------------
+  function placesEnsureMeshes() {
+    if (placesGroup) return;
+    _placesM4 = new THREE.Matrix4(); _placesP3 = new THREE.Vector3();
+    _placesQ = new THREE.Quaternion(); _placesS3 = new THREE.Vector3();
+    _placesCol = new THREE.Color(); _placesV3 = new THREE.Vector3();
+    placesGroup = new THREE.Group();
+    placesGroup.name = 'places';
+    placesDiscIM = new THREE.InstancedMesh(
+      new THREE.CylinderGeometry(32, 36, 1, 20),
+      new THREE.MeshLambertMaterial({ color: 0xffffff }), 64);
+    placesDiscIM.frustumCulled = false;
+    placesDiscIM.count = 0;
+    placesGroup.add(placesDiscIM);
+    placesGroup.visible = false;
+    scene.add(placesGroup);
+  }
+  function placesBadgeTexture(text) {
+    var hit = placesBadgeTexCache[text];
+    if (hit) return hit;
+    var c = document.createElement('canvas');
+    var x = c.getContext('2d');
+    x.font = '700 34px system-ui, -apple-system, sans-serif';
+    var w = Math.ceil(x.measureText(text).width) + 36;
+    c.width = w; c.height = 54;
+    var g = x;
+    g.fillStyle = 'rgba(10,14,18,0.85)';
+    g.beginPath();
+    if (g.roundRect) g.roundRect(0, 0, c.width, c.height, 13); else g.rect(0, 0, c.width, c.height);
+    g.fill();
+    g.font = '700 34px system-ui, -apple-system, sans-serif';
+    g.fillStyle = '#F5F2EA'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(text, c.width / 2, c.height / 2 + 1);
+    var t = new THREE.CanvasTexture(c);
+    t.anisotropy = 4;
+    var o = { tex: t, aspect: c.width / c.height };
+    placesBadgeTexCache[text] = o;
+    return o;
+  }
+  // Static geometry: instance buffers are rebuilt only when the enabled
+  // brand set or the zoom scale changes — nothing is allocated per frame.
+  function placesWriteMarkers() {
+    placesEnsureMeshes();
+    var list = placesEnabledPlaces();
+    placesPickList = [];
+    for (var i = 0; i < list.length; i++) {
+      var p = list[i];
+      var b = PLACES_BRANDS[p.brand];
+      var xy = project(p.lat, p.lon);
+      var h = PLACES_DISC_H * stopYS;
+      _placesP3.set(xy[0], STOP_BASE_Y + h / 2, xy[1]);
+      _placesQ.identity();
+      _placesS3.set(1, h, 1);
+      _placesM4.compose(_placesP3, _placesQ, _placesS3);
+      placesDiscIM.setMatrixAt(i, _placesM4);
+      _placesCol.set(b ? b.color : '#8a8f98');
+      placesDiscIM.setColorAt(i, _placesCol);
+      placesPickList.push({ id: p.id, n: p.n, x: xy[0], z: xy[1], r: [], place: true, pdata: p });
+      var badge = placesBadges[i];
+      if (!badge) {
+        badge = new THREE.Sprite(new THREE.SpriteMaterial({ depthTest: false, depthWrite: false, transparent: true, opacity: 0.95 }));
+        badge.renderOrder = 35;
+        badge.visible = false;
+        placesGroup.add(badge);
+        placesBadges[i] = badge;
+      }
+      var bt = b ? b.badge : '?';
+      if (badge.userData.text !== bt) {
+        var o = placesBadgeTexture(bt);
+        badge.material.map = o.tex;
+        badge.material.needsUpdate = true;
+        badge.userData.text = bt;
+        badge.userData.aspect = o.aspect;
+      }
+      badge.scale.set(40 * (badge.userData.aspect || 1), 40, 1);
+      badge.position.set(xy[0], STOP_BASE_Y + h + 44, xy[1]);
+    }
+    placesDiscIM.count = list.length;
+    placesDiscIM.instanceMatrix.needsUpdate = true;
+    if (placesDiscIM.instanceColor) placesDiscIM.instanceColor.needsUpdate = true;
+    for (var j = list.length; j < placesBadges.length; j++) {
+      if (placesBadges[j]) placesBadges[j].visible = false;
+    }
+    placesGroup.visible = !!(placesData && placesLoadState === 'ok' && list.length &&
+      (placesOn.starbucks || placesOn.planetfitness));
+  }
+  // Zoom-coupled rescale, called from easeStopScale: place pucks are flat
+  // members of the ground-marker family and ride the same eased scale.
+  function placesRescale() {
+    if (!placesGroup || !placesData) return;
+    placesWriteMarkers();
+  }
+  // Per-frame hook from the animate loop: letter badges follow the
+  // street-zoom declutter rule — visible at close zoom only (camDist < 9000,
+  // the MoGo badge threshold), never all 42 citywide at once.
+  function placesFrameTick(camDist) {
+    if (!placesGroup) return;
+    var show = placesGroup.visible && camDist < 9000;
+    for (var i = 0; i < placesPickList.length; i++) {
+      var b = placesBadges[i];
+      if (b && b.visible !== show) b.visible = show;
+    }
+  }
+  // Screen-space nearest place (mirrors pickMogoStation: proximity, not
+  // raycast — the pucks are low and raycasting them would be fiddly).
+  function pickPlace(cx, cy, isTouch) {
+    if (!placesGroup || !placesGroup.visible || !placesPickList.length) return null;
+    var r = renderer.domElement.getBoundingClientRect();
+    var sx = cx - r.left, sy = cy - r.top;
+    var best = null, bestD = isTouch ? 48 : 26;
+    for (var i = 0; i < placesPickList.length; i++) {
+      var s = placesPickList[i];
+      _placesV3.set(s.x, STOP_BASE_Y + 26, s.z).project(camera);
+      if (_placesV3.z > 1 || _placesV3.z < -1) continue;
+      var px = (_placesV3.x * 0.5 + 0.5) * r.width, py = (-_placesV3.y * 0.5 + 0.5) * r.height;
+      var d = Math.hypot(px - sx, py - sy);
+      if (d < bestD) { bestD = d; best = s; }
+    }
+    return best;
+  }
+
+  // --- stop-card section ---------------------------------------------------------
+  // The stop card is the shared detail surface. For a place record,
+  // renderStopPlace fills the PLACE section and relabels the two generic
+  // rows (Type / Address); for any other record it hides the section, and
+  // restores the labels only when a place card was the one showing (the
+  // restore is flag-gated so the MoGo branch's labels are never clobbered —
+  // showStop calls renderStopMogo first, then this).
+  var placeCardActive = false;
+  function placesCardModel(p) {
+    if (!p) return null;
+    var b = PLACES_BRANDS[p.brand] || { name: p.brand || 'Place', kind: 'Place' };
+    return {
+      title: p.n || b.name,
+      brandName: b.name,
+      kind: b.kind,
+      address: p.addr || null,
+      note: b.name + ' ' + b.kind.toLowerCase() + '. Location from OpenStreetMap ' +
+        '(\u00A9 OpenStreetMap contributors, ODbL) \u2014 community map data, which may not list every location.'
+    };
+  }
+  // Screen-reader announcement text for a place card (showStop calls this
+  // in place of its generic "routes serve this stop" sentence).
+  function placesCardText(st) {
+    if (!st || !st.pdata) return 'Place details opened.';
+    var m = placesCardModel(st.pdata);
+    return 'Place details opened. ' + m.title + '. ' + m.kind +
+      (m.address ? '. ' + m.address : '. Address not listed') + '.';
+  }
+  function renderStopPlace(st) {
+    var sec = $('stop-place');
+    if (!sec) return;
+    var idDt = $('stop-id-dt'), srvDt = $('stop-nroutes-dt');
+    if (!st || !st.place || !st.pdata) {
+      sec.hidden = true;
+      if (placeCardActive) {
+        if (idDt) idDt.textContent = 'Stop ID';
+        if (srvDt) srvDt.textContent = 'Serving';
+        placeCardActive = false;
+      }
+      return;
+    }
+    var m = placesCardModel(st.pdata);
+    if (idDt) idDt.textContent = 'Type';
+    if (srvDt) srvDt.textContent = 'Address';
+    $('stop-id').textContent = m.kind;
+    $('stop-nroutes').textContent = m.address || 'Not listed in OpenStreetMap';
+    var dl = $('stop-place-dl');
+    dl.innerHTML = '';
+    var dt = document.createElement('dt'); dt.textContent = 'Brand';
+    var dd = document.createElement('dd'); dd.textContent = m.brandName;
+    dl.appendChild(dt); dl.appendChild(dd);
+    $('stop-place-note').textContent = m.note;
+    sec.hidden = false;
+    placeCardActive = true;
+  }
+
+  // --- screen-reader surface -----------------------------------------------------
+  // #places-sr names every shown place in words (signature-gated, like
+  // #mogo-sr); #places-live announces toggle changes and load failure only —
+  // the dataset is static, so there is nothing else to announce.
+  var placesSrSig = '';
+  function placesSrText(p) {
+    var b = PLACES_BRANDS[p.brand];
+    return (p.n || (b ? b.name : 'Place')) + (p.addr ? ', ' + p.addr : ' \u2014 address not listed') + '.';
+  }
+  function renderPlacesSr() {
+    var list = $('places-sr-list');
+    if (!list) return;
+    var shown = placesEnabledPlaces();
+    var sig = placesLoadState + '|' + shown.map(function (p) { return p.id; }).join(',');
+    if (sig === placesSrSig) return;
+    placesSrSig = sig;
+    list.innerHTML = '';
+    shown.forEach(function (p) {
+      var li = document.createElement('li');
+      li.textContent = placesSrText(p);
+      list.appendChild(li);
+    });
+    var note = $('places-sr-note');
+    if (note) {
+      note.textContent = placesLoadState === 'error'
+        ? 'Places data is unavailable \u2014 places.json could not be loaded.'
+        : placesLoadState === 'ok'
+          ? 'Places from OpenStreetMap (\u00A9 OpenStreetMap contributors, ODbL): ' +
+            (placesData.meta && placesData.meta.counts ? placesData.meta.counts.total : placesData.places.length) +
+            ' locations in the dataset, ' + shown.length + ' shown.'
+          : 'Places are off. Enable Starbucks or Planet Fitness in the filter panel to list them here.';
+    }
+  }
+  function placesAnnounce(msg) {
+    var live = $('places-live');
+    if (live) live.textContent = msg;
+  }
+
+  // --- toggles -------------------------------------------------------------------
+  // One "Places" group in the filter panel, two brand sub-toggles, each
+  // with its baked dataset tally. Default OFF and session-only, matching
+  // Justin's MoGo rulings of 2026-10-14: nothing is written to localStorage.
+  function placesSyncToggles() {
+    var sb = $('places-sb-toggle'), pf = $('places-pf-toggle');
+    if (sb) sb.setAttribute('aria-pressed', String(placesOn.starbucks));
+    if (pf) pf.setAttribute('aria-pressed', String(placesOn.planetfitness));
+    var err = placesLoadState === 'error';
+    var counts = (placesData && placesData.meta && placesData.meta.counts) || null;
+    var sbC = $('places-sb-count'), pfC = $('places-pf-count'), allC = $('places-count');
+    if (err) {
+      if (sbC) sbC.textContent = 'unavailable';
+      if (pfC) pfC.textContent = 'unavailable';
+      if (allC) allC.textContent = 'unavailable';
+    } else if (counts) {
+      if (sbC) sbC.textContent = String(counts.starbucks || 0);
+      if (pfC) pfC.textContent = String(counts.planetfitness || 0);
+      if (allC) allC.textContent = String(counts.total || 0) + ' locations';
+    }
+  }
+  function placesWireToggle(id, brand) {
+    var t = $(id);
+    if (t && t.addEventListener) {
+      t.addEventListener('click', function () {
+        placesOn[brand] = !placesOn[brand];
+        if (placesOn[brand]) placesEnsureData();
+        try { placesWriteMarkers(); } catch (e) { /* marker failure must not break the toggle */ }
+        placesSyncToggles();
+        renderPlacesSr();
+        var b = PLACES_BRANDS[brand];
+        var n = (placesData && placesData.meta && placesData.meta.counts && placesData.meta.counts[brand]) || 0;
+        // On the first enable the lazy fetch has not resolved yet, so the
+        // tally is announced only when the dataset is already in hand.
+        placesAnnounce(b.name + (placesOn[brand] ? (n ? ' shown: ' + n + ' locations.' : ' shown.') : ' hidden.'));
+        if (!placesOn[brand] && typeof selectedStop !== 'undefined' && selectedStop && selectedStop.place &&
+            selectedStop.pdata && selectedStop.pdata.brand === brand &&
+            typeof hideStop === 'function') hideStop();
+      });
+    }
+  }
+  placesWireToggle('places-sb-toggle', 'starbucks');
+  placesWireToggle('places-pf-toggle', 'planetfitness');
+  placesSyncToggles();
+  renderPlacesSr();
   // --- instant paint from logged history ---------------------------------------
   var historyRendered = false;
   function maybeRenderHistory() {
@@ -6751,6 +7100,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         // MoGo bikeshare: count badges appear at close zoom only
         // (declutter rule, same family as the route labels above).
         if (typeof mogoFrameTick === 'function') mogoFrameTick(camDist);
+        if (typeof placesFrameTick === 'function') placesFrameTick(camDist);
         if (stopHighlight.visible) {
           var shp = busPulse();
           stopHighlight.scale.set(shp, shp, 1);
