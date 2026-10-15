@@ -11,6 +11,10 @@
  *   widget.setVehicles([...]);          // live vehicle list
  *   widget.board(vehicleId);            // pick a bus to ride
  *   widget.updateVehicle(vehicle);      // refresh position each poll
+ *
+ * Optional callbacks (assigned by the host page):
+ *   widget.onBoard(vehicleId)  — fired by board(), from any surface.
+ *   widget.onAlight(vehicleId) — fired by alight() with the bus left.
  */
 
 (function (global) {
@@ -172,12 +176,19 @@
   RideAlong.prototype.board = function (vehicleId) {
     this.currentVehicleId = vehicleId;
     this.refresh();
+    if (typeof this.onBoard === 'function') {
+      try { this.onBoard(vehicleId); } catch (e) {}
+    }
   };
 
   RideAlong.prototype.alight = function () {
+    var prev = this.currentVehicleId;
     this.currentVehicleId = null;
     this.render();
     this.renderPicker();
+    if (prev && typeof this.onAlight === 'function') {
+      try { this.onAlight(prev); } catch (e) {}
+    }
   };
 
   RideAlong.prototype.updateVehicle = function (vehicle) {
@@ -250,18 +261,25 @@
     sel.setAttribute('aria-label', 'Choose a bus to ride');
     sel.appendChild(el('option', '', '-- choose a bus --'));
     var self = this;
-    // Alphabetize by route name, then vehicle id.
-    var sorted = this.vehicles.slice().sort(function (a, b) {
-      var ra = (self.routeById[a.route_id] || {}).name || a.route_id;
-      var rb = (self.routeById[b.route_id] || {}).name || b.route_id;
-      return ra.localeCompare(rb) || String(a.vehicle_id).localeCompare(String(b.vehicle_id));
-    });
-    sorted.forEach(function (v) {
+    // Sort by the displayed label with numeric-aware natural ordering, so
+    // route numbers order 4, 7, 9, 10, 16 (and 200 before 210) instead of
+    // lexicographic 10, 16, 4, 7, 9. Vehicle id is the final tiebreak.
+    var labeled = this.vehicles.map(function (v) {
       var route = self.routeById[v.route_id];
-      var label = (route ? route.name + ' - ' + route.id : v.route_id) +
-        ' · Bus ' + v.vehicle_id +
-        (v.destination ? ' → ' + v.destination : '');
-      var opt = el('option', '', label);
+      return {
+        v: v,
+        label: (route ? route.name + ' - ' + route.id : v.route_id) +
+          ' · Bus ' + v.vehicle_id +
+          (v.destination ? ' → ' + v.destination : '')
+      };
+    });
+    labeled.sort(function (a, b) {
+      return a.label.localeCompare(b.label, undefined, { numeric: true, sensitivity: 'base' }) ||
+        String(a.v.vehicle_id).localeCompare(String(b.v.vehicle_id), undefined, { numeric: true });
+    });
+    labeled.forEach(function (item) {
+      var v = item.v;
+      var opt = el('option', '', item.label);
       opt.value = v.vehicle_id;
       if (v.vehicle_id === self.currentVehicleId) opt.selected = true;
       sel.appendChild(opt);
