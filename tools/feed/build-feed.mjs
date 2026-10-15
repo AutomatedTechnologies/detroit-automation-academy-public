@@ -29,6 +29,26 @@
  *  - QLINE: public GTFS-RT VehiclePositions (no key). The protobuf is
  *    decoded by the minimal reader below (no npm dependencies), mapping
  *    with the same semantics as lib/gtfsrt.js.
+ *  - SMART (Swiftly, DORMANT — added 2026-10-15): authenticated GTFS-RT
+ *    VehiclePositions from Swiftly's realtime API, active ONLY when the
+ *    SWIFTLY_KEY env var (repo secret, placed by the repo owner when
+ *    Swiftly issues the key) is present and non-empty. Key requested
+ *    2026-10-13 for SMART only; SMART was removed from the product the
+ *    same week, and this leg exists so the receiving infrastructure is
+ *    ready before the key arrives — it does NOT return SMART to the
+ *    map (the page does not consume the display payload yet).
+ *    DISPLAY-ONLY (Swiftly API License Agreement §4(vi), decision
+ *    2026-10-15): Swiftly Content is never merged into vehicles.json
+ *    (the publicly documented feed contract) and never enters the
+ *    telemetry archive (the logger excludes agency "smart"
+ *    structurally). Decoded SMART vehicles are written to a separate
+ *    display payload, live-data/smart-display.json, which the page
+ *    will fetch solely to render markers when SMART returns. It is
+ *    not referenced by api.html or any public documentation and is
+ *    not linked from any page. Absent key: the leg performs ZERO
+ *    network calls, sources.smart keeps the removed state verbatim,
+ *    and a stale display payload left in the checkout is deleted so
+ *    revoked access cannot keep serving Swiftly Content.
  *
  * Output envelopes are byte-compatible with the proxy contract the page
  * consumes:
@@ -47,6 +67,10 @@
  * Env: DDOT_BUSTIME_KEY (secret; absent = DDOT not-configured state),
  *      DDOT_ROUTES (optional override, comma-separated),
  *      QLINE_VP_URL (optional override),
+ *      SWIFTLY_KEY (secret; absent/empty = SMART leg fully dormant,
+ *      zero network calls, sources.smart stays the removed state),
+ *      SMART_VP_URL (optional override; default is the verified Swiftly
+ *      pattern for agency key "smart" — see pollSmart),
  *      FEED_OUT_DIR (optional; default <repo>/live-data — local testing).
  */
 import { createHash } from 'node:crypto';
@@ -63,6 +87,8 @@ const ALL_DDOT_ROUTES = '1,2,3,4,5,6,7,8,9,10,11,12,13,15,16,17,18,19,23,27,29,3
 const DDOT_ROUTES = (process.env.DDOT_ROUTES || ALL_DDOT_ROUTES).split(',').map((s) => s.trim()).filter(Boolean);
 const QLINE_VP_URL = process.env.QLINE_VP_URL || 'https://s3.amazonaws.com/etatransit.gtfs/qline.etaspot.net/position_updates.pb';
 const SMART_REMOVED_REASON = 'SMART removed from Live Transit Detroit 2026-10-15';
+const SWIFTLY_KEY = process.env.SWIFTLY_KEY || '';
+const SMART_VP_URL = process.env.SMART_VP_URL || 'https://api.goswift.ly/real-time/smart/gtfs-rt-vehicle-positions';
 
 /* ---------------- fetch helpers (proxy equivalents) ---------------- */
 
@@ -74,6 +100,20 @@ async function fetchJson(url, timeoutMs = 15000) {
 
 async function fetchBuffer(url, timeoutMs = 15000) {
   const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
+  if (!res.ok) throw new Error(`HTTP ${res.status} from ${url.split('?')[0]}`);
+  return Buffer.from(await res.arrayBuffer());
+}
+
+/** Fetch with the Swiftly API key. The key travels only in the
+ *  Authorization header (Bearer scheme — the scheme api.goswift.ly
+ *  itself names in its 401 WWW-Authenticate challenge, verified
+ *  2026-10-15 against the public detroit-m1-rail feed) and is never
+ *  placed in a URL, a log line, or an error message. */
+async function fetchBufferSwiftly(url, key, timeoutMs = 15000) {
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${key}` },
+    signal: AbortSignal.timeout(timeoutMs),
+  });
   if (!res.ok) throw new Error(`HTTP ${res.status} from ${url.split('?')[0]}`);
   return Buffer.from(await res.arrayBuffer());
 }
@@ -287,6 +327,70 @@ async function pollDdot(nowIso) {
       batches_ok: batchesOk, batches_failed: settled.length - batchesOk,
     },
   };
+}
+
+/* ------------- SMART leg (Swiftly GTFS-RT, dormant) -------------
+ * Endpoint: https://api.goswift.ly/real-time/<agencyKey>/gtfs-rt-vehicle-positions
+ * — Swiftly's documented realtime pattern (agency developer pages,
+ * e.g. Marin Transit and SF Bay Ferry, publish the identical shape).
+ * Agency key "smart" verified 2026-10-15 by unauthenticated probes of
+ * api.goswift.ly: /real-time/smart/gtfs-rt-vehicle-positions answered
+ * HTTP 401 {"errorCode":401,"errorMessage":"Invalid Credentials"}
+ * (the feed exists and requires the key) while every other candidate
+ * slug answered 404. The key-issuance email remains the authority if
+ * it states anything different; SMART_VP_URL overrides the URL.
+ *
+ * Volume: one request per 5-minute build cycle (~288/day). Swiftly's
+ * public developer documentation states no numeric call limit (the
+ * license's §3 incorporates the Developer Documentation limits
+ * without numbers of its own); §4(vii) prohibits usage Swiftly deems
+ * excessive or abusive. A single fixed-cadence request per cycle —
+ * never per visitor — is the conservative shape; if Swiftly's
+ * issuance terms state a limit, a sub-cadence goes here the way
+ * bulletins got theirs.
+ *
+ * Honesty: mapGtfsRtVehicles returns [] both for a genuinely empty
+ * feed and for undecodable bytes, so the leg first checks the payload
+ * IS a GTFS-RT FeedMessage (header field present). An auth rejection,
+ * an HTTP error, or a non-GTFS-RT body surfaces as an { ok:false }
+ * source state with the reason — never as a silent zero presented as
+ * ok (the DDOT vehicles-leg masking defect is the counterexample this
+ * guard exists against). A decodable feed with zero vehicle entities
+ * is a genuine zero and reports ok with vehicles: 0.
+ */
+
+function gtfsRtFeedShape(buffer) {
+  let header = false;
+  let entities = 0;
+  for (const [no, val] of protoFields(buffer)) {
+    if (no === 1 && val.wire === 2) header = true;
+    else if (no === 2 && val.wire === 2) entities++;
+  }
+  return { header, entities };
+}
+
+async function pollSmart(nowIso) {
+  // Called ONLY when SWIFTLY_KEY is non-empty (main gates on key
+  // presence), so the dormant state performs zero network calls.
+  try {
+    const buf = await fetchBufferSwiftly(SMART_VP_URL, SWIFTLY_KEY);
+    let shape;
+    try {
+      shape = gtfsRtFeedShape(buf);
+    } catch (e) {
+      shape = null;
+    }
+    if (!shape || !shape.header) {
+      return {
+        vehicles: [],
+        state: { ok: false, at: nowIso, reason: 'Swiftly SMART feed: response was not a GTFS-RT FeedMessage' },
+      };
+    }
+    const vehicles = mapGtfsRtVehicles(buf, nowIso, 'smart');
+    return { vehicles, state: { ok: true, at: nowIso, vehicles: vehicles.length } };
+  } catch (err) {
+    return { vehicles: [], state: { ok: false, at: nowIso, reason: `Swiftly SMART feed: ${err.message}` } };
+  }
 }
 
 async function pollQline(nowIso) {
@@ -568,12 +672,17 @@ async function main() {
     nowMs: Date.now(),
   });
 
-  const [ddot, qline, ddotAlerts] = await Promise.all([
+  const smartActive = Boolean(SWIFTLY_KEY);
+  const [ddot, qline, ddotAlerts, smart] = await Promise.all([
     pollDdot(nowIso),
     pollQline(nowIso),
     reuse.reuse
       ? { alerts: reuse.body.alerts, calls: 0, state: priorDdotBulletinState(reuse.body) }
       : pollDdotAlerts(nowIso),
+    // Dormant gate: no key -> no promise, no network call, and
+    // sources.smart below stays the removed state verbatim, so every
+    // output file is byte-identical to the pre-SMART-leg builder.
+    smartActive ? pollSmart(nowIso) : Promise.resolve(null),
   ]);
 
   const vehiclesBody = {
@@ -582,7 +691,13 @@ async function main() {
     vehicles: [...ddot.vehicles, ...qline.vehicles],
     sources: {
       ddot: ddot.state,
-      smart: { ok: false, removed: true, at: nowIso, reason: SMART_REMOVED_REASON },
+      // Display-only (§4(vi)): SMART vehicles are NEVER merged into
+      // this file. With a key present, sources.smart reports the
+      // display leg's own state (same shape family as the other legs);
+      // without one it is the removed state, byte-identical to before.
+      smart: smartActive
+        ? smart.state
+        : { ok: false, removed: true, at: nowIso, reason: SMART_REMOVED_REASON },
       qline: qline.state,
     },
   };
@@ -597,8 +712,34 @@ async function main() {
 
   const v = writeIfChanged(path.join(OUT_DIR, 'vehicles.json'), vehiclesBody);
   const a = reuse.reuse ? 'unchanged' : writeIfChanged(alertsPath, alertsBody);
+
+  /* SMART display payload — written only while the leg is active.
+   * Envelope mirrors vehicles.json (generated_at, count, vehicles)
+   * plus the leg's own source state under `source`. Same write policy
+   * (material change or 30-minute heartbeat). When the key is absent
+   * the payload must not exist: if a previous active era left one in
+   * the checkout, delete it so the workflow commit removes it from
+   * the served site — Swiftly Content stops being served the cycle
+   * the key is withdrawn (license §14 posture). */
+  const smartDisplayPath = path.join(OUT_DIR, 'smart-display.json');
+  let smartNote;
+  if (smartActive) {
+    const displayBody = {
+      generated_at: nowIso,
+      count: smart.vehicles.length,
+      vehicles: smart.vehicles,
+      source: smart.state,
+    };
+    const s = writeIfChanged(smartDisplayPath, displayBody);
+    smartNote = `smart-display.json: ${s} (smart=${smart.vehicles.length} ok=${smart.state.ok})`;
+  } else {
+    if (fs.existsSync(smartDisplayPath)) fs.unlinkSync(smartDisplayPath);
+    smartNote = 'smart-display.json: not written (SWIFTLY_KEY not set; leg dormant)';
+  }
+
   console.log(`vehicles.json: ${v} (ddot=${ddot.vehicles.length} ok=${ddot.state.ok}, qline=${qline.vehicles.length} ok=${qline.state.ok})`);
   console.log(`alerts.json: ${a} (ddot alerts=${ddotAlerts.alerts.length} ok=${ddotAlerts.state.ok})`);
+  console.log(smartNote);
   console.log(
     `bustime calls: vehicles=${ddot.calls} bulletins=${ddotAlerts.calls}` +
       (reuse.reuse
@@ -607,7 +748,7 @@ async function main() {
   );
 }
 
-export { collectDdotBulletins, ddotBulletinsReusable, main };
+export { collectDdotBulletins, ddotBulletinsReusable, gtfsRtFeedShape, pollSmart, main };
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch((e) => {
