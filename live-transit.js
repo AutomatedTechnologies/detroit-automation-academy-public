@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-1554';
+  var STAMP = '20261015-1638';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -5510,6 +5510,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         refreshFilterCounts();
         lastTotal = n;
         setHeader(n, 'updated ' + fmtTime(d.generated_at ? new Date(d.generated_at) : null), false);
+        svcFeedOk(d); // service degradation notice: evaluate source states + freshness
         // SMART REMOVED 2026-10-15: no Transit-API data is displayed;
         // the Transit attribution badge and the SMART age labeling were
         // removed with the SMART segment.
@@ -5519,8 +5520,203 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           ? 'live feed retrying…'
           : (historyOk ? 'showing last logged positions · live feed retrying…' : 'live feed retrying…');
         setHeader(lastTotal, text, true);
+        svcFeedFail(); // service degradation notice: feed unreachable
       });
   }
+
+  // === SVC-NOTICE-BEGIN ===
+  // --- service degradation notice -------------------------------------------
+  // Fail-safe rider notice for live-data degradation (staged candidate;
+  // record: files/service-notice/service-notice.md). Detection uses only
+  // data the vehicles poll already receives: the envelope's per-agency
+  // source states (sources.ddot / sources.qline), the envelope's
+  // generated_at age, and the poll's own success or failure. No new
+  // fetches, no new endpoints. sources.smart is an explicit removed state
+  // (SMART removed from the product 2026-10-15) and is never read here:
+  // removal by design is not a degradation (S4). A source reporting ok
+  // with zero vehicles is NOT a degradation — overnight truth is zero
+  // vehicles — so vehicle counts are never a signal. S6: the notice
+  // claims only the freshness and source state the envelope measures,
+  // and names the data's age whenever positions may be old.
+  var SVC_STALE_MS = 15 * 60 * 1000; // 3x the feed's 5-minute build cadence
+  var svcAttempted = false;   // at least one poll attempt has completed
+  var svcLastOk = false;      // the most recent poll attempt succeeded
+  var svcLastPayload = null;  // last successfully parsed vehicles envelope
+  var svcDismissedSig = null; // signature of the dismissed condition set
+  var svcShownSig = null;     // signature currently rendered (null = hidden)
+  var svcExpanded = false;
+
+  var SVC_SHORT = {
+    'stale': 'positions out of date',
+    'ddot-not-configured': 'DDOT positions not connected',
+    'ddot-down': 'DDOT positions unavailable',
+    'ddot-partial': 'DDOT positions incomplete',
+    'qline-down': 'QLINE positions unavailable'
+  };
+  var SVC_TAIL = 'What still works: the map, all stop and route information, and the trip planner are unaffected. The planner computes journeys from the published DDOT timetable (DDOT schedule data current through February 7, 2027), not from live positions. While live positions are degraded, scheduled times are the reliable basis for planning a trip. This notice concerns the live data feed only. Bus and streetcar service is not cancelled, and this page does not announce service cancellations.';
+
+  function svcConditions() {
+    var out = [];
+    if (!svcAttempted) return out;
+    if (!svcLastOk) { out.push({ key: 'unreachable' }); return out; }
+    var d = svcLastPayload;
+    if (!d) return out;
+    var genT = Date.parse(d.generated_at || '');
+    if (!isNaN(genT)) {
+      var ageMs = Date.now() - genT;
+      if (ageMs > SVC_STALE_MS) {
+        out.push({ key: 'stale', genAt: d.generated_at, ageMin: Math.floor(ageMs / 60000) });
+      }
+    }
+    var src = d.sources || {};
+    var dd = src.ddot;
+    if (dd) {
+      if (dd.ok === false && dd.configured === false) {
+        out.push({ key: 'ddot-not-configured' });
+      } else if (dd.ok === false) {
+        out.push({ key: 'ddot-down' });
+      } else {
+        // The builder reports ok:true for the DDOT leg whenever the leg
+        // ran; a leg whose every route-group request failed is visible
+        // only in the batch counters, so the counters are the signal.
+        var bo = Number(dd.batches_ok), bf = Number(dd.batches_failed);
+        if (isFinite(bo) && isFinite(bf) && (bo + bf) > 0) {
+          if (bo === 0) out.push({ key: 'ddot-down' });
+          else if (bf > 0) out.push({ key: 'ddot-partial', ok: bo, total: bo + bf });
+        }
+      }
+    }
+    var ql = src.qline;
+    if (ql && ql.ok === false) out.push({ key: 'qline-down' });
+    return out;
+  }
+
+  function svcHeadline(c) {
+    switch (c.key) {
+      case 'unreachable':
+        return 'Live vehicle positions unavailable. The live feed cannot be reached.';
+      case 'stale':
+        return 'Live vehicle positions are out of date. Last updated ' +
+          fmtTime(new Date(c.genAt)) + ', ' + c.ageMin +
+          (c.ageMin === 1 ? ' minute' : ' minutes') + ' ago.';
+      case 'ddot-not-configured':
+        return 'DDOT live positions are not available on this map.';
+      case 'ddot-down':
+        return 'DDOT live positions unavailable. The DDOT feed is not reporting.';
+      case 'ddot-partial':
+        return 'DDOT live positions are incomplete. Some DDOT routes are not reporting.';
+      case 'qline-down':
+        return 'QLINE live positions unavailable. The QLINE feed is not reporting.';
+    }
+    return '';
+  }
+
+  function svcDetailText(c) {
+    switch (c.key) {
+      case 'unreachable':
+        if (typeof liveEverOk !== 'undefined' && liveEverOk && svcLastPayload) {
+          return 'The live data file this page reads could not be loaded. The vehicle positions on the map are from the last successful update (' +
+            fmtTime(new Date(svcLastPayload.generated_at)) + ') and are not being refreshed.';
+        }
+        if (typeof historyOk !== 'undefined' && historyOk) {
+          return 'The live data file this page reads could not be loaded. Any vehicle positions shown come from the most recent logged snapshot. They are not current positions and are not being refreshed.';
+        }
+        return 'The live data file this page reads could not be loaded, and no live update has been received yet. No live vehicle positions are shown.';
+      case 'stale':
+        return 'The live feed is rebuilt every five minutes. The newest file available is from ' +
+          fmtTime(new Date(c.genAt)) + ' (' + c.ageMin + ' minutes old). The positions on the map are exactly the positions in that file. They are not advanced or estimated between updates.';
+      case 'ddot-not-configured':
+        return 'The DDOT live position feed is not connected to this map in its current configuration, so DDOT vehicles do not appear. This is a data connection state. It is not a change to DDOT service, and it does not affect QLINE positions, the map, or the trip planner.';
+      case 'ddot-down':
+        return 'The DDOT position source returned no data for the most recent update. DDOT vehicles are removed from the map while the source is not reporting, and they return when the source resumes. A source outage is not a service suspension. DDOT buses continue to run on their published schedules.';
+      case 'ddot-partial':
+        return 'The DDOT position source returned data for ' + c.ok + ' of ' + c.total +
+          ' route groups in the most recent update. Vehicles on the remaining routes do not appear in this update. Routes that are reporting are shown at their measured positions.';
+      case 'qline-down':
+        return 'The QLINE position source returned no data for the most recent update. QLINE streetcars are removed from the map while the source is not reporting, and they return when the source resumes. A source outage is not a service suspension.';
+    }
+    return '';
+  }
+
+  function svcSig(conds) {
+    return conds.map(function (c) {
+      return c.key +
+        (c.key === 'stale' ? '@' + c.genAt : '') +
+        (c.key === 'ddot-partial' ? ':' + c.ok + '/' + c.total : '');
+    }).join('|');
+  }
+
+  function svcRender() {
+    var box = $('svc-notice');
+    if (!box) return;
+    var conds = svcConditions();
+    if (!conds.length) {
+      box.hidden = true;
+      svcShownSig = null;
+      svcDismissedSig = null; // a cleared condition re-arms the notice
+      svcExpanded = false;
+      return;
+    }
+    var sig = svcSig(conds);
+    if (sig === svcDismissedSig) {
+      box.hidden = true;
+      svcShownSig = null;
+      return;
+    }
+    var head = svcHeadline(conds[0]);
+    if (conds.length > 1) {
+      head += ' Also: ' + conds.slice(1).map(function (c) { return SVC_SHORT[c.key]; }).join('; ') + '.';
+    }
+    if (!box.hidden && svcShownSig === sig && $('svc-headline').textContent === head) return;
+    $('svc-headline').textContent = head;
+    var det = $('svc-details');
+    det.innerHTML = '';
+    conds.forEach(function (c) {
+      var p = document.createElement('p');
+      p.textContent = svcDetailText(c);
+      det.appendChild(p);
+    });
+    var tail = document.createElement('p');
+    tail.textContent = SVC_TAIL;
+    det.appendChild(tail);
+    det.hidden = !svcExpanded;
+    $('svc-details-btn').setAttribute('aria-expanded', svcExpanded ? 'true' : 'false');
+    box.hidden = false;
+    svcShownSig = sig;
+  }
+
+  // Poll hooks: called from poll()'s success and failure paths only.
+  function svcFeedOk(d) {
+    svcAttempted = true;
+    svcLastOk = true;
+    svcLastPayload = d;
+    svcRender();
+  }
+  function svcFeedFail() {
+    svcAttempted = true;
+    svcLastOk = false;
+    svcRender();
+  }
+
+  (function svcWire() {
+    var btn = $('svc-details-btn'), dis = $('svc-dismiss');
+    if (btn) btn.addEventListener('click', function () {
+      svcExpanded = !svcExpanded;
+      $('svc-details').hidden = !svcExpanded;
+      btn.setAttribute('aria-expanded', svcExpanded ? 'true' : 'false');
+    });
+    if (dis) dis.addEventListener('click', function () {
+      if (svcShownSig != null) svcDismissedSig = svcShownSig;
+      var box = $('svc-notice');
+      if (box) box.hidden = true;
+      svcShownSig = null;
+    });
+    // Re-evaluate between polls so a stale condition surfaces (and its
+    // stated age stays current) without waiting for the next 60 s poll.
+    // Renders from stored state only; this timer never fetches.
+    setInterval(function () { svcRender(); }, 30000);
+  })();
+  // === SVC-NOTICE-END ===
 
   // --- service alerts (phase 1) — presentation: Map-Native (concept B) ------
   // Consumes the proxy's /api/alerts (DDOT BusTime bulletins, kind
