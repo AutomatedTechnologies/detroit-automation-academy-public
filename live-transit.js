@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-1107';
+  var STAMP = '20261015-1130';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -30,6 +30,20 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
   var container = document.getElementById('live-map');
   if (!container) return;
+  // Map gesture containment backstop (2026-10-15): iOS Safari drives page
+  // pinch-zoom through the proprietary gesture events when a pinch starts
+  // on a surface touch-action does not cover. The CSS in live-transit.html
+  // sets touch-action on every stage surface; this listener closes the
+  // remaining path by cancelling gesture events that originate inside the
+  // map stage. Scoped to the stage: pinch on the rest of the page is
+  // untouched, and OrbitControls consumes pointer events (never gesture
+  // events) on the canvas, so camera control is unaffected.
+  var mapStage = document.querySelector('.map-stage');
+  if (mapStage && mapStage.addEventListener) {
+    var killStageGesture = function (e) { e.preventDefault(); };
+    mapStage.addEventListener('gesturestart', killStageGesture, { passive: false });
+    mapStage.addEventListener('gesturechange', killStageGesture, { passive: false });
+  }
   var $ = function (id) { return document.getElementById(id); };
   // Shared screen-reader announcements (defect sr-status): one polite live
   // region (#sr-status in live-transit.html) for dynamic changes that have
