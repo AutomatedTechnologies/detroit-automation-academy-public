@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-1040';
+  var STAMP = '20261015-1107';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -367,6 +367,21 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (dShort.length > 24) dShort = dShort.slice(0, 23) + '…';
     return dShort;
   }
+  // Route identity label — the naming convention (settled 2026-10-11):
+  // "Name - Number" ("Greenfield - 10", "Fast Michigan - 261"). A route
+  // whose name equals its id renders name only (QLINE — never
+  // "QLINE - QLINE"); a route with no registry name falls back to the
+  // bare id; a non-numeric id renders name only (the code-registered
+  // Detroit People Mover pseudo-route carries no route number). Every
+  // surface that names a route goes through this one formatter.
+  function routeLabel(rid) {
+    var name = routeNames[rid];
+    if (!name) return String(rid);
+    if (name === rid) return name;
+    if (/^\d+$/.test(rid)) return name + ' - ' + rid;
+    return name;
+  }
+
   function routeBadgeTexture(rid) {
     var t = badgeTexCache[rid];
     if (t) return t;
@@ -574,7 +589,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   function drawBusInfo(v) {
     var col = routeColors[v.route_id] ? '#' + routeColors[v.route_id].getHexString() : '#9aa0a6';
     var dest = formatDest(v.route_id, v.destination);
-    var line1 = v.route_id + ' · ' + (routeNames[v.route_id] || 'DDOT') + (dest ? ' → ' + dest : '');
+    var line1 = routeLabel(v.route_id) + (dest ? ' → ' + dest : '');
     var spd = (v.speed_mph != null && !isNaN(v.speed_mph)) ? Math.round(v.speed_mph) + ' mph' : '–';
     var line2 = 'Bus ' + (v.vehicle_id || '–') + ' · ' + spd + ' · ' + busAgeText(v) + smartVehicleSuffix(v, Date.now(), smartAge.via);
     var c = document.createElement('canvas');
@@ -1791,7 +1806,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     $('bus-chip').style.background = chipBg;
     var chipC = $('bus-chip-c'); // compact bar (staging Phase 2 HTML); guard for HTML without it
     if (chipC) chipC.style.background = chipBg;
-    var compactTitle = sn + ' · ' + (routeNames[sn] || 'DDOT') + (dest ? ' → ' + dest : '');
+    var compactTitle = routeLabel(sn) + (dest ? ' → ' + dest : '');
     $('bus-title').textContent = compactTitle;
     var cTitle = $('bus-compact-title');
     if (cTitle) cTitle.textContent = compactTitle;
@@ -2021,13 +2036,13 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var li = document.createElement('li');
     var b = document.createElement('button');
     var dest = formatDest(v.route_id, v.destination);
-    b.setAttribute('aria-label', 'Bus ' + (v.vehicle_id || '') + ', route ' + v.route_id + ' ' + (routeNames[v.route_id] || '') + (dest ? ', to ' + dest : ''));
+    b.setAttribute('aria-label', 'Bus ' + (v.vehicle_id || '') + ', ' + routeLabel(v.route_id) + (dest ? ', to ' + dest : ''));
     var dot = document.createElement('i'); dot.className = 'b-dot';
     var rc = routeColors[v.route_id];
     dot.style.background = rc ? '#' + rc.getHexString() : '#F5F2EA';
     var main = document.createElement('span'); main.className = 'b-main';
     var name = document.createElement('b');
-    name.textContent = v.route_id + ' · ' + (v.vehicle_id || '');
+    name.textContent = routeLabel(v.route_id) + ' · Bus ' + (v.vehicle_id || '');
     var sub = document.createElement('span');
     sub.textContent = dest ? 'to ' + dest : (routeNames[v.route_id] || 'DDOT');
     main.appendChild(name); main.appendChild(sub);
@@ -2069,10 +2084,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // ascending numerically (lexicographic fallback for non-numeric ids).
     function numKey(x) { var n = parseInt(x, 10); return isNaN(n) ? null : n; }
     slots.slice().sort(function (a, b) {
-      var ar = a.vehicle.route_id, br = b.vehicle.route_id;
-      var an = numKey(ar), bn = numKey(br);
-      if (an !== null && bn !== null && an !== bn) return an - bn;
-      var rc = String(ar).localeCompare(String(br));
+      // Route lists sort alphabetically by route name (convention,
+      // settled 2026-10-11): "Greenfield - 10" files under G, ahead
+      // of "Vernor - 1"; vehicles within a route stay numeric below.
+      var rc = routeLabel(a.vehicle.route_id).localeCompare(routeLabel(b.vehicle.route_id));
       if (rc !== 0) return rc;
       var av = numKey(a.vehicle.vehicle_id), bv = numKey(b.vehicle.vehicle_id);
       if (av !== null && bv !== null && av !== bv) return av - bv;
@@ -2686,7 +2701,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       dot.style.background = rc ? '#' + rc.getHexString() : '#F5F2EA';
       chip.appendChild(dot);
       var b = document.createElement('b');
-      b.textContent = rid + ' · ' + (routeNames[rid] || 'DDOT');
+      b.textContent = routeLabel(rid);
       chip.appendChild(b);
       if (typeof alertsForRoute === 'function' && typeof alertFx === 'function' && alertsForRoute(rid).length) {
         var cFx = alertFx({ effect: alertWorstEffect(alertsForRoute(rid)) });
@@ -2761,7 +2776,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       dot.style.background = rc ? '#' + rc.getHexString() : '#F5F2EA';
       row.appendChild(dot);
       var b = document.createElement('b');
-      b.textContent = v.route_id + ' · ' + (formatDest(v.route_id, v.destination) || (routeNames[v.route_id] || 'DDOT'));
+      var slDest = formatDest(v.route_id, v.destination);
+      b.textContent = routeLabel(v.route_id) + (slDest ? ' · ' + slDest : '');
       row.appendChild(b);
       // Stop tiles: the serving vehicle's number, so a rider can match
       // the row to the bus they can see. Gate: stopTilesOn.
@@ -3060,7 +3076,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       t.textContent = h.stop.n || 'Stop';
       b.appendChild(t);
       var r = document.createElement('span');
-      r.textContent = (h.stop.r || []).slice(0, 4).join(' · ') + ((h.stop.r || []).length > 4 ? ' +' + ((h.stop.r || []).length - 4) : '');
+      r.textContent = (h.stop.r || []).slice(0, 4).map(routeLabel).join(' · ') + ((h.stop.r || []).length > 4 ? ' +' + ((h.stop.r || []).length - 4) : '');
       b.appendChild(r);
       b.addEventListener('click', function () {
         tapBuzz();
@@ -3247,7 +3263,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (tr.s < sBoard - 50) {
       var eta = (sBoard - tr.s) / speed;
       if (eta <= 150) {
-        return { kind: 'board', text: 'Route ' + leg.routeId + ' reaches ' +
+        return { kind: 'board', text: 'Route ' + routeLabel(leg.routeId) + ' reaches ' +
           tripStopName(leg.board) + ' in ~' + fmtEta(eta) + ' — be ready to board.' };
       }
       return null;
@@ -3256,10 +3272,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (left < 0) return null;
     if (left === 0) return 'passed';
     if (left === 1) {
-      return { kind: 'alight', urgent: true, text: 'Route ' + leg.routeId +
+      return { kind: 'alight', urgent: true, text: 'Route ' + routeLabel(leg.routeId) +
         ' arriving at ' + tripStopName(leg.alight) + ' — get off at the next stop.' };
     }
-    return { kind: 'riding', text: 'Route ' + leg.routeId + ' — ' + left +
+    return { kind: 'riding', text: 'Route ' + routeLabel(leg.routeId) + ' — ' + left +
       ' stops to ' + tripStopName(leg.alight) + '.' };
   }
   function checkMissedTransfer(j, busLegs) {
@@ -3346,7 +3362,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       missedCooldownUntil = Date.now() + 5 * 60 * 1000;
       guidanceDismissedSig = null;
       showGuidanceBanner('missed',
-        'Missed the Route ' + missed.leg2.routeId + ' connection — replanned from your current position.',
+        'Missed the Route ' + routeLabel(missed.leg2.routeId) + ' connection — replanned from your current position.',
         true, false);
       replanFromLive(missed);
       return;
@@ -3453,7 +3469,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         dot.style.background = l.color || '#F5F2EA';
         chip.appendChild(dot);
         var lbl = document.createElement('b');
-        lbl.textContent = l.routeId;
+        lbl.textContent = routeLabel(l.routeId);
         chip.appendChild(lbl);
       } else {
         var w = document.createElement('b');
@@ -3516,7 +3532,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (topAlert) {
         var ban = document.createElement('div');
         ban.className = 'trip-alert-top';
-        ban.textContent = '✕ No service on route ' + topRid + ': ' + topAlert.header +
+        ban.textContent = '✕ No service on ' + routeLabel(topRid) + ': ' + topAlert.header +
           (topAlert.kind === 'planned' ? ' (planned notice)' : '') +
           ' — this itinerary uses that route; the leg below states what changed.';
         det.appendChild(ban);
@@ -3530,7 +3546,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (l.type === 'bus') {
         dot.style.background = l.color || '#F5F2EA';
         var t = document.createElement('b');
-        t.textContent = l.routeId + ' · ' + (l.headsign || l.routeName || 'DDOT');
+        t.textContent = routeLabel(l.routeId) + (l.headsign ? ' · ' + l.headsign : '');
         body.appendChild(t);
         var s = document.createElement('span');
         s.textContent = tripStopName(l.board) + ' → ' + tripStopName(l.alight);
@@ -4163,7 +4179,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       head.appendChild(label);
       var list = document.createElement('div');
       list.className = 'f-routes';
-      g.routes.forEach(function (rid) {
+      g.routes.slice().sort(function (a, b) {
+        // Name-alphabetical within the group (convention, 2026-10-11);
+        // the data files list routes in numeric order.
+        return routeLabel(a).localeCompare(routeLabel(b));
+      }).forEach(function (rid) {
         var route = routeById[rid];
         if (!route) return;
         filterState.routes[rid] = gOn;
@@ -4172,7 +4192,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         b.setAttribute('aria-pressed', 'true');
         b.dataset.route = rid;
         // Route display name: "name - number" unless they're identical (QLINE).
-        var chipName = (route.name === rid) ? route.name : route.name + ' - ' + rid;
+        var chipName = routeLabel(rid);
         b.innerHTML = '<i style="background:' + route.color + '"></i><b>' +
           chipName + '</b><span class="cnt" id="cnt-' + rid + '">–</span>' +
           '<span class="idle-tag" id="idle-' + rid + '" hidden>not running</span>';
@@ -5378,7 +5398,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var s = fx.label + ': ' + (a.header || 'Service alert') + ' — ' +
       (ALERT_AGENCY[a.agency] || a.agency || '') + ', ' +
       (a.kind === 'planned' ? 'planned notice' : 'live alert');
-    if (a.routes && a.routes.length) s += ', route' + (a.routes.length === 1 ? ' ' : 's ') + a.routes.join(', ');
+    if (a.routes && a.routes.length) s += ', route' + (a.routes.length === 1 ? ' ' : 's ') + a.routes.map(routeLabel).join(', ');
     if (a.stops && a.stops.length) s += ', stop' + (a.stops.length === 1 ? ' ' : 's ') + a.stops.join(', ');
     var win = alertWindowText(a);
     if (win) s += ', ' + win;
@@ -5982,7 +6002,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var row = document.createElement('div');
       row.className = 'beta-row';
       var b = document.createElement('b');
-      b.textContent = op.rid + ' \u00b7 Bus ' + op.bus + ' at ' + (op.stop.n || 'stop');
+      b.textContent = routeLabel(op.rid) + ' · Bus ' + op.bus + ' at ' + (op.stop.n || 'stop');
       row.appendChild(b);
       var t = document.createElement('span');
       t.textContent = 'bus ~' + betaMins(op.eta) + ' \u00b7 ' + betaMins(op.walk) + ' walk';
@@ -5991,7 +6011,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (op.nearDest) {
         var s = document.createElement('div');
         s.className = 'beta-sub';
-        s.textContent = 'Route ' + op.rid + ' also stops near your destination.';
+        s.textContent = 'Route ' + routeLabel(op.rid) + ' also stops near your destination.';
         list.appendChild(s);
       }
     });
@@ -7359,7 +7379,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         if (longest) {
           var mid = longest[Math.floor(longest.length / 2)];
           // Route display name: "name - number" unless they're identical (QLINE).
-          var displayName = (route.name === route.id) ? route.name : route.name + ' - ' + route.id;
+          var displayName = routeLabel(route.id);
           var label = makeLabel(displayName, route.color);
           label.position.set(mid[0], 1050, mid[1]);
           grp.add(label);
