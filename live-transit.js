@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-1437';
+  var STAMP = '20261015-1458';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -2256,7 +2256,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     ['\u27F3', 'Two-finger twist', 'Rotate the view. Tilt to see the elevated route guideways — each route floats at its own height so crossings read as clean overpasses.'],
     ['\u25CF', 'Tap a bus', 'Opens the bus card: vehicle number, route, destination, speed, heading, and how fresh the position reading is. Tap Follow to track it.'],
     ['\u25A0', 'Bus badges', 'Each bus carries a bus-shaped badge showing its route number, bordered in the route\u2019s color. Badges declutter automatically when buses cluster.'],
-    ['\u29E9', 'Routes', 'Filter by group (DDOT, SMART, People Mover) or individual route. Routes with no live buses are dimmed or hidden automatically.'],
+    ['\u29E9', 'Routes', 'Filter by group (DDOT, QLINE, People Mover) or individual route. Routes with no live buses are dimmed or hidden automatically.'],
     ['\u25C8', 'Plan trip', 'Enter two points and get a transit itinerary with real routes, transfers, and walking legs — built on the same schedule data as the map.'],
     ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops and intersections from the rider\u2019s seat, ordered by travel direction. If a bus is already selected it rides that bus; selecting a bus on the map while Ride along is open rides it too, and the camera follows it.'],
     [ICO_FINDME, 'Find me', 'Center the map on your location. "Routes near me" then shows only routes with a stop within 1,250 m of you.'],
@@ -2269,7 +2269,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     ['\u2194', 'Right-drag', 'Pan across the city. Tilt to see the elevated route guideways — each route floats at its own height so crossings read as clean overpasses.'],
     ['\u25CF', 'Click a bus', 'Opens the bus card: vehicle number, route, destination, speed, heading, and how fresh the position reading is. Click Follow to track it.'],
     ['\u25A0', 'Bus badges', 'Each bus carries a bus-shaped badge showing its route number, bordered in the route\u2019s color. Badges declutter automatically when buses cluster.'],
-    ['\u29E9', 'Routes', 'Filter by group (DDOT, SMART, People Mover) or individual route. Routes with no live buses are dimmed or hidden automatically.'],
+    ['\u29E9', 'Routes', 'Filter by group (DDOT, QLINE, People Mover) or individual route. Routes with no live buses are dimmed or hidden automatically.'],
     ['\u25C8', 'Plan trip', 'Enter two points and get a transit itinerary with real routes, transfers, and walking legs — built on the same schedule data as the map.'],
     ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops and intersections from the rider\u2019s seat, ordered by travel direction. If a bus is already selected it rides that bus; selecting a bus on the map while Ride along is open rides it too, and the camera follows it.'],
     [ICO_FINDME, 'Find me', 'Center the map on your location. "Routes near me" then shows only routes with a stop within 1,250 m of you.'],
@@ -3445,7 +3445,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     host.innerHTML = '';
     var none = document.createElement('p');
     none.className = 'trip-note';
-    none.textContent = 'One of these stops is not on a DDOT route, and no DDOT stop is within a short walk of it. The scheduled planner covers DDOT routes; SMART and QLINE stops share the map and the stop search.';
+    none.textContent = 'One of these stops is not on a DDOT route, and no DDOT stop is within a short walk of it. The scheduled planner covers DDOT routes.';
     host.appendChild(none);
     announceSr(none.textContent);
   }
@@ -5682,6 +5682,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
             function (e) { clearTimeout(timer); throw e; })
       .then(function (d) {
         if (!d || !Array.isArray(d.vehicles)) throw new Error('bad payload');
+        // SMART REMOVED 2026-10-15: the proxy may still emit SMART records
+        // until its own leg is cut; the product carries DDOT and QLINE
+        // only, so SMART vehicles are dropped at ingest, before every
+        // fan-out (map, counts, ride-along, follow, tiles, delay matching).
+        d.vehicles = d.vehicles.filter(function (v) { return v && v.agency !== 'smart'; });
         lastVehicles = d.vehicles;
         liveEverOk = true;
         if (typeof window.__setRideVehicles === 'function') window.__setRideVehicles(d.vehicles);
@@ -5694,13 +5699,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         refreshFilterCounts();
         lastTotal = n;
         setHeader(n, 'updated ' + fmtTime(d.generated_at ? new Date(d.generated_at) : null), false);
-        // Transit attribution (API terms): visible only while SMART data is
-        // actually served from the Transit API.
-        transitDataOn = !!(d.sources && d.sources.smart && d.sources.smart.via === 'transit'
-          && d.sources.smart.vehicles > 0);
-        syncTransitBadge();
-        smartAge = computeSmartAge(d);
-        applySmartAgeUI();
+        // SMART REMOVED 2026-10-15: no Transit-API data is displayed, so
+        // the Transit attribution badge never shows and no SMART snapshot
+        // age is computed. (The age-labeling graft is removed in the
+        // excision step; transitDataOn stays false permanently.)
+        transitDataOn = false;
       })
       .catch(function () {
         var text = liveEverOk
@@ -6183,8 +6186,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
             function (e) { clearTimeout(timer); throw e; })
       .then(function (d) {
         if (!d || !Array.isArray(d.alerts)) throw new Error('bad payload');
-        mergeAlerts(d.alerts);
-        alertsState.sources = Array.isArray(d.sources) ? d.sources : [];
+        // SMART REMOVED 2026-10-15: bulletin-board (SMART) alerts are not
+        // part of the product; drop them and their source line at ingest.
+        mergeAlerts(d.alerts.filter(function (a) { return a && a.agency !== 'smart'; }));
+        alertsState.sources = (Array.isArray(d.sources) ? d.sources : [])
+          .filter(function (s) { return s && s.agency !== 'smart'; });
         alertsState.ok = true;
         try { refreshAlertSurfaces(); } catch (e) { /* UI refresh must never mark the feed down */ }
       })
@@ -7595,9 +7601,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     fetch('peoplemover-3d.json?v=' + STAMP, { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .catch(function () { return null; }), // static layer is optional: map works without it
-    fetch('smart-routes-3d.json?v=' + STAMP, { cache: 'no-store' })
+    fetch('smart-tombstones.json?v=' + STAMP, { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
-      .catch(function () { return null; }), // SMART layer is optional: map works DDOT-only without it
+      .catch(function () { return null; }), // tombstone segment: see the merge below
     fetch('qline-3d.json?v=' + STAMP, { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .catch(function () { return null; }) // QLINE layer is optional
@@ -7608,24 +7614,35 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       streetData = all[2];
       streetNameData = all[3];
       var pmData = all[4];
-      var smartData = all[5];
+      var smartTombstones = all[5];
       var qlineData = all[6];
-      // SMART routes via the Transit API: merged into the DDOT dataset so
-      // route groups, filters, stops, and labels all work unchanged. The
-      // proxy serves SMART vehicle snapshots on the same /api/vehicles feed;
-      // route_id values (SMART short names) match the proxy's Transit mapping.
-      // Absent file: the map runs DDOT-only, no errors.
-      if (smartData && Array.isArray(smartData.routes) && smartData.routes.length) {
-        data.groups = (data.groups || []).concat(smartData.groups || []);
-        // Unified SMART identity: every SMART visual — route lines, bus
-        // pillars, stop pylons, labels, filter chips, DOM dots — renders in
-        // SMART red. Applied once here so all downstream color resolution
-        // inherits it. Exempt: multi-route hub paper-white pylons and the
-        // selected-stop white highlight (state indicators, not route colors).
-        smartData.routes.forEach(function (r) { r.color = '#c30915'; });
-        data.routes = (data.routes || []).concat(smartData.routes);
-        data.stops = (data.stops || []).concat(smartData.stops || []);
+      // SMART REMOVED 2026-10-15 (Justin's direction): SMART routes, stops,
+      // vehicles, and alerts are no longer part of this product; future
+      // improvements prioritize DDOT and QLINE. The merged stop registry is
+      // positional (S1: the registry index is a stop's identity), so the
+      // SMART segment is TOMBSTONED, never deleted or renumbered: 5,437
+      // inert records (empty name, empty route list, archived coordinates)
+      // occupy indices 5124-10560, keeping every DDOT index (0-5123) and
+      // every QLINE index (10561-10582) identical to the pre-removal
+      // registry. Tombstones render nowhere: rebuildStops skips stops with
+      // an empty route list, and search matches on names (theirs are
+      // empty). The segment skeleton ships as smart-tombstones.json,
+      // generated from the archived pre-removal file
+      // (files/smart-removal/archive/). If that fetch failed, the segment
+      // is synthesized at an off-plane coordinate — the segment LENGTH
+      // (5,437) is the load-bearing property.
+      var SMART_SEGMENT_STOPS = 5437;
+      var tombstoneStops = [];
+      if (smartTombstones && Array.isArray(smartTombstones.stops)) {
+        smartTombstones.stops.forEach(function (rec) {
+          tombstoneStops.push({ id: rec[0], n: '', x: rec[1], z: rec[2], r: [], smartRemoved: true });
+        });
       }
+      while (tombstoneStops.length < SMART_SEGMENT_STOPS) {
+        tombstoneStops.push({ id: 'SMART:removed', n: '', x: 0, z: -1000000, r: [], smartRemoved: true });
+      }
+      tombstoneStops.length = SMART_SEGMENT_STOPS;
+      data.stops = (data.stops || []).concat(tombstoneStops);
       // QLINE streetcar: merged like SMART. The proxy serves QLINE vehicle
       // positions on the same /api/vehicles feed with agency='qline' and
       // route_id='QLINE'. Absent file: the map runs without QLINE, no errors.
