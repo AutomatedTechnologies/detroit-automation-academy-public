@@ -163,6 +163,7 @@
     this.routeById = {};
     this.flatById = {};
     this.currentVehicleId = null;
+    this.timesProvider = null;
     this.render();
   }
 
@@ -183,6 +184,38 @@
     this.vehicles = vehicles || [];
     this.renderPicker();
     if (this.currentVehicleId) this.refresh();
+  };
+
+  // Optional host hook: fn(vehicle) -> { byStop, onlyIds, note } | null.
+  // Supplies per-stop times for the ride view and — when the host has
+  // matched the vehicle to its scheduled trip — the trip's remaining
+  // stop ids (onlyIds), so the list is the trip's own remaining
+  // sequence. Absent or null-returning: the view renders as before.
+  RideAlong.prototype.setTimesProvider = function (fn) {
+    this.timesProvider = fn || null;
+  };
+
+  // Transfer routes serving a stop, as display labels. Reads the stop
+  // record's r[] — the registry record at the stop's index (S1).
+  RideAlong.prototype.transferLabels = function (stop, currentRouteId) {
+    if (!stop || !stop.r) return [];
+    var seen = {}, routes = [];
+    for (var i = 0; i < stop.r.length; i++) {
+      var rid = stop.r[i];
+      if (rid === currentRouteId || seen[rid]) continue;
+      var route = this.routeById[rid];
+      if (!route) continue;
+      seen[rid] = true;
+      routes.push(route);
+    }
+    routes.sort(function (a, b) {
+      var an = a.name || a.id, bn = b.name || b.id;
+      if (an !== bn) return an < bn ? -1 : 1;
+      var ai = parseFloat(a.id), bi = parseFloat(b.id);
+      if (!isNaN(ai) && !isNaN(bi)) return ai - bi;
+      return String(a.id) < String(b.id) ? -1 : 1;
+    });
+    return routes.map(routeLabel);
   };
 
   RideAlong.prototype.board = function (vehicleId) {
@@ -241,8 +274,30 @@
 
     var onPath = stopsAlongPath(flat, this.stops, v.route_id);
     var upcoming = upcomingStops(onPath, loc.arcLen, direction, 12);
+    // The stop the bus most recently passed (or is standing at), so
+    // the rider's own position along the sequence can be marked.
+    var prevStop = null;
+    if (direction > 0) {
+      for (var pi = 0; pi < onPath.length; pi++) {
+        if (onPath[pi].arcLen <= loc.arcLen + 5) prevStop = onPath[pi]; else break;
+      }
+    } else {
+      for (var pj = 0; pj < onPath.length; pj++) {
+        if (onPath[pj].arcLen >= loc.arcLen - 5) { prevStop = onPath[pj]; break; }
+      }
+    }
+    // Host stop times: when the provider returns the matched trip's
+    // remaining stop ids, the upcoming list becomes exactly that
+    // sequence. A filter that would empty the list is ignored — an id
+    // space mismatch must never blank the rider's stops.
+    var tp = null;
+    if (this.timesProvider) { try { tp = this.timesProvider(v); } catch (e) { tp = null; } }
+    if (tp && tp.onlyIds) {
+      var filtered = upcoming.filter(function (u) { return tp.onlyIds[String(u.stop.id)]; });
+      if (filtered.length) upcoming = filtered;
+    }
     var intersections = upcomingIntersections(upcoming);
-    this.renderRide(v, route, upcoming, intersections, direction);
+    this.renderRide(v, route, upcoming, intersections, direction, prevStop, loc.arcLen, tp);
   };
 
   // ---- rendering ----
@@ -318,7 +373,7 @@
       ', but the route path is not loaded yet.'));
   };
 
-  RideAlong.prototype.renderRide = function (v, route, upcoming, intersections, direction) {
+  RideAlong.prototype.renderRide = function (v, route, upcoming, intersections, direction, prevStop, busArcLen, tp) {
     var body = this.mount.querySelector('#ra-body');
     if (!body) return;
     body.innerHTML = '';
@@ -332,6 +387,14 @@
     body.appendChild(head);
     body.appendChild(el('p', 'ra-bus', 'Bus ' + v.vehicle_id +
       (v.speed != null ? ' · ' + Math.round(v.speed) + ' mph' : '')));
+
+    // The rider's position along the sequence: the bus is the rider's
+    // vehicle, so its place on the path is the rider's place.
+    if (prevStop) {
+      body.appendChild(el('p', 'ra-here', Math.abs(busArcLen - prevStop.arcLen) <= 25
+        ? 'You are here · at ' + prevStop.stop.n
+        : 'You are here · just past ' + prevStop.stop.n));
+    }
 
     if (!upcoming.length) {
       body.appendChild(el('p', 'ra-empty', 'No further stops ahead on this run.'));
@@ -348,6 +411,10 @@
       nextCard.appendChild(el('p', 'ra-next-x',
         'Intersection of ' + streets.join(' and ')));
     }
+    var nextTime = tp && tp.byStop ? tp.byStop[String(next.stop.id)] : null;
+    if (nextTime) nextCard.appendChild(el('p', 'ra-next-time', nextTime));
+    var nextXfer = this.transferLabels(next.stop, v.route_id);
+    if (nextXfer.length) nextCard.appendChild(el('p', 'ra-xfer', 'Transfers · ' + nextXfer.join(' · ')));
     body.appendChild(nextCard);
 
     // Upcoming stops list.
@@ -357,6 +424,10 @@
       var li = el('li', 'ra-stop', upcoming[i].stop.n);
       var st = streetsFromStopName(upcoming[i].stop.n);
       if (st.length > 1) li.title = 'Intersection of ' + st.join(' and ');
+      var rowTime = tp && tp.byStop ? tp.byStop[String(upcoming[i].stop.id)] : null;
+      if (rowTime) li.appendChild(el('span', 'ra-time', ' · ' + rowTime));
+      var rowXfer = this.transferLabels(upcoming[i].stop, v.route_id);
+      if (rowXfer.length) li.appendChild(el('span', 'ra-xfer', 'Transfers · ' + rowXfer.join(' · ')));
       list.appendChild(li);
     }
     body.appendChild(list);
@@ -370,6 +441,8 @@
       });
       body.appendChild(xl);
     }
+
+    if (tp && tp.note) body.appendChild(el('p', 'ra-note', tp.note));
 
     var leave = el('button', 'ra-leave', 'Get off this bus');
     var self = this;
