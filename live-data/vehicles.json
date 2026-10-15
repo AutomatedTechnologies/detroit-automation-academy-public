@@ -1,36 +1,36 @@
 {
-  "generated_at": "2026-10-15T23:25:30.565Z",
+  "generated_at": "2026-10-15T23:28:59.057Z",
   "count": 4,
   "vehicles": [
     {
       "agency": "qline",
       "route_id": "QLINE",
       "vehicle_id": "287",
-      "lat": 42.3472785949707,
-      "lon": -83.05767059326172,
-      "bearing": 321,
+      "lat": 42.3525505065918,
+      "lon": -83.06120300292969,
+      "bearing": 331,
       "speed_mph": null,
-      "updated_at": "2026-10-15T23:24:55.000Z"
+      "updated_at": "2026-10-15T23:28:25.000Z"
     },
     {
       "agency": "qline",
       "route_id": "QLINE",
       "vehicle_id": "290",
-      "lat": 42.35456085205078,
-      "lon": -83.0630111694336,
-      "bearing": 152,
+      "lat": 42.347190856933594,
+      "lon": -83.05789947509766,
+      "bearing": 157,
       "speed_mph": null,
-      "updated_at": "2026-10-15T23:24:55.000Z"
+      "updated_at": "2026-10-15T23:28:28.000Z"
     },
     {
       "agency": "qline",
       "route_id": "QLINE",
       "vehicle_id": "291",
-      "lat": 42.32986068725586,
-      "lon": -83.04560852050781,
+      "lat": 42.32984161376953,
+      "lon": -83.04559326171875,
       "bearing": 129,
       "speed_mph": null,
-      "updated_at": "2026-10-15T23:24:57.000Z"
+      "updated_at": "2026-10-15T23:28:26.000Z"
     },
     {
       "agency": "qline",
@@ -40,25 +40,25 @@
       "lon": -83.0743408203125,
       "bearing": 333,
       "speed_mph": null,
-      "updated_at": "2026-10-15T23:23:22.000Z"
+      "updated_at": "2026-10-15T23:28:26.000Z"
     }
   ],
   "sources": {
     "ddot": {
       "ok": true,
-      "at": "2026-10-15T23:25:30.565Z",
+      "at": "2026-10-15T23:28:59.057Z",
       "vehicles": 0,
       "batches_ok": 4,
       "batches_failed": 0
     },
     "smart": {
-      "ok": false,
-      "at": "2026-10-15T23:25:30.565Z",
-      "reason": "Swiftly SMART feed: HTTP 403 from https://api.goswift.ly/real-time/smart/gtfs-rt-vehicle-positions"
+      "ok": true,
+      "at": "2026-10-15T23:28:59.057Z",
+      "vehicles": 147
     },
     "qline": {
       "ok": true,
-      "at": "2026-10-15T23:25:30.565Z",
+      "at": "2026-10-15T23:28:59.057Z",
       "vehicles": 4
     }
   }
