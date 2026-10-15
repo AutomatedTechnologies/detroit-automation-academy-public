@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261014-1614';
+  var STAMP = '20261014-2246';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -1706,6 +1706,22 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var sub = document.createElement('span');
     sub.textContent = n + (n === 1 ? ' route' : ' routes') + (st.id ? ' · ID ' + st.id : '');
     main.appendChild(name); main.appendChild(sub);
+    if (typeof alertsForStop === 'function' && typeof alertFx === 'function' && alertsState.ok) {
+      var mine = alertsForStop(st.id);
+      var pool = mine;
+      if (!pool.length) {
+        pool = [];
+        (st.r || []).forEach(function (r) { alertsForRoute(r).forEach(function (a) { pool.push(a); }); });
+      }
+      if (pool.length) {
+        var wEff = alertWorstEffect(pool);
+        var wFx = alertFx({ effect: wEff });
+        var sAdv = document.createElement('span');
+        sAdv.className = 'b-adv' + (wEff === 'NO_SERVICE' ? ' severe' : '');
+        sAdv.textContent = wFx.glyph + ' ' + wFx.label.toLowerCase() + (mine.length ? ' at this stop' : ' on a serving route');
+        main.appendChild(sAdv);
+      }
+    }
     b.appendChild(dot); b.appendChild(main);
     b.addEventListener('click', function () { setBrowse(false); showStop(st); });
     li.appendChild(b);
@@ -1747,6 +1763,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var sub = document.createElement('span');
     sub.textContent = dest ? 'to ' + dest : (routeNames[v.route_id] || 'DDOT');
     main.appendChild(name); main.appendChild(sub);
+    if (typeof alertsForRoute === 'function' && typeof alertFx === 'function' && alertsState.ok && alertsForRoute(v.route_id).length) {
+      var rList = alertsForRoute(v.route_id);
+      var rEff = alertWorstEffect(rList);
+      var rFx = alertFx({ effect: rEff });
+      var bAdv = document.createElement('span');
+      bAdv.className = 'b-adv' + (rEff === 'NO_SERVICE' ? ' severe' : '');
+      bAdv.textContent = rFx.glyph + ' ' + rFx.label.toLowerCase() + ' on this route';
+      main.appendChild(bAdv);
+    }
     b.appendChild(dot); b.appendChild(main);
     b.addEventListener('click', function () { setBrowse(false); showBus(v); });
     li.appendChild(b);
@@ -2344,8 +2369,17 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var b = document.createElement('b');
       b.textContent = rid + ' · ' + (routeNames[rid] || 'DDOT');
       chip.appendChild(b);
+      if (typeof alertsForRoute === 'function' && typeof alertFx === 'function' && alertsForRoute(rid).length) {
+        var cFx = alertFx({ effect: alertWorstEffect(alertsForRoute(rid)) });
+        var adv = document.createElement('span');
+        adv.className = 'adv-tag fx-' + cFx.cls;
+        adv.textContent = cFx.glyph;
+        adv.title = cFx.label + ' — active service alert on this route';
+        chip.appendChild(adv);
+      }
       host.appendChild(chip);
     });
+    if (typeof renderStopAlerts === 'function') renderStopAlerts(st);
     $('stop-card').hidden = false;
     // Dialog focus: same pattern as showBus above.
     if (_stopReturnFocus === null && document.activeElement && !$('stop-card').contains(document.activeElement)) _stopReturnFocus = document.activeElement;
@@ -3120,6 +3154,28 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (!det) return;
     det.innerHTML = '';
     if (tripSel < 0 || !tripJourneys[tripSel]) return;
+    // Service alerts (Map-Native): a NO_SERVICE effect on any leg's route
+    // is stated at the top of the itinerary; every alert on a leg's route
+    // also gets a "What changed" line on the leg itself, and the leg row
+    // takes the vocabulary's left-border treatment. The planner informs —
+    // it never silently reroutes around an alert.
+    if (typeof alertsForRoute === 'function') {
+      var topAlert = null, topRid = null;
+      mergeWalkLegs(tripJourneys[tripSel].legs).forEach(function (l0) {
+        if (l0.type !== 'bus' || topAlert) return;
+        alertsForRoute(l0.routeId).forEach(function (a) {
+          if (!topAlert && a.effect === 'NO_SERVICE') { topAlert = a; topRid = l0.routeId; }
+        });
+      });
+      if (topAlert) {
+        var ban = document.createElement('div');
+        ban.className = 'trip-alert-top';
+        ban.textContent = '✕ No service on route ' + topRid + ': ' + topAlert.header +
+          (topAlert.kind === 'planned' ? ' (planned notice)' : '') +
+          ' — this itinerary uses that route; the leg below states what changed.';
+        det.appendChild(ban);
+      }
+    }
     mergeWalkLegs(tripJourneys[tripSel].legs).forEach(function (l) {
       var row = document.createElement('div');
       row.className = 'trip-leg-row';
@@ -3143,6 +3199,32 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           badge.className = l.disrupted ? 'trip-disrupted-badge' : 'trip-live-badge';
           badge.textContent = l.disrupted ? 'Disrupted' : 'Live';
           body.appendChild(badge);
+        }
+        if (typeof alertsForRoute === 'function' && typeof alertWhatChanged === 'function') {
+          var legAlerts = alertsForRoute(l.routeId);
+          if (legAlerts.length) {
+            row.classList.add('alerted');
+            if (alertWorstEffect(legAlerts) === 'NO_SERVICE') row.classList.add('severe');
+          }
+          legAlerts.forEach(function (a) {
+            var fx = alertFx(a);
+            var aw = document.createElement('span');
+            aw.className = 'trip-leg-alert';
+            var lead = document.createElement('b');
+            lead.className = 'fx fx-' + fx.cls;
+            lead.textContent = fx.glyph + ' What changed: ';
+            aw.appendChild(lead);
+            var txt = alertWhatChanged(a);
+            // Stop precision the feed actually supports: when the alert
+            // names this leg's boarding stop, say so in words.
+            var bs = (typeof stopData !== 'undefined' && stopData) ? stopData[l.board] : null;
+            if (bs && (a.stops || []).indexOf(String(bs.id)) >= 0 &&
+                (a.effect === 'DETOUR' || a.effect === 'NO_SERVICE' || a.effect === 'STOP_MOVED')) {
+              txt += ' Your boarding stop, ' + (bs.n || ('stop ' + bs.id)) + ', is one of the stops this alert names.';
+            }
+            aw.appendChild(document.createTextNode(txt));
+            body.appendChild(aw);
+          });
         }
       } else {
         dot.className = 'walk';
@@ -4777,6 +4859,496 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       });
   }
 
+  // --- service alerts (phase 1) — presentation: Map-Native (concept B) ------
+  // Consumes the proxy's /api/alerts (DDOT BusTime bulletins, kind
+  // 'realtime'; SMART smartbus.org board, kind 'planned'). Presentation
+  // follows concept B as selected 2026-10-14: there is NO global strip.
+  // Alerts live where they apply — severity badges on route chips, alert
+  // bands in the stop card, "what changed" lines in the planner, and
+  // glyph + dashed overlays on the 3D map itself. Planned (bulletin-board)
+  // alerts tint ONLY the chip: they never draw map geometry, because the
+  // board carries no stop- or path-level precision. Zero-state is absence:
+  // no badges, no bands, no overlays. Every treatment pairs color with a
+  // glyph and words (see ALERT_FX and the help card's vocabulary list);
+  // nothing is carried by color alone. Feature-detect by design: the
+  // endpoint does not exist on the proxy until phase 1 deploys, and every
+  // failure path here degrades silently, so the map behaves as before.
+  var alertsState = { ok: false, alerts: [], sources: [], misses: {} };
+  var ALERT_EFFECT_RANK = {
+    NO_SERVICE: 5, REDUCED_SERVICE: 4, SIGNIFICANT_DELAYS: 3, DETOUR: 3,
+    ACCESSIBILITY_ISSUE: 2, STOP_MOVED: 2, MODIFIED_SERVICE: 2,
+    ADDITIONAL_SERVICE: 1, OTHER_EFFECT: 1, UNKNOWN_EFFECT: 0, NO_EFFECT: 0
+  };
+  var ALERT_AGENCY = { ddot: 'DDOT', smart: 'SMART', qline: 'QLINE' };
+  // The five-effect vocabulary (design samples, shared table). cls keys
+  // the CSS treatments; css is the glyph color used on map sprites.
+  var ALERT_FX = {
+    NO_SERVICE: { glyph: '✕', label: 'No service', cls: 'nostop', css: '#FF8A80' },
+    DETOUR: { glyph: '↪', label: 'Detour', cls: 'detour', css: '#FF8A80' },
+    REDUCED_SERVICE: { glyph: '◑', label: 'Reduced service', cls: 'reduced', css: '#FFB000' },
+    STOP_MOVED: { glyph: '⇄', label: 'Stop moved', cls: 'moved', css: '#4D96FF' },
+    INFO: { glyph: 'ℹ', label: 'Notice', cls: 'info', css: '#9AA0A6' }
+  };
+  var ALERT_FX_FALLBACK = { glyph: '⚠', label: 'Service alert', cls: 'detour', css: '#FF8A80' };
+  function alertFx(a) {
+    var e = a && a.effect;
+    if (e && ALERT_FX[e]) return ALERT_FX[e];
+    if (e === 'SIGNIFICANT_DELAYS') return { glyph: '⚠', label: 'Significant delays', cls: 'detour', css: '#FF8A80' };
+    if (e === 'MODIFIED_SERVICE') return { glyph: '⚠', label: 'Modified service', cls: 'detour', css: '#FF8A80' };
+    if (e === 'ACCESSIBILITY_ISSUE') return { glyph: '⚠', label: 'Accessibility issue', cls: 'detour', css: '#FF8A80' };
+    if (e === 'ADDITIONAL_SERVICE') return { glyph: 'ℹ', label: 'Additional service', cls: 'info', css: '#9AA0A6' };
+    if (e) return { glyph: '⚠', label: e.replace(/_/g, ' ').toLowerCase(), cls: 'detour', css: '#FF8A80' };
+    return ALERT_FX_FALLBACK;
+  }
+  function alertParseT(s) { var t = s ? Date.parse(s) : NaN; return isNaN(t) ? null : t; }
+  function alertIsActive(a, nowMs) {
+    if (!a) return false;
+    var p = a.active_period || {};
+    var st = alertParseT(p.start), en = alertParseT(p.end);
+    if (st !== null && nowMs < st) return false;   // not yet in force
+    if (en !== null && nowMs > en) return false;   // period ended
+    return true;
+  }
+  function activeAlerts() {
+    var n = Date.now();
+    return alertsState.alerts.filter(function (a) { return alertIsActive(a, n); });
+  }
+  function alertsForRoute(rid) {
+    if (!rid) return [];
+    var id = String(rid);
+    return activeAlerts().filter(function (a) { return (a.routes || []).indexOf(id) >= 0; });
+  }
+  function alertsForStop(stid) {
+    if (stid === null || stid === undefined || stid === '') return [];
+    var id = String(stid);
+    return activeAlerts().filter(function (a) { return (a.stops || []).indexOf(id) >= 0; });
+  }
+  function alertWorstEffect(list) {
+    var w = null, wr = -1;
+    (list || []).forEach(function (a) {
+      var r = ALERT_EFFECT_RANK[a.effect] || 0;
+      if (r > wr) { wr = r; w = a.effect; }
+    });
+    return w;
+  }
+  function alertWindowText(a) {
+    var p = a.active_period || {};
+    var st = alertParseT(p.start), en = alertParseT(p.end);
+    if (st === null && en === null) return '';
+    var f = function (t) { return fmtTime(new Date(t)); };
+    if (st !== null && en !== null) return f(st) + ' – ' + f(en);
+    if (st !== null) return 'from ' + f(st);
+    return 'until ' + f(en);
+  }
+  // Plain-language "what changed" sentence for one alert — the words that
+  // accompany every glyph, in the planner, the stop card, and the
+  // screen-reader list. Built only from fields the feed actually carries.
+  function alertWhatChanged(a) {
+    var fx = alertFx(a);
+    var s = fx.label + ' — ' + (a.header || 'Service alert');
+    var bits = [ALERT_AGENCY[a.agency] || a.agency || '',
+      a.kind === 'planned' ? 'planned notice' : 'live'];
+    var win = alertWindowText(a);
+    if (win) bits.push(win);
+    s += ' (' + bits.filter(Boolean).join(' · ') + ')';
+    if (a.description) s += ' ' + a.description;
+    return s;
+  }
+  function alertSrText(a) {
+    var fx = alertFx(a);
+    var s = fx.label + ': ' + (a.header || 'Service alert') + ' — ' +
+      (ALERT_AGENCY[a.agency] || a.agency || '') + ', ' +
+      (a.kind === 'planned' ? 'planned notice' : 'live alert');
+    if (a.routes && a.routes.length) s += ', route' + (a.routes.length === 1 ? ' ' : 's ') + a.routes.join(', ');
+    if (a.stops && a.stops.length) s += ', stop' + (a.stops.length === 1 ? ' ' : 's ') + a.stops.join(', ');
+    var win = alertWindowText(a);
+    if (win) s += ', ' + win;
+    if (a.description) s += '. ' + a.description;
+    return s;
+  }
+  // Retire an alert only after it is absent from two consecutive fetches
+  // (design rule) — a single flaky fetch never flickers the UI.
+  function mergeAlerts(fresh) {
+    var seen = {};
+    (fresh || []).forEach(function (a) {
+      if (a && a.id) { seen[a.id] = true; alertsState.misses[a.id] = 0; }
+    });
+    var kept = (fresh || []).slice();
+    alertsState.alerts.forEach(function (old) {
+      if (old.id && !seen[old.id]) {
+        alertsState.misses[old.id] = (alertsState.misses[old.id] || 0) + 1;
+        if (alertsState.misses[old.id] < 2) kept.push(old);
+        else delete alertsState.misses[old.id];
+      }
+    });
+    alertsState.alerts = kept;
+  }
+
+  // --- accessible text equivalent -------------------------------------------
+  // #alerts-sr is a visually-hidden list naming every active alert in
+  // words, rebuilt by this same render path whenever the alert set
+  // changes; #alerts-live announces only set changes (never the 120 s
+  // re-poll), so screen-reader users get the alerts without the noise.
+  var alertsSrSig = '', alertsLiveIds = null;
+  function renderAlertSr() {
+    var list = $('alerts-sr-list');
+    if (!list) return;
+    var act = alertsState.ok ? activeAlerts() : [];
+    var sig = (alertsState.ok ? 'ok' : 'down') + '|' + act.map(function (a) {
+      return a.id + ':' + (a.effect || '') + ':' + (a.header || '');
+    }).join(';;');
+    if (sig !== alertsSrSig) {
+      alertsSrSig = sig;
+      list.innerHTML = '';
+      act.forEach(function (a) {
+        var li = document.createElement('li');
+        li.textContent = alertSrText(a);
+        list.appendChild(li);
+      });
+      var src = $('alerts-sr-sources');
+      if (src) {
+        src.textContent = alertsState.sources.map(function (s) {
+          var name = (ALERT_AGENCY[s.agency] || s.agency || '').toUpperCase();
+          if (!s.ok) return name + ' alerts unavailable';
+          return name + ' updated ' + fmtTime(s.fetched_at ? new Date(s.fetched_at) : null) +
+            (s.kind === 'planned' ? ' · bulletin board (planned notices)' : ' · live feed');
+        }).join(' · ');
+      }
+      var ids = act.map(function (a) { return a.id; }).sort().join(',');
+      if (alertsLiveIds !== null && ids !== alertsLiveIds) {
+        var lv = $('alerts-live');
+        if (lv) {
+          lv.textContent = act.length
+            ? 'Service alerts updated: ' + act.length + ' active. Most severe: ' +
+              alertFx({ effect: alertWorstEffect(act) }).label.toLowerCase() + '.'
+            : 'All service alerts have cleared.';
+        }
+      }
+      alertsLiveIds = ids;
+    }
+  }
+
+  // --- route chip badges ------------------------------------------------------
+  // Per the samples: a red ✕ badge when any alert on the route is
+  // NO_SERVICE; an amber count badge for live alerts; a hollow "P" when
+  // the route carries only planned notices. The badge glyph is
+  // aria-hidden — the same information is written into the chip's
+  // aria-label and title, so the chip never speaks in color alone.
+  function renderChipBadges() {
+    var chips = document.querySelectorAll('.f-chip[data-route]');
+    for (var i = 0; i < chips.length; i++) {
+      var chip = chips[i], rid = chip.getAttribute('data-route');
+      var list = (alertsState.ok && rid) ? alertsForRoute(rid) : [];
+      var olds = chip.querySelectorAll('.alert-badge');
+      for (var j = olds.length - 1; j >= 0; j--) olds[j].remove();
+      chip.classList.toggle('has-alert', list.length > 0);
+      var worst = list.length ? alertWorstEffect(list) : null;
+      chip.classList.toggle('alert-severe', worst === 'NO_SERVICE');
+      if (!list.length) {
+        chip.removeAttribute('aria-label');
+        chip.removeAttribute('title');
+        continue;
+      }
+      var live = list.filter(function (a) { return a.kind !== 'planned'; });
+      var badge = document.createElement('span');
+      badge.className = 'alert-badge';
+      badge.setAttribute('aria-hidden', 'true');
+      if (worst === 'NO_SERVICE') { badge.classList.add('ab-nostop'); badge.textContent = '✕'; }
+      else if (live.length) { badge.classList.add('ab-live'); badge.textContent = String(live.length); }
+      else { badge.classList.add('ab-planned'); badge.textContent = 'P'; }
+      chip.appendChild(badge);
+      var fx = alertFx({ effect: worst });
+      var nameEl = chip.querySelector('b');
+      var nm = nameEl ? nameEl.textContent : ('Route ' + rid);
+      chip.setAttribute('aria-label', nm + ' — service alert: ' + fx.label.toLowerCase() +
+        (list.length > 1 ? ', ' + list.length + ' alerts active' : '') +
+        (!live.length ? ' (planned notice)' : ''));
+      chip.title = 'Service alert: ' + fx.label + (!live.length ? ' (planned notice)' : '');
+    }
+  }
+
+  // --- map overlays (3D) ------------------------------------------------------
+  // Treatments, per the vocabulary: NO_SERVICE — the affected span is
+  // muted by a dark fade ribbon and overdrawn with a red-white dashed
+  // ribbon (never amber: route 4's own color IS #FFB000) plus a ✕ sprite;
+  // DETOUR — the same red-white dashed ribbon over the affected span plus
+  // a ↪ sprite, and pulsing amber rings on the bypassed stops the
+  // bulletin names; REDUCED_SERVICE — a dim ribbon over the route;
+  // STOP_MOVED — a hollow blue ring and ⇄ sprite at the named stop (the
+  // feed carries no replacement-stop coordinates, so no new boarding
+  // point is drawn — the words live in the stop card); INFO — none.
+  // Spans come from the alert's own stop list snapped to the route path;
+  // a route-wide alert with no stops spans the whole route. The bulletin
+  // carries no detour path geometry, so no diversion line is invented.
+  // Overlays are children of the route's own group, so route/group
+  // filter toggles hide them with their route.
+  var alertOverlaySubs = {};   // rid -> THREE.Group child of routeGroups[rid]
+  var alertPulseRings = [];    // ring meshes animated by alertPulseTick
+  var alertPulseRaf = 0;
+  var alertDashTex = null;
+  var alertReducedMotion = (typeof window !== 'undefined' && window.matchMedia)
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
+  var alertStopById = null, alertStopDataRef = null;
+  function alertStopsById() {
+    if (typeof stopData === 'undefined' || !stopData) return {};
+    if (alertStopById && alertStopDataRef === stopData) return alertStopById;
+    var m = {};
+    stopData.forEach(function (s) { if (s && s.id !== undefined && s.id !== null) m[String(s.id)] = s; });
+    alertStopById = m; alertStopDataRef = stopData;
+    return m;
+  }
+  function alertStopsForRoute(a, rid) {
+    var byId = alertStopsById(), out = [];
+    (a.stops || []).forEach(function (sid) {
+      var st = byId[String(sid)];
+      if (st && (st.r || []).indexOf(rid) >= 0) out.push(st);
+    });
+    return out;
+  }
+  function alertSpanFor(route, a, rid) {
+    var stops = alertStopsForRoute(a, rid);
+    if (!stops.length || typeof nearestOnPath !== 'function') return route.paths || [];
+    var best = null;
+    (route.paths || []).forEach(function (path) {
+      if (!path || path.length < 2) return;
+      var idx = [];
+      stops.forEach(function (st) {
+        var i = nearestOnPath(path, st.x, st.z);
+        var dx = path[i][0] - st.x, dz = path[i][1] - st.z;
+        if (dx * dx + dz * dz <= 600 * 600) idx.push(i);
+      });
+      if (idx.length && (!best || idx.length > best.idx.length)) best = { path: path, idx: idx };
+    });
+    if (!best) return route.paths || [];
+    var lo = Math.min.apply(null, best.idx), hi = Math.max.apply(null, best.idx);
+    lo = Math.max(0, lo - 1); hi = Math.min(best.path.length - 1, hi + 1);
+    if (hi - lo < 1) { lo = Math.max(0, lo - 1); hi = Math.min(best.path.length - 1, hi + 1); }
+    return [best.path.slice(lo, hi + 1)];
+  }
+  function alertDashTexture() {
+    if (alertDashTex) return alertDashTex;
+    var c = document.createElement('canvas');
+    c.width = 256; c.height = 16;
+    var x = c.getContext('2d');
+    x.fillStyle = '#B3261E'; x.fillRect(0, 0, 128, 16);   // red dash
+    x.fillStyle = '#F5F2EA'; x.fillRect(128, 0, 42, 16);  // white dash
+    // remainder transparent: the route deck shows through the gap
+    var tex = new THREE.CanvasTexture(c);
+    tex.wrapS = THREE.RepeatWrapping;
+    alertDashTex = tex;
+    return tex;
+  }
+  function alertDashRibbon(pts, y) {
+    var g = ribbonGeometry(pts, 78, y);
+    var pos = g.getAttribute('position');
+    var pairs = pos.count / 2;
+    var len = 0;
+    for (var i = 1; i < pts.length; i++) len += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+    var reps = Math.max(2, Math.round(len / 300));
+    var uv = new Float32Array(pos.count * 2);
+    for (var k = 0; k < pairs; k++) {
+      var u = pairs > 1 ? (k / (pairs - 1)) * reps : 0;
+      uv[k * 4] = u; uv[k * 4 + 1] = 0; uv[k * 4 + 2] = u; uv[k * 4 + 3] = 1;
+    }
+    g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    return g;
+  }
+  function alertGlyphSprite(glyph, colorCss, scale) {
+    var c = document.createElement('canvas');
+    c.width = 192; c.height = 192;
+    var x = c.getContext('2d');
+    x.font = '700 124px "Inter", sans-serif';
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.lineWidth = 16; x.strokeStyle = 'rgba(12,17,22,.92)';
+    x.strokeText(glyph, 96, 102);
+    x.fillStyle = colorCss;
+    x.fillText(glyph, 96, 102);
+    var tex = new THREE.CanvasTexture(c);
+    var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+    sp.scale.set(scale, scale, 1);
+    sp.renderOrder = 6;
+    return sp;
+  }
+  function addAlertPulseRing(parent, st) {
+    var ring = new THREE.Mesh(
+      new THREE.RingGeometry(34, 58, 40),
+      new THREE.MeshBasicMaterial({ color: 0xffb000, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false })
+    );
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.set(st.x, 22, st.z);
+    ring.userData.phase = Math.random() * Math.PI * 2;
+    parent.add(ring);
+    alertPulseRings.push(ring);
+  }
+  function alertPulseTick() {
+    if (!alertPulseRings.length) { alertPulseRaf = 0; return; }
+    var t = performance.now() / 420;
+    for (var i = 0; i < alertPulseRings.length; i++) {
+      var r = alertPulseRings[i];
+      var s = 1 + 0.3 * Math.sin(t + r.userData.phase);
+      r.scale.set(s, s, 1);
+      r.material.opacity = 0.95 - 0.4 * (0.5 + 0.5 * Math.sin(t + r.userData.phase));
+    }
+    alertPulseRaf = requestAnimationFrame(alertPulseTick);
+  }
+  function disposeAlertSub(sub) {
+    sub.traverse(function (o) {
+      if (o.geometry) o.geometry.dispose();
+      if (o.material) o.material.dispose();  // disposes the material only; the shared dash texture survives
+    });
+  }
+  function renderAlertMap() {
+    if (typeof THREE === 'undefined' || typeof scene === 'undefined' ||
+        typeof routeById === 'undefined' || typeof routeGroups === 'undefined') return;
+    Object.keys(alertOverlaySubs).forEach(function (rid) {
+      var sub = alertOverlaySubs[rid];
+      if (sub.parent) sub.parent.remove(sub);
+      disposeAlertSub(sub);
+      delete alertOverlaySubs[rid];
+    });
+    alertPulseRings = [];
+    if (alertPulseRaf) { cancelAnimationFrame(alertPulseRaf); alertPulseRaf = 0; }
+    if (!alertsState.ok) return;
+    activeAlerts().forEach(function (a) {
+      if (a.kind === 'planned') return;  // planned: chip tint only, never geometry
+      (a.routes || []).forEach(function (rid) {
+        var route = routeById[rid];
+        var host = routeGroups[rid];
+        if (!route || !route.paths || !host) return;
+        var ri = routeOrder.indexOf(rid);
+        var y = 66 + (ri < 0 ? 0 : ri) * 1.2 + 3;
+        var fx = alertFx(a);
+        var sub = alertOverlaySubs[rid];
+        if (!sub) { sub = new THREE.Group(); sub.name = 'alert-overlay'; host.add(sub); alertOverlaySubs[rid] = sub; }
+        if (a.effect === 'NO_SERVICE' || a.effect === 'DETOUR') {
+          alertSpanFor(route, a, rid).forEach(function (span) {
+            if (!span || span.length < 2) return;
+            if (a.effect === 'NO_SERVICE') {
+              sub.add(new THREE.Mesh(ribbonGeometry(span, 78, y),
+                new THREE.MeshBasicMaterial({ color: 0x05070a, transparent: true, opacity: 0.45, side: THREE.DoubleSide, depthWrite: false })));
+            }
+            sub.add(new THREE.Mesh(alertDashRibbon(span, y + 0.7),
+              new THREE.MeshBasicMaterial({ map: alertDashTexture(), transparent: true, side: THREE.DoubleSide, depthWrite: false })));
+            var mid = span[Math.floor(span.length / 2)];
+            var spr = alertGlyphSprite(fx.glyph, fx.css, 160);
+            spr.position.set(mid[0], y + 130, mid[1]);
+            sub.add(spr);
+          });
+          alertStopsForRoute(a, rid).forEach(function (st) { addAlertPulseRing(sub, st); });
+        } else if (a.effect === 'REDUCED_SERVICE') {
+          (route.paths || []).forEach(function (p) {
+            if (!p || p.length < 2) return;
+            sub.add(new THREE.Mesh(ribbonGeometry(p, 78, y),
+              new THREE.MeshBasicMaterial({ color: 0x05070a, transparent: true, opacity: 0.38, side: THREE.DoubleSide, depthWrite: false })));
+          });
+        } else if (a.effect === 'STOP_MOVED') {
+          alertStopsForRoute(a, rid).forEach(function (st) {
+            var ring = new THREE.Mesh(
+              new THREE.RingGeometry(26, 42, 32),
+              new THREE.MeshBasicMaterial({ color: 0x4d96ff, transparent: true, opacity: 0.95, side: THREE.DoubleSide, depthWrite: false })
+            );
+            ring.rotation.x = -Math.PI / 2;
+            ring.position.set(st.x, 22, st.z);
+            sub.add(ring);
+            var spr2 = alertGlyphSprite(fx.glyph, fx.css, 120);
+            spr2.position.set(st.x, y + 100, st.z);
+            sub.add(spr2);
+          });
+        }
+        // INFO and unlisted effects: no map geometry (vocabulary rule).
+      });
+    });
+    if (alertPulseRings.length && !alertReducedMotion && !alertPulseRaf) {
+      alertPulseRaf = requestAnimationFrame(alertPulseTick);
+    }
+  }
+
+  // --- stop card bands ---------------------------------------------------------
+  // One band per alert scoped to this stop: glyph, a bold plain-language
+  // first line, then the alert's own words with agency + kind. Route-level
+  // alerts that do not name this stop are NOT shown here — the stop card
+  // never claims stop precision the feed does not have.
+  function renderStopAlerts(st) {
+    var box = $('stop-alerts'), list = $('stop-alerts-list');
+    if (!box || !list) return;
+    var mine = (st && alertsState.ok) ? alertsForStop(st.id) : [];
+    if (!mine.length) { box.hidden = true; list.innerHTML = ''; return; }
+    box.hidden = false;
+    list.innerHTML = '';
+    mine.forEach(function (a) {
+      var fx = alertFx(a);
+      var band = document.createElement('div');
+      band.className = 'sa-band' + (a.effect === 'NO_SERVICE' ? ' severe' : '') +
+        (a.effect === 'STOP_MOVED' ? ' moved' : '');
+      var ico = document.createElement('span');
+      ico.className = 'sa-ico';
+      ico.setAttribute('aria-hidden', 'true');
+      ico.textContent = fx.glyph;
+      band.appendChild(ico);
+      var p = document.createElement('p');
+      var lead = document.createElement('b');
+      var win = alertWindowText(a);
+      lead.textContent =
+        a.effect === 'DETOUR' ? 'This stop is bypassed' + (win ? ' ' + win : '') + '.'
+        : a.effect === 'NO_SERVICE' ? 'No service at this stop' + (win ? ' ' + win : '') + '.'
+        : a.effect === 'STOP_MOVED' ? 'Boarding point moved from this stop' + (win ? ' ' + win : '') + '.'
+        : fx.label + ' at this stop' + (win ? ' ' + win : '') + '.';
+      p.appendChild(lead);
+      var rest = document.createElement('span');
+      rest.textContent = ' ' + (a.header || 'Service alert') +
+        ' (' + (ALERT_AGENCY[a.agency] || a.agency || '') + ' · ' +
+        (a.kind === 'planned' ? 'planned notice' : 'live') + ')' +
+        (a.description ? ' ' + a.description : '');
+      p.appendChild(rest);
+      band.appendChild(p);
+      list.appendChild(band);
+    });
+  }
+  function refreshAlertSurfaces() {
+    renderAlertSr();
+    renderChipBadges();
+    try { renderAlertMap(); } catch (e) { /* overlay failure must never mark the feed down */ }
+    if (typeof selectedStop !== 'undefined' && selectedStop) {
+      var sc = $('stop-card');
+      if (sc && !sc.hidden) renderStopAlerts(selectedStop);
+    }
+    if (typeof tripJourneys !== 'undefined' && tripJourneys && tripJourneys.length &&
+        typeof tripSel !== 'undefined' && tripSel >= 0 && typeof renderTripDetail === 'function') {
+      renderTripDetail();
+    }
+    var bp = $('browse-panel');
+    if (bp && !bp.hidden) {
+      if (typeof buildBrowseStops === 'function') buildBrowseStops();
+      if (typeof refreshBrowseBuses === 'function') refreshBrowseBuses(true);
+    }
+  }
+  function pollAlerts() {
+    var proxy = (window.FORGE_LIVE_PROXY || '').replace(/\/$/, '');
+    if (!proxy) return;
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, 15000);
+    fetch(proxy + '/api/alerts', { cache: 'no-store', signal: ctrl.signal })
+      .then(function (r) { clearTimeout(timer); if (!r.ok) throw new Error('http ' + r.status); return r.json(); },
+            function (e) { clearTimeout(timer); throw e; })
+      .then(function (d) {
+        if (!d || !Array.isArray(d.alerts)) throw new Error('bad payload');
+        mergeAlerts(d.alerts);
+        alertsState.sources = Array.isArray(d.sources) ? d.sources : [];
+        alertsState.ok = true;
+        try { refreshAlertSurfaces(); } catch (e) { /* UI refresh must never mark the feed down */ }
+      })
+      .catch(function () {
+        // Endpoint absent (proxy not yet deployed) or fetch failed:
+        // silent degradation — badges, bands and overlays all clear.
+        alertsState.ok = false;
+        try { refreshAlertSurfaces(); } catch (e) { /* never throw from the poll */ }
+      });
+  }
+  function startAlertsPoll() {
+    pollAlerts();
+    setInterval(function () { if (!document.hidden) pollAlerts(); }, 120000);
+  }
+
   // --- instant paint from logged history ---------------------------------------
   var historyRendered = false;
   function maybeRenderHistory() {
@@ -5122,6 +5694,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       fetchHistory();
       maybeRenderHistory();
       poll();
+      startAlertsPoll();
       // Hidden-tab backoff (credit saver): while the tab is hidden, skip the
       // 60 s vehicle poll and re-check every 10 min instead. On return to
       // visible, poll immediately and resume the normal cadence.
