@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-0505';
+  var STAMP = '20261015-0532';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -6930,7 +6930,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // --- stop-card section ---------------------------------------------------------
   // The stop card is the shared detail surface. For a place record,
   // renderStopPlace fills the PLACE section and relabels the two generic
-  // rows (Type / Address); for any other record it hides the section, and
+  // rows (Type / Address); the section DL carries the Brand row plus the
+  // enrichment rows the record has (Hours / Phone / Website — only rows
+  // that have data). For any other record it hides the section, and
   // restores the labels only when a place card was the one showing (the
   // restore is flag-gated so the MoGo branch's labels are never clobbered —
   // showStop calls renderStopMogo first, then this).
@@ -6943,6 +6945,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       brandName: b.name,
       kind: b.kind,
       address: p.addr || null,
+      hours: p.hours || null,
+      phone: p.phone || null,
+      website: p.website || null,
       note: b.name + ' ' + b.kind.toLowerCase() + '. Location from OpenStreetMap ' +
         '(\u00A9 OpenStreetMap contributors, ODbL) \u2014 community map data, which may not list every location.'
     };
@@ -6954,6 +6959,26 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var m = placesCardModel(st.pdata);
     return 'Place details opened. ' + m.title + '. ' + m.kind +
       (m.address ? '. ' + m.address : '. Address not listed') + '.';
+  }
+  function placesDlRow(dl, label, value) {
+    var dt = document.createElement('dt'); dt.textContent = label;
+    var dd = document.createElement('dd'); dd.textContent = value;
+    dl.appendChild(dt); dl.appendChild(dd);
+  }
+  function placesDlLinkRow(dl, label, url) {
+    var dt = document.createElement('dt'); dt.textContent = label;
+    var dd = document.createElement('dd');
+    if (/^https?:\/\//i.test(url)) {
+      var a = document.createElement('a');
+      a.href = url;
+      a.textContent = url.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      dd.appendChild(a);
+    } else {
+      dd.textContent = url;
+    }
+    dl.appendChild(dt); dl.appendChild(dd);
   }
   function renderStopPlace(st) {
     var sec = $('stop-place');
@@ -6975,9 +7000,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     $('stop-nroutes').textContent = m.address || 'Not listed in OpenStreetMap';
     var dl = $('stop-place-dl');
     dl.innerHTML = '';
-    var dt = document.createElement('dt'); dt.textContent = 'Brand';
-    var dd = document.createElement('dd'); dd.textContent = m.brandName;
-    dl.appendChild(dt); dl.appendChild(dd);
+    placesDlRow(dl, 'Brand', m.brandName);
+    if (m.hours) placesDlRow(dl, 'Hours', m.hours);
+    if (m.phone) placesDlRow(dl, 'Phone', m.phone);
+    if (m.website) placesDlLinkRow(dl, 'Website', m.website);
     $('stop-place-note').textContent = m.note;
     sec.hidden = false;
     placeCardActive = true;
