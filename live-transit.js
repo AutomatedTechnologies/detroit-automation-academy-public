@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-1130';
+  var STAMP = '20261015-1158';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -3115,6 +3115,58 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     seeds.sort(function (a, b) { return a.walk - b.walk; });
     return seeds.slice(0, 12);
   }
+  // The scheduled timetable covers only the DDOT segment of the merged
+  // stop registry: buildIndex derives tt.nStops from the timetable
+  // (5,116) while the registry carries 10,583 stops (DDOT first, then
+  // SMART, then QLINE). A SMART/QLINE stop can therefore never be a
+  // planner endpoint as-is, and plan() fails silently for one. Map an
+  // out-of-coverage stop to the nearest covered stop within 400 m —
+  // agency twins at one intersection sit metres apart (SMART
+  // "Woodward & Warren" vs the DDOT stop of the same name) — or return
+  // -1 when no covered stop is that close.
+  function coveredStopIdx(idx, tt) {
+    if (idx == null || idx < 0) return -1;
+    if (!tt || idx < tt.nStops) return idx;
+    var s = stopData && stopData[idx];
+    if (!s) return -1;
+    var best = -1, bd = 400;
+    for (var i = 0; i < tt.nStops; i++) {
+      var t = stopData[i];
+      if (!t) continue;
+      var d = Math.hypot(t.x - s.x, t.z - s.z);
+      if (d < bd) { bd = d; best = i; }
+    }
+    return best;
+  }
+  // Planner arguments with endpoint coverage applied. Returns null when
+  // an endpoint is out of coverage with no covered stop within 400 m.
+  function planArgs(tt) {
+    var dest = coveredStopIdx(tripTo.idx, tt);
+    if (dest < 0) return null;
+    var seeds;
+    if (tripFrom.kind === 'stop') {
+      var o = coveredStopIdx(tripFrom.idx, tt);
+      if (o < 0) return null;
+      var w = 0;
+      if (o !== tripFrom.idx) {
+        var a = stopData[tripFrom.idx], b = stopData[o];
+        w = Math.max(60, Math.round(Math.hypot(a.x - b.x, a.z - b.z) / 1.4));
+      }
+      seeds = [{ stop: o, walk: w }];
+    } else {
+      seeds = tripSeeds();
+    }
+    return { seeds: seeds, dest: dest };
+  }
+  function renderTripUncovered() {
+    var host = $('trip-results');
+    host.innerHTML = '';
+    var none = document.createElement('p');
+    none.className = 'trip-note';
+    none.textContent = 'One of these stops is not on a DDOT route, and no DDOT stop is within a short walk of it. The scheduled planner covers DDOT routes; SMART and QLINE stops share the map and the stop search.';
+    host.appendChild(none);
+    announceSr(none.textContent);
+  }
   function tripWhen() {
     if (tripLeaveMode === 'at' && tripLeaveTime) {
       var p = tripLeaveTime.split(':');
@@ -3157,12 +3209,18 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       tripRaptor = R;
       var loaded = tripTT ? Promise.resolve(tripTT)
         : R.loadTimetable('ddot-timetable-S1000182.json?v=' + STAMP).then(function (tt) { tripTT = tt; return tt; });
-      var seeds = tripSeeds();
-      var dest = tripTo.idx;
       var when = tripWhen();
       var oF = tripFrom, oT = tripTo; // capture; ignore if the user moved on
       return loaded.then(function (tt) {
-        var res = R.plan(tt, seeds, dest, when);
+        if (oF !== tripFrom || oT !== tripTo) return; // stale
+        var args = planArgs(tt);
+        if (!args) {
+          tripJourneys = []; tripSel = -1;
+          clearTripHighlight();
+          renderTripUncovered();
+          return;
+        }
+        var res = R.plan(tt, args.seeds, args.dest, when);
         if (oF !== tripFrom || oT !== tripTo) return; // stale
         tripJourneys = res.journeys;
         tripSel = tripJourneys.length ? 0 : -1;
@@ -3202,7 +3260,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   function replanLive() {
     if (!tripMode || !tripJourneys.length || !tripRaptor || !tripTT || tripLoading) return;
     try {
-      var res = tripRaptor.plan(tripTT, tripSeeds(), tripTo.idx, new Date());
+      var args = planArgs(tripTT);
+      if (!args) return; // endpoint out of coverage: keep the current results
+      var res = tripRaptor.plan(tripTT, args.seeds, args.dest, new Date());
       var sig = tripSel >= 0 && tripJourneys[tripSel] ? journeySig(tripJourneys[tripSel]) : null;
       tripJourneys = res.journeys;
       tripSel = -1;
@@ -3431,7 +3491,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       none.className = 'trip-note';
       none.textContent = res.meta.reason === 'no-service'
         ? 'No scheduled DDOT service at this time.'
-        : 'No scheduled trip found between these stops right now. Try a different pair or time.';
+        : res.meta.reason === 'no-origin'
+          ? 'No DDOT stop is within a short walk of the start point. The scheduled planner covers DDOT routes.'
+          : 'No scheduled trip found between these stops right now. Try a different pair or time.';
       host.appendChild(none);
       announceSr(none.textContent);
       return;
@@ -6013,14 +6075,32 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (r.state === 'no-origin') { betaNoteRow(list, 'Set a From point \u2014 or tap Locate \u2014 so this tile can work from where you are.'); return; }
     if (r.state !== 'ok' || !r.options.length) { betaNoteRow(list, 'No live buses are approaching stops near the start point right now.'); return; }
     r.options.forEach(function (op) {
-      var row = document.createElement('div');
-      row.className = 'beta-row';
+      var row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'beta-row beta-suggest-row';
+      row.setAttribute('aria-label', 'Begin trip: board ' + routeLabel(op.rid) + ' bus ' + op.bus + ' at ' + (op.stop.n || 'stop'));
       var b = document.createElement('b');
       b.textContent = routeLabel(op.rid) + ' · Bus ' + op.bus + ' at ' + (op.stop.n || 'stop');
       row.appendChild(b);
       var t = document.createElement('span');
       t.textContent = 'bus ~' + betaMins(op.eta) + ' \u00b7 ' + betaMins(op.walk) + ' walk';
       row.appendChild(t);
+      // Begin trip: the suggestion names a specific catchable bus at a
+      // specific stop, so tapping it starts the trip from that stop —
+      // the same origin path as tapping the stop on the map (setTripFrom
+      // + replan), keeping the rider inside the planner. The bus card is
+      // deliberately not opened here: showBus() covers the trip card
+      // (exclCover), which would hide the plan the rider just started.
+      row.addEventListener('click', function () {
+        tapBuzz();
+        var idx = stopData ? stopData.indexOf(op.stop) : -1;
+        if (idx < 0) return;
+        setTripFrom({ kind: 'stop', idx: idx });
+        renderTripFields();
+        updateTripMarkers();
+        maybeReplan();
+        announceSr('Trip origin set to ' + (op.stop.n || 'stop') + '. Board ' + routeLabel(op.rid) + ' bus ' + op.bus + ' there.');
+      });
       list.appendChild(row);
       if (op.nearDest) {
         var s = document.createElement('div');
