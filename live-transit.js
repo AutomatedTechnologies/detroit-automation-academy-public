@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261014-2306';
+  var STAMP = '20261014-2309';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -1299,6 +1299,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       pin.scale.y = stopYS;
       pin.position.y = PM_DECK_Y + (300 * stopYS) / 2;
     }
+    if (typeof mogoRescale === 'function') mogoRescale();
     // NOTE 2026-10-06: stop distance-fade (opacity easing) reverted — it
     // correlated with renderer crashes in testing. Stops stay fully opaque
     // until a safer quieting mechanism is validated.
@@ -1475,6 +1476,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // dense downtown DDOT stops beneath them. (No-op while the PM layer is off.)
     var pm = pickPMStation(e.clientX, e.clientY, isTouch);
     if (pm) { showStop(pm); return; }
+    // MoGo bikeshare stations: same direct-pick precedence as the
+    // People Mover pins. (No-op while the layer is off or feed down.)
+    var mg = (typeof pickMogoStation === 'function') ? pickMogoStation(e.clientX, e.clientY, isTouch) : null;
+    if (mg) { showStop(mg); return; }
     if (isTouch) {
       // Raycast missed everything: nearest-on-screen fallbacks, as before.
       var _r = renderer.domElement.getBoundingClientRect();
@@ -2381,11 +2386,18 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       host.appendChild(chip);
     });
     if (typeof renderStopAlerts === 'function') renderStopAlerts(st);
+    if (typeof renderStopMogo === 'function') renderStopMogo(st);
     $('stop-card').hidden = false;
     // Dialog focus: same pattern as showBus above.
     if (_stopReturnFocus === null && document.activeElement && !$('stop-card').contains(document.activeElement)) _stopReturnFocus = document.activeElement;
     $('stop-card').focus();
-    announceSr('Stop details opened. ' + (st.n || 'Stop') + '. ' + (st.r || []).length + ((st.r || []).length === 1 ? ' route serves this stop.' : ' routes serve this stop.'));
+    if (st.mogo && st.station) {
+      announceSr('Bikeshare station details opened. ' + (st.n || 'Station') + '. ' +
+        (typeof mogoCardModel === 'function' ? mogoCardModel(st.station, Date.now()).bikesLine + '. ' : '') +
+        (typeof mogoStatusSentence === 'function' ? mogoStatusSentence(st.station) : ''));
+    } else {
+      announceSr('Stop details opened. ' + (st.n || 'Stop') + '. ' + (st.r || []).length + ((st.r || []).length === 1 ? ' route serves this stop.' : ' routes serve this stop.'));
+    }
     // Selection ring hugs the ground for DDOT stops, the guideway deck for
     // People Mover stations (their pins stand on the elevated loop).
     stopHighlight.position.set(st.x, st.pm ? PM_DECK_Y + 4 : 20, st.z);
@@ -3712,6 +3724,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (idle) idle.setAttribute('aria-pressed', String(!!filterState.hideIdle));
     var pmT = $('pm-toggle');
     if (pmT) pmT.setAttribute('aria-pressed', String(!!pmVisible));
+    var mgT = $('mogo-toggle');
+    if (mgT && typeof mogoVisible !== 'undefined') mgT.setAttribute('aria-pressed', String(mogoVisible));
   }
 
   function buildFilterPanel(groups) {
@@ -5592,6 +5606,514 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     sync();
   })();
 
+  // --- MoGo bikeshare station layer ---------------------------------------
+  // Live station availability from MoGo's public GBFS v3.0 feed
+  // (detroit.publicbikesystem.net), rendered as its own THREE group with
+  // its own filter-panel toggle — the People Mover layer's pattern, except
+  // this feed is live: station_status polls every 60 s on the bus cadence.
+  //
+  // Transport: DIRECT client-side fetch, no proxy. Verified 2026-10-14:
+  // GET station_information / station_status with an Origin header for
+  // this site returns 200 with `Access-Control-Allow-Origin: *`; the feed
+  // is no-auth and the request is a simple GET (no preflight), so the
+  // browser can read it itself. Client-side also holds the privacy bar:
+  // nothing about the rider leaves the device. (A curl HEAD probe from a
+  // shell returned 403 — a probe artifact; the GET evidence governs.)
+  //
+  // Data rules (recon 2026-10-05, enforced by the station-layer suite):
+  // canonical availability is the v3.0 vehicle count + per-type rows; the
+  // deprecated v2.x availability field is zero everywhere upstream and is
+  // never read. Stations whose last_reported is over 5 minutes old (or
+  // which are not installed) are QUARANTINED: grey, flattened markers,
+  // excluded from planner bike legs, and their cards say so in words.
+  // Zero-bike stations stay visible, dimmed and shortened — a rider's
+  // corner station reading empty is information, not noise. Stations that
+  // can neither rent nor return are not rendered.
+  //
+  // Nothing is carried by color alone: marker HEIGHT encodes state
+  // (full = bikes available, half = empty, low = stale), an e-assist ring
+  // circles stations with an EFIT available, a count badge ("🚲 N", or
+  // the word "stale") appears at close zoom, the stop card states bikes,
+  // docks and status in words, and #mogo-sr names every shown station's
+  // state in text for screen readers. Feed failure is an honest state,
+  // not a silent one: markers clear, the toggle reads "unavailable", and
+  // the SR note says the feed could not be loaded. No toast on the map.
+  var MOGO_GBFS_BASE = 'https://detroit.publicbikesystem.net/customer/gbfs/v3.0';
+  var MOGO_POLL_MS = 60000;
+  var MOGO_INFO_RECHECK_MS = 60 * 60 * 1000;
+  var MOGO_FETCH_TIMEOUT_MS = 20000;
+  var MOGO_STALE_MS = 5 * 60 * 1000;
+  var MOGO_LIVE_TYPES = ['ICONIC', 'EFIT'];
+  var MOGO_DOT_COLORS = { green: '#2ecc71', amber: '#f5a623', red: '#e5484d', grey: '#8a8f98' };
+  var MOGO_BASE_H = 75; // same base height as a single-route stop pylon
+  var mogoState = { ok: false, layer: null, fetchedAtMs: 0 };
+  var mogoVisible = false; // default OFF per Justin 2026-10-14 (design of record was ON, design 2026-10-05)
+  var mogoInfoCache = null, mogoInfoFetchedAtMs = 0;
+  var mogoGroup = null, mogoIM = null, mogoRingIM = null;
+  var mogoBadges = [];     // one THREE.Sprite per rendered station
+  var mogoPickList = [];   // {id, n, x, z, r:[], mogo:true, station}
+  var mogoBadgeTexCache = {};
+  var _mogoM4 = null, _mogoP3 = null, _mogoQ = null, _mogoS3 = null, _mogoCol = null, _mogoV3 = null;
+
+  // --- data layer: ES5 port of hidden_files/mogo/station-layer/lib/mogo.js
+  // (the suite-tested module; the client harness re-verifies equivalence
+  // against it on the pinned fixtures — do not let the two drift).
+  function mogoEnName(localized) {
+    if (typeof localized === 'string') return localized;
+    if (!Array.isArray(localized)) return '';
+    var en = null, i;
+    for (i = 0; i < localized.length; i++) {
+      if (localized[i] && localized[i].language === 'en') { en = localized[i]; break; }
+    }
+    var pick = en || localized[0];
+    return (pick && pick.text) || '';
+  }
+  function mogoTypeCounts(vehicleTypesAvailable) {
+    var counts = {};
+    (vehicleTypesAvailable || []).forEach(function (row) {
+      if (row && row.vehicle_type_id) counts[row.vehicle_type_id] = Number(row.count) || 0;
+    });
+    return counts;
+  }
+  function mogoBuildStation(info, status, nowMs) {
+    var st = status || {};
+    var reported = st.last_reported ? new Date(st.last_reported).getTime() : NaN;
+    var stale = !isFinite(reported) || (nowMs - reported) > MOGO_STALE_MS;
+    var installed = st.is_installed === true;
+    var renting = st.is_renting === true;
+    var returning = st.is_returning === true;
+    var vehiclesTotal = Number(st.num_vehicles_available) || 0;
+    var docksTotal = Number(st.num_docks_available) || 0;
+    var counts = mogoTypeCounts(st.vehicle_types_available);
+    var iconic = counts.ICONIC || 0;
+    var efit = counts.EFIT || 0;
+    var retiredNonzero = {};
+    Object.keys(counts).forEach(function (t) {
+      if (MOGO_LIVE_TYPES.indexOf(t) < 0 && counts[t] > 0) retiredNonzero[t] = counts[t];
+    });
+    return {
+      id: String(info.station_id),
+      name: mogoEnName(info.name),
+      lat: Number(info.lat),
+      lon: Number(info.lon),
+      address: info.address || '',
+      capacity: Number(info.capacity) || 0,
+      installed: installed, renting: renting, returning: returning, stale: stale,
+      vehiclesTotal: vehiclesTotal, docksTotal: docksTotal,
+      iconic: iconic, efit: efit, otherNonzero: retiredNonzero,
+      vehicleDocksAvailable: st.vehicle_docks_available || [],
+      eligiblePickup: installed && renting && vehiclesTotal >= 1 && !stale,
+      eligibleDropoff: installed && returning && docksTotal >= 1 && !stale,
+      statusClass: (!installed || stale) ? 'quarantined'
+        : vehiclesTotal >= 5 ? 'plenty' : vehiclesTotal >= 1 ? 'low' : 'empty',
+      statusHue: (!installed || stale) ? 'grey'
+        : vehiclesTotal >= 5 ? 'green' : vehiclesTotal >= 1 ? 'amber' : 'red',
+      efitRing: efit >= 1,
+      visible: installed && (renting || returning),
+      lastReported: st.last_reported || null,
+      updatedAgeMs: isFinite(reported) ? Math.max(0, nowMs - reported) : null
+    };
+  }
+  function mogoBuildLayer(infoPayload, statusPayload, nowMs) {
+    var infos = (infoPayload && infoPayload.data && infoPayload.data.stations) || [];
+    var statusById = {};
+    ((statusPayload && statusPayload.data && statusPayload.data.stations) || []).forEach(function (s) {
+      statusById[String(s.station_id)] = s;
+    });
+    var stations = infos.map(function (info) {
+      return mogoBuildStation(info, statusById[String(info.station_id)], nowMs);
+    });
+    var byId = {};
+    stations.forEach(function (s) { byId[s.id] = s; });
+    function sum(f) { return stations.reduce(function (a, s) { return a + f(s); }, 0); }
+    function cnt(f) { return stations.filter(f).length; }
+    var summary = {
+      stationCount: stations.length,
+      visible: cnt(function (s) { return s.visible; }),
+      renting: cnt(function (s) { return s.renting && s.installed; }),
+      withVehicles: cnt(function (s) { return s.vehiclesTotal >= 1; }),
+      totalVehicles: sum(function (s) { return s.vehiclesTotal; }),
+      totalIconic: sum(function (s) { return s.iconic; }),
+      totalEfit: sum(function (s) { return s.efit; }),
+      totalDocks: sum(function (s) { return s.docksTotal; }),
+      quarantined: cnt(function (s) { return s.stale || !s.installed; }),
+      pickupEligible: cnt(function (s) { return s.eligiblePickup; }),
+      dropoffEligible: cnt(function (s) { return s.eligibleDropoff; })
+    };
+    return { stations: stations, byId: byId, summary: summary };
+  }
+  function mogoPanelTally(summary) {
+    var v = summary ? summary.totalVehicles : 0;
+    var s = summary ? summary.withVehicles : 0;
+    return v + ' bike' + (v === 1 ? '' : 's') + ' · ' + s + ' station' + (s === 1 ? '' : 's') + ' live';
+  }
+  // Plain-language status sentence — the words that accompany every
+  // marker treatment, in the card, the SR list, and the toggle note.
+  function mogoStatusSentence(st) {
+    if (!st.installed) return 'This station is not installed.';
+    if (st.stale) return 'This station\u2019s feed reports are stale \u2014 its counts may be out of date, and it is excluded from trip-planner bike legs.';
+    if (st.renting && st.returning) return 'Renting and accepting returns.';
+    if (st.renting) return 'Renting only \u2014 returns are not accepted here.';
+    if (st.returning) return 'Returns only \u2014 no rentals here.';
+    return 'Not renting or accepting returns.';
+  }
+  function mogoSrText(st) {
+    var s = st.name + ': ';
+    if (!st.installed) return s + 'not installed.';
+    if (st.stale) return s + 'station reports are stale; availability may be out of date.';
+    if (st.vehiclesTotal === 0) s += 'no bikes available';
+    else {
+      s += st.vehiclesTotal + (st.vehiclesTotal === 1 ? ' bike' : ' bikes') + ' available';
+      var parts = [];
+      if (st.iconic > 0) parts.push(st.iconic + ' standard');
+      if (st.efit > 0) parts.push(st.efit + ' e-assist');
+      if (parts.length) s += ' (' + parts.join(', ') + ')';
+    }
+    s += ', ' + st.docksTotal + (st.docksTotal === 1 ? ' dock' : ' docks') + ' available.';
+    return s;
+  }
+  function mogoBadgeText(st) {
+    if (!st.installed || st.stale) return 'stale';
+    return '\uD83D\uDEB2 ' + st.vehiclesTotal; // "🚲 N" — count text, not color alone
+  }
+  // Stop-card model: mirrors lib buildStationCard; zero rows for vehicle
+  // types are omitted (retired fleets are noise), the total is always
+  // stated in the card's Bikes line by the caller.
+  function mogoCardModel(station, nowMs) {
+    if (!station) return null;
+    var lines = [];
+    if (station.iconic > 0) lines.push({ label: 'Standard bikes', value: String(station.iconic) });
+    if (station.efit > 0) lines.push({ label: 'E-assist bikes', value: String(station.efit) });
+    Object.keys(station.otherNonzero || {}).forEach(function (t) {
+      if (station.otherNonzero[t] > 0) lines.push({ label: t, value: String(station.otherNonzero[t]) });
+    });
+    lines.push({ label: 'Docks available', value: String(station.docksTotal) });
+    var ageMs = station.updatedAgeMs;
+    var updated = (station.stale || ageMs === null || ageMs === undefined) ? 'stale'
+      : ageMs < 60000 ? 'updated just now'
+      : 'updated ' + Math.round(ageMs / 60000) + ' min ago';
+    return {
+      title: station.name,
+      address: station.address || '',
+      bikesLine: station.stale ? 'Counts may be out of date'
+        : station.vehiclesTotal === 0 ? 'No bikes available'
+        : station.vehiclesTotal + (station.vehiclesTotal === 1 ? ' bike available' : ' bikes available'),
+      lines: lines,
+      status: mogoStatusSentence(station),
+      updated: updated,
+      pickupEligible: station.eligiblePickup,
+      dropoffEligible: station.eligibleDropoff
+    };
+  }
+
+  // --- rendering ------------------------------------------------------------
+  function mogoEnsureMeshes() {
+    if (mogoGroup) return;
+    _mogoM4 = new THREE.Matrix4(); _mogoP3 = new THREE.Vector3();
+    _mogoQ = new THREE.Quaternion(); _mogoS3 = new THREE.Vector3();
+    _mogoCol = new THREE.Color(); _mogoV3 = new THREE.Vector3();
+    mogoGroup = new THREE.Group();
+    mogoGroup.name = 'mogo-bikeshare';
+    mogoIM = new THREE.InstancedMesh(
+      new THREE.CylinderGeometry(16, 20, 1, 10),
+      new THREE.MeshLambertMaterial({ color: 0xffffff }), 96);
+    mogoIM.frustumCulled = false;
+    mogoIM.count = 0;
+    mogoGroup.add(mogoIM);
+    var ringGeo = new THREE.RingGeometry(30, 44, 28);
+    if (ringGeo.rotateX) ringGeo.rotateX(-Math.PI / 2);
+    mogoRingIM = new THREE.InstancedMesh(ringGeo,
+      new THREE.MeshBasicMaterial({ color: 0xF5F2EA, transparent: true, opacity: 0.5, side: THREE.DoubleSide, depthWrite: false }), 96);
+    mogoRingIM.frustumCulled = false;
+    mogoRingIM.count = 0;
+    mogoGroup.add(mogoRingIM);
+    mogoGroup.visible = false;
+    scene.add(mogoGroup);
+  }
+  function mogoHeightFor(st) {
+    // Height encodes state alongside color: full = bikes available,
+    // half = empty, low = quarantined (stale / not installed).
+    if (st.statusClass === 'quarantined') return 22;
+    if (st.vehiclesTotal === 0) return 40;
+    return MOGO_BASE_H;
+  }
+  function mogoBadgeTexture(text) {
+    var hit = mogoBadgeTexCache[text];
+    if (hit) return hit;
+    var c = document.createElement('canvas');
+    var x = c.getContext('2d');
+    x.font = '600 30px system-ui, -apple-system, sans-serif';
+    var w = Math.ceil(x.measureText(text).width) + 40;
+    c.width = w; c.height = 54;
+    var g = x;
+    g.fillStyle = 'rgba(10,14,18,0.85)';
+    g.beginPath();
+    if (g.roundRect) g.roundRect(0, 0, c.width, c.height, 13); else g.rect(0, 0, c.width, c.height);
+    g.fill();
+    g.font = '600 30px system-ui, -apple-system, sans-serif';
+    g.fillStyle = '#F5F2EA'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(text, c.width / 2, c.height / 2 + 1);
+    var t = new THREE.CanvasTexture(c);
+    t.anisotropy = 4;
+    var o = { tex: t, aspect: c.width / c.height };
+    mogoBadgeTexCache[text] = o;
+    return o;
+  }
+  function mogoWriteMarkers() {
+    mogoEnsureMeshes();
+    var layer = mogoState.layer;
+    var list = layer ? layer.stations.filter(function (s) { return s.visible; }) : [];
+    mogoPickList = [];
+    var ringIdx = 0;
+    for (var i = 0; i < list.length; i++) {
+      var st = list[i];
+      var xy = project(st.lat, st.lon);
+      var h = mogoHeightFor(st) * stopYS;
+      _mogoP3.set(xy[0], STOP_BASE_Y + h / 2, xy[1]);
+      _mogoQ.identity();
+      _mogoS3.set(1, h, 1);
+      _mogoM4.compose(_mogoP3, _mogoQ, _mogoS3);
+      mogoIM.setMatrixAt(i, _mogoM4);
+      _mogoCol.set(MOGO_DOT_COLORS[st.statusHue] || MOGO_DOT_COLORS.grey);
+      if (st.statusClass === 'quarantined') _mogoCol.multiplyScalar(0.6);
+      else if (st.vehiclesTotal === 0) _mogoCol.multiplyScalar(0.5);
+      mogoIM.setColorAt(i, _mogoCol);
+      if (st.efitRing) {
+        _mogoP3.set(xy[0], STOP_BASE_Y + 4, xy[1]);
+        _mogoS3.set(1, 1, 1);
+        _mogoM4.compose(_mogoP3, _mogoQ, _mogoS3);
+        mogoRingIM.setMatrixAt(ringIdx++, _mogoM4);
+      }
+      var rec = { id: st.id, n: st.name, x: xy[0], z: xy[1], r: [], mogo: true, station: st };
+      mogoPickList.push(rec);
+      var badge = mogoBadges[i];
+      if (!badge) {
+        badge = new THREE.Sprite(new THREE.SpriteMaterial({ depthTest: false, depthWrite: false, transparent: true, opacity: 0.95 }));
+        badge.renderOrder = 35;
+        badge.visible = false;
+        mogoGroup.add(badge);
+        mogoBadges[i] = badge;
+      }
+      var bt = mogoBadgeText(st);
+      if (badge.userData.text !== bt) {
+        var o = mogoBadgeTexture(bt);
+        badge.material.map = o.tex;
+        badge.material.needsUpdate = true;
+        badge.userData.text = bt;
+        badge.userData.aspect = o.aspect;
+      }
+      badge.scale.set(46 * (badge.userData.aspect || 1), 46, 1);
+      badge.position.set(xy[0], STOP_BASE_Y + h + 48, xy[1]);
+    }
+    mogoIM.count = list.length;
+    mogoIM.instanceMatrix.needsUpdate = true;
+    if (mogoIM.instanceColor) mogoIM.instanceColor.needsUpdate = true;
+    mogoRingIM.count = ringIdx;
+    mogoRingIM.instanceMatrix.needsUpdate = true;
+    for (var j = list.length; j < mogoBadges.length; j++) {
+      if (mogoBadges[j]) mogoBadges[j].visible = false;
+    }
+    mogoGroup.visible = !!(mogoVisible && mogoState.ok && list.length);
+  }
+  // Zoom-coupled rescale, called from easeStopScale: station markers are
+  // the stop family, so they ride the same eased scale.
+  function mogoRescale() {
+    if (!mogoGroup || !mogoState.layer) return;
+    mogoWriteMarkers();
+  }
+  // Per-frame hook from the animate loop: count badges follow the
+  // street-zoom declutter rule — visible at close zoom only, never all
+  // 81 citywide at once.
+  function mogoFrameTick(camDist) {
+    if (!mogoGroup) return;
+    var show = mogoGroup.visible && camDist < 9000;
+    for (var i = 0; i < mogoPickList.length; i++) {
+      var b = mogoBadges[i];
+      if (b && b.visible !== show) b.visible = show;
+    }
+  }
+  // Screen-space nearest station (mirrors pickPMStation: proximity, not
+  // raycast — the markers are small and raycasting them would be fiddly).
+  function pickMogoStation(cx, cy, isTouch) {
+    if (!mogoGroup || !mogoGroup.visible || !mogoPickList.length) return null;
+    var r = renderer.domElement.getBoundingClientRect();
+    var sx = cx - r.left, sy = cy - r.top;
+    var best = null, bestD = isTouch ? 48 : 26;
+    for (var i = 0; i < mogoPickList.length; i++) {
+      var s = mogoPickList[i];
+      _mogoV3.set(s.x, STOP_BASE_Y + 40, s.z).project(camera);
+      if (_mogoV3.z > 1 || _mogoV3.z < -1) continue;
+      var px = (_mogoV3.x * 0.5 + 0.5) * r.width, py = (-_mogoV3.y * 0.5 + 0.5) * r.height;
+      var d = Math.hypot(px - sx, py - sy);
+      if (d < bestD) { bestD = d; best = s; }
+    }
+    return best;
+  }
+
+  // --- stop-card section ------------------------------------------------------
+  // The stop card is the shared detail surface (People Mover stations use
+  // it too). For a MoGo record, renderStopMogo fills the bikeshare section
+  // and relabels the two generic rows; for any other stop it hides the
+  // section and restores the labels.
+  function renderStopMogo(st) {
+    var sec = $('stop-mogo');
+    if (!sec) return;
+    var idDt = $('stop-id-dt'), srvDt = $('stop-nroutes-dt');
+    if (!st || !st.mogo || !st.station) {
+      sec.hidden = true;
+      if (idDt) idDt.textContent = 'Stop ID';
+      if (srvDt) srvDt.textContent = 'Serving';
+      return;
+    }
+    var m = mogoCardModel(st.station, Date.now());
+    if (idDt) idDt.textContent = 'Station ID';
+    if (srvDt) srvDt.textContent = 'Bikes';
+    $('stop-id').textContent = st.station.id;
+    $('stop-nroutes').textContent = m.bikesLine;
+    var dl = $('stop-mogo-dl');
+    dl.innerHTML = '';
+    m.lines.forEach(function (ln) {
+      var dt = document.createElement('dt'); dt.textContent = ln.label;
+      var dd = document.createElement('dd'); dd.textContent = ln.value;
+      dl.appendChild(dt); dl.appendChild(dd);
+    });
+    var note = $('stop-mogo-note');
+    var bits = [];
+    if (m.address) bits.push(m.address);
+    bits.push(m.status);
+    bits.push('Availability ' + m.updated + '.');
+    note.textContent = bits.join(' ');
+    sec.hidden = false;
+  }
+
+  // --- screen-reader surface --------------------------------------------------
+  // #mogo-sr names every shown station's state in words (signature-gated,
+  // like #alerts-sr); #mogo-live announces only availability transitions,
+  // never the 60 s re-poll.
+  var mogoSrSig = '', mogoLiveOk = null;
+  function renderMogoSr() {
+    var list = $('mogo-sr-list');
+    if (!list) return;
+    var layer = mogoState.layer;
+    var shown = (mogoState.ok && layer) ? layer.stations.filter(function (s) { return s.visible; }) : [];
+    var sig = (mogoState.ok ? 'ok' : 'down') + '|' + shown.map(function (s) {
+      return s.id + ':' + s.vehiclesTotal + ':' + s.docksTotal + ':' + s.statusClass;
+    }).join(',');
+    if (sig !== mogoSrSig) {
+      mogoSrSig = sig;
+      list.innerHTML = '';
+      shown.forEach(function (st) {
+        var li = document.createElement('li');
+        li.textContent = mogoSrText(st);
+        list.appendChild(li);
+      });
+      var src = $('mogo-sr-note');
+      if (src) {
+        src.textContent = !mogoState.ok
+          ? 'MoGo bikeshare availability is unavailable \u2014 the GBFS feed could not be loaded.'
+          : 'MoGo GBFS feed: ' + layer.summary.stationCount + ' stations, ' + shown.length + ' shown, ' +
+            layer.summary.quarantined + ' with stale reports.';
+      }
+    }
+    if (mogoLiveOk !== mogoState.ok) {
+      var live = $('mogo-live');
+      if (live && mogoLiveOk !== null) {
+        live.textContent = mogoState.ok
+          ? 'MoGo bikeshare availability loaded: ' + mogoPanelTally(mogoState.layer.summary) + '.'
+          : 'MoGo bikeshare availability is unavailable right now.';
+      }
+      mogoLiveOk = mogoState.ok;
+    }
+  }
+
+  // --- toggle -----------------------------------------------------------------
+  function mogoSyncToggle() {
+    var t = $('mogo-toggle');
+    if (!t) return;
+    t.setAttribute('aria-pressed', String(mogoVisible));
+    var c = $('mogo-count');
+    if (c) {
+      c.textContent = !mogoState.ok ? 'unavailable'
+        : mogoState.layer ? mogoPanelTally(mogoState.layer.summary) : 'loading';
+    }
+  }
+  var mogoToggleEl = $('mogo-toggle');
+  if (mogoToggleEl && mogoToggleEl.addEventListener) {
+    mogoToggleEl.addEventListener('click', function () {
+      mogoVisible = !mogoVisible;
+      if (mogoGroup) mogoGroup.visible = !!(mogoVisible && mogoState.ok && mogoPickList.length);
+      mogoSyncToggle();
+      if (!mogoVisible && typeof selectedStop !== 'undefined' && selectedStop && selectedStop.mogo &&
+          typeof hideStop === 'function') hideStop();
+    });
+  }
+
+  // --- poll -------------------------------------------------------------------
+  function mogoFetchJson(url) {
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, MOGO_FETCH_TIMEOUT_MS);
+    return fetch(url, { cache: 'no-store', signal: ctrl.signal })
+      .then(function (r) {
+        clearTimeout(timer);
+        if (!r.ok) throw new Error('gbfs http ' + r.status);
+        return r.json();
+      }, function (e) { clearTimeout(timer); throw e; });
+  }
+  // station_information geometry moves slowly: re-fetch on a slow
+  // cadence, replace the cache only when the feed's last_updated changes.
+  function mogoRefreshInfo(force) {
+    var t = Date.now();
+    if (mogoInfoCache && !force && (t - mogoInfoFetchedAtMs) < MOGO_INFO_RECHECK_MS) {
+      return Promise.resolve(mogoInfoCache);
+    }
+    return mogoFetchJson(MOGO_GBFS_BASE + '/station_information.json').then(function (payload) {
+      mogoInfoFetchedAtMs = t;
+      if (!mogoInfoCache || payload.last_updated !== mogoInfoCache.last_updated) {
+        mogoInfoCache = payload;
+      }
+      return mogoInfoCache;
+    });
+  }
+  function mogoSetLayer(layer, ok) {
+    mogoState.ok = !!ok;
+    if (layer) { mogoState.layer = layer; mogoState.fetchedAtMs = Date.now(); }
+    // On failure the last layer is kept for the card/SR bookkeeping, but
+    try { mogoWriteMarkers(); } catch (e) { /* marker failure must never break the poll */ }
+    try { renderMogoSr(); } catch (e) { /* SR failure must never break the poll */ }
+    try { mogoSyncToggle(); } catch (e) { /* toggle failure must never break the poll */ }
+    if (typeof selectedStop !== 'undefined' && selectedStop && selectedStop.mogo &&
+        typeof renderStopMogo === 'function') {
+      var fresh = mogoState.layer && mogoState.layer.byId[selectedStop.id];
+      if (fresh) { selectedStop.station = fresh; renderStopMogo(selectedStop); }
+    }
+  }
+  function pollMogo() {
+    mogoRefreshInfo(false)
+      .then(function (info) {
+        return mogoFetchJson(MOGO_GBFS_BASE + '/station_status.json').then(function (status) {
+          mogoSetLayer(mogoBuildLayer(info, status, Date.now()), true);
+        });
+      })
+      .catch(function () {
+        // Feed down: honest unavailable state — markers clear (group hides
+        // on ok=false), the toggle reads "unavailable", the SR note says
+        // the feed could not be loaded. The next tick retries.
+        mogoSetLayer(null, false);
+      });
+  }
+  function startMogoPoll() {
+    pollMogo();
+    setInterval(function () { if (!document.hidden) pollMogo(); }, MOGO_POLL_MS);
+  }
+  // Boot: the projection arrives with the route data — start polling as
+  // soon as it exists so markers can be placed.
+  var mogoBootTimer = setInterval(function () {
+    if (typeof proj !== 'undefined' && proj) {
+      clearInterval(mogoBootTimer);
+      startMogoPoll();
+    }
+  }, 500);
+
   // --- instant paint from logged history ---------------------------------------
   var historyRendered = false;
   function maybeRenderHistory() {
@@ -6064,6 +6586,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           belleIsleLabel.visible = biLvis;
           if (belleIsleTether) belleIsleTether.visible = biLvis;
         }
+        // MoGo bikeshare: count badges appear at close zoom only
+        // (declutter rule, same family as the route labels above).
+        if (typeof mogoFrameTick === 'function') mogoFrameTick(camDist);
         if (stopHighlight.visible) {
           var shp = busPulse();
           stopHighlight.scale.set(shp, shp, 1);
