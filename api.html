@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Transit API — Detroit Automation Academy</title>
-<meta name="description" content="Documentation for the Detroit Automation Academy's live transit API: real-time DDOT bus positions as JSON, plus the logged history dataset.">
+<meta name="description" content="Documentation for the Detroit Automation Academy's live transit data: DDOT and QLINE vehicle positions and DDOT service alerts as static JSON, plus the logged history dataset.">
 <link rel="icon" type="image/webp" href="assets/logo.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -43,13 +43,13 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Detroit Automation Academy">
 <meta property="og:title" content="Transit API — Detroit Automation Academy">
-<meta property="og:description" content="Documentation for the Detroit Automation Academy's live transit API: real-time DDOT vehicle data.">
+<meta property="og:description" content="Documentation for the Detroit Automation Academy's live transit data: DDOT and QLINE vehicle positions and alerts as static JSON.">
 <meta property="og:url" content="https://www.detroitautomationacademy.com/api.html">
 <meta property="og:image" content="https://www.detroitautomationacademy.com/assets/logo.webp">
 <meta property="og:image:alt" content="Detroit Automation Academy — Forge D logo">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Transit API — Detroit Automation Academy">
-<meta name="twitter:description" content="Documentation for the Detroit Automation Academy's live transit API: real-time DDOT vehicle data.">
+<meta name="twitter:description" content="Documentation for the Detroit Automation Academy's live transit data: DDOT and QLINE vehicle positions and alerts as static JSON.">
 <meta name="twitter:image" content="https://www.detroitautomationacademy.com/assets/logo.webp">
 <script type="application/ld+json">
 {
@@ -57,7 +57,7 @@
   "@type": "WebAPI",
   "name": "Detroit Automation Academy Transit API",
   "url": "https://www.detroitautomationacademy.com/api.html",
-  "description": "Real-time DDOT vehicle data API from the Detroit Automation Academy.",
+  "description": "Live DDOT and QLINE vehicle data from the Detroit Automation Academy, published as static JSON.",
   "provider": {
     "@type": "Organization",
     "name": "Detroit Automation Academy",
@@ -77,57 +77,48 @@
       <p class="kicker">Developer documentation</p>
       <h1>The transit <span class="accent">API.</span></h1>
       <div class="prose">
-        <p>This is the live data feed behind the academy&rsquo;s <a href="live-transit.html">Live Transit map</a> and the bus count on the <a href="live-transit.html">Live Transit page</a>: real-time Detroit Department of Transportation (DDOT) bus positions, served as JSON through the academy&rsquo;s proxy. No key required.</p>
-        <p>Base URL: <code>https://forge-line-live-proxy.netlify.app</code></p>
+        <p>This is the live data feed behind the academy&rsquo;s <a href="live-transit.html">Live Transit map</a> and the bus count on the <a href="live-transit.html">Live Transit page</a>: Detroit Department of Transportation (DDOT) bus positions, QLINE streetcar positions, and DDOT service alerts, published as static JSON files on this site. A GitHub Actions workflow in the academy&rsquo;s site repository rebuilds the files from the agency feeds about every 5 minutes. No key required.</p>
+        <p>Base URL: <code>https://detroitautomationacademy.com</code></p>
       </div>
     </div>
   </section>
 
   <section class="api-section">
     <div class="wrap">
-      <h2>Endpoint</h2>
+      <h2>Endpoints</h2>
       <div class="endpoint">
         <div class="endpoint-head">
           <span class="method">GET</span>
-          <span class="endpoint-path">/api/vehicles</span>
+          <span class="endpoint-path">/live-data/vehicles.json</span>
         </div>
         <dl class="kv">
           <dt>Parameters</dt><dd>None.</dd>
-          <dt>Refresh</dt><dd>The feed updates roughly every 60 seconds; the proxy caches upstream responses for 60 seconds.</dd>
-          <dt>CORS</dt><dd>CORS-enabled for web use — call it directly from browser JavaScript.</dd>
-          <dt>Auth</dt><dd>None. The DDOT key lives server-side in the proxy and is never exposed.</dd>
+          <dt>Refresh</dt><dd>The build workflow runs about every 5 minutes and republishes the file when the underlying data has changed (and at least every 30 minutes as a liveness heartbeat). GitHub Pages may serve a cached copy for up to 10 minutes. Judge freshness by <code>generated_at</code>, never by fetch time.</dd>
+          <dt>CORS</dt><dd>Served by GitHub Pages with <code>Access-Control-Allow-Origin: *</code> — call it directly from browser JavaScript.</dd>
+          <dt>Auth</dt><dd>None to read. The upstream DDOT key is a secret of the build workflow and never appears in the published files.</dd>
         </dl>
       </div>
 
-      <h3>Example response <span style="color:#9AA0A6;font-weight:400;font-size:.85rem;">(trimmed to 2 vehicles)</span></h3>
+      <h3>Example response <span style="color:#9AA0A6;font-weight:400;font-size:.85rem;">(real response, 2026-10-15; trimmed to 1 of 3 vehicles)</span></h3>
 <pre class="code">{
-  "generated_at": "2026-10-03T01:04:15.108Z",
-  "count": 17,
+  "generated_at": "2026-10-15T19:52:23.113Z",
+  "count": 3,
   "vehicles": [
     {
-      "agency": "ddot",
-      "route_id": "4",
-      "vehicle_id": "2532",
-      "lat": 42.331234,
-      "lon": -83.046789,
-      "bearing": 151,
-      "speed_mph": 13,
-      "updated_at": "2026-10-02T21:04:00"
-    },
-    {
-      "agency": "ddot",
-      "route_id": "1",
-      "vehicle_id": "1827",
-      "lat": 42.332769,
-      "lon": -83.052425,
-      "bearing": 359,
-      "speed_mph": 0,
-      "updated_at": "2026-10-02T21:03:00"
+      "agency": "qline",
+      "route_id": "QLINE",
+      "vehicle_id": "287",
+      "lat": 42.34115982055664,
+      "lon": -83.05355072021484,
+      "bearing": 336,
+      "speed_mph": null,
+      "updated_at": "2026-10-15T19:51:54.000Z"
     }
   ],
   "sources": {
-    "ddot":  { "ok": true,  "at": "2026-10-03T01:04:15.108Z", "vehicles": 17 },
-    "smart": { "ok": false, "at": "2026-10-03T01:04:15.108Z", "reason": "no SWIFTLY_KEY" }
+    "ddot":  { "ok": false, "at": "2026-10-15T19:52:23.113Z", "reason": "DDOT_BUSTIME_KEY secret not configured", "configured": false },
+    "smart": { "ok": false, "removed": true, "at": "2026-10-15T19:52:23.113Z", "reason": "SMART removed from Live Transit Detroit 2026-10-15" },
+    "qline": { "ok": true,  "at": "2026-10-15T19:52:23.113Z", "vehicles": 3 }
   }
 }</pre>
 
@@ -135,11 +126,10 @@
       <table class="fields">
         <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td>generated_at</td><td>string</td><td>ISO 8601 UTC timestamp of when the proxy built this response.</td></tr>
+          <tr><td>generated_at</td><td>string</td><td>ISO 8601 UTC timestamp of when the build workflow generated this file. The file is only republished when the data changes (30-minute heartbeat aside), so this is the freshness clock for everything in it.</td></tr>
           <tr><td>count</td><td>integer</td><td>Number of vehicle objects in <code>vehicles</code>.</td></tr>
           <tr><td>vehicles</td><td>array</td><td>Live vehicle snapshots (fields below).</td></tr>
-          <tr><td>sources</td><td>object</td><td>Per-agency feed status: <code>ok</code>, <code>at</code>, and either <code>vehicles</code> or a <code>reason</code>.</td></tr>
-          <tr><td>stale</td><td>boolean</td><td>Present and <code>true</code> only when the upstream feed was unreachable and the proxy served its last cached snapshot. Treat positions as older than <code>generated_at</code> suggests.</td></tr>
+          <tr><td>sources</td><td>object</td><td>Per-agency feed status, keyed <code>ddot</code>, <code>smart</code>, <code>qline</code>: <code>ok</code>, <code>at</code>, and either <code>vehicles</code> (a count) or a <code>reason</code>. Two states are named explicitly: <code>sources.ddot</code> carries <code>"configured": false</code> with a reason when the build workflow lacks the upstream DDOT key — DDOT vehicles are then absent while other agencies still publish; <code>sources.smart</code> carries <code>"removed": true</code> — SMART was removed from Live Transit Detroit on 2026-10-15 and is never polled.</td></tr>
         </tbody>
       </table>
 
@@ -148,14 +138,90 @@
         <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
         <tbody>
           <tr><td>agency</td><td>string</td><td><code>ddot</code> or <code>qline</code>.</td></tr>
-          <tr><td>route_id</td><td>string</td><td>GTFS route id. Currently <code>1</code> (Vernor), <code>4</code> (Woodward), <code>10</code> (Greenfield), <code>16</code> (Dexter).</td></tr>
+          <tr><td>route_id</td><td>string</td><td>GTFS route id: the route number for DDOT vehicles (the build covers all 37 DDOT routes), or <code>QLINE</code> for the streetcar.</td></tr>
           <tr><td>vehicle_id</td><td>string</td><td>Agency vehicle number.</td></tr>
           <tr><td>lat / lon</td><td>number</td><td>WGS84 position in decimal degrees.</td></tr>
-          <tr><td>bearing</td><td>number</td><td>Compass heading in degrees. Omitted when unknown.</td></tr>
-          <tr><td>speed_mph</td><td>number</td><td>Reported speed in miles per hour. Omitted when unknown.</td></tr>
-          <tr><td>updated_at</td><td>string</td><td>Vehicle timestamp as reported by the agency feed. Omitted when unknown.</td></tr>
+          <tr><td>bearing</td><td>number</td><td>Compass heading in degrees, or <code>null</code> when the feed does not report it.</td></tr>
+          <tr><td>speed_mph</td><td>number</td><td>Reported speed in miles per hour, or <code>null</code> when the feed does not report it.</td></tr>
+          <tr><td>destination</td><td>string</td><td>DDOT records only: the destination text reported by the BusTime feed, or <code>null</code>. QLINE records do not carry this field.</td></tr>
+          <tr><td>updated_at</td><td>string</td><td>Vehicle timestamp as reported by the agency feed (ISO 8601; DDOT timestamps are agency-local time without an offset). <code>null</code> when the feed reports none.</td></tr>
         </tbody>
       </table>
+      <div class="endpoint">
+        <div class="endpoint-head">
+          <span class="method">GET</span>
+          <span class="endpoint-path">/live-data/alerts.json</span>
+        </div>
+        <dl class="kv">
+          <dt>Parameters</dt><dd>None.</dd>
+          <dt>Refresh</dt><dd>Rebuilt on the same schedule as <code>vehicles.json</code>: about every 5 minutes when the alert set or a source state changes, with the same 30-minute heartbeat.</dd>
+          <dt>CORS</dt><dd>Served by GitHub Pages with <code>Access-Control-Allow-Origin: *</code>.</dd>
+          <dt>Auth</dt><dd>None to read.</dd>
+        </dl>
+      </div>
+
+      <h3>Example response <span style="color:#9AA0A6;font-weight:400;font-size:.85rem;">(real response, 2026-10-15)</span></h3>
+<pre class="code">{
+  "generated_at": "2026-10-15T19:51:06.386Z",
+  "count": 0,
+  "alerts": [],
+  "sources": [
+    {
+      "agency": "ddot",
+      "kind": "realtime",
+      "via": "bustime",
+      "fetched_at": "2026-10-15T19:51:06.386Z",
+      "ok": false,
+      "status": "error",
+      "alerts": 0,
+      "reason": "DDOT_BUSTIME_KEY secret not configured",
+      "configured": false
+    }
+  ]
+}</pre>
+
+      <h3>Alerts top-level fields</h3>
+      <table class="fields">
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>generated_at</td><td>string</td><td>ISO 8601 UTC timestamp of when the build workflow generated this file.</td></tr>
+          <tr><td>count</td><td>integer</td><td>Number of alert objects in <code>alerts</code>.</td></tr>
+          <tr><td>alerts</td><td>array</td><td>Active DDOT service bulletins (fields below).</td></tr>
+          <tr><td>sources</td><td>array</td><td>Per-agency feed status as an array (in <code>vehicles.json</code> it is an object). Each entry carries <code>agency</code>, <code>kind</code>, <code>via</code>, <code>fetched_at</code>, <code>ok</code>, <code>status</code> (<code>ok</code> or <code>error</code>), and <code>alerts</code> (a count); a failed or unconfigured source adds a <code>reason</code>, and the not-configured state adds <code>"configured": false</code>.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Bulletin fields</h3>
+      <table class="fields">
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>string</td><td>Bulletin id from the BusTime feed.</td></tr>
+          <tr><td>agency</td><td>string</td><td><code>ddot</code>.</td></tr>
+          <tr><td>header</td><td>string</td><td>Bulletin headline.</td></tr>
+          <tr><td>description</td><td>string</td><td>Bulletin detail text.</td></tr>
+          <tr><td>effect / cause</td><td>string</td><td>Currently always <code>null</code> — the BusTime bulletin feed does not carry GTFS-RT effect/cause values.</td></tr>
+          <tr><td>active_period</td><td>object</td><td><code>{start, end}</code>: <code>start</code> is the bulletin timestamp reported by the BusTime feed (agency-local ISO 8601, or <code>null</code>); <code>end</code> is currently always <code>null</code>.</td></tr>
+          <tr><td>routes / stops</td><td>array</td><td>Route ids and stop ids the bulletin applies to.</td></tr>
+          <tr><td>url</td><td>string</td><td>Currently always <code>null</code>.</td></tr>
+          <tr><td>source</td><td>string</td><td><code>bustime</code>.</td></tr>
+          <tr><td>fetched_at</td><td>string</td><td>When the build fetched this bulletin (the file&rsquo;s <code>generated_at</code>).</td></tr>
+          <tr><td>kind</td><td>string</td><td><code>realtime</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="api-section">
+    <div class="wrap">
+      <h2>Retired endpoints</h2>
+      <div class="prose">
+        <p>The live data used to be served by a proxy at <code>forge-line-live-proxy.netlify.app</code>. <strong>Those endpoints were retired on 2026-10-15</strong> — the proxy&rsquo;s hosting quota was exhausted (it returned HTTP 503 <code>usage_exceeded</code> on every path) and the feed moved to the static files above. Do not build against them:</p>
+        <ul>
+          <li><code>GET https://forge-line-live-proxy.netlify.app/api/vehicles</code> — retired 2026-10-15; use <code>/live-data/vehicles.json</code> instead.</li>
+          <li><code>GET https://forge-line-live-proxy.netlify.app/api/alerts</code> — retired 2026-10-15; use <code>/live-data/alerts.json</code> instead.</li>
+          <li><code>GET https://forge-line-live-proxy.netlify.app/healthz</code> — retired 2026-10-15; the static files need no health endpoint — check <code>generated_at</code>.</li>
+        </ul>
+      </div>
     </div>
   </section>
 
@@ -164,14 +230,14 @@
       <h2>Rate-limit etiquette</h2>
       <div class="prose">
         <ul>
-          <li>Poll at most <strong>once per 30 seconds</strong>. The academy&rsquo;s own map polls every 60 seconds — matching that is plenty.</li>
-          <li>Polling faster than the ~60-second feed refresh returns the same cached snapshot; use <code>generated_at</code> to detect genuinely new data instead of re-polling.</li>
+          <li>Poll at most <strong>once per minute</strong>. The academy&rsquo;s own map polls the vehicles file every 60 seconds — matching that is plenty.</li>
+          <li>The files are rebuilt about every 5 minutes, so faster polling returns the same file; use <code>generated_at</code> to detect genuinely new data instead of re-polling.</li>
           <li>Cache responses client-side. Don&rsquo;t fan out one page view into many parallel requests.</li>
-          <li>Never try to bypass the proxy or extract the agency key — the key stays server-side by design.</li>
+          <li>The published files are the whole interface — there is no key to ask for and nothing upstream to bypass; the agency key exists only inside the build workflow.</li>
         </ul>
       </div>
       <div class="callout">
-        <p>Building a student project or a community tool? The 60-second cadence is the intended use. If you need something the API doesn&rsquo;t offer, the logged history below may already have it.</p>
+        <p>Building a student project or a community tool? The 5-minute cadence is the intended use. If you need something the feed doesn&rsquo;t offer, the logged history below may already have it.</p>
       </div>
     </div>
   </section>
@@ -180,7 +246,7 @@
     <div class="wrap">
       <h2>Logged history dataset</h2>
       <div class="prose">
-        <p>Every 5 minutes, a scheduled job polls this API and appends the snapshot to a public log — the raw material for headway analysis, reliability scores, and arrival predictions. Vehicle objects in the log use exactly the same field names as the live endpoint above, so code written against the live feed reads the history without translation.</p>
+        <p>A public log of this feed&rsquo;s snapshots, appended every 5 minutes, runs from 2026-10-03 — the raw material for headway analysis, reliability scores, and arrival predictions. Vehicle objects in the log use exactly the same field names as the live endpoint above, so code written against the live feed reads the history without translation.</p>
         <ul>
           <li>Repository: <a href="https://github.com/smit4786/forge-line-transit-data">github.com/smit4786/forge-line-transit-data</a></li>
           <li>Format: <code>forge-line.telemetry/v1</code>, documented in the repo&rsquo;s <a href="https://github.com/smit4786/forge-line-transit-data/blob/main/SCHEMA.md">SCHEMA.md</a></li>
@@ -197,11 +263,12 @@
       <h2>Error behavior</h2>
       <div class="prose">
         <ul>
-          <li><strong>HTTP 200 with <code>"stale": true</code></strong> — the agency feed was unreachable; the proxy served its last cached snapshot. Keep displaying it, but mark the data as older, and keep retrying on your normal cadence.</li>
-          <li><strong>Non-200 or network failure</strong> — back off and retry after 60 seconds. Don&rsquo;t hammer the endpoint; the feed only refreshes about once a minute anyway.</li>
-          <li><strong>Empty <code>vehicles</code> array</strong> — valid response, no buses currently reporting on the covered routes (common late at night).</li>
+          <li><strong>Old <code>generated_at</code></strong> — the files are static, so a failed or delayed build leaves the previous file in place rather than returning an error. If <code>generated_at</code> is well past the ~5-minute build cadence, treat the contents as of that timestamp and keep retrying on your normal cadence.</li>
+          <li><strong>A source reports <code>"ok": false</code></strong> — that agency&rsquo;s leg failed or is not configured (its <code>reason</code> says which); the other agencies&rsquo; data still publishes. Check <code>sources</code> before concluding the whole feed is down.</li>
+          <li><strong>Non-200 or network failure</strong> — back off and retry after 60 seconds. Don&rsquo;t hammer the files; they only change every few minutes anyway.</li>
+          <li><strong>Empty <code>vehicles</code> array</strong> — valid response, no vehicles currently reporting on the covered routes (common late at night).</li>
         </ul>
-        <p>All timestamps are UTC. Route coverage may expand as feeds are added; check <code>sources</code> to see which agencies are live.</p>
+        <p>File-level timestamps (<code>generated_at</code>, <code>fetched_at</code>) are UTC; vehicle and bulletin timestamps are reported as the agency feeds give them. Route coverage may expand as feeds are added; check <code>sources</code> to see which agencies are live.</p>
       </div>
     </div>
   </section>
@@ -212,7 +279,7 @@
       <h2>Built by <span class="accent">Detroit Automation Academy.</span></h2>
       <div class="prose">
         <p>Live vehicle data: DDOT via Clever Devices BusTime; QLINE via its public GTFS-RT feed. Route shapes and stops: DDOT and QLINE GTFS.</p>
-        <p class="fine">This API is a community resource. The academy runs it on donated infrastructure — please follow the rate-limit etiquette above so it stays fast for everyone.</p>
+        <p class="fine">This feed is a community resource, published from the academy&rsquo;s own repository — please follow the rate-limit etiquette above so it stays fast for everyone.</p>
       </div>
     </div>
   </section>
