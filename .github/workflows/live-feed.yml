@@ -20,11 +20,19 @@ name: Live transit feed (static JSON)
 # own. workflow_dispatch is exempt from that guard, so this workflow
 # dispatches the Pages deploy explicitly after a commit lands.
 #
-# Secret required (set by the repo owner; never committed):
+# Secrets (set by the repo owner; never committed):
 #   DDOT_BUSTIME_KEY — DDOT Clever Devices BusTime API key (the same
 #   key the Netlify proxy held as DDOT_KEY). Until it is set, the feed
 #   publishes the QLINE leg live and reports the DDOT leg as a named
 #   not-configured state; nothing is fabricated.
+#   SWIFTLY_KEY — Swiftly realtime API key for SMART GTFS-RT vehicle
+#   positions (requested 2026-10-13; issued to the repo owner by
+#   email). OPTIONAL and dormant: until it is set, the builder's SMART
+#   leg performs zero network calls and every output is identical to
+#   the pre-SMART build. When set, SMART vehicles are written ONLY to
+#   live-data/smart-display.json (display-only under the Swiftly API
+#   License Agreement §4(vi); never merged into vehicles.json, never
+#   archived by the telemetry logger).
 
 on:
   schedule:
@@ -54,6 +62,7 @@ jobs:
       - name: Poll upstreams and rebuild live-data JSON
         env:
           DDOT_BUSTIME_KEY: ${{ secrets.DDOT_BUSTIME_KEY }}
+          SWIFTLY_KEY: ${{ secrets.SWIFTLY_KEY }}
         run: node tools/feed/build-feed.mjs
 
       - name: Commit if changed
@@ -62,6 +71,15 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add live-data/vehicles.json live-data/alerts.json
+          # smart-display.json exists only while SWIFTLY_KEY is set.
+          # Stage it when present (create/update) or tracked (a tracked
+          # file the builder deleted because the key was withdrawn —
+          # the deletion must be committed so the payload stops being
+          # served). -A covers both; the guard avoids a pathspec error
+          # in the never-existed case.
+          if [ -e live-data/smart-display.json ] || git ls-files --error-unmatch live-data/smart-display.json >/dev/null 2>&1; then
+            git add -A -- live-data/smart-display.json
+          fi
           if git diff --cached --quiet; then
             echo "No material change; nothing to commit."
             echo "pushed=false" >> "$GITHUB_OUTPUT"
