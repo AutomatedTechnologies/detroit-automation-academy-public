@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-1204';
+  var STAMP = '20261015-1239';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -2578,10 +2578,35 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var p = project(lat, lon);
     userXZ = p;
     cancelStreetTween();
-    var off = camera.position.clone().sub(controls.target);
-    controls.target.set(p[0], 0, p[1]);
-    camera.position.copy(controls.target).add(off);
     youMarker.group.position.set(p[0], 0, p[1]);
+    // Zoom-on-enable (2026-10-15, Justin's priority): enabling location
+    // flies the camera SMOOTHLY to street level over the rider, so the
+    // buses, stops, and routes around the rider are individually
+    // tappable and selectable. The framing is the app's own bus vantage
+    // (TransitionEngine.vantageForBus): a 32-degree-elevated view at
+    // horizontal offset max(controls.minDistance * 1.3, 900) — 1,560 m
+    // at the normal-mode minDistance of 1,200 m — for a total camera
+    // distance of ~1,840 m. Derivation: the home framing (~20.5 km) is
+    // far too wide to pick out one bus; the street-view vantage
+    // (~670 m) sits below controls.minDistance in normal mode, so
+    // OrbitControls would snap the camera back out on the next
+    // interaction (vantageForBus's own comment documents that
+    // constraint); at ~1,840 m stopScaleFor() is at its close-zoom
+    // floor (<= 2,800 m), so stops and buses render at full street
+    // scale. The move reuses TransitionEngine.go -> glideTo, the
+    // existing minimum-jerk fly-to — no second animation system. While
+    // a trip fly-through owns the camera, TransitionEngine.go defers
+    // and would drop the move entirely, so that case keeps the legacy
+    // instant recenter. Denied or unavailable location never reaches
+    // this code: the error path and the settled home framing are
+    // unchanged.
+    if (typeof tripFly !== 'undefined' && tripFly) {
+      var off = camera.position.clone().sub(controls.target);
+      controls.target.set(p[0], 0, p[1]);
+      camera.position.copy(controls.target).add(off);
+    } else {
+      TransitionEngine.go({ vantage: TransitionEngine.vantageForBus(p[0], p[1]) });
+    }
     youMarker.setAccuracy(accMeters);
     youMarker.group.visible = true;
     locateBtn.setAttribute('aria-pressed', 'true');
