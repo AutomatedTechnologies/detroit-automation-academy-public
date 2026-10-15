@@ -176,6 +176,12 @@
   RideAlong.prototype.board = function (vehicleId) {
     this.currentVehicleId = vehicleId;
     this.refresh();
+    // Rebuild the picker so the <select> shows the boarded bus. refresh()
+    // renders only the ride body; without this, a programmatic board
+    // (the host's selection state, not the dropdown) leaves the select
+    // displaying "-- choose a bus --" until the next setVehicles
+    // re-render — the widget looks un-boarded while it is riding.
+    this.renderPicker();
     if (typeof this.onBoard === 'function') {
       try { this.onBoard(vehicleId); } catch (e) {}
     }
