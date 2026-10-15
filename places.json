@@ -1,0 +1,488 @@
+{
+ "projection": {
+  "lat0": 42.381161,
+  "lon0": -83.148531
+ },
+ "meta": {
+  "source": "OpenStreetMap contributors via the Overpass API (query run 2026-10-15, OSM base timestamp 2026-10-15T07:04:04Z)",
+  "license": "ODbL",
+  "attribution": "© OpenStreetMap contributors",
+  "boundary": {
+   "latS": 42.178,
+   "latN": 42.47997522924901,
+   "lonW": -83.385,
+   "lonE": -82.8992288,
+   "note": "Map boundary = assets/detroit-streets.json meta bbox (street mosaic extent). The extent declared in smart-routes-3d.json is stale and was not used."
+  },
+  "counts": {
+   "starbucks": 31,
+   "planetfitness": 11,
+   "total": 42
+  },
+  "note": "Selected by OSM brand/name tags (Starbucks amenity=cafe; Planet Fitness leisure=fitness_centre) inside the boundary; same-brand node/way duplicate pairs under 10 m merged to the building way (2 dropped). OSM under-covers licensed in-store counters (e.g. inside Target stores, hotels, campus licensed shops); directory spot checks 2026-10-15 found a small number of area locations absent from OSM. Treat as most locations, not all."
+ },
+ "places": [
+  {
+   "id": "pf-1655353861",
+   "brand": "planetfitness",
+   "n": "Planet Fitness",
+   "x": -3340.6,
+   "z": 20373.1,
+   "lat": 42.198147,
+   "lon": -83.189157,
+   "addr": "13591 Eureka Road, Southgate",
+   "osm": "node/1655353861"
+  },
+  {
+   "id": "pf-7351309493",
+   "brand": "planetfitness",
+   "n": "Planet Fitness",
+   "x": -10111.4,
+   "z": 17533.1,
+   "lat": 42.223659,
+   "lon": -83.271497,
+   "addr": null,
+   "osm": "node/7351309493"
+  },
+  {
+   "id": "pf-13358081876",
+   "brand": "planetfitness",
+   "n": "Planet Fitness",
+   "x": -8950.7,
+   "z": 14084.4,
+   "lat": 42.25464,
+   "lon": -83.257381,
+   "addr": null,
+   "osm": "node/13358081876"
+  },
+  {
+   "id": "pf-13101201835",
+   "brand": "planetfitness",
+   "n": "Planet Fitness",
+   "x": 15159.0,
+   "z": 13805.6,
+   "lat": 42.257143,
+   "lon": -82.964181,
+   "addr": "4330 Walker Road, Windsor",
+   "osm": "node/13101201835"
+  },
+  {
+   "id": "pf-710870109",
+   "brand": "planetfitness",
+   "n": "Planet Fitness",
+   "x": -19050.8,
+   "z": 10997.7,
+   "lat": 42.282367,
+   "lon": -83.38021,
+   "addr": "34610 West Michigan Avenue, Wayne",
+   "osm": "way/710870109"
+  },
+  {
+   "id": "pf-12708402342",
+   "brand": "planetfitness",
+   "n": "Planet Fitness",
+   "x": -10388.6,
+   "z": 9323.8,
+   "lat": 42.297404,
+   "lon": -83.274867,
+   "addr": null,
+   "osm": "node/12708402342"
+  },
+  {
+   "id": "pf-8868936676",
+   "brand": "planetfitness",
+   "n": "Planet Fitness",
+   "x": -14850.4,
+   "z": 5901.2,
+   "lat": 42.32815,
+   "lon": -83.329128,
+   "addr": null,
+   "osm": "node/8868936676"
+  },
+  {
+   "id": "pf-11465654255",
+   "brand": "planetfitness",
+   "n": "Planet Fitness",
+   "x": -5865.9,
+   "z": 5636.3,
+   "lat": 42.330529,
+   "lon": -83.219866,
+   "addr": "18660 Ford Road, Detroit",
+   "osm": "node/11465654255"
+  },
+  {
+   "id": "pf-10313877382",
+   "brand": "planetfitness",
+   "n": "Planet Fitness",
+   "x": -19171.5,
+   "z": 4536.6,
+   "lat": 42.340408,
+   "lon": -83.381677,
+   "addr": null,
+   "osm": "node/10313877382"
+  },
+  {
+   "id": "pf-8847039992",
+   "brand": "planetfitness",
+   "n": "Planet Fitness",
+   "x": 2226.8,
+   "z": -7063.3,
+   "lat": 42.444611,
+   "lon": -83.121451,
+   "addr": "1395 8 Mile Road West, Detroit",
+   "osm": "node/8847039992"
+  },
+  {
+   "id": "pf-9042161521",
+   "brand": "planetfitness",
+   "n": "Planet Fitness",
+   "x": -2515.3,
+   "z": -10298.1,
+   "lat": 42.47367,
+   "lon": -83.17912,
+   "addr": null,
+   "osm": "node/9042161521"
+  },
+  {
+   "id": "sb-6348547749",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": -3444.7,
+   "z": 21939.5,
+   "lat": 42.184076,
+   "lon": -83.190422,
+   "addr": "17056 Fort Street, Riverview",
+   "osm": "node/6348547749"
+  },
+  {
+   "id": "sb-7061306569",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": -9205.7,
+   "z": 20341.8,
+   "lat": 42.198429,
+   "lon": -83.260482,
+   "addr": "23402 Eureka Road, Taylor",
+   "osm": "node/7061306569"
+  },
+  {
+   "id": "sb-12817711474",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": -8772.8,
+   "z": 19797.9,
+   "lat": 42.203314,
+   "lon": -83.255218,
+   "addr": "14099 Pardee Road, Taylor",
+   "osm": "node/12817711474"
+  },
+  {
+   "id": "sb-6981751507",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": -17461.4,
+   "z": 19661.5,
+   "lat": 42.20454,
+   "lon": -83.360881,
+   "addr": "2500 World Gateway, Detroit",
+   "osm": "node/6981751507"
+  },
+  {
+   "id": "sb-6981780829",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": -17596.6,
+   "z": 19219.0,
+   "lat": 42.208515,
+   "lon": -83.362524,
+   "addr": "2500 World Gateway, Detroit",
+   "osm": "node/6981780829"
+  },
+  {
+   "id": "sb-6981790322",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": -17001.4,
+   "z": 18841.0,
+   "lat": 42.21191,
+   "lon": -83.355286,
+   "addr": "2500 World Gateway, Detroit",
+   "osm": "node/6981790322"
+  },
+  {
+   "id": "sb-12902497436",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": -71.7,
+   "z": 18617.7,
+   "lat": 42.213917,
+   "lon": -83.149403,
+   "addr": "2003 Biddle Avenue, Wyandotte",
+   "osm": "node/12902497436"
+  },
+  {
+   "id": "sb-5907286185",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": -16552.5,
+   "z": 17475.0,
+   "lat": 42.224181,
+   "lon": -83.349827,
+   "addr": "Detroit",
+   "osm": "node/5907286185"
+  },
+  {
+   "id": "sb-12290750746",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": -16260.9,
+   "z": 16951.3,
+   "lat": 42.228886,
+   "lon": -83.346281,
+   "addr": null,
+   "osm": "node/12290750746"
+  },
+  {
+   "id": "sb-10313875391",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": -16418.6,
+   "z": 15269.4,
+   "lat": 42.243994,
+   "lon": -83.348199,
+   "addr": "8330 Merriman Road, Romulus",
+   "osm": "node/10313875391"
+  },
+  {
+   "id": "sb-751185240",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": 7261.5,
+   "z": 14614.5,
+   "lat": 42.249877,
+   "lon": -83.060223,
+   "addr": null,
+   "osm": "way/751185240"
+  },
+  {
+   "id": "sb-691993894",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": -3495.8,
+   "z": 14179.5,
+   "lat": 42.253785,
+   "lon": -83.191044,
+   "addr": "1845 Southfield Road, Lincoln Park",
+   "osm": "way/691993894"
+  },
+  {
+   "id": "sb-6720062930",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": 12093.6,
+   "z": 14015.7,
+   "lat": 42.255256,
+   "lon": -83.00146,
+   "addr": null,
+   "osm": "node/6720062930"
+  },
+  {
+   "id": "sb-641986611",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": 15206.1,
+   "z": 13956.9,
+   "lat": 42.255785,
+   "lon": -82.963608,
+   "addr": "4450 Walker Road, Windsor",
+   "osm": "way/641986611"
+  },
+  {
+   "id": "sb-6698377825",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": 11954.7,
+   "z": 11923.4,
+   "lat": 42.274052,
+   "lon": -83.003149,
+   "addr": null,
+   "osm": "node/6698377825"
+  },
+  {
+   "id": "sb-8236542171",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": -5508.3,
+   "z": 11450.6,
+   "lat": 42.278299,
+   "lon": -83.215518,
+   "addr": "23005 Outer Drive, Allen Park",
+   "osm": "node/8236542171"
+  },
+  {
+   "id": "sb-1454503949",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": 7336.1,
+   "z": 10087.4,
+   "lat": 42.290545,
+   "lon": -83.059316,
+   "addr": null,
+   "osm": "way/1454503949"
+  },
+  {
+   "id": "sb-293484520",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": 10585.1,
+   "z": 9278.4,
+   "lat": 42.297812,
+   "lon": -83.019804,
+   "addr": null,
+   "osm": "way/293484520"
+  },
+  {
+   "id": "sb-1502463184",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": -8090.5,
+   "z": 8461.2,
+   "lat": 42.305153,
+   "lon": -83.24692,
+   "addr": "22155 Michigan Avenue, Dearborn",
+   "osm": "node/1502463184"
+  },
+  {
+   "id": "sb-712151365",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": 16633.2,
+   "z": 7703.2,
+   "lat": 42.311963,
+   "lon": -82.946253,
+   "addr": null,
+   "osm": "way/712151365"
+  },
+  {
+   "id": "sb-10739125577",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": 9082.4,
+   "z": 7216.4,
+   "lat": 42.316335,
+   "lon": -83.038079,
+   "addr": null,
+   "osm": "node/10739125577"
+  },
+  {
+   "id": "sb-4121449545",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": 9504.6,
+   "z": 6726.5,
+   "lat": 42.320736,
+   "lon": -83.032945,
+   "addr": "377 Riverside Drive East, Windsor",
+   "osm": "node/4121449545"
+  },
+  {
+   "id": "sb-6815019645",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": -1672.6,
+   "z": 6382.7,
+   "lat": 42.323824,
+   "lon": -83.168872,
+   "addr": "12921 Michigan Avenue, Dearborn",
+   "osm": "node/6815019645"
+  },
+  {
+   "id": "sb-9537408438",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": 8193.3,
+   "z": 5834.8,
+   "lat": 42.328746,
+   "lon": -83.048892,
+   "addr": "243 West Congress Street, Detroit",
+   "osm": "node/9537408438"
+  },
+  {
+   "id": "sb-2983229795",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": 8331.5,
+   "z": 5561.8,
+   "lat": 42.331198,
+   "lon": -83.047211,
+   "addr": "777 Woodward Avenue, Detroit",
+   "osm": "node/2983229795"
+  },
+  {
+   "id": "sb-9353565134",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": 8055.9,
+   "z": 5489.1,
+   "lat": 42.331852,
+   "lon": -83.050562,
+   "addr": "1114 Washington Boulevard, Detroit",
+   "osm": "node/9353565134"
+  },
+  {
+   "id": "sb-4119748263",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": 6383.0,
+   "z": 2527.3,
+   "lat": 42.358458,
+   "lon": -83.070907,
+   "addr": "5221 Gullen Mall, Detroit",
+   "osm": "node/4119748263"
+  },
+  {
+   "id": "sb-3289178579",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": -15277.3,
+   "z": 299.7,
+   "lat": 42.378469,
+   "lon": -83.33432,
+   "addr": "12679 Middlebelt Road, Livonia",
+   "osm": "node/3289178579"
+  },
+  {
+   "id": "sb-5256432107",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": 19107.9,
+   "z": -2741.6,
+   "lat": 42.405789,
+   "lon": -82.916158,
+   "addr": "18051 Mack Avenue, Detroit",
+   "osm": "node/5256432107"
+  },
+  {
+   "id": "sb-8847040001",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": 2287.4,
+   "z": -7224.9,
+   "lat": 42.446063,
+   "lon": -83.120713,
+   "addr": "1327 8 Mile Road West, Detroit",
+   "osm": "node/8847040001"
+  },
+  {
+   "id": "sb-2315415808",
+   "brand": "starbucks",
+   "n": "Starbucks",
+   "x": -18561.6,
+   "z": -9199.6,
+   "lat": 42.463802,
+   "lon": -83.37426,
+   "addr": "33199 Grand River Avenue, Farmington",
+   "osm": "node/2315415808"
+  }
+ ]
+}
