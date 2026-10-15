@@ -105,13 +105,21 @@ async function fetchBuffer(url, timeoutMs = 15000) {
 }
 
 /** Fetch with the Swiftly API key. The key travels only in the
- *  Authorization header (Bearer scheme — the scheme api.goswift.ly
- *  itself names in its 401 WWW-Authenticate challenge, verified
- *  2026-10-15 against the public detroit-m1-rail feed) and is never
- *  placed in a URL, a log line, or an error message. */
+ *  Authorization header as the RAW key value, and is never placed in
+ *  a URL, a log line, or an error message. Auth form measured live
+ *  2026-10-15 (workflow test runs 38821825120 / 38822082150 /
+ *  38822211656): "Authorization: Bearer <key>" scores HTTP 401
+ *  "Invalid Credentials" — identical to a bogus value and to no
+ *  credential at all — while the raw key is READ by the server (a
+ *  bogus raw value still scores 401; the genuine key scores 403,
+ *  i.e. recognized but not authorized for this agency feed). The
+ *  401's WWW-Authenticate: Bearer challenge is therefore not the
+ *  scheme this API accepts for key auth; integrator documentation
+ *  for the same API (Marin Transit / SF Bay Ferry developer pages,
+ *  third-party configs) likewise shows the raw key in the header. */
 async function fetchBufferSwiftly(url, key, timeoutMs = 15000) {
   const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${key}` },
+    headers: { Authorization: key },
     signal: AbortSignal.timeout(timeoutMs),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status} from ${url.split('?')[0]}`);
