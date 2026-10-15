@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261014-2313';
+  var STAMP = '20261014-2319';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -417,6 +417,146 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   busInfoSprite.visible = false;
   busInfoSprite.renderOrder = 41;
   scene.add(busInfoSprite);
+  // === SMART SNAPSHOT-AGE LABELING (graft, 2026-10-14) =====================
+  // SMART positions come from per-route Transit API snapshots held in
+  // ephemeral proxy memory (48h TTL), so they can be far older than the
+  // poll time while DDOT/QLINE positions are live. This graft states the
+  // SMART data's age in text wherever SMART data is presented: the SMART
+  // group header, the SMART beta note, the live-count pill, SMART stop
+  // cards, and the tapped-bus label. Text only, by design: the alerts
+  // layer already uses dimmed/faded rendering for REDUCED_SERVICE, so
+  // age is never carried by appearance. DDOT and QLINE are never touched.
+  // Age source: sources.smart.oldest_snapshot_at (the proxy's oldest
+  // per-route snapshot time: per-source granularity, the stalest SMART
+  // data being shown), falling back to the oldest updated_at among SMART
+  // vehicles. Age is measured against the payload's own generated_at, so
+  // client clock skew cannot distort it. When SMART is served by a live
+  // source (via !== 'transit') and no snapshot field exists, age stays
+  // unknown and nothing is labelled.
+  var smartAge = { band: 'unknown', ageMin: null, snapshotAtMs: null, count: 0,
+                   routesWithData: null, routesTotal: null, partial: false, via: null };
+
+  // --- PURE LOGIC START (extracted and unit-tested in Node) ---
+  function smartSnapshotAt(d) {
+    var sm = d && d.sources && d.sources.smart;
+    if (sm && sm.oldest_snapshot_at) {
+      var t = new Date(sm.oldest_snapshot_at).getTime();
+      if (!isNaN(t)) return t;
+    }
+    if (sm && sm.via && sm.via !== 'transit') return null; // live source: no snapshot semantics
+    var oldest = null;
+    var vs = (d && Array.isArray(d.vehicles)) ? d.vehicles : [];
+    for (var i = 0; i < vs.length; i++) {
+      if (vs[i].agency !== 'smart' || !vs[i].updated_at) continue;
+      var vt = new Date(vs[i].updated_at).getTime();
+      if (isNaN(vt)) continue;
+      if (oldest == null || vt < oldest) oldest = vt;
+    }
+    return oldest;
+  }
+  function computeSmartAge(d) {
+    var out = { band: 'unknown', ageMin: null, snapshotAtMs: null, count: 0,
+                routesWithData: null, routesTotal: null, partial: false, via: null };
+    var sm = d && d.sources && d.sources.smart;
+    if (!sm) return out;
+    out.via = sm.via || null;
+    out.count = (typeof sm.vehicles === 'number') ? sm.vehicles : 0;
+    out.routesWithData = (typeof sm.routes_with_data === 'number') ? sm.routes_with_data : null;
+    out.routesTotal = (typeof sm.routes === 'number') ? sm.routes : null;
+    out.partial = !!(out.routesTotal && out.routesWithData != null && out.routesWithData < out.routesTotal);
+    if (!out.count) return out; // no SMART vehicles shown: zero-state, nothing to label
+    var at = smartSnapshotAt(d);
+    if (at == null) return out;
+    var ref = d.generated_at ? new Date(d.generated_at).getTime() : NaN;
+    if (isNaN(ref)) ref = Date.now();
+    var ageMin = Math.max(0, (ref - at) / 60000);
+    out.snapshotAtMs = at;
+    out.ageMin = ageMin;
+    out.band = ageMin <= 5 ? 'fresh' : (ageMin <= 60 ? 'snapshot' : 'stale');
+    return out;
+  }
+  function formatClock12(ms) {
+    var d = new Date(ms);
+    var h = d.getHours();
+    var ap = h < 12 ? 'AM' : 'PM';
+    var h12 = h % 12; if (h12 === 0) h12 = 12;
+    var m = d.getMinutes();
+    return h12 + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
+  }
+  function formatAgeLong(ageMin) {
+    var n = Math.round(ageMin);
+    if (n < 60) return n + ' min';
+    var h = Math.floor(n / 60), r = n % 60;
+    return r ? (h + ' h ' + r + ' min') : (h + ' h');
+  }
+  function smartHeaderText(age) {
+    if (!age || age.band === 'unknown') return '';
+    var parts = [];
+    if (age.partial) parts.push(age.routesWithData + ' of ' + age.routesTotal + ' routes');
+    if (age.band === 'snapshot') parts.push('as of ' + formatClock12(age.snapshotAtMs));
+    else if (age.band === 'stale') parts.push(formatAgeLong(age.ageMin) + ' old');
+    return parts.join(' \u00b7 ');
+  }
+  function smartNoteText(age) {
+    if (!age || age.band === 'unknown') return '';
+    var s = [];
+    if (age.partial) s.push(age.routesWithData + ' of ' + age.routesTotal + ' SMART routes are reporting.');
+    if (age.band === 'snapshot') s.push('SMART positions as of ' + formatClock12(age.snapshotAtMs) + '.');
+    else if (age.band === 'stale') s.push('SMART data is ' + formatAgeLong(age.ageMin) + ' old \u2014 positions may have moved.');
+    return s.join(' ');
+  }
+  function smartStopNoteText(age) {
+    if (!age) return '';
+    if (age.band === 'snapshot') return 'SMART positions as of ' + formatClock12(age.snapshotAtMs) + ' \u2014 snapshot, not live GPS.';
+    if (age.band === 'stale') return 'SMART data is ' + formatAgeLong(age.ageMin) + ' old \u2014 buses may have moved from the positions shown.';
+    return '';
+  }
+  function smartPillText(age) {
+    if (!age || age.band !== 'stale') return '';
+    return 'SMART ' + age.count + ' (stale)';
+  }
+  // Suffix for the tapped-bus label: this vehicle's position is a Transit
+  // snapshot position, not a live GPS fix. Per-vehicle, from its own
+  // updated_at, matching the age text drawn beside it.
+  function smartVehicleSuffix(v, nowMs, via) {
+    if (!v || v.agency !== 'smart' || via !== 'transit' || !v.updated_at) return '';
+    var t = new Date(v.updated_at).getTime();
+    if (isNaN(t)) return '';
+    return ((nowMs - t) / 60000 > 5) ? ' \u00b7 snapshot' : '';
+  }
+  // --- PURE LOGIC END ---
+
+  function applySmartAgeUI() {
+    var hl = $('smart-age-label');
+    if (hl) hl.textContent = smartHeaderText(smartAge);
+    var nt = $('smart-age-note');
+    if (nt) { var ntx = smartNoteText(smartAge); nt.textContent = ntx ? ' ' + ntx : ''; }
+    var pn = $('smart-pill-note');
+    if (pn) {
+      var pt = smartPillText(smartAge);
+      pn.textContent = pt;
+      pn.hidden = !pt;
+    }
+    renderStopSmartNote();
+  }
+  function stopServedBySmart(st) {
+    if (!st || !Array.isArray(st.r)) return false;
+    var sr = (typeof groupRoutes !== 'undefined' && groupRoutes.smart) || [];
+    for (var i = 0; i < st.r.length; i++) { if (sr.indexOf(st.r[i]) >= 0) return true; }
+    return false;
+  }
+  function renderStopSmartNote() {
+    var el = $('stop-smart-note');
+    if (!el) return;
+    var txt = '';
+    if (typeof selectedStop !== 'undefined' && selectedStop && stopServedBySmart(selectedStop)) {
+      txt = smartStopNoteText(smartAge);
+    }
+    el.textContent = txt;
+    el.hidden = !txt;
+  }
+  // === END SMART SNAPSHOT-AGE LABELING ===
+
   function busAgeText(v) {
     if (!v.updated_at) return '–';
     var s = Math.max(0, Math.round((Date.now() - new Date(v.updated_at).getTime()) / 1000));
@@ -427,7 +567,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var dest = formatDest(v.route_id, v.destination);
     var line1 = v.route_id + ' · ' + (routeNames[v.route_id] || 'DDOT') + (dest ? ' → ' + dest : '');
     var spd = (v.speed_mph != null && !isNaN(v.speed_mph)) ? Math.round(v.speed_mph) + ' mph' : '–';
-    var line2 = 'Bus ' + (v.vehicle_id || '–') + ' · ' + spd + ' · ' + busAgeText(v);
+    var line2 = 'Bus ' + (v.vehicle_id || '–') + ' · ' + spd + ' · ' + busAgeText(v) + smartVehicleSuffix(v, Date.now(), smartAge.via);
     var c = document.createElement('canvas');
     var m = c.getContext('2d');
     m.font = '700 34px system-ui, -apple-system, sans-serif';
@@ -2424,6 +2564,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   function renderStopLive() {
     var host = $('stop-live'), list = $('stop-live-list');
     if (!host || !list) return;
+    renderStopSmartNote();
     if (!selectedStop || !lastVehicles || !lastVehicles.length) {
       host.hidden = true; return;
     }
@@ -3769,7 +3910,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       label.setAttribute('aria-expanded', 'false');
       label.setAttribute('aria-label', 'Expand ' + gLabel + ' routes');
       label.innerHTML = '<b>' + gLabel + '</b>' +
-        '<span class="f-count" id="fgc-' + g.id + '">–</span><span class="f-chev">▾</span>';
+        '<span class="f-count" id="fgc-' + g.id + '">–</span>' +
+        (g.id === 'smart' ? '<span class="f-count" id="smart-age-label"></span>' : '') +
+        '<span class="f-chev">▾</span>';
       label.addEventListener('click', function () {
         var open = sec.classList.toggle('open');
         label.setAttribute('aria-expanded', String(open));
@@ -3805,10 +3948,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         var betaNote = document.createElement('p');
         betaNote.className = 'f-beta-note';
         betaNote.textContent = 'Beta: all 45 routes have map lines. Vehicle positions via the Transit API.';
+        var smartAgeNote = document.createElement('span');
+        smartAgeNote.id = 'smart-age-note';
+        betaNote.appendChild(smartAgeNote);
         sec.appendChild(betaNote);
       }
       host.appendChild(sec);
     });
+    applySmartAgeUI();
     $('filter-all').addEventListener('click', function () {
       // "Show all" means all: the near-me proximity restriction must not
       // override it, so near-me is switched off first.
@@ -4875,6 +5022,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         transitDataOn = !!(d.sources && d.sources.smart && d.sources.smart.via === 'transit'
           && d.sources.smart.vehicles > 0);
         syncTransitBadge();
+        smartAge = computeSmartAge(d);
+        applySmartAgeUI();
       })
       .catch(function () {
         var text = liveEverOk
