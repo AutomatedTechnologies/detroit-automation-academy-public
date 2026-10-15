@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-1330';
+  var STAMP = '20261015-1437';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -2398,6 +2398,29 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   function chromeHidden(name) {
     return document.body.classList.contains('chrome-no-' + name);
   }
+
+  // --- app lock (route-filters-missing fix, stamp 20261015-1437) --------
+  // While the app script is running, the document itself does not
+  // scroll. The page carries real content below the stage, so the
+  // document is taller than the viewport; an uncovered scroll vector
+  // (a drag on the help overlay's backdrop, which has no touch-action
+  // anywhere in its ancestor chain, or a wheel scroll over non-canvas
+  // chrome) could scroll the document until the whole .map-bar sat
+  // above the visible area — and with it the only entry to the route
+  // filter panel (togglePanel is called from #filter-btn alone), the
+  // planner, ride-along, and the home link — while every contained
+  // surface refuses to scroll it back. The lock reuses the max-mode
+  // presentation lock's mechanism (the html/body .app-lock rules in
+  // the HTML mirror html/body.pseudo-full-lock), set here by the app
+  // script at boot: with the script absent the classes are never set
+  // and the static page scrolls as before. setMaxMode composes
+  // unchanged — its saved scroll offset is 0 under the lock, and its
+  // own lock classes are added and removed alongside. Subset stopgap:
+  // the app-borders shell carries the same semantics (document height
+  // = viewport height in the app view) and subsumes these rules when
+  // it lands. Trace: files/route-filters-missing/trace.md.
+  document.documentElement.classList.add('app-lock');
+  document.body.classList.add('app-lock');
 
   // --- fullscreen toggle (native API where offered; maximized view where not) ---
   // Behavior contract (files/fullscreen-fix/fullscreen-fix.md):
