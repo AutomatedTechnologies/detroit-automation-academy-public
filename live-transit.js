@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-0406';
+  var STAMP = '20261015-0429';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -6565,8 +6565,33 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // close zoom on the same declutter rule as the MoGo count badges, so
   // identity is never carried by color alone. The card and the SR list
   // state brand and address in words wherever the data carries them.
+  //
+  // Height and glow (2026-10-15, Justin's direction: "Add visual height
+  // and glow to POIs for easier identification"): a slim pillar rises
+  // from each disc and the letter badge rides at its top, and a soft
+  // brand-tinted halo surrounds each marker at every zoom. The pillar is
+  // 48 units tall on the stop family's height scale (rides stopYS like
+  // the disc height), so the whole marker tops out at (16 + 48) * stopYS
+  // = 64 * stopYS — below the stop family's own 75-unit base height
+  // before per-route additions (a single-route stop pylon is 103 *
+  // stopYS, a bus pillar 220): a place reads as a pin, never as a
+  // second skyline, at every zoom, because pillar and stops scale
+  // together. The pillar height is deliberately NOT distance-scaled
+  // like the footprint: subordination is a world-space property, and
+  // far-zoom identification is the glow's job — a distance-growing
+  // pillar stacked on the distance-growing disc would rebuild the
+  // skyline the height cap exists to prevent. The glow is an
+  // additive-blended radial-gradient sprite, diameter 2.2x the disc's,
+  // so it tracks the footprint's distance scaling and carries brand
+  // identity at the default and city-wide distances where the letter
+  // badges are decluttered away. Fair use unchanged: brand colors and
+  // letter badges only — no logos or trademarked artwork.
   var PLACES_DATA_URL = 'places.json?v=' + STAMP;
   var PLACES_DISC_H = 16;   // place puck height before the stop family's zoom scale
+  var PLACES_PILLAR_H = 48; // pillar height above the disc top, before stopYS
+  var PLACES_PILLAR_R = 5;  // pillar radius at the footprint floor; scales with the footprint (~disc diameter / 13)
+  var PLACES_GLOW_K = 2.2;  // glow sprite diameter as a multiple of the disc diameter
+  var PLACES_GLOW_OPACITY = 0.5; // additive halo strength — a glow, not a blob
   var PLACES_DISC_BASE_D = 64;  // disc diameter at the close-zoom floor (the geometry's own width)
   // Distance-scaling coefficient (2026-10-15 legibility fix): beyond the
   // floor the disc diameter grows in proportion to camera distance —
@@ -6587,8 +6612,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   var placesData = null;          // parsed places.json once loaded
   var placesLoadState = 'idle';   // idle | loading | ok | error
   var placesOn = { starbucks: false, planetfitness: false }; // DEFAULT OFF, session-only (no localStorage) — Justin's MoGo rulings, 2026-10-14
-  var placesGroup = null, placesDiscIM = null;
+  var placesGroup = null, placesDiscIM = null, placesPillarIM = null;
   var placesBadges = [];          // one THREE.Sprite per rendered place
+  var placesGlows = [];           // one additive halo sprite per rendered place
+  var placesGlowTex = null;       // shared radial-gradient texture (brand tint is per-sprite)
   var placesPickList = [];        // {id, n, x, z, r: [], place: true, pdata}
   var placesBadgeTexCache = {};
   var _placesM4 = null, _placesP3 = null, _placesQ = null, _placesS3 = null, _placesCol = null, _placesV3 = null;
@@ -6641,6 +6668,17 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   function placesDiscPx(camDist, viewportH) {
     return placesDiscDiamFor(camDist) * viewportH / (2 * camDist * Math.tan(camera.fov * 0.5 * DEG));
   }
+  // Glow diameter for a camera distance, in world units: the disc's
+  // distance-scaled diameter times the glow multiple, so the halo holds
+  // the same screen size as the disc at every wider zoom.
+  function placesGlowDiamFor(camDist) {
+    return placesDiscDiamFor(camDist) * PLACES_GLOW_K;
+  }
+  // Rendered glow diameter in CSS pixels. Exposed for verification of
+  // the height-and-glow build, like placesDiscPx.
+  function placesGlowPx(camDist, viewportH) {
+    return placesGlowDiamFor(camDist) * viewportH / (2 * camDist * Math.tan(camera.fov * 0.5 * DEG));
+  }
   function placesEnsureMeshes() {
     if (placesGroup) return;
     _placesM4 = new THREE.Matrix4(); _placesP3 = new THREE.Vector3();
@@ -6654,8 +6692,35 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     placesDiscIM.frustumCulled = false;
     placesDiscIM.count = 0;
     placesGroup.add(placesDiscIM);
+    // Pillar: unit cylinder with the stop family's taper (14/18 ≈ 1/1.25),
+    // instanced like the disc; per-instance scale carries the radius
+    // (footprint-coupled) and the height (stopYS-coupled).
+    placesPillarIM = new THREE.InstancedMesh(
+      new THREE.CylinderGeometry(1, 1.25, 1, 10),
+      new THREE.MeshLambertMaterial({ color: 0xffffff }), 64);
+    placesPillarIM.frustumCulled = false;
+    placesPillarIM.count = 0;
+    placesGroup.add(placesPillarIM);
     placesGroup.visible = false;
     scene.add(placesGroup);
+  }
+  // Shared radial-gradient texture for the glow sprites: a white core
+  // falling to transparency, tinted per sprite by the material color.
+  // One texture for all places — the brand lives in the tint, so no
+  // per-brand canvas work is needed.
+  function placesGlowTexture() {
+    if (placesGlowTex) return placesGlowTex;
+    var c = document.createElement('canvas');
+    c.width = 128; c.height = 128;
+    var g = c.getContext('2d');
+    var grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    grad.addColorStop(0, 'rgba(255,255,255,0.85)');
+    grad.addColorStop(0.35, 'rgba(255,255,255,0.32)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 128, 128);
+    placesGlowTex = new THREE.CanvasTexture(c);
+    return placesGlowTex;
   }
   function placesBadgeTexture(text) {
     var hit = placesBadgeTexCache[text];
@@ -6697,6 +6762,45 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     placesDiscIM.count = placesPickList.length;
     placesDiscIM.instanceMatrix.needsUpdate = true;
   }
+  // Pillar instance matrices from the pick list: the radius rides the
+  // eased footprint scale (a pillar stays ~1/13 of its disc's width at
+  // every zoom) and the height rides stopYS (the stop family's scale),
+  // so the writer runs wherever the disc writer runs.
+  function placesWritePillarInstances() {
+    if (!placesPillarIM) return;
+    var dh = PLACES_DISC_H * stopYS, ph = PLACES_PILLAR_H * stopYS;
+    var r = PLACES_PILLAR_R * placesDiscScaleV;
+    for (var i = 0; i < placesPickList.length; i++) {
+      var s = placesPickList[i];
+      _placesP3.set(s.x, STOP_BASE_Y + dh + ph / 2, s.z);
+      _placesQ.identity();
+      _placesS3.set(r, ph, r);
+      _placesM4.compose(_placesP3, _placesQ, _placesS3);
+      placesPillarIM.setMatrixAt(i, _placesM4);
+    }
+    placesPillarIM.count = placesPickList.length;
+    placesPillarIM.instanceMatrix.needsUpdate = true;
+  }
+  // Glow sprite placement: centered on the marker's vertical span, with
+  // the diameter tracking the eased footprint scale. Sprites have no
+  // instance buffer, so this is a plain per-sprite loop over at most 42
+  // entries; it runs on marker writes and on the per-frame hook (the
+  // diameter eases with the footprint).
+  function placesSyncGlows() {
+    var diam = PLACES_DISC_BASE_D * placesDiscScaleV * PLACES_GLOW_K;
+    var cy = STOP_BASE_Y + (PLACES_DISC_H + PLACES_PILLAR_H) * stopYS / 2;
+    for (var i = 0; i < placesPickList.length; i++) {
+      var glow = placesGlows[i];
+      if (!glow) continue;
+      var s = placesPickList[i];
+      glow.position.set(s.x, cy, s.z);
+      glow.scale.set(diam, diam, 1);
+      glow.visible = !!(placesGroup && placesGroup.visible);
+    }
+    for (var j = placesPickList.length; j < placesGlows.length; j++) {
+      if (placesGlows[j]) placesGlows[j].visible = false;
+    }
+  }
   // Static geometry: instance buffers are rebuilt only when the enabled
   // brand set or the zoom scale changes — nothing is allocated per frame.
   function placesWriteMarkers() {
@@ -6710,6 +6814,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var h = PLACES_DISC_H * stopYS;
       _placesCol.set(b ? b.color : '#8a8f98');
       placesDiscIM.setColorAt(i, _placesCol);
+      placesPillarIM.setColorAt(i, _placesCol);
       placesPickList.push({ id: p.id, n: p.n, x: xy[0], z: xy[1], r: [], place: true, pdata: p });
       var badge = placesBadges[i];
       if (!badge) {
@@ -6728,15 +6833,36 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         badge.userData.aspect = o.aspect;
       }
       badge.scale.set(40 * (badge.userData.aspect || 1), 40, 1);
-      badge.position.set(xy[0], STOP_BASE_Y + h + 44, xy[1]);
+      // The badge rides at the pillar's top (disc top + pillar height),
+      // with its center one badge-radius and a small gap above it.
+      badge.position.set(xy[0], STOP_BASE_Y + h + PLACES_PILLAR_H * stopYS + 26, xy[1]);
+      var glow = placesGlows[i];
+      if (!glow) {
+        glow = new THREE.Sprite(new THREE.SpriteMaterial({
+          map: placesGlowTexture(), color: new THREE.Color(b ? b.color : '#8a8f98'),
+          blending: THREE.AdditiveBlending, depthWrite: false,
+          transparent: true, opacity: PLACES_GLOW_OPACITY }));
+        glow.renderOrder = 34; // under the letter badges (35)
+        glow.visible = false;
+        placesGroup.add(glow);
+        placesGlows[i] = glow;
+      }
+      if (glow.userData.brand !== p.brand) {
+        glow.material.color.set(b ? b.color : '#8a8f98');
+        glow.userData.brand = p.brand;
+      }
     }
     placesWriteDiscInstances();
+    placesWritePillarInstances();
     if (placesDiscIM.instanceColor) placesDiscIM.instanceColor.needsUpdate = true;
+    if (placesPillarIM.instanceColor) placesPillarIM.instanceColor.needsUpdate = true;
     for (var j = list.length; j < placesBadges.length; j++) {
       if (placesBadges[j]) placesBadges[j].visible = false;
     }
     placesGroup.visible = !!(placesData && placesLoadState === 'ok' && list.length &&
       (placesOn.starbucks || placesOn.planetfitness));
+    // Glows sync last: visibility reads the group's final state.
+    placesSyncGlows();
   }
   // Zoom-coupled rescale, called from easeStopScale: place pucks are flat
   // members of the ground-marker family and ride the same eased scale.
@@ -6753,12 +6879,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (!placesGroup) return;
     var target = placesDiscDiamFor(camDist) / PLACES_DISC_BASE_D;
     var dS = target - placesDiscScaleV;
+    // The pillar radius and the glow diameter ride the same eased
+    // footprint scale, so both are rewritten wherever the discs are.
     if (Math.abs(dS) > 0.003) {
       placesDiscScaleV += dS * 0.16;
-      try { placesWriteDiscInstances(); } catch (e) { /* a failed rewrite retries next frame */ }
+      try { placesWriteDiscInstances(); placesWritePillarInstances(); placesSyncGlows(); } catch (e) { /* a failed rewrite retries next frame */ }
     } else if (placesDiscScaleV !== target) {
       placesDiscScaleV = target;
-      try { placesWriteDiscInstances(); } catch (e) { /* a failed rewrite retries next frame */ }
+      try { placesWriteDiscInstances(); placesWritePillarInstances(); placesSyncGlows(); } catch (e) { /* a failed rewrite retries next frame */ }
     }
     var show = placesGroup.visible && camDist < 9000;
     for (var i = 0; i < placesPickList.length; i++) {
@@ -6775,7 +6903,13 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var best = null, bestD = isTouch ? 48 : 26;
     for (var i = 0; i < placesPickList.length; i++) {
       var s = placesPickList[i];
-      _placesV3.set(s.x, STOP_BASE_Y + 26, s.z).project(camera);
+      // Anchor at the pillar's mid-height: the visible column runs from
+      // the ground to the pillar top, so the pick target sits mid-column
+      // (the bus pillars' idiom — a tap anywhere along the column is
+      // closest to its middle). The existing radii (26 px mouse, 48 px
+      // touch) already cover the glow at distance-scaled zooms, whose
+      // radius is ≈18 px at the default and city-wide distances.
+      _placesV3.set(s.x, STOP_BASE_Y + (PLACES_DISC_H + PLACES_PILLAR_H) * stopYS / 2, s.z).project(camera);
       if (_placesV3.z > 1 || _placesV3.z < -1) continue;
       var px = (_placesV3.x * 0.5 + 0.5) * r.width, py = (-_placesV3.y * 0.5 + 0.5) * r.height;
       var d = Math.hypot(px - sx, py - sy);
