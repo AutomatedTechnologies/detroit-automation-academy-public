@@ -97,6 +97,22 @@
   .map-live strong { font-family: "Space Grotesk", sans-serif; font-size: 1.15rem; color: #F5F2EA; }
   .map-live span { display: block; color: #9AA0A6; font-size: .75rem; margin-top: .15rem; }
   .map-live .feed-warn { color: #FFB000; }
+  /* Service degradation notice: strip directly under the map bar.
+     Absolutely positioned (zero layout effect when hidden), z-index 6:
+     below the bar (7), above the panels (5) and cards (6 peers sit in
+     their own contexts), below the nav overlay (8) and toast (9). */
+  .svc-notice { position: absolute; top: 3.25rem; left: 0; right: 0; z-index: 6; background: rgba(12,17,22,.97); border-bottom: 1px solid rgba(255,176,0,.55); color: #F5F2EA; font-size: .82rem; padding: .5rem .8rem; font-family: "Inter", sans-serif; touch-action: none; }
+  .svc-notice[hidden] { display: none; }
+  .svc-row { display: flex; align-items: center; gap: .6rem; }
+  .svc-glyph { color: #FFB000; flex: none; }
+  .svc-headline { margin: 0; flex: 1 1 auto; min-width: 0; }
+  .svc-btn { background: none; border: 1px solid rgba(245,242,234,.25); color: #F5F2EA; font: inherit; font-size: .75rem; border-radius: 999px; padding: .25rem .7rem; cursor: pointer; flex: none; }
+  .svc-btn:hover { border-color: #FFB000; }
+  .svc-details { margin-top: .5rem; color: #C9CDD2; max-width: 60rem; max-height: 38vh; overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; }
+  .svc-details[hidden] { display: none; }
+  .svc-details p { margin: 0 0 .5rem; line-height: 1.45; }
+  .svc-details p:last-child { margin-bottom: 0; }
+  body.fs-lock .svc-notice { touch-action: none; }
   .route-chip { display: inline-flex; align-items: center; gap: .5rem; background: rgba(12,17,22,.82); border: 1px solid rgba(245,242,234,.16); color: #F5F2EA; border-radius: 999px; padding: .5rem .85rem; font-size: .82rem; cursor: pointer; backdrop-filter: blur(6px); transition: opacity .15s, border-color .15s; }
   .route-chip i { width: .7rem; height: .7rem; border-radius: 3px; display: inline-block; }
   .route-chip b { font-weight: 600; }
@@ -626,6 +642,15 @@
           <button class="filter-btn" id="ride-btn" aria-pressed="false" aria-label="Ride along"><span class="filter-ico">◉</span><span class="fb-label"><span class="fb-full">Ride along</span><span class="fb-short" aria-hidden="true">Ride</span></span></button>
         </div>
       </div>
+      <div class="svc-notice" id="svc-notice" role="region" aria-label="Live data notice" hidden>
+        <div class="svc-row">
+          <span class="svc-glyph" aria-hidden="true">&#9888;</span>
+          <p class="svc-headline" id="svc-headline"></p>
+          <button class="svc-btn" id="svc-details-btn" aria-expanded="false" aria-controls="svc-details">Details</button>
+          <button class="svc-btn" id="svc-dismiss">Dismiss</button>
+        </div>
+        <div class="svc-details" id="svc-details" hidden></div>
+      </div>
       <div class="filter-panel" id="filter-panel" hidden>
         <div class="filter-panel-head">
           <strong>Routes</strong>
@@ -878,6 +903,6 @@
   window.FORGE_LIVE_PROXY = "live-data";
 </script>
 <script src="ride-along.js?v=20261015-1256"></script>
-<script type="module" src="live-transit.js?v=20261015-1554"></script>
+<script type="module" src="live-transit.js?v=20261015-1638"></script>
 </body>
 </html>
