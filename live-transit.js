@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-1239';
+  var STAMP = '20261015-1249';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -2672,6 +2672,81 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     } catch (e) { show(); }
   }
 
+  // --- Ride-along stop times (2026-10-15) ---------------------------------
+  // Supplies Ride Along's upcoming-stops list with per-stop times from
+  // the best source the data supports, per agency (ARCHITECTURE.md):
+  // DDOT — the vehicle's matched timetable trip via the delay engine.
+  // SMART — snapshot positions (S6): sequence only, the boundary named
+  // in the view. QLINE — no stop times published to this view:
+  // sequence only, named. Coverage boundaries are stated in the view,
+  // never presented as a generic empty state (S4).
+  //
+  // The timetable engine (raptor.js + the DDOT timetable) normally
+  // loads with the first planner use. Ride Along needs its
+  // vehicle-to-trip matching (updateLiveDelays) as soon as a rider
+  // boards, so opening Ride Along loads it quietly (setRideMode).
+  // Planner state is shared: when the planner later opens it finds
+  // tripTT/tripRaptor already set.
+  var rideEngineLoading = false;
+  function ensureTripEngine() {
+    if ((tripTT && tripRaptor) || rideEngineLoading) return;
+    rideEngineLoading = true;
+    var loadR = tripRaptor ? Promise.resolve(tripRaptor)
+      : import('./raptor.js?v=' + STAMP).then(function (m) { tripRaptor = m.default || m; return tripRaptor; });
+    loadR.then(function (R) {
+      if (tripTT || !R || !R.loadTimetable) return;
+      return R.loadTimetable('ddot-timetable-S1000182.json?v=' + STAMP).then(function (tt) { tripTT = tt; });
+    }).catch(function () { /* engine unavailable: times degrade to the named notes (S4) */ })
+      .then(function () { rideEngineLoading = false; if (rideWidget) rideWidget.refresh(); });
+  }
+
+  // Ride Along stop-times provider (the widget's setTimesProvider).
+  // Returns { byStop: { gtfsStopId: label }, onlyIds: { gtfsStopId:
+  // true } | null, note }. DDOT source: the vehicle's matched timetable
+  // trip (the delay engine's tripDelayState) — the trip's remaining
+  // stops are the sequence filter, and its arrival times — empirically
+  // adjusted (arrL2) when the timing cells have substituted them, else
+  // scheduled (arr) — are shifted by the vehicle's measured delay.
+  function rideTimesFor(v) {
+    if (!v) return null;
+    if (v.agency === 'smart') {
+      var ageTxt = (smartAge && smartAge.ageMin != null) ? Math.round(smartAge.ageMin) + ' min old' : 'not current';
+      return { byStop: {}, onlyIds: null, note: 'SMART positions are a snapshot (' + ageTxt + '), not a live fix. Stops are listed in order; stop times are not published for SMART buses in this view.' };
+    }
+    if (v.agency === 'qline') {
+      return { byStop: {}, onlyIds: null, note: 'QLINE stop times are not published to this view. Stops are listed in order.' };
+    }
+    if (v.agency !== 'ddot') return null;
+    if (!tripTT) {
+      return { byStop: {}, onlyIds: null, note: 'Stop times load with the trip engine; they appear here once it is ready.' };
+    }
+    var found = null;
+    tripDelayState.forEach(function (st, trip) { if (st.vehicleId === v.vehicle_id) found = { st: st, trip: trip }; });
+    if (!found) {
+      return { byStop: {}, onlyIds: null, note: 'This bus is not matched to a scheduled trip yet, so stop times are not shown. Matching runs every minute while the bus reports a current position.' };
+    }
+    var trip = found.trip, st = found.st;
+    var arr = trip.arrL2 || trip.arr;
+    var nowSec = detroitParts(Date.now()).sec;
+    var byStop = {}, onlyIds = {};
+    for (var j = 0; j < trip.stops.length; j++) {
+      var eta = arr[j] + (st.disrupted ? 0 : st.delaySec);
+      if (eta < nowSec - 30) continue; // already served (30 s grace for the stop the bus is standing at)
+      var sObj = stopData && stopData[trip.stops[j]];
+      if (!sObj || sObj.id == null) continue;
+      var gid = String(sObj.id);
+      onlyIds[gid] = true;
+      var dSec = eta - nowSec;
+      byStop[gid] = dSec < 45 ? 'now' : (dSec <= 5400 ? Math.round(dSec / 60) + ' min' : tripClock(eta));
+    }
+    var note = st.disrupted
+      ? 'This bus is off its schedule pattern; the times shown are its scheduled times.'
+      : (trip.arrL2
+        ? 'Times are live estimates for this bus: typical running times for its trip, adjusted by its measured delay.'
+        : 'Times are live estimates for this bus: its scheduled trip times, adjusted by its measured delay.');
+    return { byStop: byStop, onlyIds: onlyIds, note: note };
+  }
+
   // --- stops ---------------------------------------------------------------
   // Stops follow individual route filters (not groups). Single-route stops
   // take their route's color; multi-route stops ("hubs") draw paper-white
@@ -3960,7 +4035,13 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         window.__setRideVehicles(lastVehicles);
       }
     }
-    if (on && rideWidget) rideWidget.refresh();
+    if (on && rideWidget) {
+      // Ride along (2026-10-15): stop times for the ride view, and the
+      // timetable engine a boarded bus's matching needs.
+      if (rideWidget.setTimesProvider) rideWidget.setTimesProvider(rideTimesFor);
+      ensureTripEngine();
+      rideWidget.refresh();
+    }
     // Respect the in-focus bus: if a bus is already selected when Ride
     // Along is switched on, ride THAT bus — no second selection in the
     // card's dropdown. (The selected bus survives a stop selection, so
@@ -3981,17 +4062,65 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // projected x/z (its data contract). Merge the projection onto a copy
     // of each record — the raw feed objects are shared with the map
     // renderer and must not be mutated. Speed arrives as speed_mph.
+    // Real-time ride view (2026-10-15): the position handed to the
+    // widget is the bus slot's CURRENT position — updateBusMotion
+    // dead-reckons it from the Kalman state every frame — not the raw
+    // fix the feed last reported. A DDOT fix can be a minute or more
+    // old on arrival and the poll cadence is 60 s; projecting the raw
+    // fix left the ride view's upcoming-stops list minutes behind the
+    // bus (passed stops lingering, times stale). The slot position is
+    // the same estimate the map renders. A vehicle without a slot (not
+    // yet tracked) falls back to the raw fix projection.
+    var slotById = {};
+    for (var s = 0; s < busSlots.length; s++) {
+      if (busSlots[s].vehicle) slotById[busSlots[s].vehicle.vehicle_id] = busSlots[s];
+    }
     var mapped = (vehicles || []).map(function (v) {
+      var sl = slotById[v.vehicle_id];
+      if (sl) {
+        var out = {};
+        for (var k in v) out[k] = v[k];
+        out.x = sl.x; out.z = sl.z;
+        if (out.speed == null && v.speed_mph != null) out.speed = v.speed_mph;
+        return out;
+      }
       if (v.lat == null || v.lon == null || !proj || typeof project !== 'function') return v;
       var p = project(v.lat, v.lon);
-      var out = {};
-      for (var k in v) out[k] = v[k];
-      out.x = p[0]; out.z = p[1];
-      if (out.speed == null && v.speed_mph != null) out.speed = v.speed_mph;
-      return out;
+      var out2 = {};
+      for (var k2 in v) out2[k2] = v[k2];
+      out2.x = p[0]; out2.z = p[1];
+      if (out2.speed == null && v.speed_mph != null) out2.speed = v.speed_mph;
+      return out2;
     });
     rideWidget.setVehicles(mapped);
   };
+  // Real-time ride view (2026-10-15): while a bus is boarded, push its
+  // tracker-predicted position to the widget every 5 s. The poll alone
+  // refreshes the ride view once a minute; between polls the bus keeps
+  // moving and its upcoming-stops list must advance with it. The widget
+  // recomputes the vehicle's progress along its trip's stop sequence
+  // from the pushed position on every push (RideAlong.updateVehicle ->
+  // refresh): stops the bus has passed drop off, the next stop is
+  // promoted, and the stop times are re-derived from the times
+  // provider. No user interaction is involved. The guard makes the
+  // interval a no-op unless a bus is boarded in Ride Along.
+  function pushRidePosition() {
+    if (!rideMode || !rideWidget || !rideWidget.currentVehicleId) return;
+    var vid = rideWidget.currentVehicleId;
+    for (var i = 0; i < busSlots.length; i++) {
+      var sl = busSlots[i];
+      if (sl.vehicle && sl.vehicle.vehicle_id === vid) {
+        var rec = {};
+        for (var k in sl.vehicle) rec[k] = sl.vehicle[k];
+        rec.x = sl.x; rec.z = sl.z;
+        if (rec.speed == null && sl.vehicle.speed_mph != null) rec.speed = sl.vehicle.speed_mph;
+        rideWidget.updateVehicle(rec);
+        return;
+      }
+    }
+  }
+  setInterval(function () { pushRidePosition(); }, 5000);
+
   function tripMiniLabel() {
     if (typeof tripJourneys !== 'undefined' && tripJourneys.length && tripJourneys[tripSel]) {
       var j = tripJourneys[tripSel];
