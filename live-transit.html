@@ -156,11 +156,10 @@
   #mogo-toggle[aria-pressed="true"] { border-color: rgba(232,93,26,.45); }
   #mogo-toggle[aria-pressed="false"] .f-box { background: transparent; }
   #mogo-toggle:focus-visible { outline: 2px solid #FFB000; outline-offset: 2px; }
-  #places-head { margin-top: .6rem; }
-  #places-sb-toggle, #places-pf-toggle { margin-top: .35rem; }
-  #places-sb-toggle[aria-pressed="true"], #places-pf-toggle[aria-pressed="true"] { border-color: rgba(232,93,26,.45); }
-  #places-sb-toggle[aria-pressed="false"] .f-box, #places-pf-toggle[aria-pressed="false"] .f-box { background: transparent; }
-  #places-sb-toggle:focus-visible, #places-pf-toggle:focus-visible { outline: 2px solid #FFB000; outline-offset: 2px; }
+  #places-toggle { margin-top: .6rem; }
+  #places-toggle[aria-pressed="true"] { border-color: rgba(232,93,26,.45); }
+  #places-toggle[aria-pressed="false"] .f-box { background: transparent; }
+  #places-toggle:focus-visible { outline: 2px solid #FFB000; outline-offset: 2px; }
   .stop-place { margin-top: .7rem; }
   .stop-place[hidden] { display: none; }
   .stop-place-note { color: #9AA0A6; font-size: .78rem; line-height: 1.5; margin: .5rem 0 0; }
@@ -586,9 +585,7 @@
         </div>
         <p class="f-note">In the trip planner, suggest a live transfer near the trip start, ranked by walk time plus wait from live bus positions.</p>
         <p class="f-note">Routes with no live buses reporting are dimmed or hidden automatically. DDOT schedule data is current through Feb 7, 2027 &mdash; this page shows live bus positions; the trip planner uses scheduled times.</p>
-        <div class="f-group-head" id="places-head"><b>Points of interest</b><span class="f-count" id="places-count">42 points of interest</span></div>
-        <button class="f-group-head" id="places-sb-toggle" aria-pressed="false" title="Show Starbucks coffee shops"><span class="f-box"></span><b>Starbucks</b><span class="f-count" id="places-sb-count">31</span></button>
-        <button class="f-group-head" id="places-pf-toggle" aria-pressed="false" title="Show Planet Fitness gyms"><span class="f-box"></span><b>Planet Fitness</b><span class="f-count" id="places-pf-count">11</span></button>
+        <button class="f-group-head" id="places-toggle" aria-pressed="false" title="Show points of interest — Starbucks coffee shops and Planet Fitness gyms"><span class="f-box"></span><b>Points of interest</b><span class="f-count" id="places-count">42 points of interest</span></button>
         <p class="f-note">Starbucks and Planet Fitness points of interest from OpenStreetMap (&copy; OpenStreetMap contributors, ODbL), within the map&rsquo;s street boundary. Flat discs colored by brand carry letter badges at close zoom &mdash; S for Starbucks, PF for Planet Fitness. Community map data may not list every point of interest; licensed counters inside other stores are the likeliest gaps.</p>
         <div id="filter-groups"></div>
         <div class="f-static">
@@ -809,6 +806,6 @@
   window.FORGE_LIVE_PROXY = "https://forge-line-live-proxy.netlify.app";
 </script>
 <script src="ride-along.js?v=20261015-0348"></script>
-<script type="module" src="live-transit.js?v=20261015-0354"></script>
+<script type="module" src="live-transit.js?v=20261015-0406"></script>
 </body>
 </html>
