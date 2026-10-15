@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261014-2246';
+  var STAMP = '20261014-2306';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -1573,6 +1573,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // D1a: on mobile the card opens as a compact route/vehicle bar; tap to expand.
     setBusCardCompact(DisplayBounds.get().deviceClass === 'mobile');
     refreshBusInfo(); // in-scene label beside the bus
+    if (typeof renderBetaTiles === 'function') renderBetaTiles();
     // After-touch transition: one engine path frames the bus at the
     // safe-frame center (not the viewport center), so the card never covers
     // it. D2b: on mobile the selection frames and holds; the explicit Follow
@@ -2433,6 +2434,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var b = document.createElement('b');
       b.textContent = v.route_id + ' · ' + (formatDest(v.route_id, v.destination) || (routeNames[v.route_id] || 'DDOT'));
       row.appendChild(b);
+      // Beta tile (stop bus numbers): the serving vehicle's number, so a
+      // rider can match the row to the bus they can see. Gate: betaTilesOn.
+      if (typeof betaTilesOn !== 'undefined' && betaTilesOn && v.vehicle_id) {
+        var bn = document.createElement('span');
+        bn.className = 'stop-live-bus';
+        bn.textContent = 'Bus ' + v.vehicle_id;
+        row.appendChild(bn);
+      }
       var t = document.createElement('span');
       var when = v.updated_at ? new Date(v.updated_at) : null;
       var mins = (when && !isNaN(when)) ? Math.max(0, Math.round((now - when.getTime()) / 60000)) : null;
@@ -2531,6 +2540,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       }
       showTripView('planner');
       $('trip-card').hidden = false;
+      if (typeof renderBetaTiles === 'function') renderBetaTiles();
       renderTripFields();
       updateTripMarkers();
       maybeReplan();
@@ -4818,6 +4828,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (bp && !bp.hidden) refreshBrowseBuses(false);
     }
     if (selectedStop) renderStopLive();
+    if (typeof renderBetaTiles === 'function') renderBetaTiles(); // beta tiles track live positions
     if (typeof refreshTripFusion === 'function') refreshTripFusion(); // live counts on trip legs
     if (selectedVehicleId) refreshBusInfo(); // tapped bus moved / new data
     return busSlots.length;
@@ -5348,6 +5359,238 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     pollAlerts();
     setInterval(function () { if (!document.hidden) pollAlerts(); }, 120000);
   }
+
+  // --- beta tiles (filed 2026-10-09; approved 2026-10-14) ------------------
+  // Three live-help surfaces behind one opt-in gate, following the SMART
+  // beta pattern: labeled beta, default OFF until the rider opts in, the
+  // choice persists in localStorage ('lt-beta-tiles'). (1) Stop tiles: the
+  // stop card's live rows add the bus number (renderStopLive, above).
+  // (2) Upcoming stops: the bus card lists the selected bus's next stops
+  // with time estimates from its matched arc position and the empirical
+  // segment speeds. (3) Suggest transfer: a tile in the trip planner ranks
+  // live buses approaching stops near the trip origin by walk + wait,
+  // recomputed from live positions on every poll \u2014 dynamic rerouting
+  // from real-time intersecting-route ETAs, not scheduled times.
+  var betaTilesOn = false;
+  try { betaTilesOn = localStorage.getItem('lt-beta-tiles') === '1'; } catch (e) {}
+  var BETA_WALK_MPS = 1.4;      // the timetable's walk speed (build-timetable.py)
+  var BETA_RADIUS_M = 1250;     // NEAR_ME_M \u2014 the "routes near me" radius
+  var BETA_FALLBACK_MPS = 8.9;  // ~20 mph when no empirical speed is known
+
+  // Seconds to ride along pathIdx from arc s0 to s1 (s1 > s0), summing
+  // per-segment times at empirical speeds; the stretch past the last
+  // mapped segment rides at the fallback speed. null when there is no
+  // segment coverage and no fallback speed to ride at.
+  function betaRideSecs(routeId, pathIdx, s0, s1, fallbackMps) {
+    if (s1 <= s0) return 0;
+    var segs = routeSegments(routeId), covered = 0, secs = 0;
+    for (var i = 0; i < segs.length; i++) {
+      var g = segs[i];
+      if (g.pathIdx !== pathIdx) continue;
+      var a = Math.max(s0, g.s0), b = Math.min(s1, g.s1);
+      if (b <= a) continue;
+      var v = empiricalSpeed(routeId, g) || fallbackMps || BETA_FALLBACK_MPS;
+      secs += (b - a) / v; covered += (b - a);
+    }
+    var fb = fallbackMps || BETA_FALLBACK_MPS;
+    if (!covered && !fb) return null;
+    if (covered < (s1 - s0) - 1) secs += ((s1 - s0) - covered) / fb;
+    return secs;
+  }
+
+  function betaMins(secs) {
+    if (secs == null) return '\u2014';
+    var m = Math.round(secs / 60);
+    return m < 1 ? '<1 min' : m + ' min';
+  }
+
+  function betaNoteRow(list, text) {
+    var p = document.createElement('p');
+    p.className = 'beta-note';
+    p.textContent = text;
+    list.appendChild(p);
+  }
+
+  // (2) Upcoming stops for the selected bus: stops ahead of the bus's
+  // filtered arc position on its current path, in order, with cumulative
+  // time estimates. Honest states: unmatched (off the mapped shape) and
+  // terminus (no stops ahead) say so in words instead of listing nothing.
+  function betaUpcoming(v) {
+    var tr = busTrackers[v.vehicle_id];
+    if (!tr || !tr.arc || tr.pathIdx < 0) return { state: 'unmatched' };
+    var smap = stopArcMap(v.route_id, tr.pathIdx);
+    var byId = {};
+    stopsByRoute(v.route_id).forEach(function (st) { byId[st.id] = st; });
+    var ups = [];
+    for (var sid in smap) {
+      if (smap[sid] > tr.s + 25 && byId[sid]) ups.push({ stop: byId[sid], s: smap[sid] });
+    }
+    ups.sort(function (a, b) { return a.s - b.s; });
+    if (!ups.length) return { state: 'terminus' };
+    var fb = tr.speedMps > 0.5 ? tr.speedMps : null;
+    var out = [], cum = 0, prev = tr.s, ok = true;
+    ups.slice(0, 6).forEach(function (u) {
+      var leg = betaRideSecs(v.route_id, tr.pathIdx, prev, u.s, fb);
+      if (leg == null) ok = false; else cum += leg;
+      out.push({ name: u.stop.n || 'Stop', secs: ok ? cum : null });
+      prev = u.s;
+    });
+    return { state: 'ok', stops: out };
+  }
+
+  function renderBusUpcoming() {
+    var host = $('bus-upcoming'), list = $('bus-upcoming-list');
+    if (!host || !list) return;
+    var v = null;
+    if (betaTilesOn && selectedVehicleId && lastVehicles) {
+      for (var i = 0; i < lastVehicles.length; i++) {
+        if (lastVehicles[i].vehicle_id === selectedVehicleId) { v = lastVehicles[i]; break; }
+      }
+    }
+    if (!v) { host.hidden = true; return; }
+    var r = betaUpcoming(v);
+    host.hidden = false;
+    list.innerHTML = '';
+    if (r.state !== 'ok') {
+      betaNoteRow(list, r.state === 'terminus'
+        ? 'This bus is at the end of its trip \u2014 no more stops on this run.'
+        : 'This bus is off its mapped route right now, so its upcoming stops cannot be estimated.');
+      return;
+    }
+    r.stops.forEach(function (u, i) {
+      var row = document.createElement('div');
+      row.className = 'beta-row';
+      var b = document.createElement('b');
+      b.textContent = (i === 0 ? 'Next: ' : '') + u.name;
+      row.appendChild(b);
+      var t = document.createElement('span');
+      t.textContent = '~' + betaMins(u.secs);
+      row.appendChild(t);
+      list.appendChild(row);
+    });
+  }
+
+  // (3) Suggest transfer: from the trip origin (the From point, else the
+  // rider's located position), take each route's nearest stop, find the
+  // soonest live bus still approaching that stop, and rank routes by
+  // walk time + wait. A bus that has already passed the stop is excluded
+  // \u2014 the suggestion must be catchable, which is the filed point of
+  // the tile: efficient transfers despite schedule deviations.
+  function betaOrigin() {
+    if (tripFrom) {
+      if (tripFrom.kind === 'stop') {
+        var st = stopData && stopData[tripFrom.idx];
+        if (st) return { x: st.x, z: st.z };
+      }
+      if (tripFrom.kind === 'loc') return { x: tripFrom.x, z: tripFrom.z };
+    }
+    if (typeof userXZ !== 'undefined' && userXZ) return { x: userXZ[0], z: userXZ[1] };
+    return null;
+  }
+
+  function betaSuggest() {
+    var o = betaOrigin();
+    if (!o) return { state: 'no-origin' };
+    if (!stopData || !lastVehicles) return { state: 'no-data' };
+    var near = {}; // rid -> [{stop, dist}...] nearest first: the tile
+    // boards at the nearest stop a live bus is still approaching (the
+    // nearest stop overall may already have been served by that bus).
+    for (var i = 0; i < stopData.length; i++) {
+      var st = stopData[i];
+      var d = Math.hypot(st.x - o.x, st.z - o.z);
+      if (d > BETA_RADIUS_M) continue;
+      (st.r || []).forEach(function (rid) {
+        (near[rid] = near[rid] || []).push({ stop: st, dist: d });
+      });
+    }
+    for (var r0 in near) near[r0].sort(function (a, b) { return a.dist - b.dist; });
+    // Optional signal: routes that also stop within the radius of the
+    // trip destination \u2014 proximity only, stated as proximity.
+    var destNear = {};
+    if (tripTo && tripTo.kind === 'stop' && stopData[tripTo.idx]) {
+      var ds = stopData[tripTo.idx];
+      for (var j = 0; j < stopData.length; j++) {
+        var s2 = stopData[j];
+        if (Math.hypot(s2.x - ds.x, s2.z - ds.z) > BETA_RADIUS_M) continue;
+        (s2.r || []).forEach(function (rid) { destNear[rid] = true; });
+      }
+    }
+    var out = [];
+    for (var rid in near) {
+      var best = null;
+      for (var ci = 0; ci < near[rid].length && !best; ci++) {
+        var cand = near[rid][ci];
+        for (var k = 0; k < lastVehicles.length; k++) {
+          var v = lastVehicles[k];
+          if (v.route_id !== rid) continue;
+          var tr = busTrackers[v.vehicle_id];
+          if (!tr || !tr.arc || tr.pathIdx < 0) continue;
+          var ss = stopArcMap(rid, tr.pathIdx)[cand.stop.id];
+          if (ss == null || ss <= tr.s + 10) continue; // already passed this stop
+          var eta = betaRideSecs(rid, tr.pathIdx, tr.s, ss, tr.speedMps > 0.5 ? tr.speedMps : null);
+          if (eta == null) continue;
+          var total = cand.dist / BETA_WALK_MPS + eta;
+          if (!best || total < best.total) best = { v: v, eta: eta, total: total, stop: cand.stop, walk: cand.dist / BETA_WALK_MPS };
+        }
+      }
+      if (best) out.push({ rid: rid, stop: best.stop, walk: best.walk, eta: best.eta, bus: best.v.vehicle_id, nearDest: !!destNear[rid] });
+    }
+    out.sort(function (a, b) { return a.total - b.total; });
+    return { state: 'ok', options: out.slice(0, 4) };
+  }
+
+  function renderSuggest() {
+    var host = $('suggest-tile'), list = $('suggest-list'), note = $('suggest-note');
+    if (!host || !list) return;
+    if (!betaTilesOn || !tripMode) { host.hidden = true; return; }
+    var r = betaSuggest();
+    host.hidden = false;
+    list.innerHTML = '';
+    if (note) note.textContent = 'Live estimates from bus positions right now. The planner above uses scheduled times.';
+    if (r.state === 'no-origin') { betaNoteRow(list, 'Set a From point \u2014 or tap Locate \u2014 so this tile can work from where you are.'); return; }
+    if (r.state !== 'ok' || !r.options.length) { betaNoteRow(list, 'No live buses are approaching stops near the start point right now.'); return; }
+    r.options.forEach(function (op) {
+      var row = document.createElement('div');
+      row.className = 'beta-row';
+      var b = document.createElement('b');
+      b.textContent = op.rid + ' \u00b7 Bus ' + op.bus + ' at ' + (op.stop.n || 'stop');
+      row.appendChild(b);
+      var t = document.createElement('span');
+      t.textContent = 'bus ~' + betaMins(op.eta) + ' \u00b7 ' + betaMins(op.walk) + ' walk';
+      row.appendChild(t);
+      list.appendChild(row);
+      if (op.nearDest) {
+        var s = document.createElement('div');
+        s.className = 'beta-sub';
+        s.textContent = 'Route ' + op.rid + ' also stops near your destination.';
+        list.appendChild(s);
+      }
+    });
+  }
+
+  function renderBetaTiles() {
+    renderBusUpcoming();
+    renderSuggest();
+  }
+
+  // Gate wiring \u2014 the SMART beta pattern: an aria-pressed toggle in
+  // the routes panel, choice persisted, note shown while the gate is on.
+  (function wireBetaTiles() {
+    var btn = $('beta-tiles-toggle'), note = $('beta-tiles-note');
+    if (!btn) return;
+    var sync = function () {
+      btn.setAttribute('aria-pressed', String(betaTilesOn));
+      if (note) note.hidden = !betaTilesOn;
+    };
+    btn.addEventListener('click', function () {
+      betaTilesOn = !betaTilesOn;
+      try { localStorage.setItem('lt-beta-tiles', betaTilesOn ? '1' : '0'); } catch (e) {}
+      sync();
+      if (selectedStop) renderStopLive();
+      renderBetaTiles();
+    });
+    sync();
+  })();
 
   // --- instant paint from logged history ---------------------------------------
   var historyRendered = false;
