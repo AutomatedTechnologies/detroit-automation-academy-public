@@ -55,21 +55,29 @@
 }
 </script>
 <style>
-  .map-stage { position: relative; height: 100vh; height: 100svh; min-height: 540px; background: #0C1116; overflow: hidden; }
+  /* Home-state first-load geometry (2026-10-15, Accessible Detroit):
+     the stage tracks the DYNAMIC viewport (100dvh after the vh/svh
+     fallbacks) so it equals the visible viewport at every moment —
+     including the first painted frame, before mobile browser chrome
+     settles; the UI layer carries an explicit z-index above the canvas
+     layer so the stage can never paint over the bar; and the bar's
+     background is the stage's own opaque #0C1116 so its title text is
+     never washed out by bright scene content behind it. */
+  .map-stage { position: relative; height: 100vh; height: 100svh; height: 100dvh; min-height: 540px; background: #0C1116; overflow: hidden; }
   /* Direction C: the shared site header is shed on this page only — the
      control bar carries the brand mark (links home) and the page footer
      below the stage keeps the full site navigation links. */
   #daa-nav { display: none; }
-  #live-map { position: absolute; inset: 0; }
+  #live-map { position: absolute; inset: 0; z-index: 0; }
   #live-map:focus-visible { outline: 2px solid #E85D1A; outline-offset: -2px; }
   #live-map canvas { display: block; width: 100% !important; height: 100% !important; }
-  .map-ui { position: absolute; inset: 0; pointer-events: none; font-family: "Inter", sans-serif; }
+  .map-ui { position: absolute; inset: 0; z-index: 1; pointer-events: none; font-family: "Inter", sans-serif; }
   .map-ui > * { pointer-events: auto; }
   /* Direction C — one 52px control bar replaces the site header, the
      title row, the live pill, and the floating action buttons: brand +
      title at left, live count/freshness under the title, the three
      actions at right. One line of identity, status, and actions. */
-  .map-bar { position: absolute; top: 0; left: 0; right: 0; height: 3.25rem; display: flex; align-items: center; gap: .6rem; padding: 0 .8rem; background: rgba(12,17,22,.94); border-bottom: 1px solid rgba(245,242,234,.12); z-index: 7; }
+  .map-bar { position: absolute; top: 0; left: 0; right: 0; height: 3.25rem; display: flex; align-items: center; gap: .6rem; padding: 0 .8rem; background: #0C1116; border-bottom: 1px solid rgba(245,242,234,.12); z-index: 7; }
   .bar-brand { display: flex; align-items: center; flex: none; }
   .bar-mark { width: 30px; height: 30px; display: block; }
   .bar-main { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
@@ -806,6 +814,6 @@
   window.FORGE_LIVE_PROXY = "https://forge-line-live-proxy.netlify.app";
 </script>
 <script src="ride-along.js?v=20261015-0348"></script>
-<script type="module" src="live-transit.js?v=20261015-0429"></script>
+<script type="module" src="live-transit.js?v=20261015-0505"></script>
 </body>
 </html>
