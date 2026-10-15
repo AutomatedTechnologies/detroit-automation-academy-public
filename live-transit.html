@@ -55,19 +55,35 @@
 }
 </script>
 <style>
-  .map-stage { position: relative; height: calc(100vh - 72px); height: calc(100svh - 72px); min-height: 540px; background: #0C1116; overflow: hidden; }
+  .map-stage { position: relative; height: 100vh; height: 100svh; min-height: 540px; background: #0C1116; overflow: hidden; }
+  /* Direction C: the shared site header is shed on this page only — the
+     control bar carries the brand mark (links home) and the page footer
+     below the stage keeps the full site navigation links. */
+  #daa-nav { display: none; }
   #live-map { position: absolute; inset: 0; }
   #live-map:focus-visible { outline: 2px solid #E85D1A; outline-offset: -2px; }
   #live-map canvas { display: block; width: 100% !important; height: 100% !important; }
   .map-ui { position: absolute; inset: 0; pointer-events: none; font-family: "Inter", sans-serif; }
   .map-ui > * { pointer-events: auto; }
-  .map-head { position: absolute; top: 1.1rem; left: 1.25rem; right: 1.25rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; pointer-events: none; }
-  .map-head-right { display: flex; flex-direction: column; align-items: flex-end; gap: .5rem; pointer-events: none; }
-  .map-head-right > * { pointer-events: auto; }
-  .map-title h1 { font-family: "Space Grotesk", sans-serif; font-size: 1.35rem; margin: 0; color: #F5F2EA; letter-spacing: .01em; }
-  .map-title h1 .accent { color: #E85D1A; }
-  .map-title p { margin: .25rem 0 0; color: #9AA0A6; font-size: .85rem; max-width: 34rem; }
-  .map-live { text-align: right; background: rgba(12,17,22,.78); border: 1px solid rgba(245,242,234,.14); border-radius: 12px; padding: .6rem .9rem; backdrop-filter: blur(6px); pointer-events: auto; white-space: nowrap; }
+  /* Direction C — one 52px control bar replaces the site header, the
+     title row, the live pill, and the floating action buttons: brand +
+     title at left, live count/freshness under the title, the three
+     actions at right. One line of identity, status, and actions. */
+  .map-bar { position: absolute; top: 0; left: 0; right: 0; height: 3.25rem; display: flex; align-items: center; gap: .6rem; padding: 0 .8rem; background: rgba(12,17,22,.94); border-bottom: 1px solid rgba(245,242,234,.12); z-index: 7; }
+  .bar-brand { display: flex; align-items: center; flex: none; }
+  .bar-mark { width: 30px; height: 30px; display: block; }
+  .bar-main { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+  .bar-title { font-family: "Space Grotesk", sans-serif; font-size: 1rem; line-height: 1.15; margin: 0; color: #F5F2EA; letter-spacing: .01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-title .accent { color: #E85D1A; }
+  .bar-actions { display: flex; align-items: center; gap: .5rem; margin-left: auto; flex: none; }
+  .fb-short { display: none; }
+  .map-live { display: flex; align-items: center; gap: .5rem; white-space: nowrap; min-width: 0; font-size: .75rem; color: #9AA0A6; pointer-events: auto; }
+  .map-live .live-main { display: flex; align-items: center; flex: none; }
+  .map-bar .map-live span { margin-top: 0; }
+  .map-bar .map-live strong { font-size: .95rem; }
+  .map-bar .map-live #bus-updated { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .map-bar .map-live #smart-pill-note { color: #FFB000; font-weight: 600; flex: none; }
+  .map-bar .transit-badge { margin-top: 0; }
   .map-live .live-dot { display: inline-block; width: .55rem; height: .55rem; border-radius: 50%; background: #2ECC71; margin-right: .45rem; animation: pulse 2s infinite; vertical-align: baseline; }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
   .map-live strong { font-family: "Space Grotesk", sans-serif; font-size: 1.15rem; color: #F5F2EA; }
@@ -169,6 +185,18 @@
   .map-tools button:hover { border-color: #E85D1A; color: #E85D1A; }
   .map-tools button:active { background: #E85D1A; border-color: #E85D1A; color: #0C1116; }
   #view-full[aria-pressed="true"] { background: rgba(232,93,26,.2); border-color: #E85D1A; color: #E85D1A; }
+  /* Direction C: rail minimized state — locate and the minimize toggle
+     stay; every other tool is one tap away behind the toggle. The
+     toggle's chevron rotates to point up (expand) while collapsed. */
+  .map-tools.collapsed button:not(#view-locate):not(#tools-toggle) { display: none; }
+  /* Independent chrome controls (Direction C substrate for the minimalist
+     iterations): each body class hides exactly one chrome element and
+     nothing else. Governed from JS by chromeHide(name, hide). */
+  body.chrome-no-bar #map-bar { display: none; }
+  body.chrome-no-rail .map-tools { display: none; }
+  body.chrome-no-hint .map-hint { display: none; }
+  .map-tools #tools-toggle svg { transition: transform .18s; }
+  .map-tools.collapsed #tools-toggle svg { transform: rotate(180deg); }
   .map-stage.pseudo-full { position: fixed; inset: 0; height: 100vh; height: 100dvh; z-index: 60; }
   body.pseudo-full-lock { overflow: hidden; }
   /* Fullscreen gesture lock — iOS Safari treats an unconsumed downward swipe
@@ -178,7 +206,7 @@
      pinch/zoom leaks). Taps/clicks are unaffected by touch-action. */
   body.fs-lock { overflow: hidden; overscroll-behavior: none; }
   body.fs-lock #live-map,
-  body.fs-lock .map-head,
+  body.fs-lock .map-bar,
   body.fs-lock .map-hint,
   body.fs-lock .map-tools { touch-action: none; }
   body.fs-lock .bus-card { touch-action: pan-y; }
@@ -231,7 +259,7 @@
   .beta-row span { margin-left: auto; color: #9AA0A6; font-size: .75rem; flex: none; font-variant-numeric: tabular-nums; }
   .beta-note { margin: .2rem 0 0; font-size: .8rem; color: #9AA0A6; line-height: 1.4; font-family: "Inter", sans-serif; }
   .beta-sub { font-size: .75rem; color: #9AA0A6; padding: 0 0 .2rem; font-family: "Inter", sans-serif; }
-  #beta-tiles-toggle:focus-visible { outline: 2px solid #FFB000; outline-offset: 2px; }
+  #stop-tiles-toggle:focus-visible, #upcoming-stops-toggle:focus-visible, #suggest-transfer-toggle:focus-visible { outline: 2px solid #FFB000; outline-offset: 2px; }
   .bus-card h2 { font-family: "Space Grotesk", sans-serif; font-size: 1.05rem; margin: 0 0 .4rem; color: #F5F2EA; display: flex; align-items: center; gap: .5rem; padding-right: 1.7rem; }
   .bus-card h2 span { overflow-wrap: break-word; min-width: 0; }
   .bus-card h2 i { width: .8rem; height: .8rem; border-radius: 3px; display: inline-block; }
@@ -362,13 +390,25 @@
   .page-note { border-top: 1px solid rgba(245,242,234,.1); }
   .page-note .fine { margin-top: 1rem; }
   @media (max-width: 640px) {
-    .map-head { flex-direction: column; }
-    .map-head-right { flex-direction: row; flex-wrap: wrap; align-items: center; align-self: flex-start; max-width: 100%; }
-    .map-live { align-self: flex-start; }
-    .map-title p { display: none; }
-    .map-hint { display: none; }
-    .bus-card { top: auto; bottom: 5.5rem; left: 1rem; right: 1rem; width: auto; max-width: none; }
-    .filter-panel { top: auto; bottom: 1rem; right: 1rem; left: 1rem; width: auto; max-height: 55%; }
+    .map-bar { gap: .45rem; padding: 0 .6rem; }
+    .bar-mark { width: 24px; height: 24px; }
+    .bar-title { font-size: .82rem; }
+    .map-live { font-size: .68rem; gap: .4rem; }
+    .map-live .live-words { display: none; }
+    .bar-actions { gap: .35rem; }
+    .bar-actions .filter-btn { flex-direction: column; gap: .05rem; width: 2.9rem; height: 2.75rem; padding: .15rem 0; border-radius: 10px; font-size: .56rem; justify-content: center; }
+    .bar-actions .filter-btn .filter-ico { font-size: .95rem; line-height: 1; }
+    .bar-actions .fb-full { display: none; }
+    .bar-actions .fb-short { display: inline; }
+    /* The hint bar leaves the mobile layout entirely (its content lives
+       in the "?" help overlay); the .touch variant must not revive it. */
+    .map-hint, .map-hint.touch { display: none; }
+    /* Cards: capped at 45% of stage height with internal scroll, and a
+       permanent 5.5rem right gutter so the rail column — collapsed or
+       expanded — is never under a card. The 0002 occlusion geometry
+       becomes impossible by construction. */
+    .bus-card { top: auto; bottom: 5.5rem; left: 1rem; right: 5.5rem; width: auto; max-width: none; max-height: 45%; overflow-y: auto; }
+    .filter-panel, .browse-panel { top: auto; bottom: 1rem; right: 1rem; left: 1rem; width: auto; max-height: 50%; }
   .resize-grip { display: none; }
   }
   /* Service alerts — Map-Native presentation (concept B, selected
@@ -502,21 +542,21 @@
   <section class="map-stage" aria-label="Live 3D transit map">
     <div id="live-map" tabindex="0" role="img" aria-label="3D map of DDOT routes with live bus positions and SMART route snapshots"></div>
     <div class="map-ui">
-      <div class="map-head">
-        <div class="map-title">
-          <h1>Live transit <span class="accent">· Detroit</span></h1>
-          <p>Every DDOT bus in Detroit — all 37 routes drawn on the actual streets in 3D, plus SMART route snapshots. Drag to orbit, scroll to zoom, click a bus for details.</p>
-        </div>
-        <div class="map-head-right">
+      <div class="map-bar" id="map-bar">
+        <a class="bar-brand" href="/" aria-label="Detroit Automation Academy home"><img class="bar-mark" src="/assets/logo.webp" alt="" width="30" height="30"></a>
+        <div class="bar-main">
+          <h1 class="bar-title">Live transit <span class="accent">· Detroit</span></h1>
           <div class="map-live" id="map-live">
-            <div><span class="live-dot"></span><strong id="bus-total" aria-live="polite" aria-atomic="true">–</strong> buses on the road</div>
+            <span class="live-main"><span class="live-dot"></span><strong id="bus-total" aria-live="polite" aria-atomic="true">–</strong><span class="live-words">&nbsp;buses on the road</span></span>
             <span id="bus-updated">connecting…</span>
             <span id="smart-pill-note" hidden></span>
             <a id="transit-badge" class="transit-badge" href="https://transitapp.com" target="_blank" rel="noopener" style="display:none">Powered by Transit</a>
           </div>
-          <button class="filter-btn" id="filter-btn" aria-expanded="false" aria-controls="filter-panel"><span class="filter-ico">⧩</span> Routes</button>
-          <button class="filter-btn" id="trip-btn" aria-pressed="false"><span class="filter-ico">◈</span> Plan trip</button>
-          <button class="filter-btn" id="ride-btn" aria-pressed="false"><span class="filter-ico">◉</span> Ride along</button>
+        </div>
+        <div class="bar-actions">
+          <button class="filter-btn" id="filter-btn" aria-expanded="false" aria-controls="filter-panel"><span class="filter-ico">⧩</span><span class="fb-label">Routes</span></button>
+          <button class="filter-btn" id="trip-btn" aria-pressed="false" aria-label="Plan trip"><span class="filter-ico">◈</span><span class="fb-label"><span class="fb-full">Plan trip</span><span class="fb-short" aria-hidden="true">Plan</span></span></button>
+          <button class="filter-btn" id="ride-btn" aria-pressed="false" aria-label="Ride along"><span class="filter-ico">◉</span><span class="fb-label"><span class="fb-full">Ride along</span><span class="fb-short" aria-hidden="true">Ride</span></span></button>
         </div>
       </div>
       <div class="filter-panel" id="filter-panel" hidden>
@@ -534,20 +574,28 @@
           <button id="hide-idle-toggle" aria-pressed="true"><span class="f-box"></span><b>Hide non-running routes</b></button>
         </div>
         <div class="f-idle-row">
-          <button id="beta-tiles-toggle" aria-pressed="false"><span class="f-box"></span><b>Beta tiles</b></button>
+          <button id="stop-tiles-toggle" aria-pressed="false" title="Show the bus number on each live departure row on stop cards"><span class="f-box"></span><b>Stop tiles</b></button>
         </div>
-        <p class="f-beta-note" id="beta-tiles-note" hidden>Beta: a Suggest transfer tile in the trip planner, bus numbers on stop cards, and upcoming stops on the bus card &mdash; all computed from live bus positions.</p>
+        <p class="f-note">Show the number of the bus serving each live departure on stop cards, so you can match the row to the bus you can see.</p>
+        <div class="f-idle-row">
+          <button id="upcoming-stops-toggle" aria-pressed="false" title="List the stops the selected bus will reach next on the bus card"><span class="f-box"></span><b>Upcoming stops</b></button>
+        </div>
+        <p class="f-note">On the bus card, list the stops the selected bus will reach next, with time estimates computed from live bus positions.</p>
+        <div class="f-idle-row">
+          <button id="suggest-transfer-toggle" aria-pressed="false" title="Suggest a live transfer near the trip start in the trip planner"><span class="f-box"></span><b>Suggest transfer</b></button>
+        </div>
+        <p class="f-note">In the trip planner, suggest a live transfer near the trip start, ranked by walk time plus wait from live bus positions.</p>
         <p class="f-note">Routes with no live buses reporting are dimmed or hidden automatically. DDOT schedule data is current through Feb 7, 2027 &mdash; this page shows live bus positions; the trip planner uses scheduled times.</p>
+        <div class="f-group-head" id="places-head"><b>Points of interest</b><span class="f-count" id="places-count">42 points of interest</span></div>
+        <button class="f-group-head" id="places-sb-toggle" aria-pressed="false" title="Show Starbucks coffee shops"><span class="f-box"></span><b>Starbucks</b><span class="f-count" id="places-sb-count">31</span></button>
+        <button class="f-group-head" id="places-pf-toggle" aria-pressed="false" title="Show Planet Fitness gyms"><span class="f-box"></span><b>Planet Fitness</b><span class="f-count" id="places-pf-count">11</span></button>
+        <p class="f-note">Starbucks and Planet Fitness points of interest from OpenStreetMap (&copy; OpenStreetMap contributors, ODbL), within the map&rsquo;s street boundary. Flat discs colored by brand carry letter badges at close zoom &mdash; S for Starbucks, PF for Planet Fitness. Community map data may not list every point of interest; licensed counters inside other stores are the likeliest gaps.</p>
         <div id="filter-groups"></div>
         <div class="f-static">
           <button class="f-group-head" id="pm-toggle" aria-pressed="true" title="Show the People Mover downtown loop and stations"><span class="f-box"></span><b>People Mover loop</b><span class="f-count">static</span></button>
           <p class="f-note">No live feed exists for the People Mover &mdash; stations and the downtown loop are schedule geometry from the agency&rsquo;s GTFS. Positions are real; no vehicles are shown.</p>
           <button class="f-group-head" id="mogo-toggle" aria-pressed="false" title="Show MoGo bikeshare stations with live bike and dock availability"><span class="f-box"></span><b>MoGo bikeshare</b><span class="f-count" id="mogo-count">loading</span></button>
           <p class="f-note">Live availability from MoGo&rsquo;s public GBFS feed, refreshed every minute. Marker height and color show bikes available; a ring means an e-assist bike is available; counts appear at close zoom. Short, grey markers are stations whose feed reports are stale &mdash; their counts may be out of date.</p>
-          <div class="f-group-head" id="places-head"><b>Places</b><span class="f-count" id="places-count">42 locations</span></div>
-          <button class="f-group-head" id="places-sb-toggle" aria-pressed="false" title="Show Starbucks coffee shops"><span class="f-box"></span><b>Starbucks</b><span class="f-count" id="places-sb-count">31</span></button>
-          <button class="f-group-head" id="places-pf-toggle" aria-pressed="false" title="Show Planet Fitness gyms"><span class="f-box"></span><b>Planet Fitness</b><span class="f-count" id="places-pf-count">11</span></button>
-          <p class="f-note">Starbucks and Planet Fitness locations from OpenStreetMap (&copy; OpenStreetMap contributors, ODbL), within the map&rsquo;s street boundary. Flat discs colored by brand carry letter badges at close zoom &mdash; S for Starbucks, PF for Planet Fitness. Community map data may not list every location; licensed counters inside other stores are the likeliest gaps.</p>
         </div>
         </div>
         <div class="resize-grip" id="panel-resize" aria-hidden="true"></div>
@@ -597,7 +645,7 @@
           <dt>Updated</dt><dd id="bus-card-updated">–</dd>
         </dl>
         <div class="bus-upcoming" id="bus-upcoming" hidden>
-          <div class="sel-eyebrow">Upcoming stops &middot; beta</div>
+          <div class="sel-eyebrow">Upcoming stops</div>
           <div id="bus-upcoming-list"></div>
         </div>
       </div>
@@ -660,7 +708,7 @@
             <input type="time" id="trip-time-input" aria-label="Departure time">
           </div>
           <div class="suggest-tile" id="suggest-tile" hidden>
-            <div class="sel-eyebrow">Suggest transfer &middot; beta</div>
+            <div class="sel-eyebrow">Suggest transfer</div>
             <div id="suggest-list"></div>
             <p class="f-note" id="suggest-note"></p>
           </div>
@@ -684,6 +732,7 @@
         <button id="view-full" aria-label="Enter fullscreen" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
         <button id="view-locate" aria-label="Find my location" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
         <button id="browse-toggle" aria-label="Browse buses and stops" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.4" fill="currentColor" stroke="none"/></svg></button>
+        <button id="tools-toggle" aria-label="Minimize map tools" aria-expanded="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
       </div>
       <div class="map-toast" id="map-toast" role="status" hidden></div>
       <div id="sr-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -700,8 +749,8 @@
         <ul id="mogo-sr-list"></ul>
         <p id="mogo-sr-note"></p>
       </section>
-      <section id="places-sr" class="sr-only" aria-label="Places, text form">
-        <h2>Places</h2>
+      <section id="places-sr" class="sr-only" aria-label="Points of interest, text form">
+        <h2>Points of interest</h2>
         <ul id="places-sr-list"></ul>
         <p id="places-sr-note"></p>
       </section>
@@ -760,6 +809,6 @@
   window.FORGE_LIVE_PROXY = "https://forge-line-live-proxy.netlify.app";
 </script>
 <script src="ride-along.js?v=20261015-0348"></script>
-<script type="module" src="live-transit.js?v=20261015-0348"></script>
+<script type="module" src="live-transit.js?v=20261015-0354"></script>
 </body>
 </html>
