@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-0323';
+  var STAMP = '20261015-0348';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -3569,6 +3569,17 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (!sl) { refreshFollowBtn(); return; }
     followSuppressed = false;
     if (typeof tripFly !== 'undefined' && tripFly) { setFollow(vid, sl); return; }
+    // Engage follow immediately; do not leave it solely to the glide's
+    // completion directive. glideTo() replaces any in-flight glide, and
+    // a replaced glide's onDone never runs — so an engage deferred to
+    // completion is silently lost when another glide (e.g. the stop
+    // card's, issued moments earlier in the select-bus -> stop -> Ride
+    // along sequence) or a programmatic camera move intervenes, and the
+    // ride then never tracks. followTick defers to an active glide
+    // frame-by-frame and keeps its seed fresh, so engaging now is safe;
+    // the glide below still centers the camera on the bus, and its
+    // completion directive re-applies this same follow.
+    setFollow(vid, sl);
     TransitionEngine.go({
       vantage: TransitionEngine.vantageForBus(sl.x, sl.z),
       follow: 'engage',
