@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-0348';
+  var STAMP = '20261015-0354';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -1108,8 +1108,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       { id: 'view-reset', edge: { mobile: 'right', desktop: 'right' }, visible: isShown },
       { id: 'view-full', edge: { mobile: 'right', desktop: 'right' }, visible: isShown },
       { id: 'browse-toggle', edge: { mobile: 'right', desktop: 'right' }, visible: isShown },
-      { id: 'filter-btn', edge: { mobile: 'right', desktop: 'right' }, visible: isShown },
-      { id: 'trip-btn', edge: { mobile: 'right', desktop: 'right' }, visible: isShown }
+      { id: 'map-bar', edge: { mobile: 'top', desktop: 'top' }, visible: isShown },
+      { id: 'filter-btn', edge: { mobile: 'top', desktop: 'top' }, visible: isShown },
+      { id: 'trip-btn', edge: { mobile: 'top', desktop: 'top' }, visible: isShown }
     ];
 
     function get() {
@@ -1684,10 +1685,93 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       _followPrev.set(sl.x, 0, sl.z);
     }
   }
+  /* === DIRECTION C — ONE SURFACE AT A TIME (mutual exclusion) =========
+     The stop card, bus card, trip card, ride card, routes panel and
+     browse panel share one screen slot. Opening any of them covers
+     whichever is open; closing the covering surface restores the covered
+     one. Covering hides the element ONLY — selection and mode state are
+     never cleared by exclusion, so the covered surface returns exactly
+     as it was (the stop card you were reading is still there when the
+     Routes panel closes). Hard closes keep their existing semantics and
+     live in the surfaces' own close paths (hideBus / hideStop /
+     setTripMode(false) / setRideMode(false) / togglePanel(false) /
+     setBrowse(false)); each of those calls exclRestore() when it
+     finishes. The one deliberate exception: stop taps while the trip
+     planner is open are planner inputs (tripStopTapped) and never open
+     the stop card over the planner. ================================ */
+  var _coveredStack = []; // surface names hidden by exclusion, state intact
+  var _exclBusy = false;   // reentrancy guard while exclusion wiring runs
+  function _surfaceElId(name) {
+    return name === 'filter' ? 'filter-panel'
+      : name === 'browse' ? 'browse-panel' : name + '-card';
+  }
+  function visibleSurface() {
+    var names = ['stop', 'bus', 'trip', 'ride', 'filter', 'browse'];
+    for (var i = 0; i < names.length; i++) {
+      var el = $(_surfaceElId(names[i]));
+      if (el && !el.hidden) return names[i];
+    }
+    return null;
+  }
+  function _hideSurfaceEl(name) {
+    var el = $(_surfaceElId(name));
+    if (el) el.hidden = true;
+    if (name === 'filter') $('filter-btn').setAttribute('aria-expanded', 'false');
+    if (name === 'browse') $('browse-toggle').setAttribute('aria-expanded', 'false');
+  }
+  function _showSurfaceEl(name) {
+    var el = $(_surfaceElId(name));
+    if (el) el.hidden = false;
+    if (name === 'filter') $('filter-btn').setAttribute('aria-expanded', 'true');
+    if (name === 'browse') $('browse-toggle').setAttribute('aria-expanded', 'true');
+  }
+  function _surfaceStillValid(name) {
+    if (name === 'stop') return !!selectedStop;
+    if (name === 'bus') return !!selectedVehicleId;
+    if (name === 'trip') return typeof tripMode !== 'undefined' && !!tripMode;
+    if (name === 'ride') return !!rideMode;
+    return false;
+  }
+  // Called at the top of every surface's own open path (the opener then
+  // unhides itself). Closes panels outright, hard-closes the other mode
+  // when a mode opens, and covers any card with its state intact.
+  function exclCover(name) {
+    _coveredStack = _coveredStack.filter(function (n) { return n !== name; });
+    var cur = visibleSurface();
+    if (!cur || cur === name) return;
+    _exclBusy = true;
+    try {
+      if (cur === 'filter') togglePanel(false);
+      else if (cur === 'browse') setBrowse(false);
+      else if ((cur === 'trip' || cur === 'ride') && (name === 'trip' || name === 'ride')) {
+        if (cur === 'trip') setTripMode(false); else setRideMode(false);
+      } else {
+        _hideSurfaceEl(cur);
+        _coveredStack.push(cur);
+      }
+    } finally { _exclBusy = false; }
+  }
+  // Called at the end of every surface's own close path: if nothing is
+  // showing, bring back the most recently covered surface whose state is
+  // still live. Entries whose state was hard-cleared meanwhile are
+  // dropped silently.
+  function exclRestore() {
+    if (_exclBusy) return;
+    if (visibleSurface()) return;
+    while (_coveredStack.length) {
+      var name = _coveredStack.pop();
+      if (!_surfaceStillValid(name)) continue;
+      _showSurfaceEl(name);
+      if (name === 'stop' && typeof renderStopLive === 'function') renderStopLive();
+      return;
+    }
+  }
+
   var _busReturnFocus = null;
   var _stopReturnFocus = null;
   function showBus(v) {
     if (!v) return;
+    exclCover('bus');
     var isReselect = (v.vehicle_id === selectedVehicleId);
     tapBuzz();
     selectedVehicleId = v.vehicle_id;
@@ -1775,6 +1859,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     _busReturnFocus = null;
     busInfoSprite.visible = false;
     renderBusInstances(); // shrink the indicator back
+    exclRestore();
   }
   $('bus-close').addEventListener('click', hideBus);
   $('bus-card').addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); hideBus(); } });
@@ -1819,6 +1904,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   var browseBusIds = '';
   function setBrowse(open) {
     var p = $('browse-panel'); if (!p) return;
+    var wasOpen = !p.hidden;
+    if (open && !wasOpen) exclCover('browse');
     p.hidden = !open;
     $('browse-toggle').setAttribute('aria-expanded', String(open));
     if (open) {
@@ -1830,6 +1917,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     } else if (p.contains(document.activeElement)) {
       $('browse-toggle').focus(); // return focus to the toggle on close
     }
+    if (!open && wasOpen) exclRestore();
   }
   $('browse-toggle').addEventListener('click', function () {
     setBrowse($('browse-panel').hidden);
@@ -2139,6 +2227,56 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
   grip.addEventListener('pointerup', function () { endResize(true); });
   grip.addEventListener('pointercancel', function () { endResize(false); });
+
+  // --- map tools rail: minimize toggle (Direction C) -------------------
+  // The rail rests collapsed on mobile (locate + this toggle only) and
+  // expanded on desktop. The toggle flips it manually; the choice
+  // persists for the session only (sessionStorage), matching the
+  // session-only precedent of the layer toggles.
+  var toolsRail = document.querySelector('.map-tools');
+  function setToolsMin(min, persist) {
+    if (!toolsRail) return;
+    toolsRail.classList.toggle('collapsed', !!min);
+    var b = $('tools-toggle');
+    if (b) {
+      b.setAttribute('aria-expanded', String(!min));
+      b.setAttribute('aria-label', min ? 'Expand map tools' : 'Minimize map tools');
+    }
+    if (persist) {
+      try { sessionStorage.setItem('lt-tools-min', min ? '1' : '0'); } catch (e) {}
+    }
+  }
+  (function initToolsRail() {
+    if (!toolsRail || !$('tools-toggle')) return;
+    var stored = null;
+    try { stored = sessionStorage.getItem('lt-tools-min'); } catch (e) {}
+    setToolsMin(stored != null ? stored === '1' : window.innerWidth <= 640, false);
+    $('tools-toggle').addEventListener('click', function () {
+      setToolsMin(!toolsRail.classList.contains('collapsed'), true);
+    });
+  })();
+
+  // --- independent chrome controls (Direction C substrate) ---------------
+  // Every chrome element is governed by exactly one control, and no
+  // control touches another element's state, so the minimalist design
+  // iterations can show, hide, or collapse each element independently:
+  //   bar  -> chromeHide('bar', h)   (body.chrome-no-bar; display only —
+  //          the bar's buttons keep their state and their panels)
+  //   rail -> collapse: setToolsMin(min, persist) / #tools-toggle;
+  //          full hide: chromeHide('rail', h) (body.chrome-no-rail)
+  //   hint -> chromeHide('hint', h)  (body.chrome-no-hint)
+  //   each surface -> its own open/close function (togglePanel,
+  //   setBrowse, setTripMode, setRideMode, showStop/hideStop,
+  //   showBus/hideBus); the exclusion block coordinates them without
+  //   coupling their state. Nothing in Direction C calls chromeHide —
+  //   the default chrome is fully visible; the control exists so a
+  //   variant can drive it without rework.
+  function chromeHide(name, hide) {
+    document.body.classList.toggle('chrome-no-' + name, !!hide);
+  }
+  function chromeHidden(name) {
+    return document.body.classList.contains('chrome-no-' + name);
+  }
 
   // --- fullscreen toggle (native API, CSS fallback for iOS Safari) -----------------
   var stage = document.querySelector('.map-stage');
@@ -2519,7 +2657,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   function showStop(st) {
     if (!st) return;
     setFollow(null); // a stop selection ends bus tracking
-    if (typeof tripMode !== 'undefined' && tripMode) tripStopTapped(st);
+    if (typeof tripMode !== 'undefined' && tripMode) { tripStopTapped(st); return; }
+    exclCover('stop');
     tapBuzz();
     setStopSelectedColor(selectedStopIndex, false);
     selectedStop = st;
@@ -2615,9 +2754,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var b = document.createElement('b');
       b.textContent = v.route_id + ' · ' + (formatDest(v.route_id, v.destination) || (routeNames[v.route_id] || 'DDOT'));
       row.appendChild(b);
-      // Beta tile (stop bus numbers): the serving vehicle's number, so a
-      // rider can match the row to the bus they can see. Gate: betaTilesOn.
-      if (typeof betaTilesOn !== 'undefined' && betaTilesOn && v.vehicle_id) {
+      // Stop tiles: the serving vehicle's number, so a rider can match
+      // the row to the bus they can see. Gate: stopTilesOn.
+      if (typeof stopTilesOn !== 'undefined' && stopTilesOn && v.vehicle_id) {
         var bn = document.createElement('span');
         bn.className = 'stop-live-bus';
         bn.textContent = 'Bus ' + v.vehicle_id;
@@ -2646,6 +2785,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // non-MoGo branch is the existing restore path.
     if (typeof renderStopMogo === 'function') renderStopMogo(null);
     if (typeof renderStopPlace === 'function') renderStopPlace(null);
+    exclRestore();
   }
   $('stop-close').addEventListener('click', hideStop);
   $('stop-card').addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); hideStop(); } });
@@ -2715,7 +2855,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     tripMode = on;
     $('trip-btn').setAttribute('aria-pressed', on ? 'true' : 'false');
     if (on) {
-      hideBus(); hideStop();
+      exclCover('trip');
       cancelTripFly();
       $('trip-card').classList.remove('min');
       $('trip-mini').hidden = true;
@@ -2733,6 +2873,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     } else {
       cancelTripFly();
       clearTrip();
+      exclRestore();
     }
   }
   function clearTripHighlight() {
@@ -3604,6 +3745,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
   function setRideMode(on) {
     rideMode = on;
+    if (on) exclCover('ride');
     $('ride-btn').setAttribute('aria-pressed', on ? 'true' : 'false');
     $('ride-card').hidden = !on;
     if (on && !rideWidget && typeof RideAlong !== 'undefined') {
@@ -3628,6 +3770,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // card's dropdown. (The selected bus survives a stop selection, so
     // this also covers select bus -> tap a stop -> Ride along.)
     if (on && rideWidget && selectedVehicleId) boardRideBus(selectedVehicleId, true);
+    if (!on) exclRestore();
   }
   $('ride-btn').addEventListener('click', function () { tapBuzz(); setRideMode(!rideMode); });
   $('ride-close').addEventListener('click', function () { setRideMode(false); });
@@ -4234,6 +4377,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var btn = $('filter-btn');
     var show = (typeof force === 'boolean') ? force : panel.hidden;
     var wasHidden = panel.hidden;
+    if (show && wasHidden) exclCover('filter');
     panel.hidden = !show;
     btn.setAttribute('aria-expanded', String(show));
     if (show && wasHidden) {
@@ -4250,6 +4394,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (hadFocus && _filterReturnFocus && _filterReturnFocus !== document.body && document.contains(_filterReturnFocus)) _filterReturnFocus.focus();
       else if (hadFocus) btn.focus();
       _filterReturnFocus = null;
+      exclRestore();
     }
   }
 
@@ -4268,6 +4413,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     $('bus-total').textContent = (total != null) ? total : '–';
     var el = $('bus-updated');
     el.textContent = text;
+    el.title = text || '';
     el.className = warn ? 'feed-warn' : '';
   }
   // The header count must follow filters immediately — a toggle that
@@ -5614,18 +5760,39 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
 
   // --- beta tiles (filed 2026-10-09; approved 2026-10-14) ------------------
-  // Three live-help surfaces behind one opt-in gate, following the SMART
-  // beta pattern: labeled beta, default OFF until the rider opts in, the
-  // choice persists in localStorage ('lt-beta-tiles'). (1) Stop tiles: the
-  // stop card's live rows add the bus number (renderStopLive, above).
-  // (2) Upcoming stops: the bus card lists the selected bus's next stops
-  // with time estimates from its matched arc position and the empirical
-  // segment speeds. (3) Suggest transfer: a tile in the trip planner ranks
-  // live buses approaching stops near the trip origin by walk + wait,
-  // recomputed from live positions on every poll \u2014 dynamic rerouting
-  // from real-time intersecting-route ETAs, not scheduled times.
-  var betaTilesOn = false;
-  try { betaTilesOn = localStorage.getItem('lt-beta-tiles') === '1'; } catch (e) {}
+  // Three live-help surfaces, each with its own named opt-in toggle in
+  // the filter panel (Justin's direction 2026-10-15: the umbrella "Beta
+  // tiles" gate was ambiguous, so the features are named and switched
+  // individually). Each defaults OFF until the rider opts in, and each
+  // choice persists in its own localStorage key ('lt-stop-tiles',
+  // 'lt-upcoming-stops', 'lt-suggest-transfer'). Migration: the retired
+  // umbrella key 'lt-beta-tiles' is read once on first load \u2014 a feature
+  // with no stored key of its own starts from the umbrella value, which
+  // is then persisted under the feature's own key, and the umbrella key
+  // is removed. (1) Stop tiles: the stop card's live rows add the bus
+  // number (renderStopLive, above). (2) Upcoming stops: the bus card
+  // lists the selected bus's next stops with time estimates from its
+  // matched arc position and the empirical segment speeds. (3) Suggest
+  // transfer: a tile in the trip planner ranks live buses approaching
+  // stops near the trip origin by walk + wait, recomputed from live
+  // positions on every poll \u2014 dynamic rerouting from real-time
+  // intersecting-route ETAs, not scheduled times.
+  var stopTilesOn = false, upcomingStopsOn = false, suggestTransferOn = false;
+  try {
+    var _tileUmbrella = localStorage.getItem('lt-beta-tiles');
+    var _tileInit = function (key) {
+      var v = localStorage.getItem(key);
+      if (v === null) {
+        v = _tileUmbrella === '1' ? '1' : '0';
+        try { localStorage.setItem(key, v); } catch (e) {}
+      }
+      return v === '1';
+    };
+    stopTilesOn = _tileInit('lt-stop-tiles');
+    upcomingStopsOn = _tileInit('lt-upcoming-stops');
+    suggestTransferOn = _tileInit('lt-suggest-transfer');
+    if (_tileUmbrella !== null) { try { localStorage.removeItem('lt-beta-tiles'); } catch (e) {} }
+  } catch (e) {}
   var BETA_WALK_MPS = 1.4;      // the timetable's walk speed (build-timetable.py)
   var BETA_RADIUS_M = 1250;     // NEAR_ME_M \u2014 the "routes near me" radius
   var BETA_FALLBACK_MPS = 8.9;  // ~20 mph when no empirical speed is known
@@ -5695,7 +5862,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var host = $('bus-upcoming'), list = $('bus-upcoming-list');
     if (!host || !list) return;
     var v = null;
-    if (betaTilesOn && selectedVehicleId && lastVehicles) {
+    if (upcomingStopsOn && selectedVehicleId && lastVehicles) {
       for (var i = 0; i < lastVehicles.length; i++) {
         if (lastVehicles[i].vehicle_id === selectedVehicleId) { v = lastVehicles[i]; break; }
       }
@@ -5795,7 +5962,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   function renderSuggest() {
     var host = $('suggest-tile'), list = $('suggest-list'), note = $('suggest-note');
     if (!host || !list) return;
-    if (!betaTilesOn || !tripMode) { host.hidden = true; return; }
+    if (!suggestTransferOn || !tripMode) { host.hidden = true; return; }
     var r = betaSuggest();
     host.hidden = false;
     list.innerHTML = '';
@@ -5826,23 +5993,30 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     renderSuggest();
   }
 
-  // Gate wiring \u2014 the SMART beta pattern: an aria-pressed toggle in
-  // the routes panel, choice persisted, note shown while the gate is on.
-  (function wireBetaTiles() {
-    var btn = $('beta-tiles-toggle'), note = $('beta-tiles-note');
-    if (!btn) return;
-    var sync = function () {
-      btn.setAttribute('aria-pressed', String(betaTilesOn));
-      if (note) note.hidden = !betaTilesOn;
-    };
-    btn.addEventListener('click', function () {
-      betaTilesOn = !betaTilesOn;
-      try { localStorage.setItem('lt-beta-tiles', betaTilesOn ? '1' : '0'); } catch (e) {}
+  // Toggle wiring \u2014 one aria-pressed toggle per feature in the
+  // filter panel, each persisting its own key.
+  (function wireTileToggles() {
+    var defs = [
+      { id: 'stop-tiles-toggle', key: 'lt-stop-tiles',
+        get: function () { return stopTilesOn; }, set: function (v) { stopTilesOn = v; } },
+      { id: 'upcoming-stops-toggle', key: 'lt-upcoming-stops',
+        get: function () { return upcomingStopsOn; }, set: function (v) { upcomingStopsOn = v; } },
+      { id: 'suggest-transfer-toggle', key: 'lt-suggest-transfer',
+        get: function () { return suggestTransferOn; }, set: function (v) { suggestTransferOn = v; } }
+    ];
+    defs.forEach(function (d) {
+      var btn = $(d.id);
+      if (!btn) return;
+      var sync = function () { btn.setAttribute('aria-pressed', String(d.get())); };
+      btn.addEventListener('click', function () {
+        d.set(!d.get());
+        try { localStorage.setItem(d.key, d.get() ? '1' : '0'); } catch (e) {}
+        sync();
+        if (selectedStop) renderStopLive();
+        renderBetaTiles();
+      });
       sync();
-      if (selectedStop) renderStopLive();
-      renderBetaTiles();
     });
-    sync();
   })();
 
   // --- MoGo bikeshare station layer ---------------------------------------
@@ -6438,7 +6612,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         placesLoadState = 'error';
         try { renderPlacesSr(); } catch (e) { /* SR failure must not break the load */ }
         try { placesSyncToggles(); } catch (e) { /* toggle failure must not break the load */ }
-        placesAnnounce('Places data could not be loaded.');
+        placesAnnounce('Points of interest data could not be loaded.');
       });
   }
 
@@ -6644,12 +6818,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var note = $('places-sr-note');
     if (note) {
       note.textContent = placesLoadState === 'error'
-        ? 'Places data is unavailable \u2014 places.json could not be loaded.'
+        ? 'Points of interest data is unavailable \u2014 places.json could not be loaded.'
         : placesLoadState === 'ok'
-          ? 'Places from OpenStreetMap (\u00A9 OpenStreetMap contributors, ODbL): ' +
+          ? 'Points of interest from OpenStreetMap (\u00A9 OpenStreetMap contributors, ODbL): ' +
             (placesData.meta && placesData.meta.counts ? placesData.meta.counts.total : placesData.places.length) +
-            ' locations in the dataset, ' + shown.length + ' shown.'
-          : 'Places are off. Enable Starbucks or Planet Fitness in the filter panel to list them here.';
+            ' points of interest in the dataset, ' + shown.length + ' shown.'
+          : 'Points of interest are off. Enable Starbucks or Planet Fitness in the filter panel to list them here.';
     }
   }
   function placesAnnounce(msg) {
@@ -6675,7 +6849,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     } else if (counts) {
       if (sbC) sbC.textContent = String(counts.starbucks || 0);
       if (pfC) pfC.textContent = String(counts.planetfitness || 0);
-      if (allC) allC.textContent = String(counts.total || 0) + ' locations';
+      if (allC) allC.textContent = String(counts.total || 0) + ' points of interest';
     }
   }
   function placesWireToggle(id, brand) {
@@ -6691,7 +6865,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         var n = (placesData && placesData.meta && placesData.meta.counts && placesData.meta.counts[brand]) || 0;
         // On the first enable the lazy fetch has not resolved yet, so the
         // tally is announced only when the dataset is already in hand.
-        placesAnnounce(b.name + (placesOn[brand] ? (n ? ' shown: ' + n + ' locations.' : ' shown.') : ' hidden.'));
+        placesAnnounce(b.name + (placesOn[brand] ? (n ? ' shown: ' + n + ' points of interest.' : ' shown.') : ' hidden.'));
         if (!placesOn[brand] && typeof selectedStop !== 'undefined' && selectedStop && selectedStop.place &&
             selectedStop.pdata && selectedStop.pdata.brand === brand &&
             typeof hideStop === 'function') hideStop();
