@@ -1,0 +1,79 @@
+name: Live transit feed (static JSON)
+
+# Publishes the Live Transit Detroit live feed as static JSON in
+# live-data/ (vehicles.json, alerts.json), served by GitHub Pages and
+# consumed by live-transit.html. Replaced the Netlify proxy
+# (forge-line-live-proxy), which Netlify quota-paused on 2026-10-15
+# (HTTP 503 usage_exceeded on all paths). Migration record:
+# goals documentation in the DAA workspace (feed-migration, 2026-10-15).
+#
+# Cadence note: GitHub Actions scheduled runs are best-effort and can
+# be delayed or dropped under load — the same behavior this account
+# measured for scheduled polling in 2026-10 (see the retired proxy's
+# log-telemetry header). The JSON carries an honest generated_at and
+# the page displays that timestamp, so a delayed run shows as older
+# data, never as fresh data.
+#
+# Why the deploy dispatch below exists: pushes made with the built-in
+# GITHUB_TOKEN do not trigger other workflows (GitHub's recursion
+# guard), so the feed commit would not fire deploy-pages.yml on its
+# own. workflow_dispatch is exempt from that guard, so this workflow
+# dispatches the Pages deploy explicitly after a commit lands.
+#
+# Secret required (set by the repo owner; never committed):
+#   DDOT_BUSTIME_KEY — DDOT Clever Devices BusTime API key (the same
+#   key the Netlify proxy held as DDOT_KEY). Until it is set, the feed
+#   publishes the QLINE leg live and reports the DDOT leg as a named
+#   not-configured state; nothing is fabricated.
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: live-feed
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Poll upstreams and rebuild live-data JSON
+        env:
+          DDOT_BUSTIME_KEY: ${{ secrets.DDOT_BUSTIME_KEY }}
+        run: node tools/feed/build-feed.mjs
+
+      - name: Commit if changed
+        id: commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add live-data/vehicles.json live-data/alerts.json
+          if git diff --cached --quiet; then
+            echo "No material change; nothing to commit."
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "live-data: feed update $(date -u +%Y-%m-%dT%H:%MZ)"
+            git pull --rebase origin main
+            git push origin main
+            echo "pushed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Dispatch Pages deploy for the new feed files
+        if: steps.commit.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy-pages.yml --ref main
