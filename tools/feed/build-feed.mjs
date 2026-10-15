@@ -69,8 +69,9 @@
  *      QLINE_VP_URL (optional override),
  *      SWIFTLY_KEY (secret; absent/empty = SMART leg fully dormant,
  *      zero network calls, sources.smart stays the removed state),
- *      SMART_VP_URL (optional override; default is the verified Swiftly
- *      pattern for agency key "smart" — see pollSmart),
+ *      SMART_VP_URL (optional override; default is the Swiftly
+ *      pattern for agency key "detroit-smartbus", confirmed by
+ *      Swiftly's key-issuance email 2026-10-15 — see pollSmart),
  *      FEED_OUT_DIR (optional; default <repo>/live-data — local testing).
  */
 import { createHash } from 'node:crypto';
@@ -88,7 +89,7 @@ const DDOT_ROUTES = (process.env.DDOT_ROUTES || ALL_DDOT_ROUTES).split(',').map(
 const QLINE_VP_URL = process.env.QLINE_VP_URL || 'https://s3.amazonaws.com/etatransit.gtfs/qline.etaspot.net/position_updates.pb';
 const SMART_REMOVED_REASON = 'SMART removed from Live Transit Detroit 2026-10-15';
 const SWIFTLY_KEY = process.env.SWIFTLY_KEY || '';
-const SMART_VP_URL = process.env.SMART_VP_URL || 'https://api.goswift.ly/real-time/smart/gtfs-rt-vehicle-positions';
+const SMART_VP_URL = process.env.SMART_VP_URL || 'https://api.goswift.ly/real-time/detroit-smartbus/gtfs-rt-vehicle-positions';
 
 /* ---------------- fetch helpers (proxy equivalents) ---------------- */
 
@@ -337,25 +338,27 @@ async function pollDdot(nowIso) {
   };
 }
 
-/* ------------- SMART leg (Swiftly GTFS-RT, dormant) -------------
+/* ------------- SMART leg (Swiftly GTFS-RT) -------------
  * Endpoint: https://api.goswift.ly/real-time/<agencyKey>/gtfs-rt-vehicle-positions
  * — Swiftly's documented realtime pattern (agency developer pages,
  * e.g. Marin Transit and SF Bay Ferry, publish the identical shape).
- * Agency key "smart" verified 2026-10-15 by unauthenticated probes of
- * api.goswift.ly: /real-time/smart/gtfs-rt-vehicle-positions answered
- * HTTP 401 {"errorCode":401,"errorMessage":"Invalid Credentials"}
- * (the feed exists and requires the key) while every other candidate
- * slug answered 404. The key-issuance email remains the authority if
- * it states anything different; SMART_VP_URL overrides the URL.
+ * Agency key "detroit-smartbus", confirmed by Swiftly's key-issuance
+ * email (Technical Support, 2026-10-15), which also enables the
+ * trip-updates endpoint (NOT integrated — this leg consumes vehicle
+ * positions only) and states the usage limit below. History: the leg
+ * originally shipped with the conventional slug "smart";
+ * unauthenticated probes could not verify any slug (api.goswift.ly's
+ * auth layer answers 401 for every agency slug before route
+ * resolution), and the genuine key scored 403 on the "smart" path
+ * because that is not the agency this key authorizes. SMART_VP_URL
+ * overrides the URL without a code change.
  *
- * Volume: one request per 5-minute build cycle (~288/day). Swiftly's
- * public developer documentation states no numeric call limit (the
- * license's §3 incorporates the Developer Documentation limits
- * without numbers of its own); §4(vii) prohibits usage Swiftly deems
- * excessive or abusive. A single fixed-cadence request per cycle —
- * never per visitor — is the conservative shape; if Swiftly's
- * issuance terms state a limit, a sub-cadence goes here the way
- * bulletins got theirs.
+ * Volume: one request per 5-minute build cycle = 12 requests/hour.
+ * Swiftly's issuance terms state a maximum of 180 requests per
+ * 15 minutes (720/hour), so the leg runs at ~1.7% of the limit;
+ * §4(vii) additionally prohibits usage Swiftly deems excessive or
+ * abusive. A single fixed-cadence request per cycle — never per
+ * visitor — is the conservative shape.
  *
  * Honesty: mapGtfsRtVehicles returns [] both for a genuinely empty
  * feed and for undecodable bytes, so the leg first checks the payload
