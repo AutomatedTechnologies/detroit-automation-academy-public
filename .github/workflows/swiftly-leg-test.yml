@@ -1,18 +1,15 @@
 name: Swiftly leg test (temporary)
 
-# TEMPORARY verification workflow, added 2026-10-15 for the dormant
-# SMART (Swiftly) leg's first live test and deleted the same day.
-# Runs the production builder from main into a SCRATCH output dir
-# with the real SWIFTLY_KEY supplied by the workflow environment
-# (the key value is never printed, logged, or committed), and prints
-# AGGREGATE evidence only: counts, source states, route lists,
-# position bounding boxes, timestamp ranges. No vehicle records are
-# printed, no artifacts are uploaded, and nothing is committed.
-# Also runs the transit-data telemetry logger (fetched read-only from
-# its public repo) against a scratch combined payload to prove the
-# display-only exclusion against real SMART records, and performs
-# two status-only scope probes (trip-updates, service-alerts) whose
-# bodies are discarded unread.
+# TEMPORARY verification workflow (round 2), 2026-10-15. Round 1
+# (run 38821825120) showed the key is rejected with
+# "Authorization: Bearer <key>" on every SMART surface (HTTP 401).
+# Swiftly's own integration examples document two other credential
+# forms: the raw key in the Authorization header (third-party
+# integrator configs published for this API) and an ?apiKey= query
+# parameter (Swiftly's VTA coding-challenge doc). This round probes
+# ONLY the granted Vehicle Positions endpoint, one request per form,
+# status code only -- response bodies are discarded unread. The key
+# value is never printed (GitHub masks it in logs regardless).
 
 on:
   workflow_dispatch:
@@ -24,70 +21,14 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Run production builder into scratch dir (real key)
-        env:
-          DDOT_BUSTIME_KEY: ${{ secrets.DDOT_BUSTIME_KEY }}
-          SWIFTLY_KEY: ${{ secrets.SWIFTLY_KEY }}
-          FEED_OUT_DIR: ${{ runner.temp }}/feed-out
-        run: node tools/feed/build-feed.mjs
-
-      - name: Summarize feed outputs (aggregates only)
-        run: |
-          OUT="${{ runner.temp }}/feed-out"
-          echo "--- files in scratch output ---"
-          ls -la "$OUT"
-          echo "--- vehicles.json agency composition ---"
-          jq -r '.vehicles | group_by(.agency)[] | "\(.[0].agency): \(length)"' "$OUT/vehicles.json"
-          echo "smart vehicles inside vehicles.json: $(jq '[.vehicles[] | select(.agency=="smart")] | length' "$OUT/vehicles.json")"
-          echo "sources.smart in vehicles.json: $(jq -c '.sources.smart' "$OUT/vehicles.json")"
-          echo "--- smart-display.json aggregates ---"
-          jq '{generated_at, count,
-               source,
-               distinct_routes: ([.vehicles[].route_id] | unique),
-               lat_min: ([.vehicles[].lat] | min), lat_max: ([.vehicles[].lat] | max),
-               lon_min: ([.vehicles[].lon] | min), lon_max: ([.vehicles[].lon] | max),
-               updated_min: ([.vehicles[].updated_at] | min),
-               updated_max: ([.vehicles[].updated_at] | max),
-               with_bearing: ([.vehicles[] | select(.bearing != null)] | length),
-               with_speed: ([.vehicles[] | select(.speed_mph != null)] | length),
-               vehicle_id_lengths: ([.vehicles[].vehicle_id | length] | unique)}' \
-            "$OUT/smart-display.json"
-
-      - name: Telemetry exclusion against the real combined payload
-        run: |
-          OUT="${{ runner.temp }}/feed-out"
-          TELE="${{ runner.temp }}/tele"
-          mkdir -p "$TELE/scripts"
-          curl -sS https://raw.githubusercontent.com/smit4786/forge-line-transit-data/main/scripts/log_static.py \
-            -o "$TELE/scripts/log_static.py"
-          jq -s '.[0] as $v | .[1] as $s | $v | .vehicles += $s.vehicles | .count = (.vehicles | length)' \
-            "$OUT/vehicles.json" "$OUT/smart-display.json" > "${{ runner.temp }}/combined.json"
-          echo "combined payload input composition:"
-          jq -r '.vehicles | group_by(.agency)[] | "\(.[0].agency): \(length)"' "${{ runner.temp }}/combined.json"
-          cd "$TELE"
-          TELEMETRY_FEED_URL="file://${{ runner.temp }}/combined.json" python3 scripts/log_static.py
-          SHARD="$(ls data/*.jsonl | head -1)"
-          echo "archived record agency composition:"
-          jq -r '.vehicles | group_by(.agency)[] | "\(.[0].agency): \(length)"' "$SHARD"
-          echo "smart records in archived record: $(jq '[.vehicles[] | select(.agency=="smart")] | length' "$SHARD")"
-          echo "archived vehicle_count: $(jq '.vehicle_count' "$SHARD")"
-          echo "archived sources: $(jq -c '.sources' "$SHARD")"
-
-      - name: Scope probes (status only; bodies discarded unread)
+      - name: Auth-format probes on the granted VP endpoint (status only)
         env:
           SWIFTLY_KEY: ${{ secrets.SWIFTLY_KEY }}
         run: |
-          for ep in gtfs-rt-trip-updates gtfs-rt-alerts; do
-            code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 \
-              -H "Authorization: Bearer $SWIFTLY_KEY" \
-              "https://api.goswift.ly/real-time/smart/$ep")"
-            echo "probe smart/$ep -> HTTP $code"
-          done
+          URL="https://api.goswift.ly/real-time/smart/gtfs-rt-vehicle-positions"
+          c1="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "Authorization: Bearer $SWIFTLY_KEY" "$URL")"
+          echo "form bearer-header -> HTTP $c1"
+          c2="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "Authorization: $SWIFTLY_KEY" "$URL")"
+          echo "form raw-header -> HTTP $c2"
+          c3="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$URL?apiKey=$SWIFTLY_KEY")"
+          echo "form apiKey-query -> HTTP $c3"
