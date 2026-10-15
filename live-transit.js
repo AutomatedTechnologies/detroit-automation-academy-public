@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-0354';
+  var STAMP = '20261015-0406';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -6538,11 +6538,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
   // --- Places layer: Starbucks + Planet Fitness ------------------------------
   // Coffee shops and gyms as a static layer over the same street map, on the
-  // MoGo layer's pattern: its own THREE group, its own filter-panel toggles,
+  // MoGo layer's pattern: its own THREE group, its own filter-panel toggle,
   // details in the shared stop card, screen-reader text surfaces. Unlike
   // MoGo there is no live feed and no staleness: the dataset is baked at
   // build time into places.json (repo root) and fetched lazily the first
-  // time either brand toggle is enabled.
+  // time the toggle is enabled.
   //
   // Source data: OpenStreetMap, via the Overpass API (© OpenStreetMap
   // contributors, ODbL — attribution ships in the dataset, the filter-panel
@@ -6567,6 +6567,19 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // state brand and address in words wherever the data carries them.
   var PLACES_DATA_URL = 'places.json?v=' + STAMP;
   var PLACES_DISC_H = 16;   // place puck height before the stop family's zoom scale
+  var PLACES_DISC_BASE_D = 64;  // disc diameter at the close-zoom floor (the geometry's own width)
+  // Distance-scaling coefficient (2026-10-15 legibility fix): beyond the
+  // floor the disc diameter grows in proportion to camera distance —
+  // diameter = camDist * K — the street labels' constant-screen-size
+  // idiom, so a disc holds ≈16 px on an 844 px-high viewport at every
+  // wider zoom. At the pre-fix fixed 64 units a disc projected to
+  // ≈3.8 px wide at the default camera distance (18.5k) and ≈1.3 px at
+  // maximum zoom-out, which is why enabling the layer produced no
+  // visible change on the map. The coefficient matches the POI v2
+  // candidate's treatment (files/places-layer/v2/) so the two agree
+  // where they overlap.
+  var PLACES_DISC_K = 0.0146;
+  var placesDiscScaleV = 1;     // current eased disc footprint scale (1 = base diameter)
   var PLACES_BRANDS = {
     starbucks:     { name: 'Starbucks',      kind: 'Coffee shop',    badge: 'S',  color: '#00704A' },
     planetfitness: { name: 'Planet Fitness', kind: 'Fitness centre', badge: 'PF', color: '#5E2590' }
@@ -6586,8 +6599,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
 
   // --- data -------------------------------------------------------------------
-  // Static site file, fetched once, lazily, on the first enable of either
-  // brand toggle (the MoGo layer fetches on enable too — there the feed is
+  // Static site file, fetched once, lazily, on the first enable of the
+  // toggle (the MoGo layer fetches on enable too — there the feed is
   // live; here the fetch is the whole load). Failure is an honest state:
   // toggles read "unavailable", the SR note says the data could not be
   // loaded, and the next enable retries.
@@ -6617,6 +6630,17 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
 
   // --- rendering ---------------------------------------------------------------
+  // Disc diameter for a camera distance, in world units: the geometry's
+  // own 64 below camDist ≈ 4400, distance-proportional beyond it.
+  function placesDiscDiamFor(camDist) {
+    return Math.max(PLACES_DISC_BASE_D, camDist * PLACES_DISC_K);
+  }
+  // Rendered disc diameter in CSS pixels (the page's own pixel measure:
+  // viewport height over the frustum height at the target distance).
+  // Exposed for verification of the legibility fix.
+  function placesDiscPx(camDist, viewportH) {
+    return placesDiscDiamFor(camDist) * viewportH / (2 * camDist * Math.tan(camera.fov * 0.5 * DEG));
+  }
   function placesEnsureMeshes() {
     if (placesGroup) return;
     _placesM4 = new THREE.Matrix4(); _placesP3 = new THREE.Vector3();
@@ -6655,6 +6679,24 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     placesBadgeTexCache[text] = o;
     return o;
   }
+  // Disc instance matrices from the pick list, at the current eased
+  // footprint scale and the stop family's height scale. Split out of
+  // placesWriteMarkers so the per-frame hook can re-scale the discs as
+  // the camera distance changes without rebuilding the pick list.
+  function placesWriteDiscInstances() {
+    if (!placesDiscIM) return;
+    var h = PLACES_DISC_H * stopYS;
+    for (var i = 0; i < placesPickList.length; i++) {
+      var s = placesPickList[i];
+      _placesP3.set(s.x, STOP_BASE_Y + h / 2, s.z);
+      _placesQ.identity();
+      _placesS3.set(placesDiscScaleV, h, placesDiscScaleV);
+      _placesM4.compose(_placesP3, _placesQ, _placesS3);
+      placesDiscIM.setMatrixAt(i, _placesM4);
+    }
+    placesDiscIM.count = placesPickList.length;
+    placesDiscIM.instanceMatrix.needsUpdate = true;
+  }
   // Static geometry: instance buffers are rebuilt only when the enabled
   // brand set or the zoom scale changes — nothing is allocated per frame.
   function placesWriteMarkers() {
@@ -6666,11 +6708,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var b = PLACES_BRANDS[p.brand];
       var xy = project(p.lat, p.lon);
       var h = PLACES_DISC_H * stopYS;
-      _placesP3.set(xy[0], STOP_BASE_Y + h / 2, xy[1]);
-      _placesQ.identity();
-      _placesS3.set(1, h, 1);
-      _placesM4.compose(_placesP3, _placesQ, _placesS3);
-      placesDiscIM.setMatrixAt(i, _placesM4);
       _placesCol.set(b ? b.color : '#8a8f98');
       placesDiscIM.setColorAt(i, _placesCol);
       placesPickList.push({ id: p.id, n: p.n, x: xy[0], z: xy[1], r: [], place: true, pdata: p });
@@ -6693,8 +6730,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       badge.scale.set(40 * (badge.userData.aspect || 1), 40, 1);
       badge.position.set(xy[0], STOP_BASE_Y + h + 44, xy[1]);
     }
-    placesDiscIM.count = list.length;
-    placesDiscIM.instanceMatrix.needsUpdate = true;
+    placesWriteDiscInstances();
     if (placesDiscIM.instanceColor) placesDiscIM.instanceColor.needsUpdate = true;
     for (var j = list.length; j < placesBadges.length; j++) {
       if (placesBadges[j]) placesBadges[j].visible = false;
@@ -6708,11 +6744,22 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (!placesGroup || !placesData) return;
     placesWriteMarkers();
   }
-  // Per-frame hook from the animate loop: letter badges follow the
-  // street-zoom declutter rule — visible at close zoom only (camDist < 9000,
-  // the MoGo badge threshold), never all 42 citywide at once.
+  // Per-frame hook from the animate loop: the disc footprint scale
+  // eases toward the distance-proportional target (the easeStopScale
+  // idiom), and letter badges follow the street-zoom declutter rule —
+  // visible at close zoom only (camDist < 9000, the MoGo badge
+  // threshold), never all 42 citywide at once.
   function placesFrameTick(camDist) {
     if (!placesGroup) return;
+    var target = placesDiscDiamFor(camDist) / PLACES_DISC_BASE_D;
+    var dS = target - placesDiscScaleV;
+    if (Math.abs(dS) > 0.003) {
+      placesDiscScaleV += dS * 0.16;
+      try { placesWriteDiscInstances(); } catch (e) { /* a failed rewrite retries next frame */ }
+    } else if (placesDiscScaleV !== target) {
+      placesDiscScaleV = target;
+      try { placesWriteDiscInstances(); } catch (e) { /* a failed rewrite retries next frame */ }
+    }
     var show = placesGroup.visible && camDist < 9000;
     for (var i = 0; i < placesPickList.length; i++) {
       var b = placesBadges[i];
@@ -6823,7 +6870,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           ? 'Points of interest from OpenStreetMap (\u00A9 OpenStreetMap contributors, ODbL): ' +
             (placesData.meta && placesData.meta.counts ? placesData.meta.counts.total : placesData.places.length) +
             ' points of interest in the dataset, ' + shown.length + ' shown.'
-          : 'Points of interest are off. Enable Starbucks or Planet Fitness in the filter panel to list them here.';
+          : 'Points of interest are off. Enable Points of interest in the filter panel to list them here.';
     }
   }
   function placesAnnounce(msg) {
@@ -6831,49 +6878,48 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (live) live.textContent = msg;
   }
 
-  // --- toggles -------------------------------------------------------------------
-  // One "Places" group in the filter panel, two brand sub-toggles, each
-  // with its baked dataset tally. Default OFF and session-only, matching
-  // Justin's MoGo rulings of 2026-10-14: nothing is written to localStorage.
+  // --- toggle ----------------------------------------------------------------------
+  // One "Points of interest" switch in the filter panel drives both
+  // brands together, with the group's baked dataset tally. Justin's
+  // direction, 2026-10-15: a single toggle for the whole group — the
+  // two per-brand sub-toggles were removed; the per-brand distinction
+  // lives on the map (disc colors and the S/PF letter badges) and in
+  // the dataset, not in panel controls. Default OFF and session-only,
+  // matching Justin's MoGo rulings of 2026-10-14: nothing is written
+  // to localStorage.
+  function placesAllOn() { return !!(placesOn.starbucks && placesOn.planetfitness); }
   function placesSyncToggles() {
-    var sb = $('places-sb-toggle'), pf = $('places-pf-toggle');
-    if (sb) sb.setAttribute('aria-pressed', String(placesOn.starbucks));
-    if (pf) pf.setAttribute('aria-pressed', String(placesOn.planetfitness));
+    var t = $('places-toggle');
+    if (t) t.setAttribute('aria-pressed', String(placesAllOn()));
     var err = placesLoadState === 'error';
     var counts = (placesData && placesData.meta && placesData.meta.counts) || null;
-    var sbC = $('places-sb-count'), pfC = $('places-pf-count'), allC = $('places-count');
+    var allC = $('places-count');
     if (err) {
-      if (sbC) sbC.textContent = 'unavailable';
-      if (pfC) pfC.textContent = 'unavailable';
       if (allC) allC.textContent = 'unavailable';
     } else if (counts) {
-      if (sbC) sbC.textContent = String(counts.starbucks || 0);
-      if (pfC) pfC.textContent = String(counts.planetfitness || 0);
       if (allC) allC.textContent = String(counts.total || 0) + ' points of interest';
     }
   }
-  function placesWireToggle(id, brand) {
-    var t = $(id);
+  (function placesWireToggle() {
+    var t = $('places-toggle');
     if (t && t.addEventListener) {
       t.addEventListener('click', function () {
-        placesOn[brand] = !placesOn[brand];
-        if (placesOn[brand]) placesEnsureData();
+        var on = !placesAllOn();
+        placesOn.starbucks = on;
+        placesOn.planetfitness = on;
+        if (on) placesEnsureData();
         try { placesWriteMarkers(); } catch (e) { /* marker failure must not break the toggle */ }
         placesSyncToggles();
         renderPlacesSr();
-        var b = PLACES_BRANDS[brand];
-        var n = (placesData && placesData.meta && placesData.meta.counts && placesData.meta.counts[brand]) || 0;
+        var n = (placesData && placesData.meta && placesData.meta.counts && placesData.meta.counts.total) || 0;
         // On the first enable the lazy fetch has not resolved yet, so the
         // tally is announced only when the dataset is already in hand.
-        placesAnnounce(b.name + (placesOn[brand] ? (n ? ' shown: ' + n + ' points of interest.' : ' shown.') : ' hidden.'));
-        if (!placesOn[brand] && typeof selectedStop !== 'undefined' && selectedStop && selectedStop.place &&
-            selectedStop.pdata && selectedStop.pdata.brand === brand &&
+        placesAnnounce(on ? (n ? 'Points of interest shown: ' + n + ' points of interest.' : 'Points of interest shown.') : 'Points of interest hidden.');
+        if (!on && typeof selectedStop !== 'undefined' && selectedStop && selectedStop.place &&
             typeof hideStop === 'function') hideStop();
       });
     }
-  }
-  placesWireToggle('places-sb-toggle', 'starbucks');
-  placesWireToggle('places-pf-toggle', 'planetfitness');
+  })();
   placesSyncToggles();
   renderPlacesSr();
   // --- instant paint from logged history ---------------------------------------
