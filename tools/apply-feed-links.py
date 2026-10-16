@@ -8,7 +8,10 @@ in feed.xml's item set) this inserts, when absent:
         <link rel="alternate" type="application/rss+xml"
               title="Detroit Automation Academy — RSS feed" href="/feed.xml">
   * a visible "RSS feed" line in the standard footer, immediately before
-    the copyright line.
+    the copyright line. The visible line points at /feed/ — the feed's
+    HTML page, which renders in every browser and links the raw XML —
+    while the discovery link above keeps pointing at /feed.xml, which
+    is what feed readers subscribe to.
 
 Run from the repository root:  python3 tools/apply-feed-links.py
 Safe to re-run; pages already carrying either element are left unchanged.
@@ -27,7 +30,7 @@ HEAD_LINK = (
     'title="Detroit Automation Academy — RSS feed" href="/feed.xml">\n'
 )
 FOOTER_LINE = (
-    '<p class="footer-line"><a href="/feed.xml">RSS feed</a> — every '
+    '<p class="footer-line"><a href="/feed/">RSS feed</a> — every '
     "edition and installment, as it publishes.</p>\n    "
 )
 FOOTER_ANCHOR = '<p class="footer-fine">'
@@ -35,7 +38,7 @@ FOOTER_ANCHOR = '<p class="footer-fine">'
 # line is added as a .fine paragraph after the footer's first line.
 FOOTER2_ANCHOR = "Detroit Automation Academy — Where Detroit builds what's next.</p>\n"
 FOOTER2_LINE = (
-    '    <p class="fine"><a href="/feed.xml">RSS feed</a> — every edition '
+    '    <p class="fine"><a href="/feed/">RSS feed</a> — every edition '
     "and installment, as it publishes.</p>\n"
 )
 
@@ -68,7 +71,10 @@ def article_pages() -> list[Path]:
 def apply(path: Path) -> tuple[bool, bool]:
     text = path.read_text(encoding="utf-8")
     head_done = "application/rss+xml" in text
-    foot_done = 'href="/feed.xml"' in text and "RSS feed" in text
+    foot_done = (
+        '<a href="/feed/">RSS feed</a>' in text
+        or '<a href="/feed.xml">RSS feed</a>' in text
+    )
     changed = False
     if not head_done and "</head>" in text:
         text = text.replace("</head>", HEAD_LINK + "</head>", 1)
