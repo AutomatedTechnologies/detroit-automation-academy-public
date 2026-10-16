@@ -48,6 +48,13 @@ HUBS = [
     "live-transit-detroit/index.html",
     "notes/index.html",
     "press/index.html",
+    # Top-level pages added 2026-10-16 (UAT Pass 1a finding: these five
+    # carried the shared shell but no RSS discovery link or footer line).
+    "api.html",
+    "dashboard.html",
+    "district.html",
+    "sponsor.html",
+    "voter-guide.html",
 ]
 
 
