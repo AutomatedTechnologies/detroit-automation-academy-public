@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261016-1542';
+  var STAMP = '20261016-1554';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -2365,7 +2365,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     ['\u25A0', 'Bus badges', 'Each bus carries a bus-shaped badge showing its route number, bordered in the route\u2019s color. Badges declutter automatically when buses cluster.'],
     ['\u29E9', 'Routes', 'Filter by group (DDOT, SMART, QLINE, People Mover) or individual route. Routes with no live buses are dimmed or hidden automatically.'],
     ['\u25C8', 'Plan trip', 'Enter two points and get a transit itinerary with real routes, transfers, and walking legs — built on the same schedule data as the map.'],
-    ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops and intersections from the rider\u2019s seat, ordered by travel direction. If a bus is already selected it rides that bus; selecting a bus on the map while Ride along is open rides it too, and the camera follows it.'],
+    ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops from the rider\u2019s seat, ordered by travel direction. If a bus is already selected it rides that bus; selecting a bus on the map while Ride along is open rides it too, and the camera follows it.'],
     [ICO_FINDME, 'Find me', 'Center the map on your location. "Routes near me" then shows only routes with a stop within 1,250 m of you.'],
     [ICO_FULL, 'Fullscreen', 'Fill the screen with the map.'],
     ['\u2302', 'Reset view', 'Return to the full-system view.']
@@ -2378,7 +2378,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     ['\u25A0', 'Bus badges', 'Each bus carries a bus-shaped badge showing its route number, bordered in the route\u2019s color. Badges declutter automatically when buses cluster.'],
     ['\u29E9', 'Routes', 'Filter by group (DDOT, SMART, QLINE, People Mover) or individual route. Routes with no live buses are dimmed or hidden automatically.'],
     ['\u25C8', 'Plan trip', 'Enter two points and get a transit itinerary with real routes, transfers, and walking legs — built on the same schedule data as the map.'],
-    ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops and intersections from the rider\u2019s seat, ordered by travel direction. If a bus is already selected it rides that bus; selecting a bus on the map while Ride along is open rides it too, and the camera follows it.'],
+    ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops from the rider\u2019s seat, ordered by travel direction. If a bus is already selected it rides that bus; selecting a bus on the map while Ride along is open rides it too, and the camera follows it.'],
     [ICO_FINDME, 'Find me', 'Center the map on your location. "Routes near me" then shows only routes with a stop within 1,250 m of you.'],
     [ICO_FULL, 'Fullscreen', 'Fill the screen with the map.'],
     ['\u2302', 'Reset view', 'Return to the full-system view.']
