@@ -6,13 +6,13 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Live Transit Detroit: Real-Time DDOT Bus Tracker in 3D | Detroit Automation Academy</title>
-<meta name="description" content="Live Transit Detroit — every DDOT and SMART bus in the Detroit region tracked live in 3D. All 83 routes and 10,583 stops drawn on the real streets, plus the QLINE streetcar, with real-time vehicle positions refreshed every 60 seconds.">
+<meta name="description" content="Live Transit Detroit — every DDOT bus in Detroit tracked live in 3D. All 37 routes and 5,124 stops drawn on the real streets, plus the QLINE streetcar, with real-time bus positions refreshed every 60 seconds.">
 <link rel="canonical" href="https://www.detroitautomationacademy.com/live-transit.html">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Detroit Automation Academy">
 <meta property="og:title" content="Live Transit Detroit: Every DDOT Bus, Live in 3D">
-<meta property="og:description" content="All 83 routes and 10,583 stops drawn on the actual streets of Detroit — DDOT, SMART, and the QLINE streetcar — with live vehicle positions refreshed every 60 seconds. Detroit students ride free; this is the map that finds their bus.">
+<meta property="og:description" content="All 37 DDOT routes and 5,124 stops drawn on the actual streets of Detroit, plus the QLINE streetcar — with live bus positions refreshed every 60 seconds. Detroit students ride free; this is the map that finds their bus.">
 <meta property="og:url" content="https://www.detroitautomationacademy.com/live-transit.html">
 <meta property="og:image" content="https://www.detroitautomationacademy.com/assets/live-transit-og.jpg">
 <meta property="og:image:width" content="1200">
@@ -20,7 +20,7 @@
 <meta property="og:image:alt" content="3D map of Detroit showing live DDOT bus positions as glowing pillars on color-coded routes">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Live Transit Detroit: Every DDOT Bus, Live in 3D">
-<meta name="twitter:description" content="All 83 routes and 10,583 stops on the real streets of Detroit — DDOT, SMART, and the QLINE streetcar — live vehicle positions, refreshed every 60 seconds.">
+<meta name="twitter:description" content="All 37 DDOT routes and 5,120 stops on the real streets of Detroit — live bus positions, refreshed every 60 seconds.">
 <meta name="twitter:image" content="https://www.detroitautomationacademy.com/assets/live-transit-og.jpg">
 <script type="application/ld+json">
 {
@@ -32,7 +32,7 @@
   "operatingSystem": "Web",
   "url": "https://www.detroitautomationacademy.com/live-transit.html",
   "image": "https://www.detroitautomationacademy.com/assets/live-transit-og.jpg",
-  "description": "Live 3D map of Detroit transit: all 83 DDOT, SMART, and QLINE routes and 10,583 stops with real-time vehicle positions refreshed every 60 seconds.",
+  "description": "Live 3D map of Detroit's DDOT bus network: all 37 routes and 5,120 stops with real-time vehicle positions refreshed every 60 seconds.",
   "provider": {
     "@type": "Organization",
     "name": "Detroit Automation Academy",
@@ -92,7 +92,6 @@
   .map-bar .map-live span { margin-top: 0; }
   .map-bar .map-live strong { font-size: .95rem; }
   .map-bar .map-live #bus-updated { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-  .map-bar.map-live #smart-pill-note { color: #FFB000; font-weight: 600; flex: none; }
   .map-live .live-dot { display: inline-block; width: .55rem; height: .55rem; border-radius: 50%; background: #2ECC71; margin-right: .45rem; animation: pulse 2s infinite; vertical-align: baseline; }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
   .map-live strong { font-family: "Space Grotesk", sans-serif; font-size: 1.15rem; color: #F5F2EA; }
@@ -160,7 +159,6 @@
   button.f-group-head { cursor: pointer; text-align: left; }
   .f-group-head b { font-weight: 600; flex: 1; text-align: left; }
   .f-group-head .f-count { color: #9AA0A6; font-size: .75rem; font-variant-numeric: tabular-nums; }
-  .f-beta-note { margin: .35rem .1rem 0; font-size: .68rem; color: #9AA0A6; line-height: 1.35; font-family: "Inter", sans-serif; }
   .f-check { background: none; border: none; padding: .15rem; margin: -.15rem 0 -.15rem -.15rem; cursor: pointer; display: flex; flex: none; }
   .f-label { background: none; border: none; color: inherit; font: inherit; display: flex; align-items: center; gap: .55rem; flex: 1; min-width: 0; cursor: pointer; padding: 0; text-align: left; }
   .f-chev { color: #9AA0A6; font-size: .8rem; transition: transform .18s; flex: none; }
@@ -326,8 +324,6 @@
   .bus-card[hidden] { display: none; }
   .sel-eyebrow { font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: #9AA0A6; margin: 0 0 .35rem; font-weight: 600; }
   #stop-card { top: auto; bottom: 4.5rem; }
-  .stop-smart-note { margin-top: .55rem; font-size: .78rem; line-height: 1.4; color: #9AA0A6; font-family: "Inter", sans-serif; }
-  .stop-smart-note[hidden] { display: none; }
   .stop-live { margin-top: .6rem; }
   .stop-live[hidden] { display: none; }
   .stop-live-row { display: flex; align-items: center; gap: .5rem; font-size: .85rem; padding: .22rem 0; color: #F5F2EA; }
@@ -580,7 +576,7 @@
         <p class="kicker">JavaScript is disabled</p>
         <h2>Live Transit Detroit needs JavaScript for the live map.</h2>
         <div class="prose">
-          <p>This page shows every DDOT and SMART bus in the Detroit region on a live 3D map: all 83 routes and 10,583 stops drawn on the actual streets, with live vehicle positions refreshed every 60 seconds, including the QLINE streetcar. Without JavaScript the live map, trip planner, and bus details cannot load.</p>
+          <p>This page shows every DDOT bus in Detroit on a live 3D map: all 37 DDOT routes and 5,124 stops drawn on the actual streets, with live bus positions refreshed every 60 seconds, plus the QLINE streetcar. Without JavaScript the live map, trip planner, and bus details cannot load.</p>
           <p>The 37 DDOT routes shown on the map are:</p>
         </div>
         <ul>
@@ -629,7 +625,7 @@
     </section>
   </noscript>
   <section class="map-stage" aria-label="Live 3D transit map">
-    <div id="live-map" tabindex="0" role="img" aria-label="3D map of DDOT, SMART, and QLINE routes with live bus positions"></div>
+    <div id="live-map" tabindex="0" role="img" aria-label="3D map of DDOT routes and the QLINE streetcar with live bus positions"></div>
     <div class="map-ui">
       <div class="map-bar" id="map-bar">
         <a class="bar-brand" href="/" aria-label="Detroit Automation Academy home"><img class="bar-mark" src="/assets/logo.webp" alt="" width="30" height="30"></a>
@@ -638,7 +634,6 @@
           <div class="map-live" id="map-live">
             <span class="live-main"><span class="live-dot"></span><strong id="bus-total" aria-live="polite" aria-atomic="true">–</strong><span class="live-words">&nbsp;buses on the road</span></span>
             <span id="bus-updated">connecting…</span>
-            <span id="smart-pill-note" hidden></span>
           </div>
         </div>
         <div class="bar-actions">
@@ -767,7 +762,6 @@
           <dl id="stop-place-dl"></dl>
           <p class="stop-place-note" id="stop-place-note"></p>
         </div>
-        <p class="stop-smart-note" id="stop-smart-note" hidden></p>
         <div class="stop-alerts" id="stop-alerts" hidden>
           <h3>Service alerts for this stop</h3>
           <div id="stop-alerts-list"></div>
@@ -853,8 +847,8 @@
         <div class="nav-card" role="dialog" aria-label="Help">
           <button class="close" id="nav-close" aria-label="Close help">&times;</button>
           <div class="sel-eyebrow">Detroit || else™</div>
-          <h2>Every bus, live in 3D.</h2>
-          <p class="nav-lede">83 routes and 10,583 stops drawn on the actual streets of Detroit — DDOT, SMART, and the QLINE streetcar — with live vehicle positions, refreshed every 60 seconds.</p>
+          <h2>Every DDOT bus, live in 3D.</h2>
+          <p class="nav-lede">37 routes and 5,120 stops drawn on the actual streets of Detroit — with live bus positions, refreshed every 60 seconds.</p>
           <h3>How to read it</h3>
           <p class="nav-lede">Pillars are buses. Pylons are stops — taller pylon, more routes. Tap a bus for its route, destination, speed and data age, shown right beside it. Tap a stop for its routes and live buses.</p>
           <h3>Service alerts on the map</h3>
@@ -881,10 +875,10 @@
       <p class="kicker">About this map</p>
       <h2>Real routes, <span class="accent">real buses.</span></h2>
       <div class="prose">
-        <p>Route shapes and stop positions come from the agencies&rsquo; published GTFS schedule data; the bus markers are live vehicle positions from the agencies&rsquo; own feeds, refreshed every 60 seconds. Zoom in close and the markers resolve into true-scale bus models — each DDOT bus is matched to its fleet model (dimensions and seating from the DDOT fleet roster) and oriented to its reported heading. It is the same live layer that powered the retired Forge Line page&rsquo;s bus count — the Forge Line concept itself was modeled on the transit Detroit already runs.</p>
+        <p>Route shapes and stop positions come from DDOT&rsquo;s published GTFS schedule data; the bus markers are live vehicle positions from the agency&rsquo;s own feed, refreshed every 60 seconds. Zoom in close and the markers resolve into true-scale bus models — each bus is matched to its fleet model (dimensions and seating from the DDOT fleet roster) and oriented to its reported heading. It is the same live layer that powered the retired Forge Line page&rsquo;s bus count — the Forge Line concept itself was modeled on the transit Detroit already runs.</p>
       </div>
-      <p class="fine">Route shapes &amp; stops: DDOT, SMART, and QLINE GTFS. Bus dimensions &amp; seating: DDOT fleet roster via <a href="https://cptdb.ca/wiki/index.php/Detroit_Department_of_Transportation">CPTDB wiki</a>. Street underlay: U.S. Census Bureau TIGER/Line 2025 (Wayne, Oakland &amp; Macomb counties). Live data: DDOT via Clever Devices BusTime; SMART via Swiftly GTFS-Realtime; QLINE via its public GTFS-RT feed. Developers: see the <a href="api.html">transit data API</a>.</p>
-      <p class="fine">Trademark notice: DDOT is a service mark of the City of Detroit. SMART is a service mark of the Suburban Mobility Authority for Regional Transportation. This is an unofficial project by Detroit Automation Academy — not affiliated with, endorsed by, or acting on behalf of DDOT, SMART, or the City of Detroit. Detroit || else™ is a trademark of Detroit Automation Academy.</p>
+      <p class="fine">Route shapes &amp; stops: DDOT and QLINE GTFS. Bus dimensions &amp; seating: DDOT fleet roster via <a href="https://cptdb.ca/wiki/index.php/Detroit_Department_of_Transportation">CPTDB wiki</a>. Street underlay: U.S. Census Bureau TIGER/Line 2025 (Wayne, Oakland &amp; Macomb counties). Live data: DDOT via Clever Devices BusTime; QLINE via its public GTFS-RT feed. Developers: see the <a href="api.html">transit data API</a>.</p>
+      <p class="fine">Trademark notice: DDOT is a service mark of the City of Detroit. This is an unofficial project by Detroit Automation Academy — not affiliated with, endorsed by, or acting on behalf of DDOT or the City of Detroit. Detroit || else™ is a trademark of Detroit Automation Academy.</p>
     </div>
   </section>
 </main>
@@ -910,6 +904,6 @@
   window.FORGE_LIVE_PROXY = "live-data";
 </script>
 <script src="ride-along.js?v=20261015-1256"></script>
-<script type="module" src="live-transit.js?v=20261015-2003"></script>
+<script type="module" src="live-transit.js?v=20261015-2023"></script>
 </body>
 </html>
