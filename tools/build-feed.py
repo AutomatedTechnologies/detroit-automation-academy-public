@@ -37,8 +37,12 @@ import sys
 from datetime import datetime, time
 from email.utils import format_datetime
 from pathlib import Path
-from xml.sax.saxutils import escape
 from zoneinfo import ZoneInfo
+
+
+def escape(text: str) -> str:
+    """Escape a string for XML element text (ampersand and angle brackets)."""
+    return html.escape(text, quote=False)
 
 ROOT = Path(__file__).resolve().parent.parent
 BASE = "https://www.detroitautomationacademy.com"
@@ -64,7 +68,9 @@ def meta_content(page: str, key: str) -> str | None:
     )
     if not m:
         m = re.search(
-            r'<meta[^>]+content="([^"]*)"[^>]+(?:name|property)="' + re.escape(key) + r'"',
+            r'<meta[^>]+content="([^"]*)"[^>]+(?:name|property)="'
+            + re.escape(key)
+            + r'"',
             page,
         )
     return html.unescape(m.group(1)).strip() if m else None
@@ -141,7 +147,9 @@ def category_for(url: str) -> str:
 
 def collect_items() -> tuple[list[dict], list[str]]:
     sitemap = (ROOT / "sitemap.xml").read_text(encoding="utf-8")
-    urls = [u for u in re.findall(r"<loc>([^<]+)</loc>", sitemap) if ARTICLE_RE.search(u)]
+    urls = [
+        u for u in re.findall(r"<loc>([^<]+)</loc>", sitemap) if ARTICLE_RE.search(u)
+    ]
     for extra in EXTRA_URLS:
         if extra not in urls:
             urls.append(extra)
@@ -194,7 +202,8 @@ def render(items: list[dict]) -> str:
         "  <channel>",
         "    <title>Detroit Automation Academy</title>",
         f"    <link>{BASE}/</link>",
-        f'    <atom:link href="{BASE}/feed.xml" rel="self" type="application/rss+xml" />',
+        f'    <atom:link href="{BASE}/feed.xml" rel="self"'
+        ' type="application/rss+xml" />',
         "    <description>Robotics, drones, and automation training for Detroit's "
         "young builders — plus The Signal newsletter, the Live Transit Detroit "
         "series, and technical notes, as they publish.</description>",
@@ -224,9 +233,11 @@ def main() -> int:
         print("error: no items collected; feed.xml not written", file=sys.stderr)
         return 1
     (ROOT / "feed.xml").write_text(render(items), encoding="utf-8")
-    print(f"feed.xml written: {len(items)} items, newest {items[0]['date'].date()} "
-          f"({items[0]['title']}), oldest {items[-1]['date'].date()} "
-          f"({items[-1]['title']})")
+    print(
+        f"feed.xml written: {len(items)} items, newest {items[0]['date'].date()} "
+        f"({items[0]['title']}), oldest {items[-1]['date'].date()} "
+        f"({items[-1]['title']})"
+    )
     return 0
 
 
