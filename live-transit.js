@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-2034';
+  var STAMP = '20261015-2249';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -465,7 +465,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // of the public vehicles.json contract. S6: a surface may claim only
   // the freshness its source measures, so SMART carries its measured age
   // wherever it is presented as current: the SMART filter-group header,
-  // the SMART beta note, the live-count pill, and SMART stop cards.
+  // the SMART group note, the live-count pill, and SMART stop cards.
   // Text only, by design: age is never carried by appearance alone.
   // DDOT and QLINE are never touched.
   // The age source is the payload's own generated_at paired with the
@@ -4532,13 +4532,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       // opens as an accordion (3 rows); route chips expand per group.
       var gOn = (g.id === 'connect-ten');
       var gLabel = g.name;
-      // SMART (reactivated 2026-10-15): labeled beta, default OFF until
-      // the rider enables it, persisted across sessions. Suburban
-      // scale (45 routes) would bury the Detroit default view if it
-      // started on.
+      // SMART (reactivated 2026-10-15; production uplift 2026-10-15):
+      // default ON like DDOT/QLINE. A stored visitor preference still
+      // wins: lt-smart-on '0' keeps SMART off, '1' keeps it on; only
+      // a fresh profile (no stored value) starts ON.
       if (g.id === 'smart') {
-        gLabel = g.name + ' (beta)';
-        try { gOn = localStorage.getItem('lt-smart-on') === '1'; } catch (e) { gOn = false; }
+        try { gOn = localStorage.getItem('lt-smart-on') !== '0'; } catch (e) { gOn = true; }
       }
       filterState.groups[g.id] = gOn;
       var sec = document.createElement('div');
@@ -4603,16 +4602,16 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       sec.appendChild(head);
       sec.appendChild(list);
       if (g.id === 'smart') {
-        // S6/S9: the beta note carries the derived route count and the
-        // live source; the freshness sentence (smart-age-note) is set
+        // S6/S9: the group note carries the derived route count and
+        // the live source; the freshness sentence (smart-age-note) is set
         // by applySmartAgeUI and stays empty while the feed is fresh.
-        var betaNote = document.createElement('p');
-        betaNote.className = 'f-beta-note';
-        betaNote.textContent = 'Beta: all ' + g.routes.length + ' routes have map lines. Vehicle positions via Swiftly GTFS-Realtime.';
+        var smartNote = document.createElement('p');
+        smartNote.className = 'f-smart-note';
+        smartNote.textContent = 'All ' + g.routes.length + ' routes have map lines. Vehicle positions via Swiftly GTFS-Realtime.';
         var smartAgeNote = document.createElement('span');
         smartAgeNote.id = 'smart-age-note';
-        betaNote.appendChild(smartAgeNote);
-        sec.appendChild(betaNote);
+        smartNote.appendChild(smartAgeNote);
+        sec.appendChild(smartNote);
       }
       host.appendChild(sec);
     });
