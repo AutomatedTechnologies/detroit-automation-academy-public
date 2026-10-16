@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261016-1531';
+  var STAMP = '20261016-1542';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -2077,6 +2077,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   function hideBus() {
     var _hadFocus = $('bus-card').contains(document.activeElement);
     selectedVehicleId = null;
+    ridePendingVid = null;
     followSuppressed = false;
     setFollow(null); // stop tracking
     $('bus-card').hidden = true;
@@ -4408,6 +4409,29 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (engageCamera) rideFollowBus(vid);
     return true;
   }
+  // A board intent that lost a feed race (2026-10-16): the selected bus
+  // was absent from the widget's vehicle snapshot at open time — a GPS
+  // gap in one build cycle is enough — and the single-shot board in
+  // setRideMode failed silently, leaving "-- choose a bus --" while a
+  // bus stood selected on the map. The intent is kept here and honored
+  // by __setRideVehicles the first poll the bus appears in.
+  var ridePendingVid = null;
+  // The rider's own bus when nothing is selected: with a location fix,
+  // the live bus within boarding distance (75 m in projected units) is
+  // the one the rider is on or standing at. Beyond that distance the
+  // picker stays empty rather than guessing at a bus across the street.
+  function nearestRideVehicleVid() {
+    if (!rideWidget || typeof userXZ === 'undefined' || !userXZ) return null;
+    var best = null, bestD2 = 75 * 75;
+    for (var i = 0; i < rideWidget.vehicles.length; i++) {
+      var v = rideWidget.vehicles[i];
+      if (v.x == null || v.z == null) continue;
+      var dx = v.x - userXZ[0], dz = v.z - userXZ[1];
+      var d2 = dx * dx + dz * dz;
+      if (d2 < bestD2) { bestD2 = d2; best = v.vehicle_id; }
+    }
+    return best;
+  }
   function setRideMode(on) {
     rideMode = on;
     if (on) { camMemTake(); exclCover('ride'); }
@@ -4439,9 +4463,23 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // Respect the in-focus bus: if a bus is already selected when Ride
     // Along is switched on, ride THAT bus — no second selection in the
     // card's dropdown. (The selected bus survives a stop selection, so
-    // this also covers select bus -> tap a stop -> Ride along.)
-    if (on && rideWidget && selectedVehicleId) boardRideBus(selectedVehicleId, true);
-    if (!on) exclRestore();
+    // this also covers select bus -> tap a stop -> Ride along.) If the
+    // widget does not know that bus yet, keep the intent pending (see
+    // ridePendingVid). With no selection at all, fall back to the bus at
+    // the rider's own location — the bus they are on — when one is
+    // within boarding distance.
+    if (on && rideWidget) {
+      var rideBoardedNow = false;
+      if (selectedVehicleId) {
+        rideBoardedNow = boardRideBus(selectedVehicleId, true);
+        ridePendingVid = rideBoardedNow ? null : selectedVehicleId;
+      }
+      if (!rideBoardedNow && !selectedVehicleId && !rideWidget.currentVehicleId) {
+        var nearVid = nearestRideVehicleVid();
+        if (nearVid) boardRideBus(nearVid, true);
+      }
+    }
+    if (!on) { ridePendingVid = null; exclRestore(); }
   }
   $('ride-btn').addEventListener('click', function () { tapBuzz(); setRideMode(!rideMode); });
   $('ride-close').addEventListener('click', function () { setRideMode(false); });
@@ -4487,6 +4525,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       return out2;
     });
     rideWidget.setVehicles(mapped);
+    // Honor a pending board intent the first time the bus appears.
+    if (ridePendingVid && rideMode && boardRideBus(ridePendingVid, true)) ridePendingVid = null;
   };
   // Real-time ride view (2026-10-15): while a bus is boarded, push its
   // tracker-predicted position to the widget every 5 s. The poll alone
