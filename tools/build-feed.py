@@ -44,6 +44,7 @@ def escape(text: str) -> str:
     """Escape a string for XML element text (ampersand and angle brackets)."""
     return html.escape(text, quote=False)
 
+
 ROOT = Path(__file__).resolve().parent.parent
 BASE = "https://www.detroitautomationacademy.com"
 TZ = ZoneInfo("America/Detroit")
