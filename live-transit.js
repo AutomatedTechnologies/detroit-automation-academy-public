@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261016-1519';
+  var STAMP = '20261016-1531';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -3332,6 +3332,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       list.appendChild(row);
     });
   }
+  // A rider watching the stop card counts down in real time: refresh the
+  // open card's relative times (arrival countdowns, live ping ages)
+  // every 30 s between vehicle polls — visible tab and open card only,
+  // no network traffic (renders from the last poll's state).
+  setInterval(function () {
+    if (document.hidden || !selectedStop) return;
+    var card = $('stop-card');
+    if (card && !card.hidden) renderStopLive();
+  }, 30000);
   function hideStop() {
     var _hadFocus = $('stop-card').contains(document.activeElement);
     setStopSelectedColor(selectedStopIndex, false);
@@ -3749,6 +3758,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         tripSel = tripJourneys.length ? 0 : -1;
         applyTripFusion();
         renderTripResults(res);
+        scrollTripDetailIntoView();
         if (tripSel >= 0) { highlightJourney(tripJourneys[0]); }
         else clearTripHighlight();
       });
@@ -3979,6 +3989,19 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (dismissed) { hideGuidanceBanner(); return; }
     showGuidanceBanner('done', 'You have arrived.', false, true);
   }
+  // Bring the selected journey's step list into view inside the results
+  // panel (2026-10-16): the detail renders BELOW the option cards, so on
+  // a phone it began under the panel's fold — a rider who planned or
+  // tapped an option saw cards, not directions, and had to discover the
+  // scroll. Called only on user-initiated renders and option taps, never
+  // on the background live re-plan, which must not move the panel under
+  // the reader.
+  function scrollTripDetailIntoView() {
+    var det = $('trip-detail');
+    if (det && det.scrollIntoView) {
+      try { det.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* no-op */ }
+    }
+  }
   function renderTripResults(res) {
     var host = $('trip-results');
     host.innerHTML = '';
@@ -4105,6 +4128,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         opts[k].setAttribute('aria-pressed', k === tripSel ? 'true' : 'false');
       }
       renderTripDetail();
+      scrollTripDetailIntoView();
       highlightJourney(tripJourneys[i]);
       flyJourney(tripJourneys[i]); // the perspective is the interface
     });
