@@ -32,12 +32,14 @@ xml-stylesheet processing instruction, and gives every item a
 and its section hub. Feed readers receive the raw RSS XML as before; the
 stylesheet only changes how the feed renders when opened in a browser.
 
-Known source defects this script tolerates (found 2026-10-16):
-  * sitemap.xml lists /live-transit-detroit/shut-down-by-the-meter/ but no
+Source defects found 2026-10-16 and corrected the same day (UAT Pass 1a):
+  * sitemap.xml listed /live-transit-detroit/shut-down-by-the-meter/ but no
     such page exists in the repository (the piece lives under /signal/).
-    The sitemap entry is skipped with a warning.
-  * /signal/relaunch/ is published but absent from sitemap.xml; it is
-    carried in EXTRA_URLS until the sitemap is corrected.
+    The phantom entry was removed from the sitemap; this script's skip
+    guard remains as a defense.
+  * /signal/relaunch/ was published but absent from sitemap.xml; the
+    sitemap now lists it. It remains in EXTRA_URLS defensively (the
+    generator dedupes by URL).
 """
 
 import html
