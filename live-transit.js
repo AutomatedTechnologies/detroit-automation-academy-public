@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-2003';
+  var STAMP = '20261015-2023';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -456,138 +456,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   busInfoSprite.visible = false;
   busInfoSprite.renderOrder = 41;
   scene.add(busInfoSprite);
-
-  // === SMART FRESHNESS LABELING (reactivation graft, 2026-10-15) =========
-  // SMART positions arrive via Swiftly GTFS-Realtime in a separate display
-  // payload (live-data/smart-display.json), rebuilt on the feed's 5-minute
-  // cadence. Display-only under the Swiftly API License §4(vi): the
-  // payload is this application's own rendering channel and is never part
-  // of the public vehicles.json contract. S6: a surface may claim only
-  // the freshness its source measures, so SMART carries its measured age
-  // wherever it is presented as current: the SMART filter-group header,
-  // the SMART beta note, the live-count pill, and SMART stop cards.
-  // Text only, by design: age is never carried by appearance alone.
-  // DDOT and QLINE are never touched.
-  // The age source is the payload's own generated_at paired with the
-  // oldest vehicle updated_at inside the same payload, so client clock
-  // skew cannot distort it. Bands: fresh (payload at most 7.5 minutes
-  // old — within 1.5 build cycles; nothing to label), aging (payload
-  // up to 15 minutes old; surfaces state the positions' as-of time),
-  // stale (past 15 minutes — 3x the build cadence): the payload's
-  // vehicles are dropped at ingest (smartDisplayVehicles) and the
-  // surfaces say the data is old instead of rendering positions as
-  // current. This restores the labeling the SMART removal took out with
-  // the Transit snapshot source it was written for, re-based on a live
-  // GPS source: there is no snapshot age to report because the feed
-  // carries one timestamp per vehicle.
-  var smartAge = { band: 'unknown', ageMin: null, payloadAtMs: null,
-                   oldestAtMs: null, payloadAgeMin: null, count: 0 };
-  var SMART_PAYLOAD_STALE_MS = 15 * 60 * 1000; // 3x the 5-minute build cadence
-
-  function computeSmartAge(s, nowMs) {
-    var out = { band: 'unknown', ageMin: null, payloadAtMs: null,
-                oldestAtMs: null, payloadAgeMin: null, count: 0 };
-    if (!s || !Array.isArray(s.vehicles)) return out;
-    out.count = s.vehicles.length;
-    var gen = s.generated_at ? new Date(s.generated_at).getTime() : NaN;
-    if (isNaN(gen)) return out;
-    out.payloadAtMs = gen;
-    var oldest = null;
-    for (var i = 0; i < s.vehicles.length; i++) {
-      var v = s.vehicles[i];
-      if (!v || !v.updated_at) continue;
-      var vt = new Date(v.updated_at).getTime();
-      if (isNaN(vt)) continue;
-      if (oldest == null || vt < oldest) oldest = vt;
-    }
-    out.oldestAtMs = oldest;
-    if (oldest != null) out.ageMin = Math.max(0, (gen - oldest) / 60000);
-    var payloadAgeMs = nowMs - gen;
-    out.payloadAgeMin = Math.max(0, payloadAgeMs / 60000);
-    out.band = payloadAgeMs > SMART_PAYLOAD_STALE_MS ? 'stale'
-      : (payloadAgeMs > SMART_PAYLOAD_STALE_MS / 2 ? 'aging' : 'fresh');
-    return out;
-  }
-  // The vehicles a display payload contributes to the merged live set:
-  // none when the payload is missing, malformed, or stale — SMART
-  // vehicles age out and disappear honestly rather than render as
-  // stale ghosts. Records without a position are dropped here as well.
-  function smartDisplayVehicles(s, nowMs) {
-    if (!s || !Array.isArray(s.vehicles)) return [];
-    if (computeSmartAge(s, nowMs).band === 'stale') return [];
-    return s.vehicles.filter(function (v) {
-      return v && v.agency === 'smart' && v.lat != null && v.lon != null;
-    });
-  }
-  function formatClock12(ms) {
-    var d = new Date(ms);
-    var h = d.getHours(), m = d.getMinutes();
-    var ap = h >= 12 ? 'PM' : 'AM';
-    h = h % 12; if (h === 0) h = 12;
-    return h + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
-  }
-  function formatAgeLong(ageMin) {
-    if (ageMin == null || isNaN(ageMin)) return '';
-    if (ageMin < 1.5) return 'about a minute';
-    if (ageMin < 55) return Math.round(ageMin) + ' minutes';
-    var hrs = ageMin / 60;
-    if (hrs < 1.5) return 'about an hour';
-    return Math.round(hrs) + ' hours';
-  }
-  function smartHeaderText(age) {
-    if (!age || age.band === 'unknown' || age.band === 'fresh') return '';
-    if (age.band === 'aging') return age.oldestAtMs != null ? 'as of ' + formatClock12(age.oldestAtMs) : '';
-    return formatAgeLong(age.payloadAgeMin) + ' old';
-  }
-  function smartNoteText(age) {
-    if (!age || age.band === 'unknown' || age.band === 'fresh') return '';
-    if (age.band === 'aging') return age.oldestAtMs != null ? 'SMART positions as of ' + formatClock12(age.oldestAtMs) + '.' : '';
-    return 'SMART data is ' + formatAgeLong(age.payloadAgeMin) + ' old \u2014 positions may have moved.';
-  }
-  function smartStopNoteText(age) {
-    if (!age) return '';
-    if (age.band === 'aging') return age.oldestAtMs != null ? 'SMART positions as of ' + formatClock12(age.oldestAtMs) + '.' : '';
-    if (age.band === 'stale') return 'SMART data is ' + formatAgeLong(age.payloadAgeMin) + ' old \u2014 buses may have moved from the positions shown.';
-    return '';
-  }
-  function smartPillText(age) {
-    if (!age || age.band !== 'stale') return '';
-    return 'SMART ' + age.count + ' (stale)';
-  }
-
-  // Applies the current smartAge object to every SMART age surface.
-  // Called after the filter panel is built and on every live poll; each
-  // surface is independently optional, so a missing element is a no-op.
-  function applySmartAgeUI() {
-    var label = $('smart-age-label');
-    if (label) label.textContent = smartHeaderText(smartAge);
-    var note = $('smart-age-note');
-    if (note) note.textContent = smartNoteText(smartAge);
-    var pill = $('smart-pill-note');
-    if (pill) {
-      var t = smartPillText(smartAge);
-      pill.textContent = t;
-      pill.hidden = !t;
-    }
-    renderStopSmartNote();
-  }
-  function stopServedBySmart(st) {
-    if (!st || !st.r || !st.r.length) return false;
-    var smartRoutes = groupRoutes.smart || [];
-    if (!smartRoutes.length) return false;
-    for (var i = 0; i < st.r.length; i++) {
-      if (smartRoutes.indexOf(String(st.r[i])) !== -1) return true;
-    }
-    return false;
-  }
-  function renderStopSmartNote() {
-    var el = $('stop-smart-note');
-    if (!el) return;
-    var t = (selectedStop && stopServedBySmart(selectedStop)) ? smartStopNoteText(smartAge) : '';
-    el.textContent = t;
-    el.hidden = !t;
-  }
-  // === END SMART FRESHNESS LABELING ===
 
   function busAgeText(v) {
     if (!v.updated_at) return '–';
@@ -2250,7 +2118,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     ['\u27F3', 'Two-finger twist', 'Rotate the view. Tilt to see the elevated route guideways — each route floats at its own height so crossings read as clean overpasses.'],
     ['\u25CF', 'Tap a bus', 'Opens the bus card: vehicle number, route, destination, speed, heading, and how fresh the position reading is. Tap Follow to track it.'],
     ['\u25A0', 'Bus badges', 'Each bus carries a bus-shaped badge showing its route number, bordered in the route\u2019s color. Badges declutter automatically when buses cluster.'],
-    ['\u29E9', 'Routes', 'Filter by group (DDOT, SMART, QLINE, People Mover) or individual route. Routes with no live buses are dimmed or hidden automatically.'],
+    ['\u29E9', 'Routes', 'Filter by group (DDOT, QLINE, People Mover) or individual route. Routes with no live buses are dimmed or hidden automatically.'],
     ['\u25C8', 'Plan trip', 'Enter two points and get a transit itinerary with real routes, transfers, and walking legs — built on the same schedule data as the map.'],
     ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops and intersections from the rider\u2019s seat, ordered by travel direction. If a bus is already selected it rides that bus; selecting a bus on the map while Ride along is open rides it too, and the camera follows it.'],
     [ICO_FINDME, 'Find me', 'Center the map on your location. "Routes near me" then shows only routes with a stop within 1,250 m of you.'],
@@ -2263,7 +2131,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     ['\u2194', 'Right-drag', 'Pan across the city. Tilt to see the elevated route guideways — each route floats at its own height so crossings read as clean overpasses.'],
     ['\u25CF', 'Click a bus', 'Opens the bus card: vehicle number, route, destination, speed, heading, and how fresh the position reading is. Click Follow to track it.'],
     ['\u25A0', 'Bus badges', 'Each bus carries a bus-shaped badge showing its route number, bordered in the route\u2019s color. Badges declutter automatically when buses cluster.'],
-    ['\u29E9', 'Routes', 'Filter by group (DDOT, SMART, QLINE, People Mover) or individual route. Routes with no live buses are dimmed or hidden automatically.'],
+    ['\u29E9', 'Routes', 'Filter by group (DDOT, QLINE, People Mover) or individual route. Routes with no live buses are dimmed or hidden automatically.'],
     ['\u25C8', 'Plan trip', 'Enter two points and get a transit itinerary with real routes, transfers, and walking legs — built on the same schedule data as the map.'],
     ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops and intersections from the rider\u2019s seat, ordered by travel direction. If a bus is already selected it rides that bus; selecting a bus on the map while Ride along is open rides it too, and the camera follows it.'],
     [ICO_FINDME, 'Find me', 'Center the map on your location. "Routes near me" then shows only routes with a stop within 1,250 m of you.'],
@@ -2554,22 +2422,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   });
 
   // --- location services ---------------------------------------------------------
-  // Coverage = the Detroit street mosaic bounds (DDOT's service area),
-  // extended to the full mosaic while the SMART group is displayed.
+  // Coverage = the Detroit street mosaic bounds (DDOT's service area).
   function inCoverage(lat, lon) {
     if (lat <= STREET_BOUNDS.latN && lat >= STREET_BOUNDS.latS &&
         lon >= STREET_BOUNDS.lonW && lon <= STREET_BOUNDS.lonE) return true;
-    // SMART suburbs: covered only while the SMART group is displayed, so
-    // "routes near you" and other location features work in the suburbs
-    // with SMART enabled and stay Detroit-scoped when it is off. The
-    // bounds are MOSAIC_BOUNDS — the street mosaic's declared bbox,
-    // and the values this branch used before the SMART removal, under
-    // the name the removal's rename gave them.
-    try {
-      if (groupSelState('smart') !== 'none' &&
-          lat <= MOSAIC_BOUNDS.latN && lat >= MOSAIC_BOUNDS.latS &&
-          lon >= MOSAIC_BOUNDS.lonW && lon <= MOSAIC_BOUNDS.lonE) return true;
-    } catch (e) {}
     return false;
   }
   // --- 3D user representation (scaffold) -----------------------------------------
@@ -2819,11 +2675,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (v.agency === 'qline') {
       return { byStop: {}, onlyIds: null, note: 'QLINE stop times are not published to this view. Stops are listed in order.' };
     }
-    if (v.agency === 'smart') {
-      // Restored with the reactivation (and now literally true): SMART
-      // publishes live positions to this view, never stop times.
-      return { byStop: {}, onlyIds: null, note: 'SMART stop times are not published to this view. Stops are listed in order.' };
-    }
     if (v.agency !== 'ddot') return null;
     if (!tripTT) {
       return { byStop: {}, onlyIds: null, note: 'Stop times load with the trip engine; they appear here once it is ready.' };
@@ -2868,7 +2719,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // 75m + 28m per serving route, so a 13-route mega-hub towers over a
   // single-route stop the way it should. Single-route pylons take their
   // route's color; multi-route hubs draw paper-white. One draw call.
-  var STOP_MAX = 16384; // merged registry capacity: DDOT stops + SMART stops + QLINE stops (10,583) plus headroom
+  var STOP_MAX = 16384; // merged registry capacity: DDOT stops + SMART tombstone segment + QLINE stops (10,583) plus headroom
   var stopIM = new THREE.InstancedMesh(
     new THREE.CylinderGeometry(14, 18, 1, 8),
     new THREE.MeshLambertMaterial({ color: 0xffffff }), STOP_MAX);
@@ -3048,7 +2899,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   function renderStopLive() {
     var host = $('stop-live'), list = $('stop-live-list');
     if (!host || !list) return;
-    renderStopSmartNote();
     if (!selectedStop || !lastVehicles || !lastVehicles.length) {
       host.hidden = true; return;
     }
@@ -3442,7 +3292,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     host.innerHTML = '';
     var none = document.createElement('p');
     none.className = 'trip-note';
-    none.textContent = 'One of these stops is not on a DDOT route, and no DDOT stop is within a short walk of it. The scheduled planner covers DDOT routes; SMART and QLINE stops share the map and the stop search.';
+    none.textContent = 'One of these stops is not on a DDOT route, and no DDOT stop is within a short walk of it. The scheduled planner covers DDOT routes.';
     host.appendChild(none);
     announceSr(none.textContent);
   }
@@ -4438,21 +4288,20 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
   // --- Street extension tier --------------------------------------------------
   // Street segments outside STREET_BOUNDS (Downriver, western suburbs) live
-  // in streetExt, displayed only while the SMART filter group is displayed
-  // (restored with the SMART reactivation, 2026-10-15).
+  // in streetExt. The group was displayed only with the SMART filter group;
+  // since the SMART removal (2026-10-15) it stays hidden permanently.
   var streetExt = null;          // THREE.Group (assigned in buildStreets)
   var streetExtLocal = null;     // extension local tier (own LOD rule)
   var streetExtMats = [];        // {mat, baseOpacity} faded together
   var streetExtFade = 0, streetExtFadeTarget = 0;
   var streetExtFadeFrom = 0, streetExtFadeT0 = 0, streetExtFadeDur = 1;
   var STREET_EXT_FADE_MS = 900;
-  // Called from applyFilters: starts (or reverses) the fade when the SMART
-  // group's displayed state changes. Reversing mid-fade continues from the
-  // current opacity — never a snap.
+  // Called from applyFilters. The fade target has been permanently 0
+  // since the SMART removal; the machinery is retained so the group's
+  // hidden state is explicit rather than incidental.
   function syncStreetExt() {
     if (!streetExt) return;
-    var on = false;
-    try { on = groupSelState('smart') !== 'none'; } catch (e) {}
+    var on = false; // permanent since the SMART removal (2026-10-15)
     var target = on ? 1 : 0;
     if (target === streetExtFadeTarget) return;
     streetExtFadeFrom = streetExtFade;
@@ -4532,14 +4381,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       // opens as an accordion (3 rows); route chips expand per group.
       var gOn = (g.id === 'connect-ten');
       var gLabel = g.name;
-      // SMART (reactivated 2026-10-15): labeled beta, default OFF until
-      // the rider enables it, persisted across sessions. Suburban
-      // scale (45 routes) would bury the Detroit default view if it
-      // started on.
-      if (g.id === 'smart') {
-        gLabel = g.name + ' (beta)';
-        try { gOn = localStorage.getItem('lt-smart-on') === '1'; } catch (e) { gOn = false; }
-      }
       filterState.groups[g.id] = gOn;
       var sec = document.createElement('div');
       sec.className = 'f-group';
@@ -4554,7 +4395,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       check.addEventListener('click', function () {
         var on = groupSelState(g.id) !== 'all'; // all-on -> switch off; else switch on
         filterState.groups[g.id] = on;
-        if (g.id === 'smart') { try { localStorage.setItem('lt-smart-on', on ? '1' : '0'); } catch (e) {} }
         g.routes.forEach(function (rid) { filterState.routes[rid] = on; delete nearMeAdded[rid]; });
         applyFilters();
         syncFilterUI();
@@ -4564,7 +4404,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       label.setAttribute('aria-expanded', 'false');
       label.setAttribute('aria-label', 'Expand ' + gLabel + ' routes');
       label.innerHTML = '<b>' + gLabel + '</b>' +
-        (g.id === 'smart' ? '<span class="f-count" id="smart-age-label"></span>' : '') +
         '<span class="f-count" id="fgc-' + g.id + '">–</span>' +
         '<span class="f-chev">▾</span>';
       label.addEventListener('click', function () {
@@ -4602,28 +4441,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       });
       sec.appendChild(head);
       sec.appendChild(list);
-      if (g.id === 'smart') {
-        // S6/S9: the beta note carries the derived route count and the
-        // live source; the freshness sentence (smart-age-note) is set
-        // by applySmartAgeUI and stays empty while the feed is fresh.
-        var betaNote = document.createElement('p');
-        betaNote.className = 'f-beta-note';
-        betaNote.textContent = 'Beta: all ' + g.routes.length + ' routes have map lines. Vehicle positions via Swiftly GTFS-Realtime.';
-        var smartAgeNote = document.createElement('span');
-        smartAgeNote.id = 'smart-age-note';
-        betaNote.appendChild(smartAgeNote);
-        sec.appendChild(betaNote);
-      }
       host.appendChild(sec);
     });
-    applySmartAgeUI();
     $('filter-all').addEventListener('click', function () {
       // "Show all" means all: the near-me proximity restriction must not
       // override it, so near-me is switched off first.
       if (filterState.nearMe) setNearMe(false);
       groupOrder.forEach(function (gid) { filterState.groups[gid] = true; });
       routeOrder.forEach(function (rid) { filterState.routes[rid] = true; });
-      try { localStorage.setItem('lt-smart-on', '1'); } catch (e) {}
       applyFilters();
       syncFilterUI();
     });
@@ -4633,7 +4458,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (filterState.nearMe) setNearMe(false);
       groupOrder.forEach(function (gid) { filterState.groups[gid] = false; });
       routeOrder.forEach(function (rid) { filterState.routes[rid] = false; });
-      try { localStorage.setItem('lt-smart-on', '0'); } catch (e) {}
       applyFilters();
       syncFilterUI();
     });
@@ -5659,19 +5483,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     return busSlots.length;
   }
 
-  // SMART display payload (reactivation, 2026-10-15): the builder
-  // publishes SMART vehicles separately (live-data/smart-display.json)
-  // because the Swiftly license is display-only — SMART vehicles are
-  // never part of the vehicles.json contract. Fetched on the same poll
-  // cycle as the main envelope; resolves null on any failure so a SMART
-  // outage can never fail or delay-mark the DDOT/QLINE poll.
-  function fetchSmartDisplay(proxy) {
-    var ctrl = new AbortController();
-    var timer = setTimeout(function () { ctrl.abort(); }, 8000);
-    return fetch(proxy + '/smart-display.json', { cache: 'no-store', signal: ctrl.signal })
-      .then(function (r) { clearTimeout(timer); return r.ok ? r.json() : null; },
-            function () { clearTimeout(timer); return null; });
-  }
   function poll() {
     var proxy = (window.FORGE_LIVE_PROXY || '').replace(/\/$/, '');
     if (!proxy) { setHeader(null, 'connecting…', false); return; }
@@ -5682,22 +5493,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
             function (e) { clearTimeout(timer); throw e; })
       .then(function (d) {
         if (!d || !Array.isArray(d.vehicles)) throw new Error('bad payload');
-        // SMART (reactivated 2026-10-15) joins here: the display
-        // payload's vehicles merge into this poll's live set before
-        // every fan-out below (map, counts, ride-along, follow, tiles,
-        // delay matching). smartDisplayVehicles drops the payload
-        // entirely when it is missing, malformed, or stale, so SMART
-        // can only ever add current positions. The envelope itself
-        // (sources, generated_at) is untouched: the degradation notice
-        // reads it exactly as before and never reads sources.smart.
-        return fetchSmartDisplay(proxy).then(function (s) {
-          smartAge = computeSmartAge(s, Date.now());
-          var sv = smartDisplayVehicles(s, Date.now());
-          if (sv.length) d.vehicles = d.vehicles.concat(sv);
-          return d;
-        });
-      })
-      .then(function (d) {
+        // SMART REMOVED 2026-10-15: the proxy may still emit SMART records
+        // until its own leg is cut; the product carries DDOT and QLINE
+        // only, so SMART vehicles are dropped at ingest, before every
+        // fan-out (map, counts, ride-along, follow, tiles, delay matching).
+        d.vehicles = d.vehicles.filter(function (v) { return v && v.agency !== 'smart'; });
         lastVehicles = d.vehicles;
         liveEverOk = true;
         if (typeof window.__setRideVehicles === 'function') window.__setRideVehicles(d.vehicles);
@@ -5711,8 +5511,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         lastTotal = n;
         setHeader(n, 'updated ' + fmtTime(d.generated_at ? new Date(d.generated_at) : null), false);
         svcFeedOk(d); // service degradation notice: evaluate source states + freshness
-        // SMART freshness surfaces track every successful poll (S6).
-        applySmartAgeUI();
+        // SMART REMOVED 2026-10-15: no Transit-API data is displayed;
+        // the Transit attribution badge and the SMART age labeling were
+        // removed with the SMART segment.
       })
       .catch(function () {
         var text = liveEverOk
@@ -5730,11 +5531,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // data the vehicles poll already receives: the envelope's per-agency
   // source states (sources.ddot / sources.qline), the envelope's
   // generated_at age, and the poll's own success or failure. No new
-  // fetches, no new endpoints. sources.smart is never read here: it
-  // reports the SMART display leg (SMART reactivated 2026-10-15), whose
-  // freshness is labelled by the SMART freshness graft on its own
-  // surfaces (S6); a SMART state change is not a degradation of the
-  // DDOT/QLINE envelope this notice guards. A source reporting ok
+  // fetches, no new endpoints. sources.smart is an explicit removed state
+  // (SMART removed from the product 2026-10-15) and is never read here:
+  // removal by design is not a degradation (S4). A source reporting ok
   // with zero vehicles is NOT a degradation — overnight truth is zero
   // vehicles — so vehicle counts are never a signal. S6: the notice
   // claims only the freshness and source state the envelope measures,
@@ -6392,10 +6191,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
             function (e) { clearTimeout(timer); throw e; })
       .then(function (d) {
         if (!d || !Array.isArray(d.alerts)) throw new Error('bad payload');
-        // SMART service alerts are not published to this feed: the
-        // Swiftly grant does not enable service alerts, and no SMART
-        // alerts design exists. Any SMART record is dropped at ingest,
-        // with its source line, as a standing guard.
+        // SMART REMOVED 2026-10-15: bulletin-board (SMART) alerts are not
+        // part of the product; drop them and their source line at ingest.
         mergeAlerts(d.alerts.filter(function (a) { return a && a.agency !== 'smart'; }));
         alertsState.sources = (Array.isArray(d.sources) ? d.sources : [])
           .filter(function (s) { return s && s.agency !== 'smart'; });
@@ -7809,9 +7606,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     fetch('peoplemover-3d.json?v=' + STAMP, { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .catch(function () { return null; }), // static layer is optional: map works without it
-    fetch('smart-routes-3d.json?v=' + STAMP, { cache: 'no-store' })
+    fetch('smart-tombstones.json?v=' + STAMP, { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
-      .catch(function () { return null; }), // SMART layer is optional: map works without it, see the merge below
+      .catch(function () { return null; }), // tombstone segment: see the merge below
     fetch('qline-3d.json?v=' + STAMP, { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .catch(function () { return null; }) // QLINE layer is optional
@@ -7822,22 +7619,35 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       streetData = all[2];
       streetNameData = all[3];
       var pmData = all[4];
-      var smartData = all[5];
-      // SMART REACTIVATED 2026-10-15 (Justin's direction): the segment
-      // the removal tombstoned is live again. The routes file was never
-      // modified (it stayed in the repo as the rollback substrate), so
-      // the pre-removal merge returns verbatim and every registry index
-      // is again the pre-removal index (S1): DDOT 0-5123, SMART
-      // 5124-10560, QLINE 10561-10582. SMART routes are recolored
-      // uniformly to SMART red, as before the removal. If the fetch
-      // failed, the map runs DDOT+QLINE only (the pre-removal failure
-      // mode); smart-tombstones.json is no longer fetched or served.
-      if (smartData && Array.isArray(smartData.routes) && smartData.routes.length) {
-        data.groups = (data.groups || []).concat(smartData.groups || []);
-        smartData.routes.forEach(function (r) { r.color = '#c30915'; });
-        data.routes = (data.routes || []).concat(smartData.routes);
-        data.stops = (data.stops || []).concat(smartData.stops || []);
+      var smartTombstones = all[5];
+      var qlineData = all[6];
+      // SMART REMOVED 2026-10-15 (Justin's direction): SMART routes, stops,
+      // vehicles, and alerts are no longer part of this product; future
+      // improvements prioritize DDOT and QLINE. The merged stop registry is
+      // positional (S1: the registry index is a stop's identity), so the
+      // SMART segment is TOMBSTONED, never deleted or renumbered: 5,437
+      // inert records (empty name, empty route list, archived coordinates)
+      // occupy indices 5124-10560, keeping every DDOT index (0-5123) and
+      // every QLINE index (10561-10582) identical to the pre-removal
+      // registry. Tombstones render nowhere: rebuildStops skips stops with
+      // an empty route list, and search matches on names (theirs are
+      // empty). The segment skeleton ships as smart-tombstones.json,
+      // generated from the archived pre-removal file
+      // (files/smart-removal/archive/). If that fetch failed, the segment
+      // is synthesized at an off-plane coordinate — the segment LENGTH
+      // (5,437) is the load-bearing property.
+      var SMART_SEGMENT_STOPS = 5437;
+      var tombstoneStops = [];
+      if (smartTombstones && Array.isArray(smartTombstones.stops)) {
+        smartTombstones.stops.forEach(function (rec) {
+          tombstoneStops.push({ id: rec[0], n: '', x: rec[1], z: rec[2], r: [], smartRemoved: true });
+        });
       }
+      while (tombstoneStops.length < SMART_SEGMENT_STOPS) {
+        tombstoneStops.push({ id: 'SMART:removed', n: '', x: 0, z: -1000000, r: [], smartRemoved: true });
+      }
+      tombstoneStops.length = SMART_SEGMENT_STOPS;
+      data.stops = (data.stops || []).concat(tombstoneStops);
       // QLINE streetcar: merged in the same pattern. The proxy serves QLINE vehicle
       // positions on the same /api/vehicles feed with agency='qline' and
       // route_id='QLINE'. Absent file: the map runs without QLINE, no errors.
@@ -7856,8 +7666,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       // Vector street map, drawn ourselves: dark ground + tiered Census
       // TIGER/Line highway geometry. Crisp at every zoom; no raster tiles.
       // The mosaic spans MOSAIC_BOUNDS; segments inside STREET_BOUNDS render
-      // always, segments outside live in streetExt, displayed only while
-      // the SMART group is displayed (see syncStreetExt).
+      // always, segments outside live in streetExt, which has stayed
+      // hidden since the SMART removal (see syncStreetExt).
       var streetLocal = null;
       (function buildStreets() {
         // Ground covers the full mosaic bbox permanently. #0d1319 against the
