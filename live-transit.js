@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261016-1352';
+  var STAMP = '20261016-1433';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -2532,6 +2532,19 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (e.key === 'Escape' && maxActive()) setMaxMode(false);
   });
   setFsBtn();
+  // Zoom defense (2026-10-16): the touch-action containment set covers
+  // the stage subtree, but a pinch that starts on a scrollable panel
+  // (touch-action: pan-y by design, so panels can scroll) can still
+  // engage iOS Safari's page zoom. A zoomed visual viewport renders the
+  // layout-anchored chrome (top bar, tools rail) off the visible edge,
+  // and no in-page state can undo a zoom once applied — prevention is
+  // the only defense. gesturestart/gesturechange are the events iOS
+  // Safari honors for this; blocking them document-wide keeps the app
+  // at scale 1 without touching panel scrolling (a gesture event is
+  // not a scroll) and without a user-scalable viewport switch, which
+  // stays out on accessibility grounds.
+  document.addEventListener('gesturestart', function (e) { e.preventDefault(); }, { passive: false });
+  document.addEventListener('gesturechange', function (e) { e.preventDefault(); }, { passive: false });
   // Keyboard selection: arrows cycle buses/stops when a card is open,
   // Escape clears. (OrbitControls doesn't bind arrows — no conflict.)
   document.addEventListener('keydown', function (e) {
