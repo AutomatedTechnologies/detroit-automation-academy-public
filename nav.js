@@ -17,6 +17,7 @@
     { label: 'Do', href: '/live-transit.html', audience: 'user' },
     { label: 'About', href: '/#mission', audience: 'visitor' },
     { label: 'Bio', href: '/apple-learning-coach/', audience: 'visitor' },
+    { label: 'Find', href: '/find.html', audience: 'visitor' },
     { label: 'Subscribe', href: NEWSLETTER_URL, audience: 'subscriber', external: true }
   ];
 
@@ -26,6 +27,7 @@
     if (/^\/(signal|press|live-transit-detroit|notes)\//.test(path) || /^\/voter-guide/.test(path)) return 'Read';
     if (/^\/(live-transit\.html|district\.html)/.test(path)) return 'Do';
     if (/^\/apple-learning-coach\//.test(path)) return 'Bio';
+    if (/^\/find\.html/.test(path)) return 'Find';
     return null;
   }
 
