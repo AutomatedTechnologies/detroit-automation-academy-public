@@ -46,6 +46,7 @@ jobs:
           cp robots.txt deployment/          || echo "robots.txt not found"
           cp sitemap.xml deployment/         || echo "sitemap.xml not found"
           cp feed.xml deployment/            || echo "feed.xml not found"
+          cp feed.xsl deployment/            || echo "feed.xsl not found"
 
           # Copy curriculum silo
           if [ -d "curriculum" ]; then
