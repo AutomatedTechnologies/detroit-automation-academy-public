@@ -208,6 +208,21 @@
           <tr><td>kind</td><td>string</td><td><code>realtime</code>.</td></tr>
         </tbody>
       </table>
+
+      <div class="endpoint">
+        <div class="endpoint-head">
+          <span class="method">GET</span>
+          <span class="endpoint-path">/feed.xml</span>
+        </div>
+        <dl class="kv">
+          <dt>Format</dt><dd>RSS 2.0 feed of the academy&rsquo;s publishing, newest first: The Signal editions and specials, Live Transit Detroit installments, Detroit 2126, and Notes. Each item carries the article&rsquo;s title, link, publication date, category, and description, plus a <code>content:encoded</code> body with links back to the article and its section hub.</dd>
+          <dt>Parameters</dt><dd>None.</dd>
+          <dt>Refresh</dt><dd>Regenerated from <code>sitemap.xml</code> and each page&rsquo;s own metadata when a new article publishes. Point a feed reader at the URL and new pieces arrive as they publish; there is no polling schedule.</dd>
+          <dt>CORS</dt><dd>Served by GitHub Pages with <code>Access-Control-Allow-Origin: *</code>.</dd>
+          <dt>Auth</dt><dd>None. No key required.</dd>
+          <dt>Display</dt><dd>Feed readers receive the raw RSS XML. Opened in a browser, the feed renders as a formatted page via <code>/feed.xsl</code>, the XSLT stylesheet the feed declares &mdash; the stylesheet affects browser display only.</dd>
+        </dl>
+      </div>
     </div>
   </section>
 
