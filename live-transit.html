@@ -46,7 +46,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ride-along.css?v=20261015-1256">
+<link rel="stylesheet" href="ride-along.css?v=20261016-1652">
 <link rel="stylesheet" href="styles.css?v=20261010-2130">
 <script type="importmap">
 {
@@ -500,6 +500,14 @@
        expanded — is never under a card. The 0002 occlusion geometry
        becomes impossible by construction. */
     .bus-card { top: auto; bottom: 5.5rem; left: 1rem; right: 5.5rem; width: auto; max-width: none; max-height: 45%; overflow-y: auto; }
+    /* One scroller per surface (2026-10-16): .ra-wrap is itself a
+       scroller (max-height 70vh), but inside the mobile card — capped
+       at 45% — it never overflows, and iOS Safari does not chain a
+       scroll gesture from a range-less inner scroller to the card.
+       The list was unscrollable on iPhone. On mobile the card is the
+       sole scroller and the wrap is plain content; on desktop the
+       wrap keeps its own 70vh scroll, as before. */
+    #ride-card .ra-wrap { max-height: none; overflow-y: visible; }
     .filter-panel, .browse-panel { top: auto; bottom: 1rem; right: 1rem; left: 1rem; width: auto; max-height: 50%; }
   .resize-grip { display: none; }
   }
