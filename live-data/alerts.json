@@ -1,17 +1,35 @@
 {
-  "generated_at": "2026-10-16T03:15:32.164Z",
-  "count": 0,
-  "alerts": [],
+  "generated_at": "2026-10-16T04:15:32.546Z",
+  "count": 1,
+  "alerts": [
+    {
+      "id": "ddot-3eb416223e",
+      "agency": "ddot",
+      "header": "DDOT service bulletin",
+      "description": "Please board outside of closure area: WB Michigan closure between Washington and Cass, reroute to Lafayette. Alt. stops RPTC or Cass & Laf.",
+      "effect": null,
+      "cause": null,
+      "active_period": {
+        "start": null,
+        "end": null
+      },
+      "routes": [],
+      "stops": [],
+      "url": null,
+      "source": "bustime",
+      "fetched_at": "2026-10-16T04:15:32.546Z",
+      "kind": "realtime"
+    }
+  ],
   "sources": [
     {
       "agency": "ddot",
       "kind": "realtime",
       "via": "bustime",
-      "fetched_at": "2026-10-16T03:15:32.164Z",
-      "ok": false,
-      "status": "error",
-      "alerts": 0,
-      "reason": "Transaction limit for current day has been exceeded."
+      "fetched_at": "2026-10-16T04:15:32.546Z",
+      "ok": true,
+      "status": "ok",
+      "alerts": 1
     }
   ]
 }
