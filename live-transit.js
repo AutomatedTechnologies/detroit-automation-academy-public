@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261016-1554';
+  var STAMP = '20261016-1906';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -21,7 +21,228 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var _bs = document.getElementById('build-stamp');
     if (_bs) _bs.textContent = 'Build ' + STAMP + '.';
   } catch (e) {}
+
+  // === Error handling, steps 1–5 (2026-10-16) ==============================
+  // Architecture: goals/forge-line-live-transit-layer/files/error-handling/
+  // architectural-review-2026-10-16.md §4–§5. The pre-existing mechanisms
+  // (recoverReload, the F2 frame guard + watchdog, the boot-chain catch,
+  // the feed degradation notice) watch the render pipeline and the feed.
+  // This block adds what they cannot see: global error capture with a
+  // bounded on-device log (step 1), planner fault accounting (steps 2–3),
+  // an interaction heartbeat distinct from frame production (step 4a),
+  // camera sanity supervision (step 4b), and the recovery ladder that the
+  // detectors route through (step 5). Everything here is defensive: the
+  // logger never throws, and a supervisor's recovery is always cheaper
+  // than the reload it precedes.
+  var ERRLOG_MAX = 50, ERRLOG_BYTES = 65536;
+  var flErrLog = [];
+  var flErrLastKey = '', flErrLastAt = 0;
+  var flFrameAt = 0; // mirrored by the frame loop each successful frame
+  // Step 4a input stamps: passive listeners only observe; they never
+  // intercept, preventDefault, or alter the event's path.
+  var lastInputAt = 0, inputSeq = 0, flInputSeqSeen = 0;
+  // Recovery ladder state (§4.6): per-rung fire counters, reset on boot
+  // and after a rung's condition has stayed clear for 60 s.
+  var ladderCounts = { interaction: 0, planner: 0, camera: 0 };
+  var ladderLastFire = { interaction: 0, planner: 0, camera: 0 };
+  // Planner fault accounting (§4.2): consecutive planner-path faults;
+  // at 3, background re-planning and guidance pause until the next
+  // successful user-initiated plan.
+  var plannerFaultStreak = 0, plannerPaused = false, plannerFaultThisPoll = false;
+
+  function errSnapshot() {
+    var s = {};
+    try {
+      s.build = STAMP;
+      s.tripMode = !!tripMode;
+      s.tripLoading = !!tripLoading;
+      s.journey = !!(tripJourneys && tripJourneys.length && tripSel >= 0);
+      s.controlsEnabled = controls ? !!controls.enabled : null;
+      s.camOwner = tripFly ? 'fly' : (streetTween ? 'tween' : (followVId ? 'follow' : null));
+      s.streetView = !!streetView;
+      if (camera && controls) s.camDist = Math.round(camera.position.distanceTo(controls.target));
+      s.feedAgeS = lastPollT ? Math.round((performance.now() - lastPollT) / 1000) : null;
+      s.inputAgeS = lastInputAt ? Math.round((performance.now() - lastInputAt) / 1000) : null;
+      s.frameAgeMs = flFrameAt ? Math.round(performance.now() - flFrameAt) : null;
+      s.plannerFaults = plannerFaultStreak;
+      s.plannerPaused = plannerPaused;
+    } catch (e) {}
+    return s;
+  }
+  function errLogPersist() {
+    try {
+      var s = JSON.stringify(flErrLog);
+      while (s.length > ERRLOG_BYTES && flErrLog.length > 1) {
+        flErrLog.shift();
+        s = JSON.stringify(flErrLog);
+      }
+      sessionStorage.setItem('fl-errlog', s);
+    } catch (e) { /* storage unavailable: the log stays memory-only */ }
+  }
+  function errLog(cls, msg, err) {
+    try {
+      var m = String(msg == null ? '' : msg).slice(0, 300);
+      var key = cls + '|' + m, now = Date.now();
+      if (key === flErrLastKey && now - flErrLastAt < 5000) return; // de-dupe bursts
+      flErrLastKey = key; flErrLastAt = now;
+      var entry = { t: now, cls: cls, msg: m, snap: errSnapshot() };
+      if (err && err.stack) {
+        entry.stack = String(err.stack).split('\n').slice(0, 3).join(' | ').slice(0, 300);
+      }
+      flErrLog.push(entry);
+      while (flErrLog.length > ERRLOG_MAX) flErrLog.shift();
+      try { console.error('[fl-err]', cls, m); } catch (e2) {}
+      errLogPersist();
+    } catch (e3) { /* the logger must never throw */ }
+  }
+  // Previous session's entries survive one reload (marked prev), so a
+  // freeze that ends in an OS tab kill still leaves its antecedents.
+  try {
+    var flPrevLog = JSON.parse(sessionStorage.getItem('fl-errlog') || '[]');
+    if (flPrevLog && flPrevLog.length) {
+      flPrevLog.forEach(function (en) { en.prev = 1; });
+      flErrLog = flPrevLog.slice(-ERRLOG_MAX);
+    }
+  } catch (e) {}
+  // Read-back hook for support/diagnostics (read-only copy).
+  window.__flErrLog = function () { return flErrLog.slice(); };
+  // Step 1: global capture. Installed before renderer construction so
+  // boot-adjacent faults are captured too. Uncaught errors are logged,
+  // never auto-recovered from here: recovery belongs to the detectors
+  // that own a diagnosis (frame guard, watchdog, supervisors, ladder).
+  window.addEventListener('error', function (e) {
+    try {
+      if (e && e.error) {
+        errLog('error', (e.message || String(e.error)).slice(0, 300), e.error);
+      } else if (e && e.target && e.target !== window) {
+        errLog('background', 'resource error: ' + (e.target.tagName || 'unknown'));
+      }
+    } catch (e2) {}
+  }, true);
+  window.addEventListener('unhandledrejection', function (e) {
+    try {
+      var r = e && e.reason;
+      errLog('rejection', ((r && r.message) || String(r)).slice(0, 300), r);
+    } catch (e2) {}
+  });
+  // Step 4a: input heartbeat stamps (passive, capture-phase so a handler
+  // that stops propagation cannot hide the input from the heartbeat).
+  ['pointerdown', 'touchstart', 'wheel', 'keydown'].forEach(function (type) {
+    window.addEventListener(type, function () {
+      lastInputAt = performance.now();
+      inputSeq++;
+    }, { passive: true, capture: true });
+  });
+  // Planner fault accounting (§4.2).
+  function notePlannerFault(err, where) {
+    plannerFaultThisPoll = true;
+    plannerFaultStreak++;
+    ladderCounts.planner++;
+    ladderLastFire.planner = Date.now();
+    errLog('planner', (where || 'planner') + ': ' + ((err && err.message) || String(err)), err);
+    if (plannerFaultStreak >= 3 && !plannerPaused) {
+      plannerPaused = true;
+      hideGuidanceBanner();
+      showPlannerFaultNote();
+    }
+  }
+  function showPlannerFaultNote() {
+    try {
+      var host = document.getElementById('trip-results');
+      if (!host || document.getElementById('trip-planner-fault')) return;
+      var p = document.createElement('p');
+      p.className = 'trip-note';
+      p.id = 'trip-planner-fault';
+      p.textContent = 'Could not plan the trip. Check your connection and try again.';
+      host.insertBefore(p, host.firstChild);
+    } catch (e) {}
+  }
+  function clearPlannerFaultNote() {
+    try {
+      var n = document.getElementById('trip-planner-fault');
+      if (n && n.parentNode) n.parentNode.removeChild(n);
+    } catch (e) {}
+  }
+  function unpausePlanner() {
+    plannerPaused = false;
+    plannerFaultStreak = 0;
+    clearPlannerFaultNote();
+  }
+  // Recovery ladder (§4.6): L1 interaction reset, L2 planner reset
+  // (containment + rollback + pause, above), L3 camera reset,
+  // L4 ladderReload -> recoverReload, L5 fail(). A rung that would fire
+  // a third time in a session escalates to L4 instead of repeating.
+  function ladderFire(rung, action) {
+    ladderCounts[rung] = (ladderCounts[rung] || 0) + 1;
+    ladderLastFire[rung] = Date.now();
+    errLog('ladder', rung + ' reset #' + ladderCounts[rung]);
+    if (ladderCounts[rung] >= 3) {
+      try {
+        showToast(rung === 'camera' ? 'The map view was reset.'
+          : 'The map stopped responding and was reset.', false);
+      } catch (e) {}
+      ladderReload('ladder-' + rung);
+      return false;
+    }
+    action();
+    return true;
+  }
+  function ladderReload(reason) {
+    errLog('recovery', 'reload requested: ' + reason);
+    recoverReload(reason);
+  }
+  // Step 4 frame-loop tick: input-starvation inference + camera sanity.
+  // Runs inside the frame loop's try, but guards itself so a supervisor
+  // fault can never masquerade as a frame fault.
+  var ehCamBadStreak = 0, ehCamLastCheck = 0;
+  function ehFrameTick(now) {
+    try {
+      if (inputSeq !== flInputSeqSeen) {
+        if (lastInputAt && now - lastInputAt > 1000) {
+          errLog('longtask', 'input observed late (>1000 ms): main-thread starvation inferred');
+        }
+        flInputSeqSeen = inputSeq;
+      }
+    } catch (e) {}
+    if (now - ehCamLastCheck < 1000) return;
+    ehCamLastCheck = now;
+    try { ehCameraCheck(); } catch (e) {}
+  }
+  function ehCameraCheck() {
+    if (tripFly || streetTween) { ehCamBadStreak = 0; return; } // an animation owns the camera
+    var p = camera.position, t = controls.target;
+    var bad = !(isFinite(p.x) && isFinite(p.y) && isFinite(p.z) &&
+                isFinite(t.x) && isFinite(t.y) && isFinite(t.z));
+    if (!bad) {
+      var d = p.distanceTo(t);
+      if (streetView) { if (d < 100 || d > 60000) bad = true; }
+      else if (d < controls.minDistance * 0.8 || d > controls.maxDistance * 1.05) bad = true;
+    }
+    if (!bad) {
+      ehCamBadStreak = 0;
+      if (ladderCounts.camera > 0 && ladderLastFire.camera &&
+          Date.now() - ladderLastFire.camera > 60000) ladderCounts.camera = 0;
+      return;
+    }
+    ehCamBadStreak++;
+    if (ehCamBadStreak < 3) return; // 3-check debounce (~3 s)
+    ehCamBadStreak = 0;
+    ladderFire('camera', function () {
+      cancelTripFly();
+      cancelStreetTween();
+      var pos, tgt;
+      if (camMem) { pos = camMem.pos.clone(); tgt = camMem.tgt.clone(); }
+      else {
+        pos = new THREE.Vector3(8448, 11758, 22332);
+        tgt = new THREE.Vector3(8448, 0, 5539);
+      }
+      glideTo(pos, tgt, 900); // the existing interruptible glide: the rider can grab the camera mid-recovery
+      try { showToast('The map view was reset.', false); } catch (e) {}
+    });
+  }
+  // === Error handling block end ============================================
   var POLL_MS = 60000;
+
   var BUS_MAX = 400;
   var DETAIL_MAX = 48;
   var DEG = Math.PI / 180;
@@ -91,18 +312,24 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       fail('The map display stopped and could not be restored automatically. Close this tab and reopen the page to continue.');
       return;
     }
-    try { sessionStorage.setItem('fl-recover-at', '' + Date.now()); } catch (e) {}
     showToast('Display interrupted — reloading the map…', true);
     setTimeout(function () {
       var gl = null;
       try { gl = renderer.getContext(); } catch (e) {}
       if (gl && !gl.isContextLost()) { recovering = false; return; }
+      // Token fix (2026-10-16, error-handling step 5): the loop-guard
+      // timestamp is written only here, once the reload is certain. The
+      // previous bytes stamped it before the stand-down check above, so
+      // a stand-down (context alive, no reload ever attempted) consumed
+      // the one automatic recovery and a genuine failure within 30 s
+      // went straight to the terminal fallback.
+      try { sessionStorage.setItem('fl-recover-at', '' + Date.now()); } catch (e) {}
       location.reload();
     }, 600);
   }
   renderer.domElement.addEventListener('webglcontextlost', function (e) {
     e.preventDefault(); // lets the platform fire contextrestored
-    recoverReload('context');
+    ladderReload('context');
   }, false);
   renderer.domElement.addEventListener('webglcontextrestored', function () {
     try { sessionStorage.removeItem('fl-recover-at'); } catch (e) {}
@@ -3383,6 +3610,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   var tripLeaveTime = '';
   var tripTT = null, tripRaptor = null, tripFusion = null;
   var tripJourneys = [], tripSel = -1, tripLoading = false;
+  var tripLastRes = null; // last successful plan result (error-handling step 3 rollback)
   var tripAutoMinimized = false; // mobile: collapse card on first results render
   var tripFly = null;
   var tripGroup = new THREE.Group();
@@ -3738,6 +3966,31 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     $('trip-prov').textContent = 'scheduled';
     var host = $('trip-results');
     host.innerHTML = '<p class="trip-note">Planning…</p>';
+    // Error-handling step 3 (§4.3): snapshot the planner's commit state
+    // before planning. On failure or budget exhaustion the snapshot is
+    // restored and the previous results re-rendered — a failed plan
+    // never blanks the card or wedges tripLoading.
+    var snap = {
+      journeys: tripJourneys, sel: tripSel, res: tripLastRes,
+      dismissedSig: guidanceDismissedSig
+    };
+    function rollbackPlan() {
+      tripJourneys = snap.journeys;
+      tripSel = snap.sel;
+      guidanceDismissedSig = snap.dismissedSig;
+    }
+    function rollbackNote(innerHtml) {
+      rollbackPlan();
+      if (snap.res && snap.journeys.length) {
+        renderTripResults(snap.res);
+        var p = document.createElement('p');
+        p.className = 'trip-note';
+        p.innerHTML = innerHtml;
+        host.insertBefore(p, host.firstChild);
+      } else {
+        host.innerHTML = '<p class="trip-note">' + innerHtml + '</p>';
+      }
+    }
     var go = function (R) {
       tripRaptor = R;
       var loaded = tripTT ? Promise.resolve(tripTT)
@@ -3753,12 +4006,22 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           renderTripUncovered();
           return;
         }
-        var res = R.plan(tt, args.seeds, args.dest, when);
+        var res = R.plan(tt, args.seeds, args.dest, when, { budgetMs: 750 });
         if (oF !== tripFrom || oT !== tripTo) return; // stale
+        if (res.meta && res.meta.reason === 'budget') {
+          // Budget exhausted (§4.3): restore the previous results and say
+          // so — never present an empty plan as if none existed.
+          errLog('planner', 'user plan budget exhausted (750 ms)');
+          rollbackNote('That trip is taking too long to plan. ' +
+            'Try a nearer destination, or check your connection and try again.');
+          return;
+        }
         tripJourneys = res.journeys;
         tripSel = tripJourneys.length ? 0 : -1;
         applyTripFusion();
         renderTripResults(res);
+        tripLastRes = res;
+        unpausePlanner(); // a successful user plan lifts the step-2 pause
         scrollTripDetailIntoView();
         if (tripSel >= 0) { highlightJourney(tripJourneys[0]); }
         else clearTripHighlight();
@@ -3773,9 +4036,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // Note: raptor.js uses named exports; the .default fallback keeps this
     // working if the module shape ever changes.
     boot.then(function (m) { return go(m.R); }).catch(function (err) {
-      $('trip-results').innerHTML = '<p class="trip-note">Could not plan the trip (' +
-        tripEsc((err && err.message) || String(err)) + '). Check your connection and try again.</p>';
-    }).then(function () { tripLoading = false; });
+      // Step 3 rollback: a failed plan restores the previous results
+      // instead of leaving the card blank behind the error note.
+      errLog('planner', 'user plan failed: ' + ((err && err.message) || String(err)), err);
+      rollbackNote('Could not plan the trip (' +
+        tripEsc((err && err.message) || String(err)) + '). Check your connection and try again.');
+    }).finally(function () { tripLoading = false; });
   }
   function applyTripFusion() {
     if (!tripFusion || !tripJourneys.length) return;
@@ -3796,7 +4062,13 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     try {
       var args = planArgs(tripTT);
       if (!args) return; // endpoint out of coverage: keep the current results
-      var res = tripRaptor.plan(tripTT, args.seeds, args.dest, new Date());
+      var res = tripRaptor.plan(tripTT, args.seeds, args.dest, new Date(), { budgetMs: 250 });
+      if (res.meta && res.meta.reason === 'budget') {
+        // Step 3 (§4.3): a background re-plan that exhausts its budget
+        // keeps the current results silently — never blanks the card.
+        errLog('planner', 'background re-plan budget exhausted (250 ms)');
+        return;
+      }
       var sig = tripSel >= 0 && tripJourneys[tripSel] ? journeySig(tripJourneys[tripSel]) : null;
       tripJourneys = res.journeys;
       tripSel = -1;
@@ -3808,8 +4080,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (tripSel < 0) tripSel = tripJourneys.length ? 0 : -1;
       applyTripFusion();
       renderTripResults(res);
+      tripLastRes = res;
       if (tripSel >= 0) highlightJourney(tripJourneys[tripSel]); else clearTripHighlight();
-    } catch (e) { /* live refresh never breaks the card */ }
+    } catch (e) { notePlannerFault(e, 'replan'); /* live refresh never breaks the card — and now it reports */ }
   }
   function journeySig(j) {
     return j.legs.map(function (l) {
@@ -3964,6 +4237,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var dismissed = (guidanceDismissedSig === sig);
     var busLegs = j.legs.filter(function (l) { return l.type === 'bus'; });
     if (!busLegs.length) { hideGuidanceBanner(); return; }
+    var finalPassed = false; // step 2 (§4.4): set when the FINAL leg reports 'passed'
     // Missed transfer: highest priority.
     var missed = checkMissedTransfer(j, busLegs);
     if (missed && Date.now() > missedCooldownUntil) {
@@ -3977,7 +4251,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
     for (var i = 0; i < busLegs.length; i++) {
       var g = guidanceForLeg(busLegs[i]);
-      if (g === 'passed') continue;
+      if (g === 'passed') { if (i === busLegs.length - 1) finalPassed = true; continue; }
       // Urgent guidance (get off at the next stop) always shows: a dismissal
       // must never suppress a safety-critical banner. Dismissal only quiets
       // non-urgent guidance for this journey.
@@ -3988,7 +4262,20 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       }
     }
     if (dismissed) { hideGuidanceBanner(); return; }
-    showGuidanceBanner('done', 'You have arrived.', false, true);
+    // Step 2 (§4.4, guidance honesty): "arrived" requires positive
+    // evidence — the final leg's bus passed the alight stop, or the
+    // live-adjusted alight time is more than 120 s in the past. The
+    // previous bytes fell through to 'You have arrived.' whenever no
+    // leg yielded live guidance, which is how a 6:51 PM departure wore
+    // an arrival banner at 6:52 PM (2026-10-16 18:52 freeze report).
+    // No guidance is no information; the honest surface is silence.
+    var arrived = finalPassed;
+    if (!arrived) {
+      var lastLeg = busLegs[busLegs.length - 1];
+      if (detroitParts(Date.now()).sec > liveLegTime(lastLeg, 'alight') + 120) arrived = true;
+    }
+    if (arrived) showGuidanceBanner('done', 'You have arrived.', false, true);
+    else hideGuidanceBanner();
   }
   // Bring the selected journey's step list into view inside the results
   // panel (2026-10-16): the detail renders BELOW the option cards, so on
@@ -5773,8 +6060,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     });
     tripRaptor.setLiveDelays(tt, delayMap, nowMs);
     // Keep the open trip card live: re-plan "leave now" queries per poll.
-    if (tripMode && tripJourneys.length && !(tripLeaveMode === 'at' && tripLeaveTime)) replanLive();
-    updateGuidance(); // Phase 2c: board/alight/missed-transfer banners
+    // Both planner-path calls are contained (step 2, §4.2): a fault here
+    // is logged as a planner fault and quarantined for this poll — it
+    // must never propagate into poll's .catch and be reported to the
+    // rider as a feed failure, as the previous bytes allowed.
+    if (tripMode && tripJourneys.length && !(tripLeaveMode === 'at' && tripLeaveTime) && !plannerPaused) replanLive();
+    if (!plannerPaused) {
+      try { updateGuidance(); } // Phase 2c: board/alight/missed-transfer banners
+      catch (e) { notePlannerFault(e, 'guidance'); hideGuidanceBanner(); }
+    }
   }
 
   // --- Phase 2b-ii: empirical timetable substitution ---------------------------
@@ -5866,6 +6160,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       });
     });
     return nSub;
+  }
+
+  // Step 2 (§4.2): the planner path inside the poll is contained at
+  // this call site. poll's .catch fires only for genuine feed failures.
+  function runPlannerPollPath() {
+    plannerFaultThisPoll = false;
+    try { updateLiveDelays(); }
+    catch (e) { notePlannerFault(e, 'poll-path'); }
+    if (!plannerFaultThisPoll) plannerFaultStreak = 0;
   }
 
   function updateBuses(vehicles) {
@@ -5970,7 +6273,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     for (var id in busTrackers) if (!seen[id]) delete busTrackers[id];
     lastPollT = now;
     pollSeq++;
-    updateLiveDelays(); // Phase 2b-i: match vehicles to trips, measure delays
+    runPlannerPollPath(); // Phase 2b-i delays + planner path (contained, step 2)
     renderBusInstances();
     if (typeof refreshBrowseBuses === 'function') {
       var bp = document.getElementById('browse-panel');
@@ -8458,6 +8761,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       });
       var lastBusMode = null;
       var lastFrameAt = performance.now();
+      var ehStuckSince = 0; // step 4a: when the stuck-interaction condition began
       var frameErrStreak = 0;
       var frameErrLogged = false;
       renderer.setAnimationLoop(function () {
@@ -8577,6 +8881,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         smoothBadges();
         renderer.render(scene, camera);
         lastFrameAt = performance.now();
+        flFrameAt = lastFrameAt; // step 1/4: snapshot mirror + supervisors
+        ehFrameTick(lastFrameAt);
         frameErrStreak = 0;
         } catch (frameErr) {
           // Frame guard (2026-10-16, crash fix F2): before this, the loop
@@ -8585,8 +8891,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           // one frame; 120 consecutive thrown frames hand over to the
           // same recovery path as a lost context.
           frameErrStreak++;
-          if (!frameErrLogged) { frameErrLogged = true; try { console.error('Live Transit frame error:', frameErr); } catch (e2) {} }
-          if (frameErrStreak >= 120) recoverReload('frames');
+          if (!frameErrLogged) { frameErrLogged = true; errLog('render', 'frame error: ' + ((frameErr && frameErr.message) || String(frameErr)), frameErr); }
+          if (frameErrStreak >= 120) ladderReload('frames');
         }
       });
       // Frame watchdog (2026-10-16, crash fix F2): covers what the
@@ -8598,8 +8904,30 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         if (document.hidden || recovering) return;
         var gl = null;
         try { gl = renderer.getContext(); } catch (e) {}
-        if (gl && gl.isContextLost()) { recoverReload('watchdog'); return; }
-        if (lastFrameAt && performance.now() - lastFrameAt > 5000) recoverReload('watchdog');
+        if (gl && gl.isContextLost()) { ladderReload('watchdog'); return; }
+        if (lastFrameAt && performance.now() - lastFrameAt > 5000) { ladderReload('watchdog'); return; }
+        // Step 4a: stuck-interaction detector. Frames are fresh (the
+        // checks above passed) yet controls are disabled with no
+        // animation owning the camera, held for > 10 s: a path disabled
+        // the controls and never completed. Gentle reset (ladder L1) —
+        // the app simply responds again; no reload, no surface unless
+        // the ladder escalates.
+        var animOwner = tripFly || streetTween;
+        if (controls && controls.enabled === false && !animOwner) {
+          if (!ehStuckSince) ehStuckSince = performance.now();
+          else if (performance.now() - ehStuckSince > 10000) {
+            ehStuckSince = 0;
+            ladderFire('interaction', function () {
+              cancelTripFly();
+              cancelStreetTween();
+              controls.enabled = true;
+            });
+          }
+        } else {
+          ehStuckSince = 0;
+          if (ladderCounts.interaction > 0 && ladderLastFire.interaction &&
+              Date.now() - ladderLastFire.interaction > 60000) ladderCounts.interaction = 0;
+        }
       }, 2000);
       document.addEventListener('visibilitychange', function () {
         if (!document.hidden) lastFrameAt = performance.now();
