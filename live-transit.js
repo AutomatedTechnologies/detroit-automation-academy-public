@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261016-1457';
+  var STAMP = '20261016-1505';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -2890,7 +2890,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (tripTT || !R || !R.loadTimetable) return;
       return R.loadTimetable('ddot-timetable-S1000182.json?v=' + STAMP).then(function (tt) { tripTT = tt; });
     }).catch(function () { /* engine unavailable: times degrade to the named notes (S4) */ })
-      .then(function () { rideEngineLoading = false; if (rideWidget) rideWidget.refresh(); });
+      .then(function () { rideEngineLoading = false; if (rideWidget) rideWidget.refresh(); if (selectedStop) renderStopLive(); });
   }
 
   // Ride Along stop-times provider (the widget's setTimesProvider).
@@ -3112,6 +3112,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // People Mover stations (their pins stand on the elevated loop).
     stopHighlight.position.set(st.x, st.pm ? PM_DECK_Y + 4 : 20, st.z);
     stopHighlight.visible = true;
+    if (typeof ensureTripEngine === 'function') ensureTripEngine();
     renderStopLive();
     // Stop selection glides the camera (Phase 2 stop intent): frame the stop
     // at the safe-frame center. No follow — stops don't move. Skipped in
@@ -3130,8 +3131,126 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       glideTo(_sv.pos, _sv.tgt, 1100);
     }
   }
+  // Next arrivals at the selected stop (2026-10-16). The stop card's
+  // other live section lists vehicles on the serving routes with their
+  // ping ages — which tells a waiting rider nothing about when a bus
+  // reaches THIS stop. This section answers that question from the two
+  // sources the data supports, in the app's honesty order: a vehicle
+  // matched to a trip by the delay engine makes the row live (the trip's
+  // time at this stop — empirically substituted arrL2 when present,
+  // else scheduled arr — shifted by the vehicle's measured delay, the
+  // same formula rideTimesFor uses, so a bus carries one consistent ETA
+  // across surfaces); every other trip serving the stop today is a
+  // scheduled row. The timetable covers the DDOT segment only (S4):
+  // SMART, QLINE, and People Mover stops get the named boundary, never
+  // a fabricated time.
+  function computeStopArrivals(idx, nowMs) {
+    var out = { state: 'ready', rows: [] };
+    if (!tripTT || !tripRaptor || !tripRaptor.serviceFor) { out.state = 'loading'; return out; }
+    if (idx == null || idx < 0 || idx >= tripTT.nStops) { out.state = 'na'; return out; }
+    var dp = detroitParts(nowMs);
+    var dpPrev = detroitParts(nowMs - 86400000);
+    var svc = tripRaptor.serviceFor(tripTT, dp.ymd, dp.dow);
+    var prevSvc = tripRaptor.serviceFor(tripTT, dpPrev.ymd, dpPrev.dow);
+    if (svc < 0 && prevSvc < 0) { out.state = 'nosvc'; return out; }
+    var nowSec = dp.sec;
+    var pats = tripTT.stopPat[idx] || [];
+    var rows = [];
+    for (var q = 0; q < pats.length; q++) {
+      var pat = tripTT.patterns[pats[q][0]];
+      var pos = pats[q][1];
+      for (var ti = 0; ti < pat.trips.length; ti++) {
+        var t = pat.trips[ti];
+        var shift = 0;
+        if (t.s !== svc) { if (t.s !== prevSvc) continue; shift = -86400; }
+        var arr = t.arrL2 || t.arr;
+        var eta = arr[pos] + shift;
+        if (eta < nowSec - 30 || eta > nowSec + 3 * 3600) continue;
+        var dstate = (typeof tripDelayState !== 'undefined') ? tripDelayState.get(t) : null;
+        var isLive = !!(dstate && dstate.vehicleId && !dstate.disrupted);
+        if (isLive) {
+          eta += dstate.delaySec;
+          if (eta < nowSec - 30) continue;
+        }
+        var head = t.h || '';
+        if (!head && pat.stops && pat.stops.length) {
+          var term = stopData && stopData[pat.stops[pat.stops.length - 1]];
+          head = term ? (term.n || '') : '';
+        }
+        var routeRec = tripTT.routes ? tripTT.routes[pat.route] : null;
+        rows.push({ rid: routeRec ? routeRec.id : pat.route, head: head, eta: eta, live: isLive, bus: isLive ? dstate.vehicleId : null });
+      }
+    }
+    rows.sort(function (a, b) { return a.eta - b.eta; });
+    out.rows = rows.slice(0, 5);
+    return out;
+  }
+  function renderStopArrivals() {
+    var host = $('stop-arrivals'), list = $('stop-arrivals-list'), note = $('stop-arrivals-note');
+    if (!host || !list || !note) return;
+    if (!selectedStop) { host.hidden = true; return; }
+    host.hidden = false;
+    list.innerHTML = '';
+    note.hidden = true;
+    var idx = (stopData && selectedStop) ? stopData.indexOf(selectedStop) : -1;
+    if (selectedStop.pm) {
+      note.textContent = 'Arrival times are published for DDOT stops. The People Mover, SMART, and QLINE publish live positions only — see the live vehicles below.';
+      note.hidden = false;
+      return;
+    }
+    var res = computeStopArrivals(idx, Date.now());
+    if (res.state === 'loading') {
+      note.textContent = 'Arrival times are loading…';
+      note.hidden = false;
+      return;
+    }
+    if (res.state === 'na') {
+      note.textContent = 'Arrival times are published for DDOT stops. SMART and QLINE publish live positions only — see the live vehicles below.';
+      note.hidden = false;
+      return;
+    }
+    if (res.state === 'nosvc') {
+      note.textContent = 'No DDOT service is scheduled today.';
+      note.hidden = false;
+      return;
+    }
+    if (!res.rows.length) {
+      note.textContent = 'No more buses are scheduled at this stop today.';
+      note.hidden = false;
+      return;
+    }
+    var nowSec = detroitParts(Date.now()).sec;
+    var anyLive = false;
+    res.rows.forEach(function (r) {
+      if (r.live) anyLive = true;
+      var row = document.createElement('div');
+      row.className = 'stop-live-row';
+      var dot = document.createElement('i');
+      var rc = routeColors[r.rid];
+      dot.style.background = rc ? '#' + rc.getHexString() : '#F5F2EA';
+      row.appendChild(dot);
+      var b = document.createElement('b');
+      b.textContent = routeLabel(r.rid) + (r.head ? ' · ' + r.head : '');
+      row.appendChild(b);
+      var tag = document.createElement('span');
+      tag.className = 'arr-tag' + (r.live ? ' live' : '');
+      tag.textContent = r.live ? 'Live' : 'Scheduled';
+      row.appendChild(tag);
+      var t = document.createElement('span');
+      var dSec = r.eta - nowSec;
+      t.textContent = dSec < 45 ? 'now' : (dSec <= 5400 ? 'in ' + Math.round(dSec / 60) + 'm' : tripClock(r.eta));
+      t.title = 'Scheduled arrival ' + tripClock(r.eta) + (r.live ? ' — live estimate for bus ' + r.bus : '');
+      row.appendChild(t);
+      list.appendChild(row);
+    });
+    if (!anyLive) {
+      note.textContent = 'Scheduled times — a live estimate replaces a row when the bus on that trip reports.';
+      note.hidden = false;
+    }
+  }
   // Live arrivals on the selected stop's routes, refreshed on every poll.
   function renderStopLive() {
+    renderStopArrivals();
     var host = $('stop-live'), list = $('stop-live-list');
     if (!host || !list) return;
     renderStopSmartNote();
