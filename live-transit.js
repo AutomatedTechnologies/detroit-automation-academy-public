@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261015-2249';
+  var STAMP = '20261016-1352';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -3816,7 +3816,20 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     b.appendChild(sub);
     var legs = document.createElement('div');
     legs.className = 'trip-legs';
+    var clockSec = (typeof j.departSec === 'number') ? j.departSec : null;
     mergeWalkLegs(j.legs).forEach(function (l) {
+      if (l.type === 'bus' && clockSec !== null && typeof l.boardSec === 'number') {
+        var waitMin = Math.round((l.boardSec - clockSec) / 60);
+        if (waitMin >= 1) {
+          var wchip = document.createElement('span');
+          wchip.className = 'trip-leg-chip';
+          var wb = document.createElement('b');
+          wb.className = 'walk';
+          wb.textContent = 'wait ' + waitMin + 'm';
+          wchip.appendChild(wb);
+          legs.appendChild(wchip);
+        }
+      }
       var chip = document.createElement('span');
       chip.className = 'trip-leg-chip';
       if (l.type === 'bus') {
@@ -3833,6 +3846,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         chip.appendChild(w);
       }
       legs.appendChild(chip);
+      if (clockSec !== null) {
+        clockSec = (l.type === 'bus' && typeof l.alightSec === 'number')
+          ? l.alightSec : clockSec + (l.secs || 0);
+      }
     });
     b.appendChild(legs);
     b.addEventListener('click', function () {
