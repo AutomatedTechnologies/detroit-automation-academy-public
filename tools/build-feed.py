@@ -18,9 +18,12 @@ hand-maintained in the feed itself:
                  Live Transit Detroit / Notes).
 
 Run from the repository root:  python3 tools/build-feed.py
-It rewrites feed.xml in the repository root. The deploy workflow
-(.github/workflows/deploy-pages.yml) copies feed.xml into the Pages
-deployment. Re-run after publishing a new article so the feed picks it up.
+It rewrites feed.xml in the repository root and feed/index.html — a
+static HTML rendering of the same items at /feed/, for browsers whose
+XSLT support cannot render feed.xml through feed.xsl (current Chrome
+builds among them). The deploy workflow (.github/workflows/
+deploy-pages.yml) copies both into the Pages deployment. Re-run after
+publishing a new article so the feed picks it up.
 
 The feed also carries a channel <image>, declares feed.xsl (repository
 root, deployed alongside it) as its browser stylesheet through an
@@ -275,6 +278,156 @@ def render(items: list[dict]) -> str:
     return "\n".join(out)
 
 
+FEED_URL_ENC = "https%3A%2F%2Fwww.detroitautomationacademy.com%2Ffeed.xml"
+
+SUBSCRIBE_LINKS = [
+    ("Feedly", f"https://feedly.com/i/subscription/feed/{FEED_URL_ENC}"),
+    ("Inoreader", f"https://www.inoreader.com/?add_feed={FEED_URL_ENC}"),
+    ("NewsBlur", f"https://newsblur.com/?url={FEED_URL_ENC}"),
+]
+
+
+def render_html(items: list[dict]) -> str:
+    """Static HTML twin of the feed at /feed/: the same items, rendered
+    with the site's own shell and styles so every browser shows the
+    designed page (feed.xsl covers XSLT-capable browsers at /feed.xml
+    itself). Generated, never hand-edited — re-run this script."""
+    cards = []
+    for it in items:
+        d = it["date"]
+        cards.append(
+            '      <article class="feedp-card">\n'
+            f'        <p class="feedp-meta"><a class="feedp-chip" '
+            f'href="{SECTION_HUBS.get(it["category"], "/")}">'
+            f'{html.escape(it["category"])}</a> '
+            f'<time datetime="{d.date().isoformat()}">'
+            f"{d.strftime('%d %b %Y')}</time></p>\n"
+            f'        <h2><a href="{it["link"]}">'
+            f'{html.escape(it["title"])}</a></h2>\n'
+            f'        <p>{html.escape(it["description"])}</p>\n'
+            f'        <p><a class="feedp-read" href="{it["link"]}">'
+            "Read on the site</a></p>\n"
+            "      </article>"
+        )
+    subs = "\n          ".join(
+        f'<a class="feedp-btn" href="{url}">{name}</a>' for name, url in SUBSCRIBE_LINKS
+    )
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>RSS feed — Detroit Automation Academy</title>
+<meta name="description" content="Every Signal edition, Live Transit Detroit installment, and note from the Detroit Automation Academy, as it publishes — subscribe in any feed reader, or read the latest here.">
+<link rel="icon" type="image/webp" href="/assets/logo.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css?v=20261010-2130">
+<link rel="canonical" href="{BASE}/feed/">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Detroit Automation Academy">
+<meta property="og:title" content="RSS feed — Detroit Automation Academy">
+<meta property="og:description" content="Every edition and installment, as it publishes. Subscribe in any feed reader, or read the latest here.">
+<meta property="og:url" content="{BASE}/feed/">
+<meta property="og:image" content="{BASE}/assets/logo.webp">
+<meta property="og:image:alt" content="Detroit Automation Academy — Forge D logo">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="RSS feed — Detroit Automation Academy">
+<meta name="twitter:description" content="Every edition and installment, as it publishes. Subscribe in any feed reader, or read the latest here.">
+<meta name="twitter:image" content="{BASE}/assets/logo.webp">
+<link rel="alternate" type="application/rss+xml" title="Detroit Automation Academy — RSS feed" href="/feed.xml">
+<style>
+  .feedp-hero {{ padding: 72px 0 8px; text-align: center; }}
+  .feedp-sub {{
+    max-width: 760px; margin: 26px auto 0; text-align: left;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 20px 22px;
+  }}
+  .feedp-sub h2 {{ margin-top: 0; font-size: 1.15rem; }}
+  .feedp-btns {{ display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }}
+  .feedp-btn {{
+    font: inherit; font-weight: 600; text-decoration: none;
+    background: var(--midnight-2); color: var(--paper);
+    border: 1px solid var(--line); border-radius: 999px; padding: 6px 16px;
+  }}
+  .feedp-btn:hover {{ border-color: var(--amber); }}
+  .feedp-url {{
+    display: block; overflow-x: auto; white-space: nowrap;
+    background: var(--midnight); border: 1px solid var(--line);
+    border-radius: 8px; padding: 10px 12px; color: var(--amber);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: .92rem;
+  }}
+  .feedp-list {{
+    max-width: 760px; margin: 34px auto 0; padding-bottom: 72px;
+    display: grid; gap: 14px;
+  }}
+  .feedp-card {{
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 20px 22px;
+  }}
+  .feedp-card h2 {{ margin: 8px 0; font-size: 1.3rem; }}
+  .feedp-card h2 a {{ color: var(--paper); text-decoration: none; }}
+  .feedp-card h2 a:hover {{ color: var(--amber); }}
+  .feedp-meta {{ color: var(--concrete); margin: 0; font-size: var(--step--1); }}
+  .feedp-chip {{
+    color: var(--paper); text-decoration: none; font-weight: 600;
+    border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px;
+    margin-right: 8px;
+  }}
+  .feedp-chip:hover {{ border-color: var(--amber); }}
+  .feedp-read {{ color: var(--amber); font-weight: 600; text-decoration: none; }}
+  .feedp-read:hover {{ text-decoration: underline; }}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#top">Skip to main content</a>
+
+<div id="daa-nav"></div>
+<script src="/nav.js?v=20261016-1340"></script>
+
+<main id="top">
+  <section class="wrap feedp-hero">
+    <p class="eyebrow">Detroit Automation Academy</p>
+    <h1>RSS feed</h1>
+    <p class="lede" style="margin-bottom:0">Every Signal edition, Live Transit Detroit installment, and note — as it publishes. Subscribe in your feed reader, or read the latest below.</p>
+    <div class="feedp-sub">
+      <h2>Subscribe</h2>
+      <p style="margin:0">Add this feed in your reader:</p>
+      <div class="feedp-btns">
+          {subs}
+          <a class="feedp-btn" href="/feed.xml">Open the raw feed (XML)</a>
+      </div>
+      <code class="feedp-url">{BASE}/feed.xml</code>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="feedp-list">
+{chr(10).join(cards)}
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <img src="/assets/logo.webp" alt="" class="brand-mark">
+      <span>Detroit Automation Academy</span>
+    </div>
+    <p class="footer-line">Built without funding. Finished on principle.</p>
+    <p class="footer-line"><a href="/feed/">RSS feed</a> — every edition and installment, as it publishes.</p>
+    <p class="footer-fine">© 2026 Detroit Automation Academy · Detroit, Michigan</p>
+  </div>
+</footer>
+
+</body>
+</html>
+"""
+
+
 def main() -> int:
     items, warnings = collect_items()
     for w in warnings:
@@ -288,6 +441,10 @@ def main() -> int:
         f"({items[0]['title']}), oldest {items[-1]['date'].date()} "
         f"({items[-1]['title']})"
     )
+    feed_dir = ROOT / "feed"
+    feed_dir.mkdir(exist_ok=True)
+    (feed_dir / "index.html").write_text(render_html(items), encoding="utf-8")
+    print(f"feed/index.html written: {len(items)} cards")
     return 0
 
 
