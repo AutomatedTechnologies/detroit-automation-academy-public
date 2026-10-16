@@ -102,10 +102,33 @@ function serviceFor(tt, ymd, dow) {
 
 var MAX_WALK_SECS = 1800; // 30 min cumulative walk per round: transfers and
 // last-mile walks are minutes; anything longer is not a transit itinerary.
+
+// Cooperative compute budget (2026-10-16, error-handling step 3;
+// architectural review §4.3). plan() is bounded by construction
+// (K_ROUNDS, the reconstruction guard, the walk cap) but was unbudgeted:
+// its worst case on a phone CPU is uninterruptible mid-call, on the main
+// thread, inside the rider's tap or the 60 s poll. Callers may pass
+// opts.budgetMs (750 user-initiated, 250 background); plan() then checks
+// the clock at round boundaries and, via planTick(), at coarse intervals
+// inside the trip scan and the walk relaxation, and on exhaustion
+// returns { journeys: [], meta: { reason: 'budget' } } — an explicit
+// result, never a hang. Without opts, behavior is exactly as before.
+var BUDGET_HIT = { budgetSentinel: true };
+var planDeadline = 0; // performance.now() deadline; 0 = unbudgeted
+var planTickN = 0;
+function planTick() {
+  if (!planDeadline) return;
+  if ((++planTickN & 511) === 0 && performance.now() > planDeadline) throw BUDGET_HIT;
+}
+function planClockCheck() {
+  if (planDeadline && performance.now() > planDeadline) throw BUDGET_HIT;
+}
+
 function relaxWalk(tt, arr, wpar, wsec, seeds) {
   var improved = new Set();
   var q = seeds.slice(), inQ = new Set(seeds);
   while (q.length) {
+    planTick();
     var s = q.shift(); inQ.delete(s);
     if (wsec[s] >= MAX_WALK_SECS) continue;
     var edges = tt.adj[s];
@@ -132,7 +155,20 @@ function fmtClock(sec) {
   return h12 + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
 }
 
-export function plan(tt, fromSeeds, toIdx, when) {
+export function plan(tt, fromSeeds, toIdx, when, opts) {
+  planDeadline = (opts && opts.budgetMs) ? performance.now() + opts.budgetMs : 0;
+  planTickN = 0;
+  try {
+    return planImpl(tt, fromSeeds, toIdx, when);
+  } catch (e) {
+    if (e === BUDGET_HIT) return { journeys: [], meta: { reason: 'budget', when: when } };
+    throw e;
+  } finally {
+    planDeadline = 0;
+  }
+}
+
+function planImpl(tt, fromSeeds, toIdx, when) {
   // fromSeeds: [{stop, walk}] — one tapped stop, or several nearby stops when
   // the origin is the rider's location. A virtual walk leg is prepended for
   // location origins so the journey always starts at the rider.
@@ -199,6 +235,7 @@ export function plan(tt, fromSeeds, toIdx, when) {
   var markedPrev = imp0;
 
   for (var k = 1; k <= K_ROUNDS; k++) {
+    planClockCheck(); // budget: round boundary
     var prevArr = arrR[k - 1];
     var arr = Float64Array.from(prevArr);
     var wpar = new Array(nS).fill(null);
@@ -212,6 +249,7 @@ export function plan(tt, fromSeeds, toIdx, when) {
         var pat = tt.patterns[pi];
         var trips = pat.trips;
         for (var ti = 0; ti < trips.length; ti++) {
+          planTick(); // budget: coarse sampling inside the trip scan
           var t = trips[ti];
           // A previous-service-day trip runs into the query day only
           // past midnight: feed times are service-day seconds, so map
@@ -226,6 +264,7 @@ export function plan(tt, fromSeeds, toIdx, when) {
           }
           if (depA(t, pos) + shift < prevArr[p]) continue; // cannot catch
           for (var j = pos + 1; j < pat.stops.length; j++) {
+            planTick(); // budget: coarse sampling inside the stop scan
             var s = pat.stops[j];
             var aA = arrA(t, j) + shift;
             if (aA < arr[s]) {
