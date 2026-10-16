@@ -99,26 +99,26 @@
         </dl>
       </div>
 
-      <h3>Example response <span style="color:#9AA0A6;font-weight:400;font-size:.85rem;">(real response, 2026-10-15; trimmed to 1 of 3 vehicles)</span></h3>
+      <h3>Example response <span style="color:#9AA0A6;font-weight:400;font-size:.85rem;">(real response, 2026-10-15; trimmed to 1 of 4 vehicles)</span></h3>
 <pre class="code">{
-  "generated_at": "2026-10-15T19:52:23.113Z",
-  "count": 3,
+  "generated_at": "2026-10-16T00:00:29.484Z",
+  "count": 4,
   "vehicles": [
     {
       "agency": "qline",
       "route_id": "QLINE",
       "vehicle_id": "287",
-      "lat": 42.34115982055664,
-      "lon": -83.05355072021484,
-      "bearing": 336,
+      "lat": 42.33913040161133,
+      "lon": -83.05245971679688,
+      "bearing": 154,
       "speed_mph": null,
-      "updated_at": "2026-10-15T19:51:54.000Z"
+      "updated_at": "2026-10-15T23:59:59.000Z"
     }
   ],
   "sources": {
-    "ddot":  { "ok": false, "at": "2026-10-15T19:52:23.113Z", "reason": "DDOT_BUSTIME_KEY secret not configured", "configured": false },
-    "smart": { "ok": false, "removed": true, "at": "2026-10-15T19:52:23.113Z", "reason": "SMART removed from Live Transit Detroit 2026-10-15" },
-    "qline": { "ok": true,  "at": "2026-10-15T19:52:23.113Z", "vehicles": 3 }
+    "ddot":  { "ok": true, "at": "2026-10-16T00:00:29.484Z", "vehicles": 0, "batches_ok": 4, "batches_failed": 0 },
+    "smart": { "ok": true, "at": "2026-10-16T00:00:29.484Z", "vehicles": 141 },
+    "qline": { "ok": true, "at": "2026-10-16T00:00:29.484Z", "vehicles": 4 }
   }
 }</pre>
 
@@ -129,7 +129,7 @@
           <tr><td>generated_at</td><td>string</td><td>ISO 8601 UTC timestamp of when the build workflow generated this file. The file is only republished when the data changes (30-minute heartbeat aside), so this is the freshness clock for everything in it.</td></tr>
           <tr><td>count</td><td>integer</td><td>Number of vehicle objects in <code>vehicles</code>.</td></tr>
           <tr><td>vehicles</td><td>array</td><td>Live vehicle snapshots (fields below).</td></tr>
-          <tr><td>sources</td><td>object</td><td>Per-agency feed status, keyed <code>ddot</code>, <code>smart</code>, <code>qline</code>: <code>ok</code>, <code>at</code>, and either <code>vehicles</code> (a count) or a <code>reason</code>. Two states are named explicitly: <code>sources.ddot</code> carries <code>"configured": false</code> with a reason when the build workflow lacks the upstream DDOT key — DDOT vehicles are then absent while other agencies still publish; <code>sources.smart</code> carries <code>"removed": true</code> — SMART was removed from Live Transit Detroit on 2026-10-15 and is never polled.</td></tr>
+          <tr><td>sources</td><td>object</td><td>Per-agency feed status, keyed <code>ddot</code>, <code>smart</code>, <code>qline</code>: <code>ok</code>, <code>at</code>, and either <code>vehicles</code> (a count) or a <code>reason</code>. Two states are named explicitly: <code>sources.ddot</code> carries <code>"configured": false</code> with a reason when the build workflow lacks the upstream DDOT key — DDOT vehicles are then absent while other agencies still publish; <code>sources.smart</code> reports the status of the SMART display leg built from the Swiftly GTFS-Realtime feed: SMART vehicle positions are displayed in the Live Transit Detroit application only and are never part of this file's <code>vehicles</code> array or of the public JSON contract — the <code>vehicles</code> count under <code>sources.smart</code> counts positions published to the application's display payload, not records in this file.</td></tr>
         </tbody>
       </table>
 
