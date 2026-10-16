@@ -1,4 +1,4 @@
-/* Ride Along widget — upcoming stops and intersections from a bus rider's perspective.
+/* Ride Along widget — upcoming stops from a bus rider's perspective.
  *
  * Data contracts (matches live-transit.js):
  *   routes: [{ id, name, color, paths: [[[x, z], ...], ...] }]
@@ -432,15 +432,11 @@
     }
     body.appendChild(list);
 
-    // Intersections ahead.
-    if (intersections.length) {
-      body.appendChild(el('h4', 'ra-sub', 'Intersections ahead'));
-      var xl = el('ul', 'ra-xlist');
-      intersections.forEach(function (x) {
-        xl.appendChild(el('li', 'ra-x', x.streets.join(' & ')));
-      });
-      body.appendChild(xl);
-    }
+    // No separate intersections list (removed 2026-10-16): it was
+    // derived from the upcoming stops' own names (upcomingIntersections
+    // reads streetsFromStopName over the same rows), so it repeated the
+    // stops list verbatim as street pairs. Every stop row above already
+    // carries its full intersection name.
 
     if (tp && tp.note) body.appendChild(el('p', 'ra-note', tp.note));
 
