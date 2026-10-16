@@ -22,6 +22,13 @@ It rewrites feed.xml in the repository root. The deploy workflow
 (.github/workflows/deploy-pages.yml) copies feed.xml into the Pages
 deployment. Re-run after publishing a new article so the feed picks it up.
 
+The feed also carries a channel <image>, declares feed.xsl (repository
+root, deployed alongside it) as its browser stylesheet through an
+xml-stylesheet processing instruction, and gives every item a
+<content:encoded> body — the description plus links back to the article
+and its section hub. Feed readers receive the raw RSS XML as before; the
+stylesheet only changes how the feed renders when opened in a browser.
+
 Known source defects this script tolerates (found 2026-10-16):
   * sitemap.xml lists /live-transit-detroit/shut-down-by-the-meter/ but no
     such page exists in the repository (the piece lives under /signal/).
@@ -146,6 +153,36 @@ def category_for(url: str) -> str:
     return "The Signal"
 
 
+SECTION_HUBS = {
+    "The Signal": "/signal/",
+    "Detroit 2126": "/signal/",
+    "Live Transit Detroit": "/live-transit-detroit/",
+    "Notes": "/notes/",
+}
+
+
+def hub_url(category: str) -> str:
+    """Absolute URL of the section hub a category belongs to."""
+    return BASE + SECTION_HUBS.get(category, "/")
+
+
+def content_html(it: dict) -> str:
+    """HTML body for an item's <content:encoded>: the description plus a
+    paragraph linking back to the article and to its section hub. The
+    description is plain text, so it is HTML-escaped here; the assembled
+    markup never contains a raw "]]>", which keeps the CDATA wrapper in
+    render() safe."""
+    link = it["link"]
+    hub = hub_url(it["category"])
+    category = html.escape(it["category"])
+    description = html.escape(it["description"])
+    return (
+        f"<p>{description}</p>"
+        f'<p><a href="{link}">Read on the site</a>'
+        f' · More from <a href="{hub}">{category}</a>.</p>'
+    )
+
+
 def collect_items() -> tuple[list[dict], list[str]]:
     sitemap = (ROOT / "sitemap.xml").read_text(encoding="utf-8")
     urls = [
@@ -199,7 +236,9 @@ def render(items: list[dict]) -> str:
     newest = items[0]["date"]
     out = [
         '<?xml version="1.0" encoding="UTF-8"?>',
-        '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
+        '<?xml-stylesheet type="text/xsl" href="/feed.xsl"?>',
+        '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"'
+        ' xmlns:content="http://purl.org/rss/1.0/modules/content/">',
         "  <channel>",
         "    <title>Detroit Automation Academy</title>",
         f"    <link>{BASE}/</link>",
@@ -210,6 +249,13 @@ def render(items: list[dict]) -> str:
         "series, and technical notes, as they publish.</description>",
         "    <language>en-us</language>",
         f"    <lastBuildDate>{format_datetime(newest)}</lastBuildDate>",
+        "    <image>",
+        f"      <url>{BASE}/assets/logo.webp</url>",
+        "      <title>Detroit Automation Academy</title>",
+        f"      <link>{BASE}/</link>",
+        "      <width>144</width>",
+        "      <height>144</height>",
+        "    </image>",
     ]
     for it in items:
         out += [
@@ -220,6 +266,9 @@ def render(items: list[dict]) -> str:
             f"      <pubDate>{format_datetime(it['date'])}</pubDate>",
             f"      <category>{escape(it['category'])}</category>",
             f"      <description>{escape(it['description'])}</description>",
+            "      <content:encoded><![CDATA["
+            f"{content_html(it)}"
+            "]]></content:encoded>",
             "    </item>",
         ]
     out += ["  </channel>", "</rss>", ""]
