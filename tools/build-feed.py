@@ -312,32 +312,53 @@ def render_html(items: list[dict]) -> str:
     subs = "\n          ".join(
         f'<a class="feedp-btn" href="{url}">{name}</a>' for name, url in SUBSCRIBE_LINKS
     )
+    viewport = "width=device-width, initial-scale=1.0, viewport-fit=cover"
+    meta_desc = (
+        "Every Signal edition, Live Transit Detroit installment, and note "
+        "from the Detroit Automation Academy, as it publishes \u2014 subscribe "
+        "in any feed reader, or read the latest here."
+    )
+    og_desc = (
+        "Every edition and installment, as it publishes. Subscribe in any "
+        "feed reader, or read the latest here."
+    )
+    lede = (
+        "Every Signal edition, Live Transit Detroit installment, and "
+        "note \u2014 as it publishes. Subscribe in your feed reader, or read "
+        "the latest below."
+    )
+    fonts = (
+        "https://fonts.googleapis.com/css2?family=Space+Grotesk:"
+        "wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+    )
+    feed_title = "Detroit Automation Academy \u2014 RSS feed"
+    foot = "every edition and installment, as it publishes."
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="{viewport}">
 <title>RSS feed — Detroit Automation Academy</title>
-<meta name="description" content="Every Signal edition, Live Transit Detroit installment, and note from the Detroit Automation Academy, as it publishes — subscribe in any feed reader, or read the latest here.">
+<meta name="description" content="{meta_desc}">
 <link rel="icon" type="image/webp" href="/assets/logo.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="{fonts}" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css?v=20261010-2130">
 <link rel="canonical" href="{BASE}/feed/">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Detroit Automation Academy">
 <meta property="og:title" content="RSS feed — Detroit Automation Academy">
-<meta property="og:description" content="Every edition and installment, as it publishes. Subscribe in any feed reader, or read the latest here.">
+<meta property="og:description" content="{og_desc}">
 <meta property="og:url" content="{BASE}/feed/">
 <meta property="og:image" content="{BASE}/assets/logo.webp">
 <meta property="og:image:alt" content="Detroit Automation Academy — Forge D logo">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="RSS feed — Detroit Automation Academy">
-<meta name="twitter:description" content="Every edition and installment, as it publishes. Subscribe in any feed reader, or read the latest here.">
+<meta name="twitter:description" content="{og_desc}">
 <meta name="twitter:image" content="{BASE}/assets/logo.webp">
-<link rel="alternate" type="application/rss+xml" title="Detroit Automation Academy — RSS feed" href="/feed.xml">
+<link rel="alternate" type="application/rss+xml" title="{feed_title}" href="/feed.xml">
 <style>
   .feedp-hero {{ padding: 72px 0 8px; text-align: center; }}
   .feedp-sub {{
@@ -392,7 +413,7 @@ def render_html(items: list[dict]) -> str:
   <section class="wrap feedp-hero">
     <p class="eyebrow">Detroit Automation Academy</p>
     <h1>RSS feed</h1>
-    <p class="lede" style="margin-bottom:0">Every Signal edition, Live Transit Detroit installment, and note — as it publishes. Subscribe in your feed reader, or read the latest below.</p>
+    <p class="lede" style="margin-bottom:0">{lede}</p>
     <div class="feedp-sub">
       <h2>Subscribe</h2>
       <p style="margin:0">Add this feed in your reader:</p>
@@ -418,7 +439,7 @@ def render_html(items: list[dict]) -> str:
       <span>Detroit Automation Academy</span>
     </div>
     <p class="footer-line">Built without funding. Finished on principle.</p>
-    <p class="footer-line"><a href="/feed/">RSS feed</a> — every edition and installment, as it publishes.</p>
+    <p class="footer-line"><a href="/feed/">RSS feed</a> — {foot}</p>
     <p class="footer-fine">© 2026 Detroit Automation Academy · Detroit, Michigan</p>
   </div>
 </footer>
