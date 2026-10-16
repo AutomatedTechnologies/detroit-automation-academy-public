@@ -160,6 +160,16 @@
 }
 
 .ra-leave {
+  /* Sticky at the tile's bottom edge (2026-10-16): the rider's exit
+     control must be reachable without scrolling — it is the last
+     element of the ride body, and position:sticky;bottom:0 pins it
+     to whichever scrollport holds the tile (the card on mobile, the
+     wrap on desktop) while the stops list scrolls beneath it. The
+     opaque background keeps rows from showing through. */
+  position: sticky;
+  bottom: 0;
+  margin-top: 10px;
+  background: #0d1218;
   width: 100%;
   padding: 10px;
   font-size: 14px;
