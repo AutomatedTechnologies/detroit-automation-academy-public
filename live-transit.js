@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261016-1505';
+  var STAMP = '20261016-1519';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -238,6 +238,45 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     g.setIndex(idx);
     return g;
+  }
+
+  // Merge position-only ribbon geometries into one geometry (crash
+  // resilience, 2026-10-16): the route builder used to add four meshes
+  // per PATH — 206 paths x 4 = ~824 draw calls at boot, sustained GPU
+  // pressure in an all-day mobile tab. Merging each route's paths per
+  // layer cuts that to at most four meshes per ROUTE (~332) with
+  // identical vertices: nothing downstream addresses a per-path mesh
+  // (picking uses the instanced stops and vehicle bodies; dimming and
+  // street fade act on per-route materials; toggles act on the route
+  // group), so the merge is render-equivalent. Normals merge when every
+  // input carries them (skirts); the deck computes its normals after
+  // the merge, exactly as it did per path. Inputs are disposed.
+  function mergeGeoms(geoms) {
+    if (geoms.length === 1) return geoms[0];
+    var total = 0, idxTotal = 0, withNormals = geoms.length > 0;
+    geoms.forEach(function (g) {
+      total += g.attributes.position.count;
+      idxTotal += g.index.count;
+      if (!g.attributes.normal) withNormals = false;
+    });
+    var pos = new Float32Array(total * 3);
+    var nor = withNormals ? new Float32Array(total * 3) : null;
+    var idx = new Uint32Array(idxTotal);
+    var vo = 0, io = 0;
+    geoms.forEach(function (g) {
+      pos.set(g.attributes.position.array, vo * 3);
+      if (nor) nor.set(g.attributes.normal.array, vo * 3);
+      var gi = g.index.array;
+      for (var i = 0; i < gi.length; i++) idx[io + i] = gi[i] + vo;
+      vo += g.attributes.position.count;
+      io += gi.length;
+      g.dispose();
+    });
+    var out = new THREE.BufferGeometry();
+    out.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    if (nor) out.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+    out.setIndex(new THREE.BufferAttribute(idx, 1));
+    return out;
   }
 
   // Vertical skirts under an elevated ribbon: turns a flat strip into a solid
@@ -8230,16 +8269,23 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         });
         streetGlowMats.push(glowMat);
         var longest = null;
+        var glowGeos = [], caseGeos = [], deckGeos = [], skirtGeos = [];
         route.paths.forEach(function (path) {
           if (path.length < 2) return;
-          grp.add(new THREE.Mesh(ribbonGeometry(path, 230, yGlow), glowMat));
-          grp.add(new THREE.Mesh(ribbonGeometry(path, 95, yCase), casingMat));
-          var deckGeo = ribbonGeometry(path, 72, yDeck);
-          deckGeo.computeVertexNormals();
-          grp.add(new THREE.Mesh(deckGeo, deckMat));
-          grp.add(new THREE.Mesh(skirtGeometry(path, 72, yDeck), skirtMat));
+          glowGeos.push(ribbonGeometry(path, 230, yGlow));
+          caseGeos.push(ribbonGeometry(path, 95, yCase));
+          deckGeos.push(ribbonGeometry(path, 72, yDeck));
+          skirtGeos.push(skirtGeometry(path, 72, yDeck));
           if (!longest || path.length > longest.length) longest = path;
         });
+        if (glowGeos.length) grp.add(new THREE.Mesh(mergeGeoms(glowGeos), glowMat));
+        if (caseGeos.length) grp.add(new THREE.Mesh(mergeGeoms(caseGeos), casingMat));
+        if (deckGeos.length) {
+          var deckGeo = mergeGeoms(deckGeos);
+          deckGeo.computeVertexNormals();
+          grp.add(new THREE.Mesh(deckGeo, deckMat));
+        }
+        if (skirtGeos.length) grp.add(new THREE.Mesh(mergeGeoms(skirtGeos), skirtMat));
         if (longest) {
           var mid = longest[Math.floor(longest.length / 2)];
           // Route display name: "name - number" unless they're identical (QLINE).
