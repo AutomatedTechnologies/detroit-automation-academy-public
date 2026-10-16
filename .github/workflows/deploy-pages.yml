@@ -94,6 +94,11 @@ jobs:
             cp -r blog deployment/ || echo "blog stubs copy failed"
           fi
 
+          # Copy Find redirect (/find/ -> /find.html)
+          if [ -d "find" ]; then
+            cp -r find deployment/ || echo "find copy failed"
+          fi
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
