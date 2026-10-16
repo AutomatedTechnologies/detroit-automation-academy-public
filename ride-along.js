@@ -164,6 +164,7 @@
     this.flatById = {};
     this.currentVehicleId = null;
     this.timesProvider = null;
+    this._bodySig = null;
     this.render();
   }
 
@@ -310,6 +311,7 @@
   }
 
   RideAlong.prototype.render = function () {
+    this._bodySig = null;
     this.mount.innerHTML = '';
     var wrap = el('div', 'ra-wrap');
     wrap.appendChild(el('h3', 'ra-title', 'Ride Along'));
@@ -364,19 +366,44 @@
     picker.appendChild(sel);
   };
 
+  // Swap a freshly built ride body into #ra-body — but only when the
+  // content actually changed. refresh() runs on every poll and on the
+  // host's 5 s tracker push; rebuilding unconditionally destroyed the
+  // DOM under the rider's finger: scroll gestures died mid-drag when
+  // their target nodes were removed, and the card's scroll position
+  // reset on every rebuild (field report 2026-10-16, "Ride along tile
+  // scroll broken"). An unchanged content signature leaves the DOM,
+  // the scroll offset, and any in-flight gesture untouched; a changed
+  // one swaps with the card's scrollTop preserved (the browser clamps
+  // it to the new content height).
+  RideAlong.prototype._commitBody = function (host, frag) {
+    var sig = frag.textContent;
+    if (this._bodySig === sig && host.childNodes.length) return;
+    this._bodySig = sig;
+    var card = null;
+    if (this.mount && this.mount.closest) {
+      try { card = this.mount.closest('.bus-card'); } catch (e) {}
+    }
+    var prevTop = card ? card.scrollTop : null;
+    host.innerHTML = '';
+    while (frag.childNodes.length) host.appendChild(frag.childNodes[0]);
+    if (card && prevTop != null) card.scrollTop = prevTop;
+  };
+
   RideAlong.prototype.renderEmpty = function (v) {
     var body = this.mount.querySelector('#ra-body');
     if (!body) return;
-    body.innerHTML = '';
-    body.appendChild(el('p', 'ra-empty',
+    var frag = document.createElement('div');
+    frag.appendChild(el('p', 'ra-empty',
       'Bus ' + v.vehicle_id + ' is on route ' + (this.routeById[v.route_id] ? routeLabel(this.routeById[v.route_id]) : v.route_id) +
       ', but the route path is not loaded yet.'));
+    this._commitBody(body, frag);
   };
 
   RideAlong.prototype.renderRide = function (v, route, upcoming, intersections, direction, prevStop, busArcLen, tp) {
-    var body = this.mount.querySelector('#ra-body');
-    if (!body) return;
-    body.innerHTML = '';
+    var host = this.mount.querySelector('#ra-body');
+    if (!host) return;
+    var body = document.createElement('div');
 
     var head = el('div', 'ra-head');
     var dot = el('i', 'ra-dot');
@@ -398,6 +425,7 @@
 
     if (!upcoming.length) {
       body.appendChild(el('p', 'ra-empty', 'No further stops ahead on this run.'));
+      this._commitBody(host, body);
       return;
     }
 
@@ -444,6 +472,7 @@
     var self = this;
     leave.addEventListener('click', function () { self.alight(); });
     body.appendChild(leave);
+    this._commitBody(host, body);
   };
 
   global.RideAlong = {
