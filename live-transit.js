@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261016-1433';
+  var STAMP = '20261016-1457';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -71,6 +71,42 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   container.appendChild(renderer.domElement);
+
+  // Crash recovery (2026-10-16, post-incident F1): iOS WebKit kills the
+  // GPU process under sustained memory pressure; the canvas then
+  // composites black indefinitely and, before this block existed,
+  // nothing in the app detected it, recovered, or told the user. On
+  // context loss: notify and reload once. The reload is guarded by a
+  // sessionStorage timestamp — a second loss within 30 s of a recovery
+  // reload shows the standing fallback surface with manual instructions
+  // instead of looping. If the platform restores the context before the
+  // reload fires, the reload stands down.
+  var recovering = false;
+  function recoverReload(reason) {
+    if (recovering) return;
+    recovering = true;
+    var last = 0;
+    try { last = +(sessionStorage.getItem('fl-recover-at') || 0); } catch (e) {}
+    if (Date.now() - last < 30000) {
+      fail('The map display stopped and could not be restored automatically. Close this tab and reopen the page to continue.');
+      return;
+    }
+    try { sessionStorage.setItem('fl-recover-at', '' + Date.now()); } catch (e) {}
+    showToast('Display interrupted — reloading the map…', true);
+    setTimeout(function () {
+      var gl = null;
+      try { gl = renderer.getContext(); } catch (e) {}
+      if (gl && !gl.isContextLost()) { recovering = false; return; }
+      location.reload();
+    }, 600);
+  }
+  renderer.domElement.addEventListener('webglcontextlost', function (e) {
+    e.preventDefault(); // lets the platform fire contextrestored
+    recoverReload('context');
+  }, false);
+  renderer.domElement.addEventListener('webglcontextrestored', function () {
+    try { sessionStorage.removeItem('fl-recover-at'); } catch (e) {}
+  }, false);
 
   var scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0c1116);
@@ -677,9 +713,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // Freeway/arterial names under 20 km, local names under 6 km, deduped by
   // name within view, nearest 14 win.
   var streetLabelCache = {};
+  var streetLabelOrder = [];
+  var STREET_LABEL_CACHE_MAX = 256;
   function streetLabelTexture(name) {
     var t = streetLabelCache[name];
-    if (t) return t;
+    if (t) {
+      var ti = streetLabelOrder.indexOf(name);
+      if (ti >= 0) { streetLabelOrder.splice(ti, 1); streetLabelOrder.push(name); }
+      return t;
+    }
     var c = document.createElement('canvas');
     var mc = c.getContext('2d');
     mc.font = '600 36px system-ui, -apple-system, sans-serif';
@@ -699,6 +741,20 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     t.anisotropy = 4;
     var o = { tex: t, aspect: c.width / c.height };
     streetLabelCache[name] = o;
+    streetLabelOrder.push(name);
+    // LRU eviction (2026-10-16, crash fix F3): this cache previously kept
+    // every canvas texture it created for the life of the page — up to
+    // 6,640 distinct street names — a monotonic GPU-memory growth vector
+    // in long-lived tabs. Evicted textures are disposed; a pooled sprite
+    // still referencing one re-uploads it on next render.
+    while (streetLabelOrder.length > STREET_LABEL_CACHE_MAX) {
+      var evictName = streetLabelOrder.shift();
+      var evictEntry = streetLabelCache[evictName];
+      if (evictEntry) {
+        if (evictEntry.tex) evictEntry.tex.dispose();
+        delete streetLabelCache[evictName];
+      }
+    }
     return o;
   }
   var streetLabelPool = [];
@@ -1419,9 +1475,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // Stop name labels: the "individual stops" legibility layer. Only in
   // street view, nearest few within ~1 km of the target.
   var stopLabelCache = {};
+  var stopLabelOrder = [];
+  var STOP_LABEL_CACHE_MAX = 512;
   function stopLabelTex(name) {
     var hit = stopLabelCache[name];
-    if (hit) return hit;
+    if (hit) {
+      var hi = stopLabelOrder.indexOf(name);
+      if (hi >= 0) { stopLabelOrder.splice(hi, 1); stopLabelOrder.push(name); }
+      return hit;
+    }
     var c = document.createElement('canvas');
     var x = c.getContext('2d');
     x.font = '500 30px system-ui, -apple-system, sans-serif';
@@ -1439,6 +1501,17 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     t.anisotropy = 4;
     var o = { tex: t, aspect: c.width / c.height };
     stopLabelCache[name] = o;
+    stopLabelOrder.push(name);
+    // LRU eviction (2026-10-16, crash fix F3): same unbounded-retention
+    // defect as the street label cache; see streetLabelTexture.
+    while (stopLabelOrder.length > STOP_LABEL_CACHE_MAX) {
+      var evictStop = stopLabelOrder.shift();
+      var evictStopEntry = stopLabelCache[evictStop];
+      if (evictStopEntry) {
+        if (evictStopEntry.tex) evictStopEntry.tex.dispose();
+        delete stopLabelCache[evictStop];
+      }
+    }
     return o;
   }
   var stopLabelPool = [];
@@ -8155,7 +8228,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         try { localStorage.setItem('fl-speedmap-v1', JSON.stringify(localSegs)); } catch (err) {}
       });
       var lastBusMode = null;
+      var lastFrameAt = performance.now();
+      var frameErrStreak = 0;
+      var frameErrLogged = false;
       renderer.setAnimationLoop(function () {
+        try {
         controls.update();
         // Camera floor: the zoom-to-cursor dolly walks the lens down the
         // pointer ray, and a large wheel/pinch delta can tunnel it straight
@@ -8270,6 +8347,33 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         easeGuideFade();
         smoothBadges();
         renderer.render(scene, camera);
+        lastFrameAt = performance.now();
+        frameErrStreak = 0;
+        } catch (frameErr) {
+          // Frame guard (2026-10-16, crash fix F2): before this, the loop
+          // body had no try/catch at any level — one throwing frame
+          // froze the last picture silently, forever. A throw now costs
+          // one frame; 120 consecutive thrown frames hand over to the
+          // same recovery path as a lost context.
+          frameErrStreak++;
+          if (!frameErrLogged) { frameErrLogged = true; try { console.error('Live Transit frame error:', frameErr); } catch (e2) {} }
+          if (frameErrStreak >= 120) recoverReload('frames');
+        }
+      });
+      // Frame watchdog (2026-10-16, crash fix F2): covers what the
+      // context listener and the frame guard cannot — a context lost
+      // without an event, or a loop that stopped producing frames.
+      // Hidden time never counts as staleness (the browser suspends the
+      // loop legitimately), and becoming visible resets the clock.
+      setInterval(function () {
+        if (document.hidden || recovering) return;
+        var gl = null;
+        try { gl = renderer.getContext(); } catch (e) {}
+        if (gl && gl.isContextLost()) { recoverReload('watchdog'); return; }
+        if (lastFrameAt && performance.now() - lastFrameAt > 5000) recoverReload('watchdog');
+      }, 2000);
+      document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) lastFrameAt = performance.now();
       });
     })
     .catch(function () {
