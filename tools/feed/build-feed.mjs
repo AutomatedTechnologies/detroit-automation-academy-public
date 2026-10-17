@@ -50,6 +50,26 @@
  *    and a stale display payload left in the checkout is deleted so
  *    revoked access cannot keep serving Swiftly Content.
  *
+ *  - SMART trip updates (Swiftly; deployed 2026-10-17):
+ *    authenticated GTFS-RT TripUpdates from the second
+ *    endpoint Swiftly's issuance enabled (2026-10-15), active ONLY
+ *    when SWIFTLY_KEY is present, on the same cycle as the positions
+ *    leg. DISPLAY-ONLY under the same §4(vi) terms: decoded trip
+ *    updates are normalized into a separate display payload,
+ *    live-data/smart-trip-updates.json, which the page fetches
+ *    solely to render live arrival times on SMART stop cards. Trip
+ *    updates are NEVER merged into vehicles.json, NEVER enter the
+ *    telemetry archive, and NEVER feed the page's trip planner or
+ *    delay matcher — display rendering only (the no-contamination
+ *    rule). Service alerts are NOT part of this leg: Swiftly did not
+ *    enable the alerts endpoint, and nothing here polls it. Absent
+ *    key: the leg performs ZERO network calls and a stale trip-
+ *    updates payload is deleted, exactly like the display payload.
+ *    Volume: one request per 5-minute cycle per endpoint — the two
+ *    Swiftly legs together make 2 requests per cycle = 6 requests
+ *    per 15 minutes against the issuance limit of 180 per 15
+ *    minutes (~3.3%).
+ *
  * Output envelopes are byte-compatible with the proxy contract the page
  * consumes:
  *  vehicles.json: {generated_at, count, vehicles[], sources:{ddot, smart, qline}}
@@ -72,6 +92,9 @@
  *      SMART_VP_URL (optional override; default is the Swiftly
  *      pattern for agency key "detroit-smartbus", confirmed by
  *      Swiftly's key-issuance email 2026-10-15 — see pollSmart),
+ *      SMART_TU_URL (optional override; default is the same Swiftly
+ *      pattern with the trip-updates endpoint — see
+ *      pollSmartTripUpdates),
  *      FEED_OUT_DIR (optional; default <repo>/live-data — local testing).
  */
 import { createHash } from 'node:crypto';
@@ -90,6 +113,7 @@ const QLINE_VP_URL = process.env.QLINE_VP_URL || 'https://s3.amazonaws.com/etatr
 const SMART_REMOVED_REASON = 'SMART removed from Live Transit Detroit 2026-10-15';
 const SWIFTLY_KEY = process.env.SWIFTLY_KEY || '';
 const SMART_VP_URL = process.env.SMART_VP_URL || 'https://api.goswift.ly/real-time/detroit-smartbus/gtfs-rt-vehicle-positions';
+const SMART_TU_URL = process.env.SMART_TU_URL || 'https://api.goswift.ly/real-time/detroit-smartbus/gtfs-rt-trip-updates';
 
 /* ---------------- fetch helpers (proxy equivalents) ---------------- */
 
@@ -243,7 +267,12 @@ function decodePosition(buf) {
 function decodeTripDescriptor(buf) {
   const out = {};
   for (const [no, val] of protoFields(buf)) {
-    if (no === 5 && val.wire === 2) out.routeId = utf8(val.bytes);
+    if (no === 1 && val.wire === 2) out.tripId = utf8(val.bytes);
+    else if (no === 2 && val.wire === 2) out.startTime = utf8(val.bytes);
+    else if (no === 3 && val.wire === 2) out.startDate = utf8(val.bytes);
+    else if (no === 4 && val.wire === 0) out.scheduleRelationship = val.varint;
+    else if (no === 5 && val.wire === 2) out.routeId = utf8(val.bytes);
+    else if (no === 6 && val.wire === 0) out.directionId = val.varint;
   }
   return out;
 }
@@ -263,6 +292,59 @@ function decodeVehiclePosition(buf) {
     else if (no === 2 && val.wire === 2) out.position = decodePosition(val.bytes);
     else if (no === 8 && val.wire === 2) out.vehicle = decodeVehicleDescriptor(val.bytes);
     else if (no === 5 && val.wire === 0) out.timestamp = val.varint;
+  }
+  return out;
+}
+
+/* GTFS-RT TripUpdate decoding (deployed 2026-10-17).
+ * Field numbers per gtfs-realtime.proto: FeedEntity.trip_update = 3;
+ * TripUpdate.trip = 1, .stop_time_update = 2, .vehicle = 3,
+ * .timestamp = 4, .delay = 5; TripDescriptor.trip_id = 1,
+ * .start_time = 2, .start_date = 3, .schedule_relationship = 4,
+ * .route_id = 5, .direction_id = 6; StopTimeUpdate.stop_sequence = 1,
+ * .arrival = 2, .departure = 3, .stop_id = 4,
+ * .schedule_relationship = 5; StopTimeEvent.delay = 1 (int32, seconds,
+ * may be negative), .time = 2 (int64, POSIX epoch seconds),
+ * .uncertainty = 3. ScheduleRelationship enums are rendered as their
+ * GTFS names so the display payload stays self-describing. */
+
+const TRIP_SCHEDULE_REL = ['SCHEDULED', 'ADDED', 'UNSCHEDULED', 'CANCELED'];
+const STOP_SCHEDULE_REL = ['SCHEDULED', 'SKIPPED', 'NO_DATA'];
+
+function int32FromVarint(v) {
+  // Protobuf int32 negatives arrive sign-extended to 64 bits.
+  return Number(BigInt.asIntN(32, v));
+}
+
+function decodeStopTimeEvent(buf) {
+  const out = {};
+  for (const [no, val] of protoFields(buf)) {
+    if (no === 1 && val.wire === 0) out.delay = int32FromVarint(val.varint);
+    else if (no === 2 && val.wire === 0) out.time = Number(BigInt.asIntN(64, val.varint));
+    else if (no === 3 && val.wire === 0) out.uncertainty = Number(val.varint);
+  }
+  return out;
+}
+
+function decodeStopTimeUpdate(buf) {
+  const out = {};
+  for (const [no, val] of protoFields(buf)) {
+    if (no === 1 && val.wire === 0) out.stopSequence = Number(val.varint);
+    else if (no === 2 && val.wire === 2) out.arrival = decodeStopTimeEvent(val.bytes);
+    else if (no === 3 && val.wire === 2) out.departure = decodeStopTimeEvent(val.bytes);
+    else if (no === 4 && val.wire === 2) out.stopId = utf8(val.bytes);
+    else if (no === 5 && val.wire === 0) out.scheduleRelationship = val.varint;
+  }
+  return out;
+}
+
+function decodeTripUpdate(buf) {
+  const out = { stopTimeUpdates: [] };
+  for (const [no, val] of protoFields(buf)) {
+    if (no === 1 && val.wire === 2) out.trip = decodeTripDescriptor(val.bytes);
+    else if (no === 2 && val.wire === 2) out.stopTimeUpdates.push(decodeStopTimeUpdate(val.bytes));
+    else if (no === 3 && val.wire === 2) out.vehicle = decodeVehicleDescriptor(val.bytes);
+    else if (no === 4 && val.wire === 0) out.timestamp = val.varint;
   }
   return out;
 }
@@ -299,6 +381,65 @@ function mapGtfsRtVehicles(buffer, nowIso, agency) {
       });
     }
     return out.filter((v) => v.vehicle_id);
+  } catch {
+    return [];
+  }
+}
+
+/* Normalize a GTFS-RT TripUpdates feed into the display payload's
+ * trip records (deployed 2026-10-17). The shape is keyed
+ * for display lookup: the page finds a stop's upcoming live times by
+ * scanning trips' stop_time_updates for its stop_id. Times stay in
+ * POSIX epoch seconds (the page formats them); delays are carried
+ * verbatim for transparency. Entities without a trip update, and
+ * updates whose trip carries neither a trip_id nor a route_id, are
+ * skipped — an unidentifiable update can never be displayed honestly.
+ * Output is sorted by (route_id, trip_id) so the payload is stable
+ * across cycles and the material-change write policy sees real
+ * changes only. */
+function mapGtfsRtTripUpdates(buffer, nowIso) {
+  try {
+    const out = [];
+    for (const [no, val] of protoFields(buffer)) {
+      if (no !== 2 || val.wire !== 2) continue; // FeedEntity
+      let tu = null;
+      for (const [eno, eval2] of protoFields(val.bytes)) {
+        if (eno === 3 && eval2.wire === 2) tu = decodeTripUpdate(eval2.bytes);
+      }
+      if (!tu || !tu.trip) continue;
+      const tripId = String(tu.trip.tripId || '');
+      const routeId = String(tu.trip.routeId || '');
+      if (!tripId && !routeId) continue;
+      const ts = tu.timestamp !== undefined ? Number(tu.timestamp) : NaN;
+      const stops = [];
+      for (const stu of tu.stopTimeUpdates) {
+        if (!stu.stopId) continue;
+        const rel = stu.scheduleRelationship !== undefined ? Number(stu.scheduleRelationship) : 0;
+        stops.push({
+          stop_id: String(stu.stopId),
+          stop_sequence: stu.stopSequence !== undefined ? stu.stopSequence : null,
+          arrival_time: stu.arrival && stu.arrival.time !== undefined ? stu.arrival.time : null,
+          arrival_delay_sec: stu.arrival && stu.arrival.delay !== undefined ? stu.arrival.delay : null,
+          departure_time: stu.departure && stu.departure.time !== undefined ? stu.departure.time : null,
+          departure_delay_sec: stu.departure && stu.departure.delay !== undefined ? stu.departure.delay : null,
+          schedule_relationship: STOP_SCHEDULE_REL[rel] || 'SCHEDULED',
+        });
+      }
+      const tripRel = tu.trip.scheduleRelationship !== undefined ? Number(tu.trip.scheduleRelationship) : 0;
+      out.push({
+        trip_id: tripId,
+        route_id: routeId,
+        direction_id: tu.trip.directionId !== undefined ? Number(tu.trip.directionId) : null,
+        start_date: tu.trip.startDate ? String(tu.trip.startDate) : null,
+        start_time: tu.trip.startTime ? String(tu.trip.startTime) : null,
+        schedule_relationship: TRIP_SCHEDULE_REL[tripRel] || 'SCHEDULED',
+        vehicle_id: tu.vehicle && tu.vehicle.id ? String(tu.vehicle.id) : null,
+        updated_at: Number.isFinite(ts) && ts > 0 ? new Date(ts * 1000).toISOString() : nowIso,
+        stop_time_updates: stops,
+      });
+    }
+    out.sort((a, b) => (a.route_id + '|' + a.trip_id).localeCompare(b.route_id + '|' + b.trip_id));
+    return out;
   } catch {
     return [];
   }
@@ -401,6 +542,41 @@ async function pollSmart(nowIso) {
     return { vehicles, state: { ok: true, at: nowIso, vehicles: vehicles.length } };
   } catch (err) {
     return { vehicles: [], state: { ok: false, at: nowIso, reason: `Swiftly SMART feed: ${err.message}` } };
+  }
+}
+
+/* SMART trip-updates leg (deployed 2026-10-17).
+ * Endpoint: https://api.goswift.ly/real-time/<agencyKey>/gtfs-rt-trip-updates
+ * — the same Swiftly pattern as the positions leg, on the second
+ * endpoint the 2026-10-15 issuance enabled. One request per cycle,
+ * gated on SWIFTLY_KEY exactly like pollSmart; the two legs together
+ * stay at 6 requests per 15 minutes against the 180 limit. Failure
+ * honesty mirrors pollSmart: a non-GTFS-RT body or an HTTP/auth error
+ * is an { ok:false } source state with the reason, never a silent
+ * zero. The normalized trips go ONLY to the trip-updates display
+ * payload — never into vehicles.json, the telemetry path, or any
+ * computation input. */
+async function pollSmartTripUpdates(nowIso) {
+  // Called ONLY when SWIFTLY_KEY is non-empty (main gates on key
+  // presence), so the dormant state performs zero network calls.
+  try {
+    const buf = await fetchBufferSwiftly(SMART_TU_URL, SWIFTLY_KEY);
+    let shape;
+    try {
+      shape = gtfsRtFeedShape(buf);
+    } catch (e) {
+      shape = null;
+    }
+    if (!shape || !shape.header) {
+      return {
+        trips: [],
+        state: { ok: false, at: nowIso, reason: 'Swiftly SMART trip updates: response was not a GTFS-RT FeedMessage' },
+      };
+    }
+    const trips = mapGtfsRtTripUpdates(buf, nowIso);
+    return { trips, state: { ok: true, at: nowIso, trips: trips.length } };
+  } catch (err) {
+    return { trips: [], state: { ok: false, at: nowIso, reason: `Swiftly SMART trip updates: ${err.message}` } };
   }
 }
 
@@ -684,7 +860,7 @@ async function main() {
   });
 
   const smartActive = Boolean(SWIFTLY_KEY);
-  const [ddot, qline, ddotAlerts, smart] = await Promise.all([
+  const [ddot, qline, ddotAlerts, smart, smartTu] = await Promise.all([
     pollDdot(nowIso),
     pollQline(nowIso),
     reuse.reuse
@@ -694,6 +870,8 @@ async function main() {
     // sources.smart below stays the removed state verbatim, so every
     // output file is byte-identical to the pre-SMART-leg builder.
     smartActive ? pollSmart(nowIso) : Promise.resolve(null),
+    // Same dormant gate for the trip-updates leg.
+    smartActive ? pollSmartTripUpdates(nowIso) : Promise.resolve(null),
   ]);
 
   const vehiclesBody = {
@@ -748,9 +926,32 @@ async function main() {
     smartNote = 'smart-display.json: not written (SWIFTLY_KEY not set; leg dormant)';
   }
 
+  /* SMART trip-updates display payload (deployed 2026-10-17) — same posture as
+   * the positions display payload: written only while the key is
+   * active, under its own envelope ({generated_at, count, trips,
+   * source}), deleted when the key is withdrawn. It is a separate
+   * file: vehicles.json above is byte-for-byte the pre-candidate
+   * composition, and nothing in this block feeds it. */
+  const smartTuPath = path.join(OUT_DIR, 'smart-trip-updates.json');
+  let smartTuNote;
+  if (smartActive) {
+    const tuBody = {
+      generated_at: nowIso,
+      count: smartTu.trips.length,
+      trips: smartTu.trips,
+      source: smartTu.state,
+    };
+    const s2 = writeIfChanged(smartTuPath, tuBody);
+    smartTuNote = `smart-trip-updates.json: ${s2} (trips=${smartTu.trips.length} ok=${smartTu.state.ok})`;
+  } else {
+    if (fs.existsSync(smartTuPath)) fs.unlinkSync(smartTuPath);
+    smartTuNote = 'smart-trip-updates.json: not written (SWIFTLY_KEY not set; leg dormant)';
+  }
+
   console.log(`vehicles.json: ${v} (ddot=${ddot.vehicles.length} ok=${ddot.state.ok}, qline=${qline.vehicles.length} ok=${qline.state.ok})`);
   console.log(`alerts.json: ${a} (ddot alerts=${ddotAlerts.alerts.length} ok=${ddotAlerts.state.ok})`);
   console.log(smartNote);
+  console.log(smartTuNote);
   console.log(
     `bustime calls: vehicles=${ddot.calls} bulletins=${ddotAlerts.calls}` +
       (reuse.reuse
@@ -759,7 +960,7 @@ async function main() {
   );
 }
 
-export { collectDdotBulletins, ddotBulletinsReusable, gtfsRtFeedShape, pollSmart, main };
+export { collectDdotBulletins, ddotBulletinsReusable, gtfsRtFeedShape, pollSmart, pollSmartTripUpdates, mapGtfsRtTripUpdates, main };
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch((e) => {
