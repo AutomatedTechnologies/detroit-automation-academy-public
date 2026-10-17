@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261017-0435';
+  var STAMP = '20261017-0129';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -6504,7 +6504,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var sl = busSlots[i], tr = sl.tracker;
       if (!tr || !tr.arc) continue;
       var moved = false;
-      var ageS = (now - tr.fixT) / 1000;
+      var ageS = (now - (tr.fixObsT != null ? tr.fixObsT : tr.fixT)) / 1000;
       if (ageS < PREDICT_HORIZON_S && tr.kInit) {
         // Kalman predict: constant-velocity model, F = [[1,dt],[0,1]].
         // The empirical segment speed enters as a velocity prior (the old
@@ -7045,7 +7045,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         tr = busTrackers[v.vehicle_id] = {
           id: v.vehicle_id, routeId: v.route_id,
           arc: null, pathIdx: -1, s: 0, sCorr: 0,
-          speedMps: 0, fixT: 0, lastX: null, lastZ: null, init: false,
+          speedMps: 0, fixT: 0, fixObsT: 0, lastX: null, lastZ: null, init: false,
           bornSeq: pollSeq, vehicle: null,
           // Kalman state: [kS arc-pos, kV velocity]; kP/kPv/kPvS covariance.
           // Replaces the ad-hoc sCorr easing with optimal gains; snap logic
@@ -7055,6 +7055,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         };
       }
       tr.vehicle = v; // fresh record each poll (destination, updated_at)
+      var spMph0 = parseFloat(v.speed_mph);
+      var inst0 = (!isNaN(spMph0) && spMph0 >= 0) ? spMph0 * MPH_TO_MPS : null;
       var m = matchFix(v.route_id, p[0], p[1], v.bearing, tr.arc ? tr : null);
       if (m && m.dist <= OFFSHAPE_M) {
         if (tr.arc && tr.pathIdx === m.pathIdx && tr.kInit) {
@@ -7062,7 +7064,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           if (Math.abs(delta) > SNAP_DIST_M) {
             // Outlier gate: snap and reinit the filter (a plain Kalman
             // filter is not robust to GPS jumps; the gate keeps it honest).
-            tr.kS = m.s; tr.kV = tr.speedMps; tr.kP = KALMAN_R; tr.kPv = 25; tr.kPvS = 0;
+            tr.kS = m.s; tr.kV = (inst0 != null ? inst0 : tr.speedMps); tr.kP = KALMAN_R; tr.kPv = 25; tr.kPvS = 0;
           } else {
             // Kalman update: H = [1, 0], R = GPS variance. Optimal gain —
             // replaces the old sCorr easing with the MMSE correction.
@@ -7079,7 +7081,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           if (tr.arc) tr.kS = Math.max(0, Math.min(tr.arc.len, tr.kS));
           tr.s = tr.kS; tr.sCorr = 0; // render from the filtered state
         } else {
-          tr.kS = m.s; tr.kV = tr.speedMps; tr.kP = KALMAN_R; tr.kPv = 25; tr.kPvS = 0;
+          tr.kS = m.s; tr.kV = (inst0 != null ? inst0 : tr.speedMps); tr.kP = KALMAN_R; tr.kPv = 25; tr.kPvS = 0;
           tr.kInit = true;
           tr.s = m.s; tr.sCorr = 0; // new / re-matched path: snap
         }
@@ -7112,6 +7114,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         tr.speedMps = tr.init ? tr.speedMps * 0.4 + inst * 0.6 : inst;
         tr.init = true;
       }
+      var fixStampMs = v.updated_at ? new Date(v.updated_at).getTime() : NaN;
+      var stampAgeMs = isNaN(fixStampMs) ? 0 : Math.max(0, Math.min(1800000, Date.now() - fixStampMs));
+      tr.fixObsT = now - stampAgeMs;
       tr.fixT = now; tr.lastX = p[0]; tr.lastZ = p[1];
       // Render state: matched arc position, else the raw fix.
       var pt = tr.arc ? pointAt(tr.arc, tr.s) : null;
