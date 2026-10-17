@@ -165,6 +165,19 @@
     this.currentVehicleId = null;
     this.timesProvider = null;
     this._bodySig = null;
+    // Planner Bus Focus (project 9) host-supplied state. All three are
+    // null/false for ordinary Ride Along use; only a planner leg focus
+    // sets them. scheduledSpec: the timetable form of a leg with no
+    // live bus. focusSpec: the same spec, kept so a lost bus's tile
+    // can show its trip's scheduled stops. boardedMissing: the host
+    // has declared the boarded bus lost (it owns the threshold).
+    // _boardedRec: the last record seen for the boarded vehicle —
+    // identity and fix age for the missing view.
+    this.scheduledSpec = null;
+    this.focusSpec = null;
+    this.boardedMissing = false;
+    this._boardedRec = null;
+    this.onScheduledClose = null;
     this.render();
   }
 
@@ -183,6 +196,8 @@
 
   RideAlong.prototype.setVehicles = function (vehicles) {
     this.vehicles = vehicles || [];
+    var cur = this.currentVehicle();
+    if (cur) this._boardedRec = cur;
     this.renderPicker();
     if (this.currentVehicleId) this.refresh();
   };
@@ -221,6 +236,11 @@
 
   RideAlong.prototype.board = function (vehicleId) {
     this.currentVehicleId = vehicleId;
+    // A real board supersedes any planner-focus scheduled view.
+    this.scheduledSpec = null;
+    this.boardedMissing = false;
+    var rec = this.currentVehicle();
+    if (rec) this._boardedRec = rec;
     this.refresh();
     // Rebuild the picker so the <select> shows the boarded bus. refresh()
     // renders only the ride body; without this, a programmatic board
@@ -236,6 +256,10 @@
   RideAlong.prototype.alight = function () {
     var prev = this.currentVehicleId;
     this.currentVehicleId = null;
+    this.scheduledSpec = null;
+    this.focusSpec = null;
+    this.boardedMissing = false;
+    this._boardedRec = null;
     this.render();
     this.renderPicker();
     if (prev && typeof this.onAlight === 'function') {
@@ -249,7 +273,10 @@
     });
     if (i >= 0) this.vehicles[i] = vehicle;
     else this.vehicles.push(vehicle);
-    if (vehicle.vehicle_id === this.currentVehicleId) this.refresh();
+    if (vehicle.vehicle_id === this.currentVehicleId) {
+      this._boardedRec = vehicle;
+      this.refresh();
+    }
   };
 
   RideAlong.prototype.currentVehicle = function () {
@@ -259,7 +286,16 @@
 
   RideAlong.prototype.refresh = function () {
     var v = this.currentVehicle();
-    if (!v) { this.render(); return; }
+    if (!v) {
+      // Planner Bus Focus states take precedence over the bare
+      // picker: a boarded bus the host has declared lost keeps its
+      // identity and its trip's scheduled stops; a scheduled focus
+      // with nothing boarded keeps its timetable view. Ordinary use
+      // (neither set) renders the picker exactly as before.
+      if (this.currentVehicleId && this.boardedMissing) { this.renderMissing(); return; }
+      if (!this.currentVehicleId && this.scheduledSpec) { this.renderScheduled(); return; }
+      this.render(); return;
+    }
     var route = this.routeById[v.route_id];
     var flat = this.flatById[v.route_id];
     if (!route || !flat || !flat.pts.length) { this.renderEmpty(v); return; }
@@ -309,6 +345,154 @@
     if (text != null) e.textContent = text;
     return e;
   }
+
+  // ---- Planner Bus Focus (project 9): scheduled + missing views ----
+  // A spec is the host's scheduled form of one planner leg:
+  // { routeId, headsign, basis: 'scheduled'|'typical',
+  //   stops: [{ id, name, label }] } with stop times pre-formatted by
+  // the host — the widget stays clock-agnostic for stop times, as
+  // with the times provider's labels.
+
+  function fmtClock(iso) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    var h = d.getHours(), m = d.getMinutes();
+    var ap = h >= 12 ? 'PM' : 'AM';
+    h = h % 12; if (h === 0) h = 12;
+    return h + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
+  }
+
+  // The spec's stop sequence: optionally a next-card for the first
+  // stop (the boarding stop of a scheduled focus), then the list —
+  // the last stop is the rider's alight stop and says so.
+  function appendSpecStops(wrap, spec, boardFirst, secTitle) {
+    if (!spec || !spec.stops || !spec.stops.length) return;
+    var stops = spec.stops;
+    if (boardFirst) {
+      var first = stops[0];
+      var card = el('div', 'ra-next');
+      card.appendChild(el('div', 'ra-next-kicker', 'Board here'));
+      card.appendChild(el('div', 'ra-next-name', first.name));
+      if (first.label) card.appendChild(el('div', 'ra-next-time', first.label));
+      wrap.appendChild(card);
+      stops = stops.slice(1);
+      if (!stops.length) return;
+    }
+    var sec = el('div', 'ra-sec');
+    sec.appendChild(el('div', 'ra-sec-h', secTitle));
+    var list = el('div', 'ra-stops');
+    stops.forEach(function (s, i) {
+      var last = i === stops.length - 1;
+      var row = el('div', 'ra-stop');
+      row.appendChild(el('span', 'ra-stop-dot' + (last ? ' end' : '')));
+      row.appendChild(el('span', 'ra-stop-name', s.name + (last ? ' · get off' : '')));
+      if (s.label) row.appendChild(el('span', 'ra-time', s.label));
+      list.appendChild(row);
+    });
+    sec.appendChild(list);
+    wrap.appendChild(sec);
+  }
+
+  RideAlong.prototype.setFocusSpec = function (spec) {
+    this.focusSpec = spec || null;
+    if (this.boardedMissing) this.refresh();
+  };
+
+  RideAlong.prototype.setBoardedMissing = function (on) {
+    this.boardedMissing = !!on;
+    if (this.currentVehicleId) this.refresh();
+  };
+
+  RideAlong.prototype.showScheduled = function (spec) {
+    if (!spec) { this.clearScheduled(); return; }
+    this.scheduledSpec = spec;
+    this.currentVehicleId = null;
+    this.boardedMissing = false;
+    this.render();
+    this.renderScheduled();
+  };
+
+  RideAlong.prototype.clearScheduled = function () {
+    if (!this.scheduledSpec) return;
+    this.scheduledSpec = null;
+    this.render();
+    this.renderPicker();
+  };
+
+  // The timetable form of a focused leg: headed Scheduled, the stops
+  // the rider will pass, no live position claimed anywhere. Built and
+  // committed exactly like renderRide — a fragment whose textContent
+  // is the signature _commitBody gates on.
+  RideAlong.prototype.renderScheduled = function () {
+    var host = this.mount.querySelector('#ra-body');
+    if (!host || !this.scheduledSpec) return;
+    var spec = this.scheduledSpec;
+    var route = spec.routeId ? this.routeById[spec.routeId] : null;
+    var title = (route ? routeLabel(route) : ('Route ' + spec.routeId)) +
+      (spec.headsign ? ' · ' + spec.headsign : '');
+    var self = this;
+    var frag = document.createElement('div');
+    var head = el('div', 'ra-head');
+    var dot = el('i', 'ra-dot');
+    dot.style.background = (route && route.color) || '#9aa0a6';
+    head.appendChild(dot);
+    head.appendChild(el('b', 'ra-route', title));
+    frag.appendChild(head);
+    frag.appendChild(el('p', 'ra-bus', 'Scheduled'));
+    frag.appendChild(el('p', 'ra-note',
+      'No live bus is on this trip yet. These are the ' +
+      (spec.basis === 'typical' ? 'typical' : 'scheduled') +
+      ' stops for your trip; the view switches to the live bus when it starts reporting.'));
+    appendSpecStops(frag, spec, true, 'Upcoming stops');
+    var close = el('button', 'ra-leave', 'Close view');
+    close.type = 'button';
+    close.addEventListener('click', function () {
+      self.clearScheduled();
+      if (typeof self.onScheduledClose === 'function') {
+        try { self.onScheduledClose(); } catch (e) {}
+      }
+    });
+    frag.appendChild(close);
+    this._commitBody(host, frag);
+  };
+
+  // The boarded bus has stopped reporting: keep its identity, state
+  // the fact and the age of the last report, and keep the rider's
+  // stops in view in their scheduled form. Nothing here extrapolates
+  // a position the bus never reported.
+  RideAlong.prototype.renderMissing = function () {
+    var host = this.mount.querySelector('#ra-body');
+    if (!host) return;
+    var rec = this._boardedRec || {};
+    var route = rec.route_id ? this.routeById[rec.route_id] : null;
+    var title = route ? routeLabel(route) : (rec.route_id ? 'Route ' + rec.route_id : 'Bus');
+    var ageMin = null, when = '';
+    if (rec.updated_at) {
+      var ageMs = Date.now() - new Date(rec.updated_at).getTime();
+      if (isFinite(ageMs) && ageMs >= 0) ageMin = Math.floor(ageMs / 60000);
+      when = fmtClock(rec.updated_at);
+    }
+    var ageTxt = ageMin == null ? '' : (ageMin < 1 ? 'just now' :
+      (ageMin === 1 ? '1 min ago' : ageMin + ' min ago'));
+    var self = this;
+    var frag = document.createElement('div');
+    var head = el('div', 'ra-head');
+    var dot = el('i', 'ra-dot');
+    dot.style.background = (route && route.color) || '#9aa0a6';
+    head.appendChild(dot);
+    head.appendChild(el('b', 'ra-route', title));
+    frag.appendChild(head);
+    frag.appendChild(el('p', 'ra-bus', 'Bus ' + this.currentVehicleId));
+    frag.appendChild(el('p', 'ra-note',
+      'This bus has stopped reporting.' +
+      (when ? ' Last reported ' + when + (ageTxt ? ' · ' + ageTxt : '') + '.' : '')));
+    if (this.focusSpec) appendSpecStops(frag, this.focusSpec, false, 'Scheduled stops for its trip');
+    var leave = el('button', 'ra-leave', 'Get off this bus');
+    leave.type = 'button';
+    leave.addEventListener('click', function () { self.alight(); });
+    frag.appendChild(leave);
+    this._commitBody(host, frag);
+  };
 
   RideAlong.prototype.render = function () {
     this._bodySig = null;
