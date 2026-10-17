@@ -116,6 +116,34 @@
     return out;
   }
 
+  // ---- endpoint indication (project 11, WS2) ----
+  // Distance + approach state of a vehicle relative to the rider,
+  // from the rendered positions and the vehicle's bearing — the
+  // same formula the host uses for its direction-aware location
+  // default. 'here' within 20 m; else 'approaching' when the bus's
+  // heading carries it toward the rider, else 'passed' (heading
+  // away — it has gone by, or travels the other way). cls is null
+  // when the bearing is unknown. Returns null without a rider fix
+  // or a vehicle position.
+  function fmtDistM(m) {
+    var ft = m * 3.28084;
+    if (ft < 1000) return Math.round(ft / 10) * 10 + ' ft';
+    return (m / 1609.344).toFixed(1) + ' mi';
+  }
+
+  function approachInfo(v, rp) {
+    if (!rp || !v || v.x == null || v.z == null) return null;
+    var dx = rp.x - v.x, dz = rp.z - v.z;
+    var dist = Math.sqrt(dx * dx + dz * dz);
+    if (dist <= 20) return { cls: 'here', dist: dist };
+    if (v.bearing == null || isNaN(v.bearing)) return { cls: null, dist: dist };
+    // Travel vector for a compass bearing in scene coords (the
+    // convention locateOnPath's pathBearing uses): (sin b, -cos b).
+    var br = v.bearing * Math.PI / 180;
+    var dot = (Math.sin(br) * dx - Math.cos(br) * dz) / dist;
+    return { cls: dot >= 0 ? 'approaching' : 'passed', dist: dist };
+  }
+
   // ---- intersections ----
 
   // Extract street names from a stop name like "Manchester & Woodward".
@@ -178,6 +206,15 @@
     this.boardedMissing = false;
     this._boardedRec = null;
     this.onScheduledClose = null;
+    // Return & endpoint selection (project 11). returnLabel /
+    // onReturnRequest: the host owns the tile-state stack; it sets
+    // the label naming the state Return restores (null = no Return
+    // control) and receives the tap. riderPos: the rider's rendered
+    // position {x, z}, host-supplied for picker distance/approach
+    // indication; null without a location fix.
+    this.returnLabel = null;
+    this.onReturnRequest = null;
+    this.riderPos = null;
     this.render();
   }
 
@@ -211,6 +248,38 @@
     this.timesProvider = fn || null;
   };
 
+  // Host-supplied rider position (rendered/projected coords), for
+  // the picker's distance + approach indication. Null clears it.
+  // The picker re-renders so the indication tracks the fix.
+  RideAlong.prototype.setRiderPos = function (x, z) {
+    this.riderPos = (x == null || z == null) ? null : { x: x, z: z };
+    this.renderPicker();
+  };
+
+  // The host's Return stack names its top state here; the ride,
+  // missing, and scheduled views render the control while a label
+  // is set. Re-rendering goes through refresh(), whose signature
+  // gate leaves the DOM untouched when nothing visible changed.
+  RideAlong.prototype.setReturnLabel = function (text) {
+    var t = text || null;
+    if (this.returnLabel === t) return;
+    this.returnLabel = t;
+    if (this.currentVehicleId || this.boardedMissing || this.scheduledSpec) this.refresh();
+  };
+
+  RideAlong.prototype._returnBtn = function () {
+    if (!this.returnLabel) return null;
+    var self = this;
+    var b = el('button', 'ra-return', '\u21A9 ' + this.returnLabel);
+    b.type = 'button';
+    b.addEventListener('click', function () {
+      if (typeof self.onReturnRequest === 'function') {
+        try { self.onReturnRequest(); } catch (e) {}
+      }
+    });
+    return b;
+  };
+
   // Transfer routes serving a stop, as display labels. Reads the stop
   // record's r[] — the registry record at the stop's index (S1).
   RideAlong.prototype.transferLabels = function (stop, currentRouteId) {
@@ -235,6 +304,7 @@
   };
 
   RideAlong.prototype.board = function (vehicleId) {
+    var prevVid = this.currentVehicleId;
     this.currentVehicleId = vehicleId;
     // A real board supersedes any planner-focus scheduled view.
     this.scheduledSpec = null;
@@ -249,7 +319,9 @@
     // re-render — the widget looks un-boarded while it is riding.
     this.renderPicker();
     if (typeof this.onBoard === 'function') {
-      try { this.onBoard(vehicleId); } catch (e) {}
+      // prevVid: the board this one replaced (project 11 — the host's
+      // Return stack is built from it).
+      try { this.onBoard(vehicleId, prevVid); } catch (e) {}
     }
   };
 
@@ -444,6 +516,8 @@
       (spec.basis === 'typical' ? 'typical' : 'scheduled') +
       ' stops for your trip; the view switches to the live bus when it starts reporting.'));
     appendSpecStops(frag, spec, true, 'Upcoming stops');
+    var rBtnS = this._returnBtn();
+    if (rBtnS) frag.appendChild(rBtnS);
     var close = el('button', 'ra-leave', 'Close view');
     close.type = 'button';
     close.addEventListener('click', function () {
@@ -487,6 +561,8 @@
       'This bus has stopped reporting.' +
       (when ? ' Last reported ' + when + (ageTxt ? ' · ' + ageTxt : '') + '.' : '')));
     if (this.focusSpec) appendSpecStops(frag, this.focusSpec, false, 'Scheduled stops for its trip');
+    var rBtnM = this._returnBtn();
+    if (rBtnM) frag.appendChild(rBtnM);
     var leave = el('button', 'ra-leave', 'Get off this bus');
     leave.type = 'button';
     leave.addEventListener('click', function () { self.alight(); });
@@ -520,21 +596,41 @@
     sel.setAttribute('aria-label', 'Choose a bus to ride');
     sel.appendChild(el('option', '', '-- choose a bus --'));
     var self = this;
+    // Endpoint indication (project 11, WS2): with a rider fix, each
+    // option also names how far the bus is and whether it is
+    // approaching or heading away — the two directions of a route
+    // stop being identical strings — and buses within 1600 m lead
+    // the list nearest-first, so the nearby endpoints the choice is
+    // actually among come first. Without a fix, labels and order
+    // are exactly the long-standing label sort.
+    var labeled = this.vehicles.map(function (v) {
+      var route = self.routeById[v.route_id];
+      var ai = approachInfo(v, self.riderPos);
+      var label = (route ? routeLabel(route) : v.route_id) +
+        ' · Bus ' + v.vehicle_id +
+        (v.destination ? ' → ' + v.destination : '');
+      if (ai) {
+        label += ' · ' + fmtDistM(ai.dist);
+        if (ai.cls === 'approaching') label += ' · approaching';
+        else if (ai.cls === 'passed') label += ' · heading away';
+      }
+      return { v: v, label: label, dist: ai ? ai.dist : null };
+    });
     // Sort by the displayed label with numeric-aware natural ordering, so
     // route numbers order 4, 7, 9, 10, 16 (and 200 before 210) instead of
     // lexicographic 10, 16, 4, 7, 9. Vehicle id is the final tiebreak.
-    var labeled = this.vehicles.map(function (v) {
-      var route = self.routeById[v.route_id];
-      return {
-        v: v,
-        label: (route ? routeLabel(route) : v.route_id) +
-          ' · Bus ' + v.vehicle_id +
-          (v.destination ? ' → ' + v.destination : '')
-      };
-    });
-    labeled.sort(function (a, b) {
+    // The nearby group (dist known, ≤ 1600 m) sorts ahead of it by
+    // distance, with the label order as its own tiebreak.
+    function labelCmp(a, b) {
       return a.label.localeCompare(b.label, undefined, { numeric: true, sensitivity: 'base' }) ||
         String(a.v.vehicle_id).localeCompare(String(b.v.vehicle_id), undefined, { numeric: true });
+    }
+    labeled.sort(function (a, b) {
+      var an = a.dist != null && a.dist <= 1600, bn = b.dist != null && b.dist <= 1600;
+      if (an && bn) return (a.dist - b.dist) || labelCmp(a, b);
+      if (an) return -1;
+      if (bn) return 1;
+      return labelCmp(a, b);
     });
     labeled.forEach(function (item) {
       var v = item.v;
@@ -609,6 +705,8 @@
 
     if (!upcoming.length) {
       body.appendChild(el('p', 'ra-empty', 'No further stops ahead on this run.'));
+      var rBtnE = this._returnBtn();
+      if (rBtnE) body.appendChild(rBtnE);
       this._commitBody(host, body);
       return;
     }
@@ -652,6 +750,8 @@
 
     if (tp && tp.note) body.appendChild(el('p', 'ra-note', tp.note));
 
+    var rBtn = this._returnBtn();
+    if (rBtn) body.appendChild(rBtn);
     var leave = el('button', 'ra-leave', 'Get off this bus');
     var self = this;
     leave.addEventListener('click', function () { self.alight(); });
@@ -667,7 +767,9 @@
     _stopsAlongPath: stopsAlongPath,
     _upcomingStops: upcomingStops,
     _streetsFromStopName: streetsFromStopName,
-    _upcomingIntersections: upcomingIntersections
+    _upcomingIntersections: upcomingIntersections,
+    _approachInfo: approachInfo,
+    _fmtDistM: fmtDistM
   };
 
 })(typeof window !== 'undefined' ? window : this);
