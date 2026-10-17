@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261017-0239';
+  var STAMP = '20261017-0327';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -821,6 +821,72 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     return s.vehicles.filter(function (v) {
       return v && v.agency === 'smart' && v.lat != null && v.lon != null;
     });
+  }
+  // === SMART TRIP UPDATES (deployed 2026-10-17) ===
+  // Swiftly's 2026-10-15 issuance enabled trip updates alongside vehicle
+  // positions; the feed builder publishes them as a separate
+  // display payload (live-data/smart-trip-updates.json). Display-only
+  // under the same §4(vi) terms, and under the no-contamination rule
+  // this state has exactly ONE reader — renderStopArrivals, for SMART
+  // stop cards. It is never read by tripDelayState, the delay matcher,
+  // RAPTOR, live-fusion, or any planner input. Freshness mirrors the
+  // positions payload's S6 rule: a payload whose generated_at is older
+  // than 15 minutes (3x the build cadence) is dropped at ingest, and
+  // the stop card falls back to the positions-only note rather than
+  // present old times as current.
+  var smartTuByStop = {};   // bare stop id -> [{rid, trip, bus, time, delay}]
+  var smartTuAtMs = null;   // generated_at of the ingested payload
+  var SMART_TU_STALE_MS = 15 * 60 * 1000;
+  function smartTuStopKey(id) {
+    // Registry ids carry an agency prefix ('SMARTMI:44016'); the feed's
+    // stop_id may arrive bare or prefixed — compare on the bare id.
+    var s = String(id == null ? '' : id);
+    var i = s.lastIndexOf(':');
+    return i >= 0 ? s.slice(i + 1) : s;
+  }
+  function ingestSmartTripUpdates(p, nowMs) {
+    smartTuByStop = {};
+    smartTuAtMs = null;
+    if (!p || !Array.isArray(p.trips)) return;
+    var gen = p.generated_at ? new Date(p.generated_at).getTime() : NaN;
+    if (isNaN(gen) || nowMs - gen > SMART_TU_STALE_MS) return;
+    smartTuAtMs = gen;
+    for (var ti = 0; ti < p.trips.length; ti++) {
+      var t = p.trips[ti];
+      if (!t || t.schedule_relationship === 'CANCELED') continue;
+      var stus = t.stop_time_updates || [];
+      for (var si = 0; si < stus.length; si++) {
+        var stu = stus[si];
+        if (!stu || stu.schedule_relationship !== 'SCHEDULED') continue;
+        var tm = stu.arrival_time != null ? stu.arrival_time : stu.departure_time;
+        if (tm == null) continue;
+        var key = smartTuStopKey(stu.stop_id);
+        if (!smartTuByStop[key]) smartTuByStop[key] = [];
+        smartTuByStop[key].push({
+          rid: t.route_id || '', trip: t.trip_id || '', bus: t.vehicle_id || null,
+          time: tm,
+          delay: stu.arrival_delay_sec != null ? stu.arrival_delay_sec : stu.departure_delay_sec
+        });
+      }
+    }
+  }
+  // Upcoming live arrivals at a SMART stop from the ingested trip
+  // updates. Returns null when no usable payload exists (the caller
+  // falls back to the positions-only note), or an array — empty when
+  // the payload is live but reports no time for this stop.
+  function smartTuRowsForStop(st, nowMs) {
+    if (!st || smartTuAtMs == null) return null;
+    if (!stopServedBySmart(st)) return null;
+    var list = smartTuByStop[smartTuStopKey(st.id)] || [];
+    var nowSec = nowMs / 1000;
+    var rows = [];
+    for (var i = 0; i < list.length; i++) {
+      var r = list[i];
+      if (r.time < nowSec - 30 || r.time > nowSec + 3 * 3600) continue;
+      rows.push(r);
+    }
+    rows.sort(function (a, b) { return a.time - b.time; });
+    return rows.slice(0, 5);
   }
   function formatClock12(ms) {
     var d = new Date(ms);
@@ -3539,7 +3605,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // across surfaces); every other trip serving the stop today is a
   // scheduled row. The timetable covers the DDOT segment only (S4):
   // SMART, QLINE, and People Mover stops get the named boundary, never
-  // a fabricated time.
+  // a fabricated time. Exception (deployed 2026-10-17): SMART
+  // stops render live times from the Swiftly trip-updates payload when
+  // a fresh one covers them — see the 'na' branch in renderStopArrivals
+  // and the SMART TRIP UPDATES section. That payload is display-only
+  // and is never an input to this function or the planner.
   function computeStopArrivals(idx, nowMs) {
     var out = { state: 'ready', rows: [] };
     if (!tripTT || !tripRaptor || !tripRaptor.serviceFor) { out.state = 'loading'; return out; }
@@ -3601,6 +3671,43 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       return;
     }
     if (res.state === 'na') {
+      // Deployed 2026-10-17: a SMART stop with a fresh trip-updates
+      // payload renders its live times here, replacing the boundary
+      // note. Any other 'na' stop (QLINE, unknown) keeps the note.
+      var tuRows = smartTuRowsForStop(selectedStop, Date.now());
+      if (tuRows) {
+        if (!tuRows.length) {
+          note.textContent = 'SMART live times are published when a bus is on its way; no SMART trip is reporting times for this stop right now — see the live vehicles below.';
+          note.hidden = false;
+          return;
+        }
+        var nowSecTu = Date.now() / 1000;
+        tuRows.forEach(function (r) {
+          var row = document.createElement('div');
+          row.className = 'stop-live-row';
+          var dot = document.createElement('i');
+          var rc = routeColors[r.rid];
+          dot.style.background = rc ? '#' + rc.getHexString() : '#F5F2EA';
+          row.appendChild(dot);
+          var b = document.createElement('b');
+          b.textContent = routeLabel(r.rid);
+          row.appendChild(b);
+          var tag = document.createElement('span');
+          tag.className = 'arr-tag live';
+          tag.textContent = 'Live';
+          row.appendChild(tag);
+          var t = document.createElement('span');
+          var dSec = r.time - nowSecTu;
+          t.textContent = dSec < 45 ? 'now' : (dSec <= 5400 ? 'in ' + Math.round(dSec / 60) + 'm' : formatClock12(r.time * 1000));
+          t.title = 'Live trip update from Swiftly' + (r.bus ? ' — bus ' + r.bus : '') +
+            (r.delay != null && Math.abs(r.delay) >= 45 ? ' — running ' + Math.round(Math.abs(r.delay) / 60) + ' min ' + (r.delay > 0 ? 'late' : 'early') : '');
+          row.appendChild(t);
+          list.appendChild(row);
+        });
+        note.textContent = 'Live times from SMART trip updates (Swiftly); the feed rebuilds every few minutes.';
+        note.hidden = false;
+        return;
+      }
       note.textContent = 'Arrival times are published for DDOT stops. SMART and QLINE publish live positions only — see the live vehicles below.';
       note.hidden = false;
       return;
@@ -6719,6 +6826,16 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       .then(function (r) { clearTimeout(timer); return r.ok ? r.json() : null; },
             function () { clearTimeout(timer); return null; });
   }
+  // SMART trip-updates payload (deployed 2026-10-17): fetched
+  // on the same poll cycle as the display payload; resolves null on
+  // any failure so a trip-updates outage can never fail the poll.
+  function fetchSmartTripUpdates(proxy) {
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, 8000);
+    return fetch(proxy + '/smart-trip-updates.json', { cache: 'no-store', signal: ctrl.signal })
+      .then(function (r) { clearTimeout(timer); return r.ok ? r.json() : null; },
+            function () { clearTimeout(timer); return null; });
+  }
   function poll() {
     var proxy = (window.FORGE_LIVE_PROXY || '').replace(/\/$/, '');
     if (!proxy) { setHeader(null, 'connecting…', false); return; }
@@ -6741,7 +6858,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           smartAge = computeSmartAge(s, Date.now());
           var sv = smartDisplayVehicles(s, Date.now());
           if (sv.length) d.vehicles = d.vehicles.concat(sv);
-          return d;
+          // SMART trip updates ride the same cycle (deployed
+          // 2026-10-17). Display-only ingest for SMART stop cards;
+          // the result is never merged into d.vehicles or any state
+          // the planner reads.
+          return fetchSmartTripUpdates(proxy).then(function (t) {
+            ingestSmartTripUpdates(t, Date.now());
+            return d;
+          });
         });
       })
       .then(function (d) {
