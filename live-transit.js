@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261017-0352';
+  var STAMP = '20261017-0400';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -2178,6 +2178,100 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var wppS = (2 * distS * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)) / r.height;
     return { d: d, score: d - (wppS > 0 ? 16 / wppS : 0) };
   }
+  // Render-engine refactor Phase 3 (project 15): stop picking reads a
+  // uniform grid over stopPickList instead of raycasting the whole
+  // InstancedMesh (three tests every one of the 10,583 instances per
+  // pick — 5.70 ms measured in the project-15 research; the grid query
+  // class measured <0.01 ms). The grid only ENUMERATES candidates; the
+  // intersection test itself is the exact per-instance triangle raycast
+  // three performs, run on a scratch mesh with the candidate's own
+  // instance matrix, so the winner — and every arbitration outcome
+  // downstream under project 10's rules, which are untouched — is the
+  // same by construction. Completeness: a ray can only hit a pylon
+  // whose base lies within the pylon radius (18 m) of the ray's XZ
+  // trace through the height band the pylons occupy; the walk samples
+  // that trace every half cell and unions the 3 x 3 cell blocks, which
+  // covers an 18 m halo around the trace with margin.
+  var STOP_GRID_CELL = 64;
+  var stopGrid = null, stopGridFor = null, stopGridLen = -1;
+  var stopGridFirst = null, stopGridLast = null;
+  function buildStopGrid() {
+    stopGrid = new Map();
+    for (var i = 0; i < stopPickList.length; i++) {
+      var s = stopPickList[i];
+      var key = Math.floor(s.x / STOP_GRID_CELL) + ',' + Math.floor(s.z / STOP_GRID_CELL);
+      var cell = stopGrid.get(key);
+      if (!cell) { cell = []; stopGrid.set(key, cell); }
+      cell.push(i);
+    }
+    stopGridFor = stopPickList;
+    stopGridLen = stopPickList.length;
+    stopGridFirst = stopPickList[0] || null;
+    stopGridLast = stopPickList[stopPickList.length - 1] || null;
+  }
+  function ensureStopGrid() {
+    if (stopGridFor !== stopPickList || stopGridLen !== stopPickList.length ||
+        stopGridFirst !== (stopPickList[0] || null) ||
+        stopGridLast !== (stopPickList[stopPickList.length - 1] || null)) buildStopGrid();
+  }
+  var _gridScratch = null, _gridM4 = null;
+  function gridStopHit(raycaster) {
+    if (!stopPickList.length) return null;
+    // Same matrix/visual sync Phase 2's override guarded: the scratch
+    // tests read instance matrices, which bake stopBakedYS, while the
+    // shader draws stopYS. A pick that arrives after the scale moved
+    // re-bakes first — a discrete-event cost, off the frame path.
+    if (stopBakedYS !== stopYS) writeStopMatrices(stopPickList, false);
+    ensureStopGrid();
+    if (!_gridScratch) {
+      _gridScratch = new THREE.Mesh(stopIM.geometry, stopIM.material);
+      _gridScratch.matrixAutoUpdate = false;
+      _gridScratch.matrixWorldAutoUpdate = false;
+      _gridM4 = new THREE.Matrix4();
+    }
+    var o = raycaster.ray.origin, d = raycaster.ray.direction;
+    var maxTop = 0;
+    for (var i = 0; i < stopPickList.length; i++) {
+      var hh = STOP_BASE_Y + stopHeight(stopPickList[i].r.length) * stopYS;
+      if (hh > maxTop) maxTop = hh;
+    }
+    // The ray's parameter span while its Y is inside [0, maxTop].
+    var t0 = 0, t1 = 60000;
+    if (Math.abs(d.y) > 1e-9) {
+      var ta = (0 - o.y) / d.y, tb = (maxTop - o.y) / d.y;
+      t0 = Math.max(0, Math.min(ta, tb));
+      t1 = Math.max(ta, tb);
+      if (t1 < 0) return null;
+      if (t1 > 60000) t1 = 60000;
+    } else if (o.y < 0 || o.y > maxTop) return null;
+    if (t1 < t0) return null;
+    var cand = new Set();
+    var steps = Math.max(1, Math.ceil((t1 - t0) / (STOP_GRID_CELL * 0.5)));
+    for (var k = 0; k <= steps; k++) {
+      var t = t0 + (t1 - t0) * (k / steps);
+      var cx = Math.floor((o.x + d.x * t) / STOP_GRID_CELL);
+      var cz = Math.floor((o.z + d.z * t) / STOP_GRID_CELL);
+      for (var gx = cx - 1; gx <= cx + 1; gx++) {
+        for (var gz = cz - 1; gz <= cz + 1; gz++) {
+          var cell = stopGrid.get(gx + ',' + gz);
+          if (cell) for (var j = 0; j < cell.length; j++) cand.add(cell[j]);
+        }
+      }
+    }
+    var best = null;
+    cand.forEach(function (idx) {
+      stopIM.getMatrixAt(idx, _gridM4);
+      _gridScratch.matrix.copy(_gridM4);
+      _gridScratch.matrixWorld.copy(_gridM4);
+      var hits = [];
+      _gridScratch.raycast(raycaster, hits);
+      if (hits.length && (!best || hits[0].distance < best.distance)) {
+        hits[0].instanceId = idx;
+        best = hits[0];
+      }
+    });
+    return best;
+  }
   function pickStop(cx, cy, isTouch) {
     if (!stopGroup || !stopGroup.visible || !stopPickList.length) return null;
     var r = renderer.domElement.getBoundingClientRect();
@@ -2186,9 +2280,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       -(((cy - r.top) / r.height) * 2 - 1)
     );
     raycaster.setFromCamera(pointerNDC, camera);
-    var hits = raycaster.intersectObject(stopIM);
-    if (hits.length && hits[0].instanceId != null) {
-      return stopPickList[hits[0].instanceId] || null;
+    var hit = gridStopHit(raycaster);
+    if (hit) {
+      return stopPickList[hit.instanceId] || null;
     }
     if (!isTouch) return null;
     return pickStopScreen(cx, cy, r);
@@ -2215,18 +2309,20 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       targets.push(pillarBeaconIM, pillarGlowIM, pillarCoreIM);
       busMeshCount = 3;
     }
-    var stopMesh = null;
-    if (stopGroup && stopGroup.visible && stopPickList.length) {
-      stopMesh = stopIM; targets.push(stopIM);
-    }
-    if (!targets.length) return null;
     var hits = raycaster.intersectObjects(targets);
-    if (!hits.length) return null;
-    var h = hits[0];
-    if (stopMesh && h.object === stopMesh) {
-      var st = (h.instanceId != null) ? (stopPickList[h.instanceId] || null) : null;
-      return st ? { kind: 'stop', stop: st } : null;
+    var h = hits.length ? hits[0] : null;
+    // Phase 3: the stop contestant comes from gridStopHit (identical
+    // intersection math over a candidate subset) and merges with the
+    // bus raycast by distance — a tie keeps the bus, exactly as the
+    // combined intersectObjects order did (stopIM sorted last).
+    if (stopGroup && stopGroup.visible && stopPickList.length) {
+      var sHit = gridStopHit(raycaster);
+      if (sHit && (!h || sHit.distance < h.distance)) {
+        var st = stopPickList[sHit.instanceId] || null;
+        return st ? { kind: 'stop', stop: st } : null;
+      }
     }
+    if (!h) return null;
     if (busMode) {
       var veh = (h.object.userData.detail) ? h.object.userData.detail.vehicle : null;
       return veh ? { kind: 'bus', vehicle: veh } : null;
@@ -3533,13 +3629,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   stopIM.frustumCulled = false;
   stopIM.count = 0;
   stopIM.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-  var _stopRaycastOrig = THREE.InstancedMesh.prototype.raycast;
-  stopIM.raycast = function (raycaster, intersects) {
-    if (stopBakedYS !== stopYS && stopPickList.length) {
-      writeStopMatrices(stopPickList, false);
-    }
-    return _stopRaycastOrig.call(this, raycaster, intersects);
-  };
+  // Phase 3 note: Phase 2's stopIM.raycast override (re-bake matrices
+  // before a whole-mesh raycast) is removed with the raycast itself —
+  // the pick paths below no longer raycast stopIM. gridStopHit performs
+  // the same re-bake before testing candidates against the matrices.
   function syncStopScaleU() {
     stopScaleU.value = stopBakedYS ? stopYS / stopBakedYS : 1;
   }
