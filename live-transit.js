@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261016-1906';
+  var STAMP = '20261016-2029';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -49,6 +49,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // at 3, background re-planning and guidance pause until the next
   // successful user-initiated plan.
   var plannerFaultStreak = 0, plannerPaused = false, plannerFaultThisPoll = false;
+  var plannerPollActive = false; // re-entry guard (stack-overflow fix, 20261016-2029)
 
   function errSnapshot() {
     var s = {};
@@ -6164,11 +6165,25 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
   // Step 2 (§4.2): the planner path inside the poll is contained at
   // this call site. poll's .catch fires only for genuine feed failures.
+  // Re-entry guard (2026-10-16, stack-overflow fix): the planner path
+  // must never re-enter itself. Its render tail reaches back into
+  // updateBuses synchronously — replanLive -> highlightJourney (and
+  // clearTripHighlight) -> applyFilters -> updateBuses — so a nested
+  // poll path re-plans on top of the outer one until the stack
+  // overflows (production, build 20261016-1906: 'replan:' /
+  // 'poll-path:' Maximum call stack size exceeded under live-delay
+  // state). The nested updateBuses still reconciles and renders
+  // vehicles; only the nested planner path is skipped — the outer
+  // run already holds this poll's delay state.
   function runPlannerPollPath() {
-    plannerFaultThisPoll = false;
-    try { updateLiveDelays(); }
-    catch (e) { notePlannerFault(e, 'poll-path'); }
-    if (!plannerFaultThisPoll) plannerFaultStreak = 0;
+    if (plannerPollActive) return;
+    plannerPollActive = true;
+    try {
+      plannerFaultThisPoll = false;
+      try { updateLiveDelays(); }
+      catch (e) { notePlannerFault(e, 'poll-path'); }
+      if (!plannerFaultThisPoll) plannerFaultStreak = 0;
+    } finally { plannerPollActive = false; }
   }
 
   function updateBuses(vehicles) {
