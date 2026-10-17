@@ -677,6 +677,13 @@
     frag.appendChild(el('p', 'ra-empty',
       'Bus ' + v.vehicle_id + ' is on route ' + (this.routeById[v.route_id] ? routeLabel(this.routeById[v.route_id]) : v.route_id) +
       ', but the route path is not loaded yet.'));
+    // Return (project 11): this boarded state has no Get off (the
+    // bus cannot be placed on its path), so Return is the rider's
+    // way back to the replaced state — render it like every other
+    // boarded view. Caught by the 0342 production drive: a boarded
+    // off-path bus showed neither control.
+    var rBtnX = this._returnBtn();
+    if (rBtnX) frag.appendChild(rBtnX);
     this._commitBody(body, frag);
   };
 
