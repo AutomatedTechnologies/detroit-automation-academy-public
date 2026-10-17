@@ -136,6 +136,8 @@
     var dx = rp.x - v.x, dz = rp.z - v.z;
     var dist = Math.sqrt(dx * dx + dz * dz);
     if (dist <= 20) return { cls: 'here', dist: dist };
+    // Route Reverse: a layover-bound bus is at the endpoint.
+    if (v.layover) return { cls: 'terminal', dist: dist };
     if (v.bearing == null || isNaN(v.bearing)) return { cls: null, dist: dist };
     // Travel vector for a compass bearing in scene coords (the
     // convention locateOnPath's pathBearing uses): (sin b, -cos b).
@@ -401,7 +403,30 @@
     // space mismatch must never blank the rider's stops.
     var tp = null;
     if (this.timesProvider) { try { tp = this.timesProvider(v); } catch (e) { tp = null; } }
-    if (tp && tp.onlyIds) {
+    // Route Reverse terminal states (specification sections 2.2-2.3):
+    // a layover tile and an at-terminal tile are their own views, not
+    // the en-route view wearing a geometric sequence.
+    if (tp && tp.layover) { this.renderLayover(v, route, tp); return; }
+    if (tp && tp.atTerminal) { this.renderTerminal(v, route, tp); return; }
+    if (tp && tp.seqIds && tp.seqIds.length) {
+      // Bound tile: the sequence is the trip's own remaining stops, in
+      // trip order — in a terminal loop the geometric order and the
+      // trip order disagree, which is the founding defect. Any stop
+      // the registry lacks falls back to the id filter below.
+      var byStopId = {};
+      onPath.forEach(function (u) { byStopId[String(u.stop.id)] = u; });
+      var seqd = [];
+      for (var si = 0; si < tp.seqIds.length; si++) {
+        var su = byStopId[String(tp.seqIds[si].id)];
+        if (!su) { seqd = null; break; }
+        seqd.push(su);
+      }
+      if (seqd && seqd.length) upcoming = seqd;
+      else if (tp.onlyIds) {
+        var filtered2 = upcoming.filter(function (u) { return tp.onlyIds[String(u.stop.id)]; });
+        if (filtered2.length) upcoming = filtered2;
+      }
+    } else if (tp && tp.onlyIds) {
       var filtered = upcoming.filter(function (u) { return tp.onlyIds[String(u.stop.id)]; });
       if (filtered.length) upcoming = filtered;
     }
@@ -584,6 +609,86 @@
     this.renderPicker();
   };
 
+  // Route Reverse S2 — the layover view: the bus has arrived, its
+  // next trip is assigned, and the tile says exactly that.
+  RideAlong.prototype.renderLayover = function (v, route, tp) {
+    var host = this.mount.querySelector('#ra-body');
+    if (!host) return;
+    var lay = tp.layover;
+    var body = document.createElement('div');
+    var head = el('div', 'ra-head');
+    var dot = el('i', 'ra-dot');
+    dot.style.background = route.color || '#9aa0a6';
+    head.appendChild(dot);
+    head.appendChild(el('b', 'ra-route', routeLabel(route)));
+    if (v.destination) head.appendChild(el('span', 'ra-dest', '\u2192 ' + v.destination));
+    body.appendChild(head);
+    body.appendChild(el('p', 'ra-bus', 'Bus ' + v.vehicle_id));
+    body.appendChild(el('p', 'ra-here', 'At ' + lay.terminal + ' \u00b7 end of the line'));
+    var card = el('div', 'ra-next');
+    card.appendChild(el('p', 'ra-next-kicker', 'Next departure'));
+    card.appendChild(el('p', 'ra-next-name', lay.terminal));
+    var streets = streetsFromStopName(lay.terminal);
+    if (streets.length > 1) {
+      card.appendChild(el('p', 'ra-next-x', 'Intersection of ' + streets.join(' and ')));
+    }
+    card.appendChild(el('p', 'ra-next-time',
+      lay.departClock + (lay.headsign ? ' \u00b7 toward ' + lay.headsign : '')));
+    body.appendChild(card);
+    var rest = [];
+    if (tp.seqIds) {
+      for (var i = 0; i < tp.seqIds.length; i++) {
+        if (lay.originId && String(tp.seqIds[i].id) === String(lay.originId)) continue;
+        rest.push(tp.seqIds[i]);
+      }
+    }
+    if (rest.length) {
+      body.appendChild(el('h4', 'ra-sub', 'Next trip \u2014 upcoming stops'));
+      var list = el('ol', 'ra-stops');
+      rest.slice(0, 11).forEach(function (s) {
+        var li = el('li', 'ra-stop', s.name);
+        var t = tp.byStop ? tp.byStop[String(s.id)] : null;
+        if (t) li.appendChild(el('span', 'ra-time', ' \u00b7 ' + t));
+        list.appendChild(li);
+      });
+      body.appendChild(list);
+    }
+    if (tp.note) body.appendChild(el('p', 'ra-note', tp.note));
+    var rBtnL = this._returnBtn();
+    if (rBtnL) body.appendChild(rBtnL);
+    var leaveL = el('button', 'ra-leave', 'Get off this bus');
+    leaveL.type = 'button';
+    var selfL = this;
+    leaveL.addEventListener('click', function () { selfL.alight(); });
+    body.appendChild(leaveL);
+    this._commitBody(host, body);
+  };
+  // Route Reverse S3 — at the terminal, unbound: the bus has reached
+  // the end of its run and no next trip is assigned. No sequence is
+  // invented for it.
+  RideAlong.prototype.renderTerminal = function (v, route, tp) {
+    var host = this.mount.querySelector('#ra-body');
+    if (!host) return;
+    var body = document.createElement('div');
+    var head = el('div', 'ra-head');
+    var dot = el('i', 'ra-dot');
+    dot.style.background = route.color || '#9aa0a6';
+    head.appendChild(dot);
+    head.appendChild(el('b', 'ra-route', routeLabel(route)));
+    if (v.destination) head.appendChild(el('span', 'ra-dest', '\u2192 ' + v.destination));
+    body.appendChild(head);
+    body.appendChild(el('p', 'ra-bus', 'Bus ' + v.vehicle_id));
+    body.appendChild(el('p', 'ra-here', 'At ' + tp.atTerminal + ' \u00b7 end of the line'));
+    if (tp.note) body.appendChild(el('p', 'ra-note', tp.note));
+    var rBtnT = this._returnBtn();
+    if (rBtnT) body.appendChild(rBtnT);
+    var leaveT = el('button', 'ra-leave', 'Get off this bus');
+    leaveT.type = 'button';
+    var selfT = this;
+    leaveT.addEventListener('click', function () { selfT.alight(); });
+    body.appendChild(leaveT);
+    this._commitBody(host, body);
+  };
   RideAlong.prototype.renderPicker = function () {
     var picker = this.mount.querySelector('#ra-picker');
     if (!picker) return;
@@ -613,6 +718,7 @@
         label += ' · ' + fmtDistM(ai.dist);
         if (ai.cls === 'approaching') label += ' · approaching';
         else if (ai.cls === 'passed') label += ' · heading away';
+        else if (ai.cls === 'terminal') label += ' · at terminal';
       }
       return { v: v, label: label, dist: ai ? ai.dist : null };
     });
