@@ -80,6 +80,13 @@ jobs:
           if [ -e live-data/smart-display.json ] || git ls-files --error-unmatch live-data/smart-display.json >/dev/null 2>&1; then
             git add -A -- live-data/smart-display.json
           fi
+          # smart-trip-updates.json: same lifecycle as
+          # smart-display.json — exists
+          # only while SWIFTLY_KEY is set; stage it when present or
+          # tracked so a key withdrawal commits its deletion too.
+          if [ -e live-data/smart-trip-updates.json ] || git ls-files --error-unmatch live-data/smart-trip-updates.json >/dev/null 2>&1; then
+            git add -A -- live-data/smart-trip-updates.json
+          fi
           if git diff --cached --quiet; then
             echo "No material change; nothing to commit."
             echo "pushed=false" >> "$GITHUB_OUTPUT"
