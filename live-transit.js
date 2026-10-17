@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261017-0327';
+  var STAMP = '20261017-0342';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -2422,6 +2422,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     exclCover('bus');
     var isReselect = (v.vehicle_id === selectedVehicleId);
     tapBuzz();
+    // Return (project 11): a selection that boards in the ride
+    // widget replaces the tile's state — capture that state before
+    // the selection (and everything it drives) mutates.
+    if (rideMode && rideWidget && v.vehicle_id !== rideWidget.currentVehicleId) {
+      _tilePushPre = captureTileState();
+    }
     selectedVehicleId = v.vehicle_id;
     renderBusInstances(); // expand the selected indicator
     var sn = v.route_id;
@@ -4939,15 +4945,275 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // does not know the vehicle — never board a bus the picker cannot show.
   function boardRideBus(vid, engageCamera) {
     if (!rideWidget || !vid) return false;
+    // A snapshot pre-captured by showBus belongs to this board call
+    // alone; consume it whatever the outcome.
+    var pre = _tilePushPre; _tilePushPre = null;
     var known = false;
     for (var i = 0; i < rideWidget.vehicles.length; i++) {
       if (rideWidget.vehicles[i].vehicle_id === vid) { known = true; break; }
     }
     if (!known) return false;
+    var prevVid = rideWidget.currentVehicleId;
+    // Return (project 11, WS1): a rider-facing board that changes the
+    // boarded bus pushes the state it replaced — captured NOW, before
+    // the board and its camera work mutate anything. Machinery
+    // boards (planner focus poll, Return's own restore) run under
+    // tilePushMute and never push. showBus may substitute its own
+    // earlier pre-capture (it mutates the selection first).
+    var preState = null;
+    if (!tilePushMute && prevVid !== vid) preState = pre || captureTileState(prevVid);
     _rideBoardMute = true;
     try { rideWidget.board(vid); } finally { _rideBoardMute = false; }
     if (engageCamera) rideFollowBus(vid);
+    if (preState) pushTileState(preState);
+    syncRidePickLabels();
     return true;
+  }
+  function boardRideBusMuted(vid, engageCamera) {
+    tilePushMute++;
+    try { return boardRideBus(vid, engageCamera); }
+    finally { tilePushMute--; }
+  }
+  // --- Ride Along Return (project 11, WS1) -------------------------
+  // The tile's exits used to abandon its previous state: any board
+  // change — the activation auto-board, a map tap, a dropdown
+  // switch, a planner leg focus — destroyed the prior boarded state
+  // irrecoverably. The stack below is captured BEFORE rider-facing
+  // tile-state changes and restored by the tile's Return control.
+  // Return ≠ Get off: Get off ends the ride (and empties the stack);
+  // Return restores the captured state exactly — boarded bus or
+  // scheduled focus, follow target, camera framing, selection, and
+  // the card's scroll offset. Design of record:
+  // goals/forge-line-live-transit-layer/files/
+  // ride-along-return-endpoints/audit-and-design.md.
+  var tileReturnStack = [];
+  var tilePushMute = 0;    // >0 while machinery moves the tile (focus poll, restore)
+  var _tilePushPre = null; // snapshot pre-captured by showBus before it mutates selection
+  function captureTileState(vidOverride) {
+    var f = camMemFraming();
+    return {
+      vid: vidOverride !== undefined ? vidOverride
+        : (rideWidget ? rideWidget.currentVehicleId : null),
+      sched: rideWidget ? rideWidget.scheduledSpec : null,
+      focus: plannerFocus ? { vid: plannerFocus.vid, trip: plannerFocus.trip, spec: plannerFocus.spec } : null,
+      missing: rideWidget ? !!rideWidget.boardedMissing : false,
+      rideMode: rideMode,
+      followVId: followVId,
+      camPos: f.pos, camTgt: f.tgt,
+      scrollTop: $('ride-card') ? $('ride-card').scrollTop : 0,
+      selVid: selectedVehicleId
+    };
+  }
+  function tileReturnLabelFor(s) {
+    if (!s) return null;
+    if (!s.rideMode) return 'Return to your trip plan';
+    if (s.focus) return 'Return to ' + (s.vid ? 'Bus ' + s.vid : 'your scheduled trip') + ' · your trip';
+    if (s.vid) return 'Return to Bus ' + s.vid;
+    return 'Return to choosing a bus';
+  }
+  function syncRideReturnUI() {
+    if (!rideWidget || !rideWidget.setReturnLabel) return;
+    var top = tileReturnStack.length ? tileReturnStack[tileReturnStack.length - 1] : null;
+    try { rideWidget.setReturnLabel(tileReturnLabelFor(top)); } catch (e) {}
+  }
+  function pushTileState(pre) {
+    tileReturnStack.push(pre || captureTileState());
+    if (tileReturnStack.length > 6) tileReturnStack.shift();
+    syncRideReturnUI();
+  }
+  function clearTileReturnStack() {
+    if (!tileReturnStack.length) return;
+    tileReturnStack = [];
+    syncRideReturnUI();
+  }
+  function rideReturn() {
+    if (!rideWidget || !tileReturnStack.length) return;
+    var s = tileReturnStack.pop();
+    syncRideReturnUI();
+    tilePushMute++;
+    try {
+      if (!s.rideMode) {
+        // The state before a planner leg focus: the tile was closed
+        // and the planner was in front. Closing the tile IS the
+        // restore — the armed cover returns the planner verbatim.
+        clearPlannerFocus('return');
+        setRideMode(false);
+        return;
+      }
+      if (s.focus) {
+        clearPlannerFocus('return');
+        plannerFocus = { vid: s.focus.vid, trip: s.focus.trip, spec: s.focus.spec,
+                         missingPolls: 0, degraded: !!s.missing, awaitBoard: false };
+        rideWidget.setFocusSpec(s.focus.spec);
+        if (s.focus.vid) {
+          if (!boardRideBus(s.focus.vid, false)) ridePendingVid = s.focus.vid;
+          if (s.missing) rideWidget.setBoardedMissing(true);
+        } else if (s.sched) {
+          rideWidget.showScheduled(s.sched);
+        }
+      } else if (s.vid) {
+        if (plannerFocus) clearPlannerFocus('return');
+        if (!boardRideBus(s.vid, false)) {
+          // The bus is gone: degrade honestly — land in the choose
+          // state and say so. The popped state is consumed.
+          if (rideWidget.currentVehicleId) rideWidget.alight();
+          showToast('Bus ' + s.vid + ' is no longer reporting — can\u2019t return to it.', false);
+        }
+      } else {
+        if (plannerFocus) clearPlannerFocus('return');
+        if (rideWidget.currentVehicleId) rideWidget.alight();
+        else if (rideWidget.scheduledSpec) rideWidget.clearScheduled();
+        if (s.sched) rideWidget.showScheduled(s.sched);
+      }
+      // Selection: the variable and its in-scene indicator only —
+      // never open the bus card over the tile.
+      selectedVehicleId = s.selVid;
+      renderBusInstances();
+      if (typeof refreshBusInfo === 'function') refreshBusInfo();
+      // Follow + camera: when the snapshot's follow rode its own
+      // bus, re-engaging follow restores the framing (the camMem
+      // followOwned rule). Otherwise restore follow to its target
+      // when that bus is still tracked, else release it, and glide
+      // to the captured framing.
+      if (s.vid && s.followVId === s.vid) {
+        rideFollowBus(s.vid);
+      } else {
+        var followRestored = false;
+        if (s.followVId) {
+          for (var i = 0; i < busSlots.length; i++) {
+            if (busSlots[i].vehicle && busSlots[i].vehicle.vehicle_id === s.followVId) {
+              setFollow(s.followVId, busSlots[i]); followRestored = true; break;
+            }
+          }
+        }
+        if (!followRestored) {
+          if (followVId) setFollow(null);
+          glideTo(s.camPos, s.camTgt, 900);
+        }
+      }
+      var card = $('ride-card');
+      if (card) card.scrollTop = s.scrollTop;
+    } catch (e) { errLog('ride', 'return: ' + (e && e.message || e), e); }
+    finally { tilePushMute--; }
+    syncRideReturnUI();
+    syncRidePickLabels();
+  }
+  // --- Ride Along endpoint indication on the map (project 11, WS2) --
+  // While the tile is in the choose state, the candidate endpoints —
+  // the activation reframe's set: nearest ≤ 6 within 1600 m of the
+  // rider (or of the camera target without a fix) — carry a label at
+  // their badge naming the terminal they are traveling toward and
+  // their distance, so two same-route buses in one frame read as two
+  // different trips. depthTest is off and the render order sits
+  // above the badges, so the indication survives the route ribbon
+  // draw (the occlusion Touch Accuracy case 2 filed). Positions are
+  // the rendered slot positions, updated per frame in ridePickTick;
+  // textures rebuild only when the set or a label's text changes
+  // (syncRidePickLabels runs on each vehicle push and tile change).
+  var ridePickGroup = null;
+  var ridePickSprites = {}; // vid -> { sprite, key }
+  function makeRidePickSprite(text, sub, colorHex) {
+    var c = document.createElement('canvas');
+    var mx = c.getContext('2d');
+    mx.font = '600 44px "Space Grotesk", sans-serif';
+    var tw = Math.ceil(mx.measureText(text).width);
+    if (sub) {
+      mx.font = '500 36px "Space Grotesk", sans-serif';
+      tw = Math.max(tw, Math.ceil(mx.measureText(sub).width));
+    }
+    c.width = Math.max(200, tw + 44);
+    c.height = sub ? 132 : 96;
+    var x = c.getContext('2d');
+    x.fillStyle = 'rgba(12,17,22,0.88)';
+    x.beginPath();
+    if (x.roundRect) x.roundRect(4, 4, c.width - 8, c.height - 8, 26); else x.rect(4, 4, c.width - 8, c.height - 8);
+    x.fill();
+    x.strokeStyle = colorHex; x.lineWidth = 3; x.stroke();
+    x.fillStyle = '#F5F2EA'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.font = '600 44px "Space Grotesk", sans-serif';
+    x.fillText(text, c.width / 2, sub ? 40 : c.height / 2);
+    if (sub) {
+      x.fillStyle = 'rgba(245,242,234,0.75)';
+      x.font = '500 36px "Space Grotesk", sans-serif';
+      x.fillText(sub, c.width / 2, 94);
+    }
+    var tex = new THREE.CanvasTexture(c);
+    tex.anisotropy = 4;
+    var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false }));
+    var H = 210;
+    sp.scale.set(H * c.width / c.height, H, 1);
+    sp.renderOrder = 30;
+    return sp;
+  }
+  function ridePickCandidates() {
+    if (!rideMode || !rideWidget) return [];
+    if (rideWidget.currentVehicleId || rideWidget.scheduledSpec || plannerFocus) return [];
+    if (typeof streetView !== 'undefined' && streetView) return [];
+    var hasLoc = (typeof userXZ !== 'undefined' && !!userXZ);
+    var ax = hasLoc ? userXZ[0] : controls.target.x;
+    var az = hasLoc ? userXZ[1] : controls.target.z;
+    var vs = [];
+    for (var i = 0; i < rideWidget.vehicles.length; i++) {
+      var v = rideWidget.vehicles[i];
+      if (v.x == null || v.z == null) continue;
+      var dx = v.x - ax, dz = v.z - az;
+      var d2 = dx * dx + dz * dz;
+      if (d2 <= 1600 * 1600) vs.push({ v: v, d2: d2 });
+    }
+    vs.sort(function (a, b) { return a.d2 - b.d2; });
+    return vs.slice(0, 6).map(function (e) { return e.v; });
+  }
+  function syncRidePickLabels() {
+    if (typeof THREE === 'undefined' || typeof scene === 'undefined') return;
+    if (!ridePickGroup) { ridePickGroup = new THREE.Group(); scene.add(ridePickGroup); }
+    var cands = ridePickCandidates();
+    var seen = {};
+    for (var i = 0; i < cands.length; i++) {
+      var v = cands[i];
+      seen[v.vehicle_id] = true;
+      var dest = formatDest(v.route_id, v.destination);
+      var text = dest ? '\u2192 ' + dest : routeLabel(v.route_id);
+      var sub = '';
+      if (typeof userXZ !== 'undefined' && userXZ && v.x != null && v.z != null) {
+        sub = rideFmtDist(Math.hypot(v.x - userXZ[0], v.z - userXZ[1]));
+      }
+      var key = text + '|' + sub;
+      var cur = ridePickSprites[v.vehicle_id];
+      if (!cur || cur.key !== key) {
+        if (cur) {
+          ridePickGroup.remove(cur.sprite);
+          if (cur.sprite.material.map) cur.sprite.material.map.dispose();
+          cur.sprite.material.dispose();
+        }
+        var col = routeColors[v.route_id] ? '#' + routeColors[v.route_id].getHexString() : '#F5F2EA';
+        var sp = makeRidePickSprite(text, sub, col);
+        ridePickGroup.add(sp);
+        ridePickSprites[v.vehicle_id] = { sprite: sp, key: key };
+      }
+    }
+    for (var vid in ridePickSprites) {
+      if (!seen[vid]) {
+        var e = ridePickSprites[vid];
+        ridePickGroup.remove(e.sprite);
+        if (e.sprite.material.map) e.sprite.material.map.dispose();
+        e.sprite.material.dispose();
+        delete ridePickSprites[vid];
+      }
+    }
+    ridePickGroup.visible = !!cands.length;
+  }
+  function ridePickTick() {
+    if (!ridePickGroup || !ridePickGroup.visible) return;
+    for (var vid in ridePickSprites) {
+      for (var i = 0; i < busSlots.length; i++) {
+        var sl = busSlots[i];
+        if (sl.vehicle && sl.vehicle.vehicle_id === vid) {
+          ridePickSprites[vid].sprite.position.set(sl.x,
+            (busMode ? 150 : PILLAR_H * pillarYS + 80) + 200, sl.z);
+          break;
+        }
+      }
+    }
   }
   // A board intent that lost a feed race (2026-10-16): the selected bus
   // was absent from the widget's vehicle snapshot at open time — a GPS
@@ -4956,10 +5222,42 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // bus stood selected on the map. The intent is kept here and honored
   // by __setRideVehicles the first poll the bus appears in.
   var ridePendingVid = null;
+  // Approach class of a vehicle relative to a rider point, from the
+  // rendered positions and the vehicle's bearing: 'here' within
+  // 20 m; else 'approaching' when its heading carries it toward the
+  // point; else 'passed' (heading away — it has gone by the rider,
+  // or travels the opposite direction). cls is null when the
+  // bearing is unknown. The ride widget classifies with the same
+  // formula for its picker indication (project 11, WS2). Travel
+  // vector for a compass bearing in scene coords: (sin b, -cos b).
+  function rideApproachClass(v, rx, rz) {
+    if (!v || v.x == null || v.z == null) return null;
+    var dx = rx - v.x, dz = rz - v.z;
+    var dist = Math.sqrt(dx * dx + dz * dz);
+    if (dist <= 20) return { cls: 'here', dist: dist };
+    if (v.bearing == null || isNaN(v.bearing)) return { cls: null, dist: dist };
+    var br = v.bearing * Math.PI / 180;
+    var dot = (Math.sin(br) * dx - Math.cos(br) * dz) / dist;
+    return { cls: dot >= 0 ? 'approaching' : 'passed', dist: dist };
+  }
+  // Rider-facing distance: feet under 1000 ft, else miles to one
+  // decimal. Twin of fmtDistM in ride-along.js.
+  function rideFmtDist(m) {
+    var ft = m * 3.28084;
+    if (ft < 1000) return Math.round(ft / 10) * 10 + ' ft';
+    return (m / 1609.344).toFixed(1) + ' mi';
+  }
   // The rider's own bus when nothing is selected: with a location fix,
   // the live bus within boarding distance (75 m in projected units) is
   // the one the rider is on or standing at. Beyond that distance the
   // picker stays empty rather than guessing at a bus across the street.
+  // Direction-aware (project 11): a bus that has passed the rider —
+  // heading away, the opposite direction's bus at a stop pair is the
+  // standing example — is never the silent default. 'here',
+  // 'approaching', and bearing-unknown buses are eligible and the
+  // nearest wins, as before; when only passed buses are in range the
+  // tile stays in the choose state, where the picker and the map
+  // indicate both endpoints and the rider picks explicitly.
   function nearestRideVehicleVid() {
     if (!rideWidget || typeof userXZ === 'undefined' || !userXZ) return null;
     var best = null, bestD2 = 75 * 75;
@@ -4968,7 +5266,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (v.x == null || v.z == null) continue;
       var dx = v.x - userXZ[0], dz = v.z - userXZ[1];
       var d2 = dx * dx + dz * dz;
-      if (d2 < bestD2) { bestD2 = d2; best = v.vehicle_id; }
+      if (d2 >= bestD2) continue;
+      var ac = rideApproachClass(v, userXZ[0], userXZ[1]);
+      if (ac && ac.cls === 'passed') continue;
+      bestD2 = d2; best = v.vehicle_id;
     }
     return best;
   }
@@ -5111,10 +5412,16 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // cover armed, and only then record the focus: a surface-mode
     // transition fires the planner-closed teardown hook, and the
     // record must not exist yet while it runs.
+    // Return (project 11): the focus replaces the tile's state, so
+    // the state it replaces is pushed first — the snapshot records
+    // rideMode as it stands, so a Return from the focus closes the
+    // tile back to the planner the cover is holding.
+    pushTileState();
+    tilePushMute++;
     rideAutoBoardMute = true;
     focusCoverArmed = true;
     try { setRideMode(true); } finally { rideAutoBoardMute = false; focusCoverArmed = false; }
-    if (!rideWidget) return;
+    if (!rideWidget) { tilePushMute--; return; }
     plannerFocus = { vid: vid || null, trip: leg.tripRef, spec: spec,
                      missingPolls: 0, degraded: false, awaitBoard: false };
     rideWidget.setFocusSpec(spec);
@@ -5128,6 +5435,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var bs = stopData[leg.board];
       if (bs) TransitionEngine.go({ vantage: TransitionEngine.vantageForStop(bs.x, 0, bs.z) });
     }
+    tilePushMute--;
   }
 
   function clearPlannerFocus(src) {
@@ -5142,6 +5450,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         else if (rideWidget.scheduledSpec) rideWidget.clearScheduled();
       } catch (e) { errLog('planner', 'focus-clear: ' + (e && e.message || e), e); }
     }
+    syncRidePickLabels();
   }
 
   function plannerFocusPoll() {
@@ -5167,7 +5476,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       f.vid = (tripDelayState.get(f.trip) || {}).vehicleId || null;
       if (!f.vid) return;
       f.missingPolls = 0;
-      if (boardRideBus(f.vid, plannerTileVisible())) {
+      if (boardRideBusMuted(f.vid, plannerTileVisible())) {
         showToast('Bus ' + f.vid + ' is now reporting live.', false);
       } else if (plannerTileVisible()) {
         ridePendingVid = f.vid;
@@ -5178,7 +5487,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       return;
     }
     if (f.awaitBoard) {
-      if (boardRideBus(f.vid, false)) {
+      if (boardRideBusMuted(f.vid, false)) {
         f.awaitBoard = false;
         showToast('Bus ' + f.vid + ' is now reporting live.', false);
       } else if (!(busTrackers[f.vid] && busTrackers[f.vid].vehicle) && ++f.missingPolls >= 2) {
@@ -5198,7 +5507,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         // The tile re-renders live from the fresh position on its
         // own; follow re-engages with a glide only while the rider
         // is looking at the tile.
-        if (plannerTileVisible() && !boardRideBus(f.vid, true)) ridePendingVid = f.vid;
+        if (plannerTileVisible() && !boardRideBusMuted(f.vid, true)) ridePendingVid = f.vid;
         showToast('Bus ' + f.vid + ' is now reporting live.', false);
       }
     } else if (++f.missingPolls >= 2 && !f.degraded) {
@@ -5218,8 +5527,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       // Camera hooks: boarding from the card's own dropdown also puts the
       // camera on the bus; getting off releases a follow this engagement
       // started.
-      rideWidget.onBoard = function (vid) {
+      rideWidget.onBoard = function (vid, prevVid) {
         if (_rideBoardMute) return;
+        // Return (project 11): a board from the tile's own picker
+        // replaces the tile's state — push the replaced state.
+        // prevVid names the widget side; the host fields captured
+        // here are still pre-transition, because onBoard fires
+        // inside board(), before the camera work below runs.
+        if (prevVid !== vid) pushTileState(captureTileState(prevVid));
         // A manual board inside the tile retargets any planner focus.
         if (plannerFocus && plannerFocus.vid !== vid) clearPlannerFocus('retargeted');
         rideFollowBus(vid);
@@ -5227,7 +5542,13 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       rideWidget.onAlight = function (vid) {
         if (followVId === vid) setFollow(null);
         if (plannerFocus && plannerFocus.vid === vid) clearPlannerFocus('alight');
+        // Get off ends the ride: there is nothing to return to
+        // inside it. Machinery alights (focus clear, Return's own
+        // restore) run muted and keep the stack.
+        if (!tilePushMute) clearTileReturnStack();
+        syncRidePickLabels();
       };
+      rideWidget.onReturnRequest = function () { rideReturn(); };
       rideWidget.onScheduledClose = function () { clearPlannerFocus('scheduled-closed'); };
       // Feed cached route/stop data if already loaded.
       if (typeof routeById !== 'undefined' && typeof stopData !== 'undefined') {
@@ -5271,7 +5592,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       try { rideChooseReframe(); }
       catch (e) { errLog('ride', 'choose-reframe: ' + (e && e.message || e), e); }
     }
-    if (!on) { ridePendingVid = null; clearPlannerFocus('tile-closed'); exclRestore(); }
+    if (!on) { ridePendingVid = null; clearPlannerFocus('tile-closed'); clearTileReturnStack(); exclRestore(); }
+    if (on) syncRideReturnUI();
+    syncRidePickLabels();
   }
   $('ride-btn').addEventListener('click', function () { tapBuzz(); setRideMode(!rideMode); });
   $('ride-close').addEventListener('click', function () { setRideMode(false); });
@@ -5317,8 +5640,23 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       return out2;
     });
     rideWidget.setVehicles(mapped);
+    // The rider's own position, for the picker's endpoint indication
+    // (distance + approach) — the same fix the location default uses.
+    if (rideWidget.setRiderPos) {
+      if (typeof userXZ !== 'undefined' && userXZ) rideWidget.setRiderPos(userXZ[0], userXZ[1]);
+      else rideWidget.setRiderPos(null);
+    }
+    syncRidePickLabels();
     // Honor a pending board intent the first time the bus appears.
-    if (ridePendingVid && rideMode && boardRideBus(ridePendingVid, true)) ridePendingVid = null;
+    // A pending FOCUS board is machinery (its state push happened at
+    // the leg tap); the activation path's pending board is the
+    // rider's own intent completing, and pushes normally.
+    if (ridePendingVid && rideMode) {
+      var pendFocus = !!(plannerFocus && plannerFocus.vid === ridePendingVid);
+      var pendOk = pendFocus ? boardRideBusMuted(ridePendingVid, true)
+                             : boardRideBus(ridePendingVid, true);
+      if (pendOk) ridePendingVid = null;
+    }
   };
   // Real-time ride view (2026-10-15): while a bus is boarded, push its
   // tracker-predicted position to the widget every 5 s. The poll alone
@@ -9334,6 +9672,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         // between polls instead of jumping every 60 s.
         updateBusMotion(performance.now());
         followTick(); // selected bus stays on screen as it moves
+        ridePickTick(); // endpoint labels track their buses (project 11)
         if (youMarker.group.visible) {
           var t = performance.now();
           var s = 1 + 0.22 * Math.sin(t / 420);
