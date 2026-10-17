@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261016-2107';
+  var STAMP = '20261016-2151';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -2196,7 +2196,17 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (cur === 'filter') togglePanel(false);
       else if (cur === 'browse') setBrowse(false);
       else if ((cur === 'trip' || cur === 'ride') && (name === 'trip' || name === 'ride')) {
-        if (cur === 'trip') setTripMode(false); else setRideMode(false);
+        // Planner Bus Focus (project 9): a leg tap opens the ride
+        // tile OVER the planner. The plan is the rider's working
+        // state and the focus is a look at one of its legs, so while
+        // focusCoverArmed the trip card takes the cover path (state
+        // intact, restored on tile close) instead of the hard close
+        // an ordinary mode switch performs.
+        if (cur === 'trip' && name === 'ride' && focusCoverArmed) {
+          _hideSurfaceEl(cur);
+          _coveredStack.push(cur);
+        }
+        else if (cur === 'trip') setTripMode(false); else setRideMode(false);
       } else {
         _hideSurfaceEl(cur);
         _coveredStack.push(cur);
@@ -4751,6 +4761,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // auto-board (selected bus / nearest bus) must not fire first and be
   // immediately retargeted — the focus boards explicitly.
   var rideAutoBoardMute = false;
+  // While a leg tap opens the ride surface, exclCover covers the trip
+  // card with its state intact instead of hard-closing the planner
+  // (see the trip/ride branch of exclCover).
+  var focusCoverArmed = false;
 
   function focusVehicleForLeg(leg) {
     // The one leg -> vehicle resolution: guidanceVehicle walks
@@ -4804,11 +4818,16 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var spec = legScheduledSpec(leg);
     var tr = focusVehicleForLeg(leg);
     var vid = tr ? (tripDelayState.get(leg.tripRef) || {}).vehicleId : null;
+    // Open the surface FIRST, with the auto-board muted and the trip
+    // cover armed, and only then record the focus: a surface-mode
+    // transition fires the planner-closed teardown hook, and the
+    // record must not exist yet while it runs.
+    rideAutoBoardMute = true;
+    focusCoverArmed = true;
+    try { setRideMode(true); } finally { rideAutoBoardMute = false; focusCoverArmed = false; }
+    if (!rideWidget) return;
     plannerFocus = { vid: vid || null, trip: leg.tripRef, spec: spec,
                      missingPolls: 0, degraded: false, awaitBoard: false };
-    rideAutoBoardMute = true;
-    try { setRideMode(true); } finally { rideAutoBoardMute = false; }
-    if (!rideWidget) { plannerFocus = null; return; }
     rideWidget.setFocusSpec(spec);
     if (vid) {
       if (!boardRideBus(vid, true)) ridePendingVid = vid;
