@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261017-0400';
+  var STAMP = '20261017-1030';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -1030,9 +1030,24 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var s = Math.max(0, Math.round((Date.now() - new Date(v.updated_at).getTime()) / 1000));
     return s < 60 ? s + 's ago' : Math.floor(s / 60) + 'm ago';
   }
+  // Route Reverse (project 18): the direction-label rule — when a
+  // binding exists, the bound trip's headsign is what every direction
+  // surface shows; unbound, the feed's sign. One rule, applied at the
+  // __setRideVehicles seam for the widget and here for the host
+  // surfaces (specification section 2.1).
+  function tripBindingFor(vid) {
+    var found = null;
+    tripDelayState.forEach(function (st, trip) { if (st.vehicleId === vid) found = { st: st, trip: trip }; });
+    return found;
+  }
+  function displayDest(v) {
+    if (!v) return '';
+    var b = tripBindingFor(v.vehicle_id);
+    return formatDest(v.route_id, (b && b.trip.h) ? b.trip.h : v.destination);
+  }
   function drawBusInfo(v) {
     var col = routeColors[v.route_id] ? '#' + routeColors[v.route_id].getHexString() : '#9aa0a6';
-    var dest = formatDest(v.route_id, v.destination);
+    var dest = displayDest(v);
     var line1 = routeLabel(v.route_id) + (dest ? ' → ' + dest : '');
     var spd = (v.speed_mph != null && !isNaN(v.speed_mph)) ? Math.round(v.speed_mph) + ' mph' : '–';
     var line2 = 'Bus ' + (v.vehicle_id || '–') + ' · ' + spd + ' · ' + busAgeText(v);
@@ -2601,7 +2616,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     selectedVehicleId = v.vehicle_id;
     renderBusInstances(); // expand the selected indicator
     var sn = v.route_id;
-    var dest = formatDest(sn, v.destination);
+    var dest = displayDest(v);
     var chipBg = routeColors[sn] ? '#' + routeColors[sn].getHexString() : '#F5F2EA';
     $('bus-chip').style.background = chipBg;
     var chipC = $('bus-chip-c'); // compact bar (staging Phase 2 HTML); guard for HTML without it
@@ -2613,7 +2628,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var cId = $('bus-compact-id');
     if (cId) cId.textContent = 'Vehicle ' + (v.vehicle_id || '–');
     $('bus-id').textContent = v.vehicle_id || '–';
-    $('bus-dest').textContent = formatDest(sn, v.destination) || '–';
+    $('bus-dest').textContent = dest || '–';
     $('bus-speed').textContent = (v.speed_mph != null && !isNaN(v.speed_mph)) ? Math.round(v.speed_mph) + ' mph' : '–';
     $('bus-heading').textContent = compass(v.bearing);
     var fi = fleetLookup(v.vehicle_id);
@@ -2836,7 +2851,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var v = slot.vehicle;
     var li = document.createElement('li');
     var b = document.createElement('button');
-    var dest = formatDest(v.route_id, v.destination);
+    var dest = displayDest(v);
     b.setAttribute('aria-label', 'Bus ' + (v.vehicle_id || '') + ', ' + routeLabel(v.route_id) + (dest ? ', to ' + dest : ''));
     var dot = document.createElement('i'); dot.className = 'b-dot';
     var rc = routeColors[v.route_id];
@@ -2867,7 +2882,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var slots = busSlots;
     if (q) slots = slots.filter(function (s) {
       var v = s.vehicle;
-      var hay = (v.route_id + ' ' + (v.vehicle_id || '') + ' ' + (routeNames[v.route_id] || '') + ' ' + (formatDest(v.route_id, v.destination) || '')).toLowerCase();
+      var hay = (v.route_id + ' ' + (v.vehicle_id || '') + ' ' + (routeNames[v.route_id] || '') + ' ' + (displayDest(v) || '')).toLowerCase();
       return hay.indexOf(q) >= 0;
     });
     var ids = slots.map(function (s) { return s.vehicle.vehicle_id; }).join(',');
@@ -3538,6 +3553,39 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // stops are the sequence filter, and its arrival times — empirically
   // adjusted (arrL2) when the timing cells have substituted them, else
   // scheduled (arr) — are shifted by the vehicle's measured delay.
+  // Route Reverse (project 18): the route's pattern termini (first and
+  // last stops of every pattern), as stopData indices per route id.
+  var rrTerminalsByRoute = null;
+  function rrTerminalAt(v) {
+    if (!v || v.x == null || v.z == null || !tripTT || !stopData) return null;
+    var spd = parseFloat(v.speed_mph);
+    if (!isNaN(spd) && spd > 2) return null;
+    if (v.updated_at) {
+      var age = Date.now() - new Date(v.updated_at).getTime();
+      if (!(age <= 300000)) return null;
+    }
+    if (!rrTerminalsByRoute) {
+      rrTerminalsByRoute = {};
+      for (var pi = 0; pi < tripTT.patterns.length; pi++) {
+        var pat = tripTT.patterns[pi];
+        var rid = tripTT.routes[pat.route] && String(tripTT.routes[pat.route].id);
+        if (!rid || !pat.trips.length) continue;
+        var set = rrTerminalsByRoute[rid] || (rrTerminalsByRoute[rid] = {});
+        for (var ti = 0; ti < pat.trips.length; ti++) {
+          var stops = pat.trips[ti].stops;
+          set[stops[0]] = true;
+          set[stops[stops.length - 1]] = true;
+        }
+      }
+    }
+    var terms = rrTerminalsByRoute[String(v.route_id)];
+    if (!terms) return null;
+    for (var idx in terms) {
+      var sObj = stopData[idx];
+      if (sObj && Math.hypot(v.x - sObj.x, v.z - sObj.z) <= 200) return sObj.n || null;
+    }
+    return null;
+  }
   function rideTimesFor(v) {
     if (!v) return null;
     if (v.agency === 'qline') {
@@ -3555,12 +3603,23 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var found = null;
     tripDelayState.forEach(function (st, trip) { if (st.vehicleId === v.vehicle_id) found = { st: st, trip: trip }; });
     if (!found) {
+      // Route Reverse S3: an unbound bus dwelling at one of its route's
+      // termini is at the end of its run — a defined state with its own
+      // words, not the generic unmatched line wearing a geometric
+      // sequence (specification section 2.3).
+      var termName = rrTerminalAt(v);
+      if (termName) {
+        return { byStop: {}, onlyIds: null, atTerminal: termName,
+          note: 'This bus has reached the end of its run. Its next trip has not been assigned yet, so stop times are not shown.' };
+      }
       return { byStop: {}, onlyIds: null, note: 'This bus is not matched to a scheduled trip yet, so stop times are not shown. Matching runs every minute while the bus reports a current position.' };
     }
     var trip = found.trip, st = found.st;
     var arr = trip.arrL2 || trip.arr;
-    var nowSec = detroitParts(Date.now()).sec;
-    var byStop = {}, onlyIds = {};
+    // The binding's service frame: after-midnight trips evaluate
+    // against service-day seconds, not calendar seconds.
+    var nowSec = detroitParts(Date.now()).sec + (st.frameShift || 0);
+    var byStop = {}, onlyIds = {}, seqIds = [];
     for (var j = 0; j < trip.stops.length; j++) {
       var eta = arr[j] + (st.disrupted ? 0 : st.delaySec);
       if (eta < nowSec - 30) continue; // already served (30 s grace for the stop the bus is standing at)
@@ -3568,15 +3627,25 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (!sObj || sObj.id == null) continue;
       var gid = String(sObj.id);
       onlyIds[gid] = true;
+      seqIds.push({ id: gid, name: sObj.n || '' });
       var dSec = eta - nowSec;
       byStop[gid] = dSec < 45 ? 'now' : (dSec <= 5400 ? Math.round(dSec / 60) + ' min' : tripClock(eta));
+    }
+    if (st.layover) {
+      var oStop = stopData && stopData[trip.stops[0]];
+      return { byStop: byStop, onlyIds: onlyIds, seqIds: seqIds,
+        layover: { terminal: oStop ? (oStop.n || '') : '',
+          originId: oStop && oStop.id != null ? String(oStop.id) : null,
+          departClock: tripClock((trip.depL2 || trip.dep)[0]),
+          headsign: formatDest(v.route_id, trip.h) },
+        note: 'This bus is between trips at the terminal. Times are its scheduled times for the next trip.' };
     }
     var note = st.disrupted
       ? 'This bus is off its schedule pattern; the times shown are its scheduled times.'
       : (trip.arrL2
         ? 'Times are live estimates for this bus: typical running times for its trip, adjusted by its measured delay.'
         : 'Times are live estimates for this bus: its scheduled trip times, adjusted by its measured delay.');
-    return { byStop: byStop, onlyIds: onlyIds, note: note };
+    return { byStop: byStop, onlyIds: onlyIds, seqIds: seqIds, note: note };
   }
 
   // --- stops ---------------------------------------------------------------
@@ -4040,7 +4109,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       dot.style.background = rc ? '#' + rc.getHexString() : '#F5F2EA';
       row.appendChild(dot);
       var b = document.createElement('b');
-      var slDest = formatDest(v.route_id, v.destination);
+      var slDest = displayDest(v);
       b.textContent = routeLabel(v.route_id) + (slDest ? ' · ' + slDest : '');
       row.appendChild(b);
       // Stop tiles: the serving vehicle's number, so a rider can match
@@ -4609,7 +4678,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var trip = leg.tripRef;
     var pts = [];
     for (var k = 0; k < trip.stops.length; k++) {
-      var sk = arcMap[String(trip.stops[k])];
+      var sk = arcMap[ttStopId(trip.stops[k])];
       if (sk != null) pts.push({ stop: String(trip.stops[k]), s: sk });
     }
     var vi = -1, ai = -1;
@@ -4636,9 +4705,20 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
   function guidanceForLeg(leg) {
     var tr = guidanceVehicle(leg);
-    if (!tr) return null; // no live bus on this trip: no guidance, no fiction
+    if (!tr) return null;
+    // Route Reverse: a layover-bound leg's bus is standing at the
+    // terminal — guidance names the departure it will make, not a
+    // moving approach (specification section 2.6).
+    var lst = leg.tripRef ? tripDelayState.get(leg.tripRef) : null;
+    if (lst && lst.layover) {
+      var ltrip = leg.tripRef;
+      var lterm = stopData && stopData[ltrip.stops[0]];
+      return { kind: 'board', text: 'Route ' + routeLabel(leg.routeId) + ' \u2014 your bus is at ' +
+        (lterm ? (lterm.n || 'the terminal') : 'the terminal') + ' and leaves at ' +
+        tripClock((ltrip.depL2 || ltrip.dep)[0]) + '.' };
+    } // no live bus on this trip: no guidance, no fiction
     var arcMap = stopArcMap(leg.routeId, tr.pathIdx);
-    var sBoard = arcMap[String(leg.board)], sAlight = arcMap[String(leg.alight)];
+    var sBoard = arcMap[ttStopId(leg.board)], sAlight = arcMap[ttStopId(leg.alight)];
     if (sBoard == null || sAlight == null) return null;
     var speed = Math.max(tr.speedMps, 1.5);
     if (tr.s < sBoard - 50) {
@@ -5428,7 +5508,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     for (var i = 0; i < cands.length; i++) {
       var v = cands[i];
       seen[v.vehicle_id] = true;
-      var dest = formatDest(v.route_id, v.destination);
+      var dest = displayDest(v);
       var text = dest ? '\u2192 ' + dest : routeLabel(v.route_id);
       var sub = '';
       if (typeof userXZ !== 'undefined' && userXZ && v.x != null && v.z != null) {
@@ -5492,6 +5572,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var dx = rx - v.x, dz = rz - v.z;
     var dist = Math.sqrt(dx * dx + dz * dz);
     if (dist <= 20) return { cls: 'here', dist: dist };
+    // Route Reverse: a layover-bound bus is at the endpoint — never
+    // 'approaching', never 'passed' (project 11 honesty, spec 4).
+    if (v.layover) return { cls: 'terminal', dist: dist };
     if (v.bearing == null || isNaN(v.bearing)) return { cls: null, dist: dist };
     var br = v.bearing * Math.PI / 180;
     var dot = (Math.sin(br) * dx - Math.cos(br) * dz) / dist;
@@ -5911,6 +5994,17 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (typeof ridePendingVid !== 'undefined' && ridePendingVid && v.vehicle_id === ridePendingVid) return true;
       return false;
     });
+    // Route Reverse: the seam is where the widget's records get the
+    // governed direction label — a bound vehicle's destination becomes
+    // its trip's headsign, and a layover binding is flagged so the
+    // widget's approach test can answer 'terminal'.
+    for (var ai = 0; ai < rideVehicles.length; ai++) {
+      var ab = tripBindingFor(rideVehicles[ai].vehicle_id);
+      if (ab) {
+        if (ab.trip.h) rideVehicles[ai].destination = ab.trip.h;
+        if (ab.st.layover) rideVehicles[ai].layover = true;
+      }
+    }
     rideWidget.setVehicles(rideVehicles);
     // The rider's own position, for the picker's endpoint indication
     // (distance + approach) — the same fix the location default uses.
@@ -7079,6 +7173,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // remaining times shifted (clamped); disrupted trips are flagged, never
   // shifted. Three quiet polls and the match reverts to scheduled.
   var tripDelayState = new Map(); // trip object -> {delaySec, vehicleId, misses, disrupted}
+  var rrLayCache = { key: null, byRoute: null }; // Route Reverse layover candidates, per service-day pair
   var stopArcCache = {};          // routeId|pathIdx -> {stopId: arc s}
   var ttRouteIdxById = null;      // built per timetable
   var lastEmpiricalRun = 0;
@@ -7119,7 +7214,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // double-count the lateness (empirical shift + delay vs raw).
     var dep = trip.depL2 || trip.dep, arr = trip.arrL2 || trip.arr;
     for (var j = 0; j < trip.stops.length; j++) {
-      var s = stopS[String(trip.stops[j])];
+      // ttStopId translates the timetable's page index to the GTFS stop
+      // id stopArcMap is keyed by — the same translation
+      // applyEmpiricalBaseline performs. Without it the lookup misses
+      // for nearly every stop and tripExpected returns null, so the
+      // matcher evaluates nothing (compute-accuracy audit, rank 1;
+      // delivered inside project 18 — the rollover procedure is
+      // vacuous without a working matcher).
+      var s = stopS[ttStopId(trip.stops[j])];
       if (s == null) continue;
       pts.push({ s: s, dep: dep[j], arr: arr[j] });
     }
@@ -7161,8 +7263,25 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (pat.route !== ridx) continue;
       for (var ti = 0; ti < pat.trips.length; ti++) {
         var t = pat.trips[ti];
-        if (t.s !== svc && t.s !== prevSvc) continue;
-        if (nowSec >= t.dep[0] - 1800 && nowSec <= t.arr[t.arr.length - 1] + 300) out.push(t);
+        // Route Reverse (project 18): each trip is evaluated in its own
+        // service frame — today's service at calendar seconds,
+        // yesterday's at +86400 s, the shift the planner and the stop
+        // card already apply. As shipped, calendar seconds were used
+        // for both frames, so any trip whose service-day times pass
+        // midnight went invisible at 00:00, and trips departing at
+        // 24:30 or later could never match at all.
+        var frames = null;
+        if (t.s === svc && t.s === prevSvc) frames = [nowSec, nowSec + 86400];
+        else if (t.s === svc) frames = [nowSec];
+        else if (t.s === prevSvc) frames = [nowSec + 86400];
+        else continue;
+        for (var fi = 0; fi < frames.length; fi++) {
+          var nf = frames[fi];
+          if (nf >= t.dep[0] - 1800 && nf <= t.arr[t.arr.length - 1] + 300) {
+            out.push({ trip: t, nowEff: nf });
+            break;
+          }
+        }
       }
     }
     return out;
@@ -7213,8 +7332,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (!cands.length) continue;
       var best = null, second = null;
       for (var ci = 0; ci < cands.length; ci++) {
-        var trip = cands[ci];
-        var exp = tripExpected(trip, stopS, nowSec);
+        var trip = cands[ci].trip;
+        var exp = tripExpected(trip, stopS, cands[ci].nowEff);
         if (!exp) continue;
         // Stop-index gate: the bus can't be 2+ stops early, nor absurdly late.
         var vIdx = -1;
@@ -7224,7 +7343,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         var gate = vIdx - exp.expIdx;
         if (gate > 1 || gate < -8) continue;
         var score = Math.abs(tr.s - exp.sE) - (headsignMatch(v.destination, trip.h) ? 500 : 0);
-        if (!best || score < best.score) { second = best; best = { trip: trip, score: score, exp: exp }; }
+        if (!best || score < best.score) { second = best; best = { trip: trip, score: score, exp: exp, frameShift: cands[ci].nowEff - nowSec }; }
         else if (!second || score < second.score) { second = { trip: trip, score: score }; }
       }
       // Clear margin or no match. 4000 m bound: beyond that the residual is
@@ -7238,6 +7357,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       matches.push({
         trip: best.trip, vehicleId: v.vehicle_id,
         delaySec: disrupted ? 0 : delaySec, disrupted: disrupted, score: best.score,
+        frameShift: best.frameShift || 0,
         fixStamp: v.updated_at ? new Date(v.updated_at).getTime() : 0
       });
     }
@@ -7251,13 +7371,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     byTrip.forEach(function (m, trip) {
       var st = tripDelayState.get(trip);
       if (m.disrupted) {
-        tripDelayState.set(trip, { delaySec: 0, vehicleId: m.vehicleId, misses: 0, disrupted: true, fixStamp: m.fixStamp });
-      } else if (!st || st.vehicleId !== m.vehicleId || st.disrupted) {
-        tripDelayState.set(trip, { delaySec: m.delaySec, vehicleId: m.vehicleId, misses: 0, disrupted: false, fixStamp: m.fixStamp });
+        tripDelayState.set(trip, { delaySec: 0, vehicleId: m.vehicleId, misses: 0, disrupted: true, fixStamp: m.fixStamp, frameShift: m.frameShift || 0 });
+      } else if (!st || st.vehicleId !== m.vehicleId || st.disrupted || st.layover) {
+        tripDelayState.set(trip, { delaySec: m.delaySec, vehicleId: m.vehicleId, misses: 0, disrupted: false, fixStamp: m.fixStamp, frameShift: m.frameShift || 0 });
       } else {
         st.delaySec = Math.round(st.delaySec * 0.5 + m.delaySec * 0.5);
         st.fixStamp = m.fixStamp;
         st.misses = 0;
+        st.frameShift = m.frameShift || 0;
       }
     });
     tripDelayState.forEach(function (st, trip) {
@@ -7266,6 +7387,85 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         if (st.misses >= 3) tripDelayState.delete(trip); // quiet: revert to scheduled
       }
     });
+    // ---- Route Reverse (project 18): the layover rule ----
+    // A DDOT vehicle with no live binding that is dwelling at a trip's
+    // origin inside that trip's assignment window binds to the trip —
+    // identity only: delaySec stays 0 and the entry is flagged layover,
+    // so no surface presents it as a measured delay and no delay is
+    // ever computed from it. The en-route matcher supersedes the
+    // binding the moment the bus departs and measures, and clears the
+    // flag when it binds the same trip. Specification section 3.3.
+    // The layover candidate set per route is cached across polls,
+    // keyed by the service-day pair: the underlying trip list changes
+    // only when the service day rolls over, so the patterns scan runs
+    // twice a day, not once per route per poll (project 15's measured
+    // costs are not regressed by this pass).
+    var layKey3 = svc + '|' + prevSvc;
+    if (rrLayCache.key !== layKey3) {
+      var byRoute3 = {};
+      for (var pi3 = 0; pi3 < tt.patterns.length; pi3++) {
+        var pat3 = tt.patterns[pi3];
+        var lst3 = byRoute3[pat3.route] || (byRoute3[pat3.route] = []);
+        for (var ti3 = 0; ti3 < pat3.trips.length; ti3++) {
+          var t3 = pat3.trips[ti3];
+          if (t3.s === svc) lst3.push({ trip: t3, shift: 0 });
+          if (t3.s === prevSvc) lst3.push({ trip: t3, shift: 86400 });
+        }
+      }
+      rrLayCache.key = layKey3;
+      rrLayCache.byRoute = byRoute3;
+    }
+    function layTripsFor(ridx3) {
+      var all3 = (rrLayCache.byRoute && rrLayCache.byRoute[ridx3]) || [];
+      var out3 = [];
+      for (var li3 = 0; li3 < all3.length; li3++) {
+        var nf3 = nowSec + all3[li3].shift;
+        var t33 = all3[li3].trip;
+        if (nf3 >= t33.dep[0] - 1800 && nf3 <= t33.dep[0] + 900) {
+          out3.push({ trip: t33, nowEff: nf3 });
+        }
+      }
+      return out3;
+    }
+    function layoverHolds(trip4, st4) {
+      var tr4 = busTrackers[st4.vehicleId];
+      if (!tr4 || !tr4.vehicle || tr4.lastX == null) return false;
+      var o4 = stopData && stopData[trip4.stops[0]];
+      if (!o4) return false;
+      if (Math.hypot(tr4.lastX - o4.x, tr4.lastZ - o4.z) > 250) return false;
+      return nowSec + (st4.frameShift || 0) <= trip4.dep[0] + 1800;
+    }
+    // Confirm live layover entries the decay loop just charged a miss.
+    tripDelayState.forEach(function (st5, trip5) {
+      if (st5.layover && layoverHolds(trip5, st5)) st5.misses = 0;
+    });
+    for (var vid6 in busTrackers) {
+      var tr6 = busTrackers[vid6];
+      if (!tr6 || !tr6.vehicle || tr6.lastX == null) continue;
+      var v6 = tr6.vehicle;
+      var ridx6 = ttRouteIdxById[String(v6.route_id)];
+      if (ridx6 == null) continue;
+      var heldBy6 = false;
+      tripDelayState.forEach(function (st6) { if (st6.vehicleId === v6.vehicle_id) heldBy6 = true; });
+      if (heldBy6) continue;
+      var fixAge6 = v6.updated_at ? (Date.now() - new Date(v6.updated_at).getTime()) : Infinity;
+      if (!(fixAge6 <= 300000)) continue;
+      var spd6 = parseFloat(v6.speed_mph);
+      if (isNaN(spd6)) spd6 = tr6.speedMps != null ? tr6.speedMps * 2.23694 : 99;
+      if (spd6 > 2) continue;
+      var lc6 = layTripsFor(ridx6).slice().sort(function (a7, b7) { return a7.trip.dep[0] - b7.trip.dep[0]; });
+      for (var li6 = 0; li6 < lc6.length; li6++) {
+        var cand6 = lc6[li6], t6 = cand6.trip;
+        if (tripDelayState.has(t6)) continue;
+        var o6 = stopData && stopData[t6.stops[0]];
+        if (!o6) continue;
+        if (Math.hypot(tr6.lastX - o6.x, tr6.lastZ - o6.z) > 200) continue;
+        tripDelayState.set(t6, { delaySec: 0, vehicleId: v6.vehicle_id, misses: 0,
+          disrupted: false, layover: true, frameShift: cand6.nowEff - nowSec,
+          fixStamp: v6.updated_at ? new Date(v6.updated_at).getTime() : 0 });
+        break;
+      }
+    }
     var delayMap = new Map();
     tripDelayState.forEach(function (st, trip) {
       delayMap.set(trip, { delaySec: st.delaySec, disrupted: st.disrupted, vehicleId: st.vehicleId, fixStamp: st.fixStamp || 0 });
@@ -8374,6 +8574,13 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // time estimates. Honest states: unmatched (off the mapped shape) and
   // terminus (no stops ahead) say so in words instead of listing nothing.
   function betaUpcoming(v) {
+    // Route Reverse: a layover-bound bus is between trips — say so,
+    // with its next departure, instead of listing the return trip's
+    // stops as if they were this run's.
+    var bb = tripBindingFor(v.vehicle_id);
+    if (bb && bb.st.layover) {
+      return { state: 'layover', clock: tripClock((bb.trip.depL2 || bb.trip.dep)[0]) };
+    }
     var tr = busTrackers[v.vehicle_id];
     if (!tr || !tr.arc || tr.pathIdx < 0) return { state: 'unmatched' };
     var smap = stopArcMap(v.route_id, tr.pathIdx);
@@ -8412,7 +8619,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (r.state !== 'ok') {
       betaNoteRow(list, r.state === 'terminus'
         ? 'This bus is at the end of its trip \u2014 no more stops on this run.'
-        : 'This bus is off its mapped route right now, so its upcoming stops cannot be estimated.');
+        : (r.state === 'layover'
+          ? 'This bus is at the terminal between trips \u2014 its next trip leaves at ' + r.clock + '.'
+          : 'This bus is off its mapped route right now, so its upcoming stops cannot be estimated.'));
       return;
     }
     r.stops.forEach(function (u, i) {
