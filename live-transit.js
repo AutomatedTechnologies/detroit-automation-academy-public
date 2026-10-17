@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261017-0341';
+  var STAMP = '20261017-0352';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -2006,10 +2006,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     updateBusBadges(busSlots.length, PILLAR_H * pillarYS + 80);
   }
 
-  // Zoom-coupled stop scale, eased every frame like the pillars. Matrix-only
-  // rewrites while moving (colors are untouched); the selection highlight is
-  // re-applied after each rewrite. People Mover pins follow the same scale
-  // so all stop-class markers behave as one family.
+  // Zoom-coupled stop scale, eased every frame like the pillars.
+  // Phase 2: easing writes the uStopScale uniform only — no matrix
+  // rewrite, so instance colors (and the selection highlight painted in
+  // them) are never disturbed and need no re-application. People Mover
+  // pins follow the same scale so all stop-class markers behave as one
+  // family.
   function easeStopScale(camDist) {
     var target = stopScaleFor(camDist);
     var d = target - stopYS;
@@ -2019,10 +2021,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     } else {
       stopYS += d * 0.16;
     }
-    if (stopPickList.length) {
-      writeStopMatrices(stopPickList, false);
-      setStopSelectedColor(selectedStopIndex, true);
-    }
+    syncStopScaleU();
     for (var p = 0; p < pmPins.length; p++) {
       var pin = pmPins[p];
       pin.scale.y = stopYS;
@@ -3498,11 +3497,52 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // single-route stop the way it should. Single-route pylons take their
   // route's color; multi-route hubs draw paper-white. One draw call.
   var STOP_MAX = 16384; // merged registry capacity: DDOT stops + SMART stops + QLINE stops (10,583) plus headroom
+  // Render-engine refactor Phase 2 (project 15): the zoom-coupled stop
+  // scale lives in ONE shader uniform instead of the instance matrices.
+  // Matrices are written at governed-list changes (rebuildStops) with the
+  // then-current stopYS baked in (stopBakedYS); the vertex shader scales
+  // world Y about STOP_BASE_Y by uStopScale = stopYS / stopBakedYS, so
+  // the per-frame easing rewrite of all 10,583 matrices (0.44-2.23 ms +
+  // a 661 KB buffer re-upload per frame, measured in the project-15
+  // research) disappears — easing is now one uniform write per frame.
+  // Normals stay at the baked scale (the pre-Phase-2 matrices distorted
+  // them the same way). Raycast exactness is kept by the raycast
+  // override below: a pick that arrives mid-ease first re-bakes the
+  // matrices at the current stopYS — picks are discrete events, so the
+  // rewrite cost moved off the frame path entirely.
+  var stopScaleU = { value: 1 };
+  var stopBakedYS = 1;
+  var stopMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+  stopMat.onBeforeCompile = function (sh) {
+    sh.uniforms.uStopScale = stopScaleU;
+    sh.vertexShader = 'uniform float uStopScale;\n' + sh.vertexShader.replace(
+      '#include <project_vertex>',
+      ['vec4 mvPosition = vec4( transformed, 1.0 );',
+       '#ifdef USE_INSTANCING',
+       '\tmvPosition = instanceMatrix * mvPosition;',
+       '#endif',
+       '\tmvPosition = modelMatrix * mvPosition;',
+       '\tmvPosition.y = ' + STOP_BASE_Y + '.0 + (mvPosition.y - ' +
+         STOP_BASE_Y + '.0) * uStopScale;',
+       '\tmvPosition = viewMatrix * mvPosition;',
+       '\tgl_Position = projectionMatrix * mvPosition;'].join('\n'));
+  };
+  stopMat.customProgramCacheKey = function () { return 'stopScale'; };
   var stopIM = new THREE.InstancedMesh(
-    new THREE.CylinderGeometry(14, 18, 1, 8),
-    new THREE.MeshLambertMaterial({ color: 0xffffff }), STOP_MAX);
+    new THREE.CylinderGeometry(14, 18, 1, 8), stopMat, STOP_MAX);
   stopIM.frustumCulled = false;
   stopIM.count = 0;
+  stopIM.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  var _stopRaycastOrig = THREE.InstancedMesh.prototype.raycast;
+  stopIM.raycast = function (raycaster, intersects) {
+    if (stopBakedYS !== stopYS && stopPickList.length) {
+      writeStopMatrices(stopPickList, false);
+    }
+    return _stopRaycastOrig.call(this, raycaster, intersects);
+  };
+  function syncStopScaleU() {
+    stopScaleU.value = stopBakedYS ? stopYS / stopBakedYS : 1;
+  }
   stopGroup.add(stopIM);
   var stopPickList = [];
   var STOP_BASE_Y = 18; // street level: above the street lines, below casing
@@ -3545,7 +3585,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
     stopIM.count = list.length;
     stopIM.instanceMatrix.needsUpdate = true;
-    if (withColors && stopIM.instanceColor) stopIM.instanceColor.needsUpdate = true;
+    if (withColors && stopIM.instanceColor) {
+      stopIM.instanceColor.setUsage(THREE.DynamicDrawUsage);
+      stopIM.instanceColor.needsUpdate = true;
+    }
+    // Phase 2: matrices now bake the current stopYS; the shader ratio
+    // returns to 1 until the ease moves stopYS away again.
+    stopBakedYS = stopYS;
+    syncStopScaleU();
   }
   function rebuildStops() {
     // Stops only depend on route toggles: skip the full rebuild when the
@@ -3597,7 +3644,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (rc) _stopTmpColor.copy(rc); else _stopTmpColor.set(0xf5f2ea);
     }
     stopIM.setColorAt(idx, _stopTmpColor);
-    stopIM.instanceColor.needsUpdate = true;
+    // Phase 2: range-limited upload — one instance's color, not the
+    // whole 10,583-instance buffer (r186 BufferAttribute update ranges;
+    // guarded so the call shape stays safe if the API is absent).
+    var ic = stopIM.instanceColor;
+    if (typeof ic.addUpdateRange === 'function') {
+      if (typeof ic.clearUpdateRanges === 'function') ic.clearUpdateRanges();
+      ic.addUpdateRange(idx * 4, 4);
+    }
+    ic.needsUpdate = true;
   }
   // Stop-card route presentation (Product Defect Reconciliation,
   // project 13): the card presents only the routes the stops layer
