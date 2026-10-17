@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261016-2151';
+  var STAMP = '20261017-0239';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -1897,41 +1897,100 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   var raycaster = new THREE.Raycaster();
   var pointerNDC = new THREE.Vector2();
   var downPos = null;
-  // Nearest bus within a touch-friendly screen radius (fingers are imprecise).
-  // Pillar mode: distance to the pillar's full screen segment (base -> beacon),
-  // so tapping anywhere along the visible column selects the bus. Bus mode:
-  // distance to the model position on the ground.
-  function pickNearestScreen(cx, cy, r) {
-    var best = null, bestD2 = 48 * 48;
-    for (var i = 0; i < busSlots.length; i++) {
-      var s = busSlots[i];
-      var d2;
-      if (busMode) {
-        _p3.set(s.x, 40, s.z).project(camera);
-        if (_p3.z > 1 || _p3.z < -1) continue;
-        var sx = (_p3.x * 0.5 + 0.5) * r.width + r.left;
-        var sy = (-_p3.y * 0.5 + 0.5) * r.height + r.top;
-        var ddx = sx - cx, ddy = sy - cy;
-        d2 = ddx * ddx + ddy * ddy;
-      } else {
-        _p3.set(s.x, 0, s.z).project(camera);
-        if (_p3.z > 1 || _p3.z < -1) continue;
+  // Touch Accuracy (project 10, 2026-10-17): the badge is an aim point
+  // too. In bus mode the badge is the only reliably visible part of the
+  // bus — the true-scale body sits behind its route's ribbon draw
+  // (measured occluded from side aspects at every working distance) —
+  // and it renders ~110 m above the ground anchor, which put badge taps
+  // outside every radius at close zoom (battery on 2151: badge aims
+  // resolved 16% bus / 82% nothing in bus mode).
+  // Candidates are scored by EDGE distance — distance to the aim point
+  // minus the aim's own screen radius — so a fat target (a stop pylon,
+  // ~16 m radius) and a compact one (a bus body, a badge) compete on
+  // how deep inside their visible extent the tap landed, not on whose
+  // center happens to be nearer. Returns { vehicle, d, score } for the
+  // best bus within maxD px of an aim point, or null.
+  function busSlotAim(s, i, cx, cy, r, cap) {
+    var best = null;
+    function consider(px, py, wpp, radiusWorld) {
+      var ddx = px - cx, ddy = py - cy;
+      var d = Math.sqrt(ddx * ddx + ddy * ddy);
+      if (cap != null && d > cap) return;
+      var score = d - (wpp > 0 ? radiusWorld / wpp : 0);
+      if (!best || score < best.score) best = { d: d, score: score };
+    }
+    if (busMode) {
+      // Anchor at the detail body's own center height: the shipped
+      // y=40 anchor projected ~44 px above the visible body at close
+      // zoom, so taps ON the body measured near or past the radius
+      // edge (battery: body aims 71% on 2151).
+      _p3.set(s.x, 2, s.z);
+      var distB = camera.position.distanceTo(_p3);
+      _p3.project(camera);
+      if (_p3.z <= 1 && _p3.z >= -1) {
+        var wppB = (2 * distB *
+          Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)) / r.height;
+        consider((_p3.x * 0.5 + 0.5) * r.width + r.left,
+                 (-_p3.y * 0.5 + 0.5) * r.height + r.top, wppB, 6.7);
+      }
+    } else {
+      _p3.set(s.x, 0, s.z).project(camera);
+      if (_p3.z <= 1 && _p3.z >= -1) {
         var ax = (_p3.x * 0.5 + 0.5) * r.width + r.left;
         var ay = (-_p3.y * 0.5 + 0.5) * r.height + r.top;
-        _p3.set(s.x, PILLAR_H * pillarYS + 48, s.z).project(camera);
-        if (_p3.z > 1 || _p3.z < -1) continue;
-        var bx = (_p3.x * 0.5 + 0.5) * r.width + r.left;
-        var by = (-_p3.y * 0.5 + 0.5) * r.height + r.top;
-        var vx = bx - ax, vy = by - ay;
-        var len2 = vx * vx + vy * vy;
-        var tt = len2 ? ((cx - ax) * vx + (cy - ay) * vy) / len2 : 0;
-        tt = tt < 0 ? 0 : (tt > 1 ? 1 : tt);
-        var px = ax + tt * vx - cx, py = ay + tt * vy - cy;
-        d2 = px * px + py * py;
+        _p3.set(s.x, PILLAR_H * pillarYS + 48, s.z);
+        var distP = camera.position.distanceTo(_p3);
+        _p3.project(camera);
+        if (_p3.z <= 1 && _p3.z >= -1) {
+          var bx = (_p3.x * 0.5 + 0.5) * r.width + r.left;
+          var by = (-_p3.y * 0.5 + 0.5) * r.height + r.top;
+          var vx = bx - ax, vy = by - ay;
+          var len2 = vx * vx + vy * vy;
+          var tt = len2 ? ((cx - ax) * vx + (cy - ay) * vy) / len2 : 0;
+          tt = tt < 0 ? 0 : (tt > 1 ? 1 : tt);
+          var qx = ax + tt * vx, qy = ay + tt * vy;
+          var wppP = (2 * distP *
+            Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)) / r.height;
+          consider(qx, qy, wppP, 14);
+        }
       }
-      if (d2 < bestD2) { bestD2 = d2; best = s.vehicle; }
+    }
+    var sp = badgePool[i];
+    if (sp && sp.visible) {
+      var distG = camera.position.distanceTo(sp.position);
+      _p3.copy(sp.position).project(camera);
+      if (_p3.z <= 1 && _p3.z >= -1) {
+        var wppG = (2 * distG *
+          Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)) / r.height;
+        consider((_p3.x * 0.5 + 0.5) * r.width + r.left,
+                 (-_p3.y * 0.5 + 0.5) * r.height + r.top,
+                 wppG, sp.scale.y / 2);
+      }
     }
     return best;
+  }
+  function pickNearestScreenD(cx, cy, r, maxD) {
+    var cap = (maxD != null ? maxD : 48);
+    var best = null, bestScore = Infinity;
+    for (var i = 0; i < busSlots.length; i++) {
+      var aim = busSlotAim(busSlots[i], i, cx, cy, r, cap);
+      if (aim && aim.score < bestScore) {
+        bestScore = aim.score;
+        best = { vehicle: busSlots[i].vehicle, d: aim.d, score: aim.score };
+      }
+    }
+    return best;
+  }
+  function pickNearestScreen(cx, cy, r) {
+    var hit = pickNearestScreenD(cx, cy, r, 48);
+    return hit ? hit.vehicle : null;
+  }
+  // The aim of one specific bus (the raycast winner, in a contest).
+  function busScreenAim(veh, cx, cy, r, cap) {
+    for (var i = 0; i < busSlots.length; i++) {
+      if (busSlots[i].vehicle === veh) return busSlotAim(busSlots[i], i, cx, cy, r, cap);
+    }
+    return null;
   }
   // Tap a stop pylon: raycast the instanced markers, report name + routes.
   // Touch gets a 44px screen-space nearest fallback so finger taps are
@@ -1939,20 +1998,45 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   var _stopV3 = null;
   // Touch fallback: nearest stop center on screen within 44px. Split out so
   // the tap handler can try the depth-ordered raycast first.
-  function pickStopScreen(cx, cy, r) {
+  function pickStopScreenD(cx, cy, r, maxD) {
     if (!_stopV3) _stopV3 = new THREE.Vector3();
     var sx = cx - r.left, sy = cy - r.top;
-    var best = null, bestD = 44;
+    var best = null, bestScore = Infinity;
     for (var i = 0; i < stopPickList.length; i++) {
       var s = stopPickList[i];
-      _stopV3.set(s.x, STOP_BASE_Y + stopHeight(s.r.length) * stopYS / 2, s.z).project(camera);
+      _stopV3.set(s.x, STOP_BASE_Y + stopHeight(s.r.length) * stopYS / 2, s.z);
+      var distS = camera.position.distanceTo(_stopV3);
+      _stopV3.project(camera);
       if (_stopV3.z > 1) continue;
       var px = (_stopV3.x * 0.5 + 0.5) * r.width;
       var py = (-_stopV3.y * 0.5 + 0.5) * r.height;
       var d = Math.hypot(px - sx, py - sy);
-      if (d < bestD) { bestD = d; best = s; }
+      if (d > (maxD != null ? maxD : 44)) continue;
+      var wppS = (2 * distS * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)) / r.height;
+      var score = d - (wppS > 0 ? 16 / wppS : 0);
+      if (score < bestScore) { bestScore = score; best = { stop: s, d: d, score: score }; }
     }
     return best;
+  }
+  function pickStopScreen(cx, cy, r) {
+    var hit = pickStopScreenD(cx, cy, r, 44);
+    return hit ? hit.stop : null;
+  }
+  // The aim of one specific stop (its pylon center, projected exactly
+  // as pickStopScreen projects it), scored the same edge-distance way.
+  // Touch Accuracy arbitration measures a contested raycast hit
+  // against the other class with this.
+  function stopScreenAim(st, cx, cy, r) {
+    if (!_stopV3) _stopV3 = new THREE.Vector3();
+    _stopV3.set(st.x, STOP_BASE_Y + stopHeight(st.r.length) * stopYS / 2, st.z);
+    var distS = camera.position.distanceTo(_stopV3);
+    _stopV3.project(camera);
+    if (_stopV3.z > 1) return null;
+    var px = (_stopV3.x * 0.5 + 0.5) * r.width;
+    var py = (-_stopV3.y * 0.5 + 0.5) * r.height;
+    var d = Math.hypot(px - (cx - r.left), py - (cy - r.top));
+    var wppS = (2 * distS * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)) / r.height;
+    return { d: d, score: d - (wppS > 0 ? 16 / wppS : 0) };
   }
   function pickStop(cx, cy, isTouch) {
     if (!stopGroup || !stopGroup.visible || !stopPickList.length) return null;
@@ -2057,10 +2141,34 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var isTouch = e.pointerType === 'touch';
     if (dx * dx + dy * dy > (isTouch ? 169 : 36)) return; // was a drag (13px touch slop)
     if (tapHitsBusInfo(e.clientX, e.clientY)) { hideBus(); return; }
-    // Depth-ordered: one raycast across buses and stops, frontmost wins.
+    // Touch Accuracy (project 10): ONE pick-resolution rule for touch
+    // and mouse. The depth-ordered raycast runs first, but its winner
+    // is CONTESTED by the other class: candidates are scored by edge
+    // distance (aim distance minus the aim's screen radius), and the
+    // other class takes the tap when its score beats the winner's by
+    // more than 6 px. The battery on 2151 showed both theft
+    // directions: stop-front taps on a bus resolving to the stop pylon
+    // whose front surface won the depth race, and taps on a stop
+    // standing inside a bus pillar's glow resolving to the bus. A tap
+    // deep inside the winner's own extent (its aim ~0 px away) can
+    // never be stolen, so a stop in front of a bus stays selectable
+    // (2026-10-06) and a tap on the bus body stays a bus.
     var hit = pickTopHit(e.clientX, e.clientY);
-    if (hit && hit.kind === 'bus') { showBus(hit.vehicle); return; }
-    if (hit && hit.kind === 'stop') { showStop(hit.stop); return; }
+    if (hit && hit.kind === 'bus') {
+      var _crB = renderer.domElement.getBoundingClientRect();
+      var _ba = busScreenAim(hit.vehicle, e.clientX, e.clientY, _crB, isTouch ? 48 : 26);
+      var _stB = (_ba && stopGroup && stopGroup.visible)
+        ? pickStopScreenD(e.clientX, e.clientY, _crB, isTouch ? 44 : 22) : null;
+      if (_stB && _stB.score < _ba.score - 6) { showStop(_stB.stop); return; }
+      showBus(hit.vehicle); return;
+    }
+    if (hit && hit.kind === 'stop') {
+      var _cr = renderer.domElement.getBoundingClientRect();
+      var _sa = stopScreenAim(hit.stop, e.clientX, e.clientY, _cr);
+      var _cb = pickNearestScreenD(e.clientX, e.clientY, _cr, isTouch ? 48 : 26);
+      if (_cb && _sa && _cb.score < _sa.score - 6) { showBus(_cb.vehicle); return; }
+      showStop(hit.stop); return;
+    }
     // People Mover stations first: their elevated pins were losing taps to the
     // dense downtown DDOT stops beneath them. (No-op while the PM layer is off.)
     var pm = pickPMStation(e.clientX, e.clientY, isTouch);
@@ -2073,19 +2181,29 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // after MoGo. (No-op while both brand toggles are off.)
     var pl = (typeof pickPlace === 'function') ? pickPlace(e.clientX, e.clientY, isTouch) : null;
     if (pl) { showStop(pl); return; }
-    if (isTouch) {
-      // Raycast missed everything: nearest-on-screen fallbacks, as before.
-      var _r = renderer.domElement.getBoundingClientRect();
-      var _v = pickNearestScreen(e.clientX, e.clientY, _r);
-      if (_v) { showBus(_v); return; }
-      var _st = pickStopScreen(e.clientX, e.clientY, _r);
-      if (_st) { showStop(_st); return; }
-    }
+    // Raycast missed everything: unified screen-space arbitration
+    // (Touch Accuracy, project 10) on the same edge-distance scores.
+    // Radii — touch 48/44 as shipped; mouse 26/22: a precise pointer
+    // gets a smaller net, but it previously got none at all (battery
+    // on 2151: 7% of mouse clicks on a co-located bus resolved). The
+    // bus wins a <= 6 px tie (it is the moving, tracked target).
+    var _r = renderer.domElement.getBoundingClientRect();
+    var _nb = pickNearestScreenD(e.clientX, e.clientY, _r, isTouch ? 48 : 26);
+    var _ns = pickStopScreenD(e.clientX, e.clientY, _r, isTouch ? 44 : 22);
+    if (_nb && (!_ns || _nb.score <= _ns.score + 6)) { showBus(_nb.vehicle); return; }
+    if (_ns) { showStop(_ns.stop); return; }
     hideBus(); hideStop();
   });
   renderer.domElement.addEventListener('pointermove', function (e) {
     if (e.pointerType !== 'mouse' || downPos) return;
-    renderer.domElement.style.cursor = pickBus(e.clientX, e.clientY) ? 'pointer' : 'grab';
+    var hov = pickBus(e.clientX, e.clientY);
+    if (!hov) {
+      // Hover parity (project 10): the cursor tells the truth over a
+      // badge too, not only over pickable geometry.
+      var _hb = pickNearestScreenD(e.clientX, e.clientY, renderer.domElement.getBoundingClientRect(), 26);
+      hov = _hb ? _hb.vehicle : null;
+    }
+    renderer.domElement.style.cursor = hov ? 'pointer' : 'grab';
   });
 
   function compass(bearing) {
@@ -4747,6 +4865,70 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
     return best;
   }
+  // Touch Accuracy requirement (project 10, filed 2026-10-16 21:26):
+  // Ride Along ACTIVATION alters the view when it opens in the
+  // choose-a-bus state — nothing boarded, nothing pending — so the
+  // candidate endpoints are easy to select. The camera glides (the
+  // standing TransitionEngine machinery; no board, no follow) to a
+  // 32-degree framing of the rider and the nearest live buses, at a
+  // distance inside the badge-visibility range where badges measure
+  // tappable size. Closing the tile restores the pre-open framing
+  // through camera memory (camMemTake ran at open) — the restore path
+  // project 11's Return workstream builds on. Skipped when the view
+  // already serves selection (>= 2 candidate badges on screen at a
+  // non-grazing elevation), in street view, while a follow owns the
+  // camera, or when no vehicle positions are known.
+  function rideChooseReframe() {
+    if (!rideWidget || !rideWidget.vehicles || !rideWidget.vehicles.length) return;
+    if (typeof streetView !== 'undefined' && streetView) return;
+    if (followVId) return;
+    var hasLoc = (typeof userXZ !== 'undefined' && !!userXZ);
+    var ax = hasLoc ? userXZ[0] : controls.target.x;
+    var az = hasLoc ? userXZ[1] : controls.target.z;
+    var vs = [];
+    for (var i = 0; i < rideWidget.vehicles.length; i++) {
+      var v = rideWidget.vehicles[i];
+      if (v.x == null || v.z == null) continue;
+      var dx = v.x - ax, dz = v.z - az;
+      vs.push({ x: v.x, z: v.z, d2: dx * dx + dz * dz });
+    }
+    if (!vs.length) return;
+    vs.sort(function (a, b) { return a.d2 - b.d2; });
+    var cand = [];
+    for (var j = 0; j < vs.length && cand.length < 6; j++) {
+      if (vs[j].d2 <= 1600 * 1600) cand.push(vs[j]);
+    }
+    if (!cand.length) cand = vs.slice(0, 3);
+    var dist0 = camera.position.distanceTo(controls.target);
+    var el0 = dist0 > 0 ? Math.asin(Math.max(-1, Math.min(1,
+      (camera.position.y - controls.target.y) / dist0))) : 0;
+    if (el0 >= 20 * Math.PI / 180) {
+      var onScreen = 0;
+      for (var k = 0; k < cand.length; k++) {
+        _p3.set(cand[k].x, busMode ? 150 : PILLAR_H * pillarYS + 80, cand[k].z).project(camera);
+        if (_p3.z <= 1 && Math.abs(_p3.x) <= 0.92 && Math.abs(_p3.y) <= 0.92) onScreen++;
+      }
+      if (onScreen >= 2) return;
+    }
+    var cxp = ax, czp = az;
+    cand.forEach(function (c) { cxp += c.x; czp += c.z; });
+    cxp /= (cand.length + 1); czp /= (cand.length + 1);
+    var rad = Math.hypot(ax - cxp, az - czp);
+    cand.forEach(function (c) { rad = Math.max(rad, Math.hypot(c.x - cxp, c.z - czp)); });
+    var vFov = THREE.MathUtils.degToRad(camera.fov) / 2;
+    var hFov = Math.atan(Math.tan(vFov) * camera.aspect);
+    var fit = (rad + 120) / Math.tan(Math.min(vFov, hFov));
+    var dist = Math.max(1100, Math.min(6400, fit));
+    _svDir.copy(camera.position).sub(controls.target); _svDir.y = 0;
+    if (_svDir.lengthSq() < 1e-6) _svDir.set(1, 0, 0);
+    _svDir.normalize();
+    var el = 32 * Math.PI / 180;
+    var pos = new THREE.Vector3(
+      cxp + _svDir.x * dist * Math.cos(el),
+      dist * Math.sin(el),
+      czp + _svDir.z * dist * Math.cos(el));
+    TransitionEngine.go({ vantage: { pos: pos, tgt: new THREE.Vector3(cxp, 0, czp) } });
+  }
   // --- Planner Bus Focus (project 9) --------------------------------
   // A bus leg in the itinerary detail is selectable: the tap resolves
   // the leg to its live vehicle, snaps the camera to it, and opens the
@@ -4974,6 +5156,13 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         var nearVid = nearestRideVehicleVid();
         if (nearVid) boardRideBus(nearVid, true);
       }
+    }
+    // Choose-state activation reframe (project 10): opening Ride Along
+    // with nothing to board alters the view for endpoint selection.
+    if (on && rideWidget && !rideAutoBoardMute && !plannerFocus &&
+        !rideWidget.currentVehicleId && !ridePendingVid) {
+      try { rideChooseReframe(); }
+      catch (e) { errLog('ride', 'choose-reframe: ' + (e && e.message || e), e); }
     }
     if (!on) { ridePendingVid = null; clearPlannerFocus('tile-closed'); exclRestore(); }
   }
