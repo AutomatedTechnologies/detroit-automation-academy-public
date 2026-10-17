@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261017-0129';
+  var STAMP = '20261017-0150';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -1476,14 +1476,20 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
   function nearestStopTo(x, z, maxR) {
     var best = null, bd2 = maxR * maxR;
-    var list = (stopPickList && stopPickList.length) ? stopPickList : (stopData || []);
+    // Product Defect Reconciliation (project 13): the governed pick
+    // list is the ONLY source — an empty list means every stop is
+    // switched off, never "fall back to all stops". The old stopData
+    // fallback resurrected hidden stops whenever the governed set
+    // was legitimately empty (all routes off; near-me with none near).
+    var list = stopPickList || [];
     for (var i = 0; i < list.length; i++) {
       var s = list[i];
       var dx = s.x - x, dz = s.z - z, d2 = dx * dx + dz * dz;
       if (d2 < bd2) { bd2 = d2; best = s; }
     }
-    // People Mover stations are stop-class anchors too.
-    for (var p = 0; p < pmStations.length; p++) {
+    // People Mover stations are stop-class anchors too — while the
+    // PM layer is on (its own toggle governs it, as in pickPMStation).
+    for (var p = 0; pmVisible && p < pmStations.length; p++) {
       var q = pmStations[p];
       var qdx = q.x - x, qdz = q.z - z, qd2 = qdx * qdx + qdz * qdz;
       if (qd2 < bd2) { bd2 = qd2; best = q; }
@@ -1867,14 +1873,16 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
     var tx = controls.target.x, tz = controls.target.z;
     var scored = [];
-    var list = (stopPickList && stopPickList.length) ? stopPickList : (stopData || []);
+    // Project 13: labels name exactly the governed stops (see
+    // nearestStopTo) — no all-stops fallback when the set is empty.
+    var list = stopPickList || [];
     for (i = 0; i < list.length; i++) {
       var s = list[i];
       if (!s.n) continue;
       var d2 = (s.x - tx) * (s.x - tx) + (s.z - tz) * (s.z - tz);
       if (d2 < 1000 * 1000) scored.push([d2, s]);
     }
-    for (var p = 0; p < pmStations.length; p++) {
+    for (var p = 0; pmVisible && p < pmStations.length; p++) {
       var q = pmStations[p];
       var qd2 = (q.x - tx) * (q.x - tx) + (q.z - tz) * (q.z - tz);
       if (qd2 < 1000 * 1000) scored.push([qd2, q]);
@@ -3524,23 +3532,29 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     stopIM.setColorAt(idx, _stopTmpColor);
     stopIM.instanceColor.needsUpdate = true;
   }
-  function showStop(st) {
+  // Stop-card route presentation (Product Defect Reconciliation,
+  // project 13): the card presents only the routes the stops layer
+  // itself would present — routeIsOn && routeNearOk, the
+  // rebuildStops predicate. A route the rider has switched off is
+  // not chipped, not badged with its alerts, and not counted here.
+  // PM stops are exempt (the DPM pseudo-route lives outside
+  // filterState). If every route gates closed the full set is kept:
+  // rebuildStops closes map-opened cards before that state can
+  // arise, so the fallback only guards directory-opened records.
+  function stopCardRoutes(st) {
+    var all = st.r || [];
+    if (st.pm || !all.length) return all;
+    var open = all.filter(function (rid) { return routeIsOn(rid) && routeNearOk(rid); });
+    return open.length ? open : all;
+  }
+  function renderStopChips(st) {
     if (!st) return;
-    setFollow(null); // a stop selection ends bus tracking
-    if (typeof tripMode !== 'undefined' && tripMode) { tripStopTapped(st); return; }
-    camMemTake();
-    exclCover('stop');
-    tapBuzz();
-    setStopSelectedColor(selectedStopIndex, false);
-    selectedStop = st;
-    selectedStopIndex = stopPickList.indexOf(st);
-    setStopSelectedColor(selectedStopIndex, true);
-    $('stop-title').textContent = st.n || 'Stop';
-    $('stop-id').textContent = st.id || '–';
-    $('stop-nroutes').textContent = (st.r || []).length + ((st.r || []).length === 1 ? ' route' : ' routes');
+    var rids = stopCardRoutes(st);
+    $('stop-nroutes').textContent = rids.length + (rids.length === 1 ? ' route' : ' routes');
     var host = $('stop-routes');
+    if (!host) return;
     host.innerHTML = '';
-    (st.r || []).forEach(function (rid) {
+    rids.forEach(function (rid) {
       var chip = document.createElement('span');
       chip.className = 'stop-route';
       var dot = document.createElement('i');
@@ -3560,6 +3574,21 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       }
       host.appendChild(chip);
     });
+  }
+  function showStop(st) {
+    if (!st) return;
+    setFollow(null); // a stop selection ends bus tracking
+    if (typeof tripMode !== 'undefined' && tripMode) { tripStopTapped(st); return; }
+    camMemTake();
+    exclCover('stop');
+    tapBuzz();
+    setStopSelectedColor(selectedStopIndex, false);
+    selectedStop = st;
+    selectedStopIndex = stopPickList.indexOf(st);
+    setStopSelectedColor(selectedStopIndex, true);
+    $('stop-title').textContent = st.n || 'Stop';
+    $('stop-id').textContent = st.id || '–';
+    renderStopChips(st);
     if (typeof renderStopAlerts === 'function') renderStopAlerts(st);
     if (typeof renderStopMogo === 'function') renderStopMogo(st);
     if (typeof renderStopPlace === 'function') renderStopPlace(st);
@@ -3650,7 +3679,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           head = term ? (term.n || '') : '';
         }
         var routeRec = tripTT.routes ? tripTT.routes[pat.route] : null;
-        rows.push({ rid: routeRec ? routeRec.id : pat.route, head: head, eta: eta, live: isLive, bus: isLive ? dstate.vehicleId : null });
+        var rowRid = routeRec ? routeRec.id : pat.route;
+        // Project 13: the card presents only gate-open routes (the
+        // stops layer's predicate) — a switched-off route's departures
+        // do not list here, live-fused or scheduled.
+        if (!routeIsOn(rowRid) || !routeNearOk(rowRid)) continue;
+        rows.push({ rid: rowRid, head: head, eta: eta, live: isLive, bus: isLive ? dstate.vehicleId : null });
       }
     }
     rows.sort(function (a, b) { return a.eta - b.eta; });
@@ -3759,6 +3793,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
   // Live arrivals on the selected stop's routes, refreshed on every poll.
   function renderStopLive() {
+    // Project 13: an open card reconciles its chips on every refresh,
+    // so toggling a serving route off while the card is open drops
+    // that route's chip on the same applyFilters pass.
+    if (selectedStop) renderStopChips(selectedStop);
     renderStopArrivals();
     var host = $('stop-live'), list = $('stop-live-list');
     if (!host || !list) return;
@@ -3769,7 +3807,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var rows = [];
     for (var i = 0; i < lastVehicles.length; i++) {
       var v = lastVehicles[i];
-      if (selectedStop.r.indexOf(v.route_id) >= 0) rows.push(v);
+      // Project 13: live rows obey the same gate as the chips — a
+      // bus on a switched-off route is not presented here either
+      // (the map does not draw it; the card must not name it).
+      if (selectedStop.r.indexOf(v.route_id) >= 0 &&
+          routeIsOn(v.route_id) && routeNearOk(v.route_id)) rows.push(v);
     }
     if (!rows.length) { host.hidden = true; return; }
     host.hidden = false;
@@ -5639,7 +5681,22 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (out2.speed == null && v.speed_mph != null) out2.speed = v.speed_mph;
       return out2;
     });
-    rideWidget.setVehicles(mapped);
+    // Product Defect Reconciliation (project 13): the widget's
+    // selection surfaces — picker, activation default, choose-state
+    // reframe, map pick labels — all consume this list, so it
+    // carries only vehicles the map itself shows: routeShown, the
+    // predicate updateBuses applies. Exempt are the live commitments
+    // a mid-ride filter change must not strand: the boarded vehicle,
+    // a planner-focus vehicle, and a pending board intent (which the
+    // block below then completes against this same list).
+    var rideVehicles = mapped.filter(function (v) {
+      if (typeof routeShown !== 'function' || routeShown(v.route_id)) return true;
+      if (rideWidget.currentVehicleId && v.vehicle_id === rideWidget.currentVehicleId) return true;
+      if (typeof plannerFocus !== 'undefined' && plannerFocus && v.vehicle_id === plannerFocus.vid) return true;
+      if (typeof ridePendingVid !== 'undefined' && ridePendingVid && v.vehicle_id === ridePendingVid) return true;
+      return false;
+    });
+    rideWidget.setVehicles(rideVehicles);
     // The rider's own position, for the picker's endpoint indication
     // (distance + approach) — the same fix the location default uses.
     if (rideWidget.setRiderPos) {
