@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261016-2029';
+  var STAMP = '20261016-2107';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -3674,6 +3674,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       maybeReplan();
     } else {
       cancelTripFly();
+      clearPlannerFocus('planner-closed');
       clearTrip();
       exclRestore();
     }
@@ -4517,6 +4518,22 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
             body.appendChild(aw);
           });
         }
+        // Planner Bus Focus (project 9): the leg is selectable — the
+        // tap resolves it to its live bus (or its scheduled form) and
+        // opens the Ride Along tile on it. The label is recomputed on
+        // every render, and the detail re-renders per poll, so it
+        // cannot promise a live bus that has stopped resolving.
+        var vb = document.createElement('button');
+        vb.type = 'button';
+        vb.className = 'trip-leg-view';
+        vb.textContent = guidanceVehicle(l) ? 'View live bus' : 'View trip';
+        vb.addEventListener('click', function (ev) {
+          if (ev && ev.stopPropagation) ev.stopPropagation();
+          focusPlannerLeg(l);
+        });
+        body.appendChild(vb);
+        row.classList.add('focusable');
+        row.addEventListener('click', function () { focusPlannerLeg(l); });
       } else {
         dot.className = 'walk';
         var wt = document.createElement('b');
@@ -4720,6 +4737,169 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
     return best;
   }
+  // --- Planner Bus Focus (project 9) --------------------------------
+  // A bus leg in the itinerary detail is selectable: the tap resolves
+  // the leg to its live vehicle, snaps the camera to it, and opens the
+  // Ride Along tile bound to it. Design of record:
+  // goals/forge-line-live-transit-layer/files/planner-bus-focus/
+  // architecture.md. The focus record binds to the vehicle id and the
+  // trip OBJECT — legs are rebuilt and cloned by every plan, while
+  // trip objects are stable timetable records and tripDelayState is
+  // keyed by them, so background re-plans never disturb a focus.
+  var plannerFocus = null;
+  // While a leg tap opens the ride surface, setRideMode's own
+  // auto-board (selected bus / nearest bus) must not fire first and be
+  // immediately retargeted — the focus boards explicitly.
+  var rideAutoBoardMute = false;
+
+  function focusVehicleForLeg(leg) {
+    // The one leg -> vehicle resolution: guidanceVehicle walks
+    // leg.tripRef -> tripDelayState -> busTrackers, the same path the
+    // guidance banners use (renderTripDetail's button label calls
+    // guidanceVehicle directly — it is the same function). Null when
+    // there is no state entry, the trip is disrupted, or the tracker
+    // has no map-matched arc.
+    return guidanceVehicle(leg);
+  }
+
+  function legScheduledSpec(leg) {
+    // The scheduled form of a leg (architecture §3): the trip's own
+    // stops from board to alight with the trip's own times, on the
+    // same basis the ride tile's times provider uses — dep for the
+    // boarding stop, arr for the rest, from arrL2/arr and depL2/dep.
+    // Degrades to the two endpoints if the stops are not found in the
+    // trip (data drift) — never to nothing.
+    if (!leg || !leg.tripRef) return null;
+    var trip = leg.tripRef;
+    var arr = trip.arrL2 || trip.arr || [], dep = trip.depL2 || trip.dep || [];
+    var rows = [];
+    var bi = trip.stops.indexOf(leg.board), ai = trip.stops.indexOf(leg.alight);
+    if (bi >= 0 && ai >= bi) {
+      for (var j = bi; j <= ai; j++) {
+        var sj = stopData[trip.stops[j]];
+        rows.push({ id: sj ? sj.id : null, name: tripStopName(trip.stops[j]),
+                    label: tripClock(j === bi ? dep[j] : arr[j]) });
+      }
+    }
+    if (!rows.length) {
+      var sb = stopData[leg.board], sa = stopData[leg.alight];
+      rows.push({ id: sb ? sb.id : null, name: tripStopName(leg.board), label: tripClock(leg.boardSec) });
+      rows.push({ id: sa ? sa.id : null, name: tripStopName(leg.alight), label: tripClock(leg.alightSec) });
+    }
+    return { routeId: leg.routeId, headsign: leg.headsign || trip.h || '',
+             basis: (trip.arrL2 || trip.depL2) ? 'typical' : 'scheduled', stops: rows };
+  }
+
+  function plannerTileVisible() { return rideMode && !$('ride-card').hidden; }
+
+  function focusPlannerLeg(leg) {
+    if (!leg || leg.type !== 'bus') return;
+    if (typeof RideAlong === 'undefined') {
+      errLog('planner', 'focus: ride tile unavailable', null);
+      showToast('Ride view unavailable on this device.', false);
+      return;
+    }
+    tapBuzz();
+    cancelTripFly(); // a fresh rider intent supersedes the cinematic
+    var spec = legScheduledSpec(leg);
+    var tr = focusVehicleForLeg(leg);
+    var vid = tr ? (tripDelayState.get(leg.tripRef) || {}).vehicleId : null;
+    plannerFocus = { vid: vid || null, trip: leg.tripRef, spec: spec,
+                     missingPolls: 0, degraded: false, awaitBoard: false };
+    rideAutoBoardMute = true;
+    try { setRideMode(true); } finally { rideAutoBoardMute = false; }
+    if (!rideWidget) { plannerFocus = null; return; }
+    rideWidget.setFocusSpec(spec);
+    if (vid) {
+      if (!boardRideBus(vid, true)) ridePendingVid = vid;
+    } else {
+      // No live vehicle: the tile answers in scheduled form and the
+      // camera goes to the boarding stop — never a silent no-op,
+      // never a fabricated live position.
+      rideWidget.showScheduled(spec);
+      var bs = stopData[leg.board];
+      if (bs) TransitionEngine.go({ vantage: TransitionEngine.vantageForStop(bs.x, 0, bs.z) });
+    }
+  }
+
+  function clearPlannerFocus(src) {
+    if (!plannerFocus) return;
+    var f = plannerFocus;
+    plannerFocus = null; // null first: the widget's onAlight re-enters here
+    if (rideWidget) {
+      try {
+        rideWidget.setFocusSpec(null);
+        rideWidget.setBoardedMissing(false);
+        if (f.vid && rideWidget.currentVehicleId === f.vid) rideWidget.alight();
+        else if (rideWidget.scheduledSpec) rideWidget.clearScheduled();
+      } catch (e) { errLog('planner', 'focus-clear: ' + (e && e.message || e), e); }
+    }
+  }
+
+  function plannerFocusPoll() {
+    if (!plannerFocus || !rideWidget) return;
+    var f = plannerFocus;
+    // Invariant (architecture §5): the focused trip must still be a
+    // bus leg of the selected journey. Background re-plans replace
+    // the journeys but carry the same trip objects, so this fires
+    // only on a genuine user re-plan or an option change that drops
+    // the trip.
+    var j = tripJourneys[tripSel], inJourney = false;
+    if (j) for (var i = 0; i < j.legs.length; i++) {
+      if (j.legs[i].type === 'bus' && j.legs[i].tripRef === f.trip) { inJourney = true; break; }
+    }
+    if (!inJourney) { clearPlannerFocus('journey-changed'); return; }
+    if (!f.vid) {
+      // Scheduled focus: upgrade when the shared resolution binds a
+      // bus to the trip. The camera moves only if the tile is what
+      // the rider is looking at; otherwise the board lands silently
+      // (awaitBoard) and is announced when it does.
+      var tr = f.trip ? focusVehicleForLeg({ tripRef: f.trip }) : null;
+      if (!tr) return;
+      f.vid = (tripDelayState.get(f.trip) || {}).vehicleId || null;
+      if (!f.vid) return;
+      f.missingPolls = 0;
+      if (boardRideBus(f.vid, plannerTileVisible())) {
+        showToast('Bus ' + f.vid + ' is now reporting live.', false);
+      } else if (plannerTileVisible()) {
+        ridePendingVid = f.vid;
+        showToast('Bus ' + f.vid + ' is now reporting live.', false);
+      } else {
+        f.awaitBoard = true;
+      }
+      return;
+    }
+    if (f.awaitBoard) {
+      if (boardRideBus(f.vid, false)) {
+        f.awaitBoard = false;
+        showToast('Bus ' + f.vid + ' is now reporting live.', false);
+      } else if (!(busTrackers[f.vid] && busTrackers[f.vid].vehicle) && ++f.missingPolls >= 2) {
+        // The bus stopped reporting before the silent board landed:
+        // fall back to the scheduled focus rather than binding a tile
+        // to a vehicle that is no longer there.
+        f.vid = null; f.awaitBoard = false; f.missingPolls = 0;
+      }
+      return;
+    }
+    var present = !!(busTrackers[f.vid] && busTrackers[f.vid].vehicle);
+    if (present) {
+      f.missingPolls = 0;
+      if (f.degraded) {
+        f.degraded = false;
+        rideWidget.setBoardedMissing(false);
+        // The tile re-renders live from the fresh position on its
+        // own; follow re-engages with a glide only while the rider
+        // is looking at the tile.
+        if (plannerTileVisible() && !boardRideBus(f.vid, true)) ridePendingVid = f.vid;
+        showToast('Bus ' + f.vid + ' is now reporting live.', false);
+      }
+    } else if (++f.missingPolls >= 2 && !f.degraded) {
+      // Two consecutive absent polls (~2 min at the feed cadence):
+      // one absent poll is a GPS gap, not a loss.
+      f.degraded = true;
+      rideWidget.setBoardedMissing(true);
+    }
+  }
   function setRideMode(on) {
     rideMode = on;
     if (on) { camMemTake(); exclCover('ride'); }
@@ -4730,8 +4910,17 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       // Camera hooks: boarding from the card's own dropdown also puts the
       // camera on the bus; getting off releases a follow this engagement
       // started.
-      rideWidget.onBoard = function (vid) { if (!_rideBoardMute) rideFollowBus(vid); };
-      rideWidget.onAlight = function (vid) { if (followVId === vid) setFollow(null); };
+      rideWidget.onBoard = function (vid) {
+        if (_rideBoardMute) return;
+        // A manual board inside the tile retargets any planner focus.
+        if (plannerFocus && plannerFocus.vid !== vid) clearPlannerFocus('retargeted');
+        rideFollowBus(vid);
+      };
+      rideWidget.onAlight = function (vid) {
+        if (followVId === vid) setFollow(null);
+        if (plannerFocus && plannerFocus.vid === vid) clearPlannerFocus('alight');
+      };
+      rideWidget.onScheduledClose = function () { clearPlannerFocus('scheduled-closed'); };
       // Feed cached route/stop data if already loaded.
       if (typeof routeById !== 'undefined' && typeof stopData !== 'undefined') {
         var rts = Object.keys(routeById).map(function (id) { return routeById[id]; });
@@ -4756,7 +4945,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // ridePendingVid). With no selection at all, fall back to the bus at
     // the rider's own location — the bus they are on — when one is
     // within boarding distance.
-    if (on && rideWidget) {
+    if (on && rideWidget && !rideAutoBoardMute) {
       var rideBoardedNow = false;
       if (selectedVehicleId) {
         rideBoardedNow = boardRideBus(selectedVehicleId, true);
@@ -4767,7 +4956,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         if (nearVid) boardRideBus(nearVid, true);
       }
     }
-    if (!on) { ridePendingVid = null; exclRestore(); }
+    if (!on) { ridePendingVid = null; clearPlannerFocus('tile-closed'); exclRestore(); }
   }
   $('ride-btn').addEventListener('click', function () { tapBuzz(); setRideMode(!rideMode); });
   $('ride-close').addEventListener('click', function () { setRideMode(false); });
@@ -6297,6 +6486,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (selectedStop) renderStopLive();
     if (typeof renderBetaTiles === 'function') renderBetaTiles(); // beta tiles track live positions
     if (typeof refreshTripFusion === 'function') refreshTripFusion(); // live counts on trip legs
+    // Planner Bus Focus (project 9): per-poll focus lifecycle —
+    // scheduled upgrade, loss, return. Contained like the rest of the
+    // poll path: a focus fault is logged under its own class, never
+    // through the planner-fault accounting, and this block calls no
+    // planner function, so it cannot re-enter the poll path.
+    if (typeof plannerFocusPoll === 'function') {
+      try { plannerFocusPoll(); } catch (e) { errLog('planner', 'focus-poll: ' + (e && e.message || e), e); }
+    }
     if (selectedVehicleId) refreshBusInfo(); // tapped bus moved / new data
     return busSlots.length;
   }
