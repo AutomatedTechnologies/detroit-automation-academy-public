@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261017-0325';
+  var STAMP = '20261017-0341';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -489,18 +489,25 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   function mergeGeoms(geoms) {
     if (geoms.length === 1) return geoms[0];
     var total = 0, idxTotal = 0, withNormals = geoms.length > 0;
+    var withARoute = geoms.length > 0, withColor = geoms.length > 0;
     geoms.forEach(function (g) {
       total += g.attributes.position.count;
       idxTotal += g.index.count;
       if (!g.attributes.normal) withNormals = false;
+      if (!g.attributes.aRoute) withARoute = false;
+      if (!g.attributes.color) withColor = false;
     });
     var pos = new Float32Array(total * 3);
     var nor = withNormals ? new Float32Array(total * 3) : null;
+    var art = withARoute ? new Float32Array(total) : null;
+    var col = withColor ? new Float32Array(total * 3) : null;
     var idx = new Uint32Array(idxTotal);
     var vo = 0, io = 0;
     geoms.forEach(function (g) {
       pos.set(g.attributes.position.array, vo * 3);
       if (nor) nor.set(g.attributes.normal.array, vo * 3);
+      if (art) art.set(g.attributes.aRoute.array, vo);
+      if (col) col.set(g.attributes.color.array, vo * 3);
       var gi = g.index.array;
       for (var i = 0; i < gi.length; i++) idx[io + i] = gi[i] + vo;
       vo += g.attributes.position.count;
@@ -510,6 +517,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var out = new THREE.BufferGeometry();
     out.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     if (nor) out.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+    if (art) out.setAttribute('aRoute', new THREE.BufferAttribute(art, 1));
+    if (col) out.setAttribute('color', new THREE.BufferAttribute(col, 3));
     out.setIndex(new THREE.BufferAttribute(idx, 1));
     return out;
   }
@@ -576,6 +585,56 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   var routeNames = {};    // id -> name
   var routeById = {};     // id -> route record from JSON
   var routeGroups = {};   // route id -> THREE.Group (guideway + label + tether)
+  // Render-engine refactor Phase 1 (project 15): guideway geometry is
+  // merged across routes into one mesh per class (glow / casing / deck /
+  // skirt). Per-route visibility and dimming — the filter gate's core
+  // operations — are preserved in the shader: every merged vertex carries
+  // an aRoute index; uRouteVis discards hidden routes' fragments and
+  // uRouteAlpha carries the per-route guide alpha (dim x street fade).
+  // routeGroups[rid].visible keeps its exact semantics for the label,
+  // tether, alert overlays, and updateBuses' group check; applyFilters
+  // mirrors the same routeShown() result into uRouteVis.
+  var ROUTE_MAX = 128;
+  var routeVisU = { value: new Float32Array(ROUTE_MAX).fill(1) };
+  var routeAlphaU = { value: new Float32Array(ROUTE_MAX).fill(1) };
+  var routeIndexById = {};  // route id -> index into the uniform arrays
+  var routeDimmed = {};     // route id -> current dim state (applyDim)
+  function routeShader(mat, withAlpha) {
+    mat.onBeforeCompile = function (sh) {
+      sh.uniforms.uRouteVis = routeVisU;
+      if (withAlpha) sh.uniforms.uRouteAlpha = routeAlphaU;
+      sh.vertexShader = 'attribute float aRoute;\nvarying float vRoute;\n' +
+        sh.vertexShader.replace('#include <begin_vertex>',
+          '#include <begin_vertex>\n\tvRoute = aRoute;');
+      sh.fragmentShader = ('uniform float uRouteVis[' + ROUTE_MAX + '];\n' +
+        (withAlpha ? 'uniform float uRouteAlpha[' + ROUTE_MAX + '];\n' : '') +
+        'varying float vRoute;\n') + sh.fragmentShader
+        .replace('#include <clipping_planes_fragment>',
+          '#include <clipping_planes_fragment>\n\tif (uRouteVis[int(vRoute + 0.5)] < 0.5) discard;')
+        .replace('#include <color_fragment>',
+          '#include <color_fragment>' + (withAlpha ?
+            '\n\tdiffuseColor.a *= uRouteAlpha[int(vRoute + 0.5)];' : ''));
+    };
+    mat.customProgramCacheKey = function () { return withAlpha ? 'routeA' : 'routeV'; };
+    return mat;
+  }
+  function tagRouteGeom(g, routeIdx, color) {
+    var n = g.attributes.position.count;
+    var ar = new Float32Array(n);
+    for (var i = 0; i < n; i++) ar[i] = routeIdx;
+    g.setAttribute('aRoute', new THREE.BufferAttribute(ar, 1));
+    if (color) {
+      var col = new Float32Array(n * 3);
+      for (var j = 0; j < n; j++) { col[j * 3] = color.r; col[j * 3 + 1] = color.g; col[j * 3 + 2] = color.b; }
+      g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    }
+    return g;
+  }
+  function refreshRouteAlpha(rid) {
+    var idx = routeIndexById[rid];
+    if (idx == null) return;
+    routeAlphaU.value[idx] = (routeDimmed[rid] ? DIM_OPACITY : 1) * streetGuideFade;
+  }
   var groupObjs = {};     // group id -> THREE.Group (stops cloud)
   var routeOrder = [];
   var groupOrder = [];
@@ -5902,18 +5961,20 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
   function applyDim(rid) {
     var g = routeGroups[rid];
-    if (!g || !g.userData.guideMats) return;
+    if (!g) return;
     // Honest rendering: only a route with a live bus on it right now renders
     // bright. 'unknown' (not yet confirmed by the feed) and 'not-running'
     // both dim — the map never implies a route is active before live data
     // proves it. ('not-running' is additionally hidden when hideIdle is on.)
     // Opacity composes with the street-view guideway fade (dimmed x faded).
+    // Phase 1: the dim state lands in the merged guideways' per-route
+    // alpha uniform — same rule, same composition, no material to touch
+    // (the pre-merge code flipped per-route materials here, and a
+    // material touch forced a shader recompile).
     var dim = (runningState[rid] !== 'running' && g.visible) || itineraryDims(rid);
-    g.userData.guideMats.forEach(function (e) {
-      if (e.dimmed === dim) return; // unchanged: never touch the material (needsUpdate forces a shader recompile)
-      e.dimmed = dim;
-      syncGuideEntry(e);
-    });
+    if (routeDimmed[rid] === dim) return; // unchanged: never rewrite the uniform
+    routeDimmed[rid] = dim;
+    refreshRouteAlpha(rid);
   }
   // Street-view guideway fade: the elevated layer cake (decks + solid skirts
   // + casing + ground glow) reads as walls at street level and buries the
@@ -5923,17 +5984,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // (shader recompiles are never per-frame).
   var streetGuideFade = 1, streetGuideFadeTarget = 1;
   var streetGlowMats = []; // per-route ground-glow materials (not dimmed by running state)
-  function guideEntryOpacity(e) {
-    return (e.dimmed ? DIM_OPACITY : e.opacity) * streetGuideFade;
-  }
-  function syncGuideEntry(e) {
-    var wantTransparent = e.dimmed || streetGuideFade < 0.999;
-    if (e.mat.transparent !== wantTransparent) {
-      e.mat.transparent = wantTransparent;
-      e.mat.needsUpdate = true;
-    }
-    e.mat.opacity = guideEntryOpacity(e);
-  }
+  // Phase 1: guideEntryOpacity / syncGuideEntry are gone with the
+  // per-route materials they served. Per-route guide alpha now lives in
+  // routeAlphaU (see refreshRouteAlpha / applyDim); the composition rule
+  // is unchanged: (dimmed ? DIM_OPACITY : 1) x streetGuideFade.
   function easeGuideFade() {
     var d = streetGuideFadeTarget - streetGuideFade;
     if (Math.abs(d) < 0.005) {
@@ -5942,11 +5996,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     } else {
       streetGuideFade += d * 0.12;
     }
-    for (var ri = 0; ri < routeOrder.length; ri++) {
-      var g = routeGroups[routeOrder[ri]];
-      if (!g || !g.userData.guideMats) continue;
-      g.userData.guideMats.forEach(syncGuideEntry);
-    }
+    for (var ri = 0; ri < routeOrder.length; ri++) refreshRouteAlpha(routeOrder[ri]);
     // Shared casing + ground glows answer only to the street fade.
     if (typeof casingMat !== 'undefined' && casingMat) {
       casingMat.opacity = 0.9 * streetGuideFade;
@@ -6003,6 +6053,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   function applyFilters() {
     routeOrder.forEach(function (rid) {
       if (routeGroups[rid]) routeGroups[rid].visible = routeShown(rid);
+      // Phase 1: the merged guideways read the same gate result from the
+      // visibility uniform — one rule, two render paths (group children
+      // via .visible, merged geometry via uRouteVis discard).
+      var _rIdx = routeIndexById[rid];
+      if (_rIdx != null) routeVisU.value[_rIdx] = routeShown(rid) ? 1 : 0;
       applyDim(rid);
     });
     groupOrder.forEach(function (gid) {
@@ -9646,7 +9701,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         streetExtLocal = addTier(lo.ext, 0x333c46, 0.8, 14, streetExt);
       })();
 
-      var casingMat = new THREE.MeshBasicMaterial({ color: 0x0c1116, transparent: true, opacity: 0.9, side: THREE.DoubleSide });
+      var casingMat = routeShader(new THREE.MeshBasicMaterial({ color: 0x0c1116, transparent: true, opacity: 0.9, side: THREE.DoubleSide }), false);
 
       // Per-group containers (stops clouds toggle with the group filter).
       groupOrder = data.groups.map(function (g) { return g.id; });
@@ -9657,6 +9712,19 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         groupObjs[g.id] = gr;
       });
 
+      // Phase 1 merged guideway materials: one per class across all
+      // routes. Deck/skirt carry per-route alpha (dim x fade) and are
+      // transparent so per-route alpha can compose; depthWrite stays on,
+      // so crossings still resolve by the per-route deck heights.
+      var deckMatAll = routeShader(new THREE.MeshLambertMaterial({
+        color: 0xffffff, vertexColors: true, side: THREE.DoubleSide, transparent: true }), true);
+      var skirtMatAll = routeShader(new THREE.MeshLambertMaterial({
+        color: 0xffffff, vertexColors: true, side: THREE.DoubleSide, transparent: true }), true);
+      var glowMatAll = routeShader(new THREE.MeshBasicMaterial({
+        color: 0xffffff, vertexColors: true, transparent: true, opacity: 0.13,
+        blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }), false);
+      streetGlowMats.push(glowMatAll);
+      var mergedGlow = [], mergedCase = [], mergedDeck = [], mergedSkirt = [];
       data.routes.forEach(function (route, ri) {
         var color = new THREE.Color(route.color);
         routeColors[route.id] = color;
@@ -9676,18 +9744,13 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         // Elevated guideway: the ribbon deck floats at y=66 with solid
         // skirts to the ground, so routes read as 3D structures. Lambert
         // materials let the directional light shade deck vs. sides.
-        var deckMat = new THREE.MeshLambertMaterial({ color: color, side: THREE.DoubleSide });
-        var skirtMat = new THREE.MeshLambertMaterial({ color: color.clone().multiplyScalar(0.38), side: THREE.DoubleSide });
-        // Kept for smart disabling: dim the guideway when the route is not running.
-        grp.userData.guideMats = [
-          { mat: deckMat, opacity: deckMat.opacity },
-          { mat: skirtMat, opacity: skirtMat.opacity }
-        ];
-        var glowMat = new THREE.MeshBasicMaterial({
-          color: color, transparent: true, opacity: 0.13,
-          blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide
-        });
-        streetGlowMats.push(glowMat);
+        // Phase 1: this route's geometry joins the merged per-class
+        // meshes after the loop, tagged with its route index and baked
+        // vertex color (deck/glow: the route color; skirt: color x 0.38,
+        // the pre-merge skirt material's shade). The group itself keeps
+        // only the label + tether; dimming is applyDim -> routeAlphaU.
+        var routeIdx = routeIndexById[route.id] = Object.keys(routeIndexById).length;
+        var skirtColor = color.clone().multiplyScalar(0.38);
         var longest = null;
         var glowGeos = [], caseGeos = [], deckGeos = [], skirtGeos = [];
         route.paths.forEach(function (path) {
@@ -9698,14 +9761,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           skirtGeos.push(skirtGeometry(path, 72, yDeck));
           if (!longest || path.length > longest.length) longest = path;
         });
-        if (glowGeos.length) grp.add(new THREE.Mesh(mergeGeoms(glowGeos), glowMat));
-        if (caseGeos.length) grp.add(new THREE.Mesh(mergeGeoms(caseGeos), casingMat));
-        if (deckGeos.length) {
-          var deckGeo = mergeGeoms(deckGeos);
-          deckGeo.computeVertexNormals();
-          grp.add(new THREE.Mesh(deckGeo, deckMat));
-        }
-        if (skirtGeos.length) grp.add(new THREE.Mesh(mergeGeoms(skirtGeos), skirtMat));
+        if (glowGeos.length) mergedGlow.push(tagRouteGeom(mergeGeoms(glowGeos), routeIdx, color));
+        if (caseGeos.length) mergedCase.push(tagRouteGeom(mergeGeoms(caseGeos), routeIdx, null));
+        if (deckGeos.length) mergedDeck.push(tagRouteGeom(mergeGeoms(deckGeos), routeIdx, color));
+        if (skirtGeos.length) mergedSkirt.push(tagRouteGeom(mergeGeoms(skirtGeos), routeIdx, skirtColor));
         if (longest) {
           var mid = longest[Math.floor(longest.length / 2)];
           // Route display name: "name - number" unless they're identical (QLINE).
@@ -9724,6 +9783,32 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         scene.add(grp);
         routeGroups[route.id] = grp;
       });
+      // Phase 1: the four merged guideway meshes (was: four meshes per
+      // route, ~332 draw calls; now four total). Deck normals are
+      // computed on the merged geometry — routes share no vertices, so
+      // the result equals the pre-merge per-route computation.
+      if (mergedGlow.length) {
+        var glowMesh = new THREE.Mesh(mergeGeoms(mergedGlow), glowMatAll);
+        glowMesh.frustumCulled = false;
+        scene.add(glowMesh);
+      }
+      if (mergedCase.length) {
+        var caseMesh = new THREE.Mesh(mergeGeoms(mergedCase), casingMat);
+        caseMesh.frustumCulled = false;
+        scene.add(caseMesh);
+      }
+      if (mergedDeck.length) {
+        var deckGeoAll = mergeGeoms(mergedDeck);
+        deckGeoAll.computeVertexNormals();
+        var deckMesh = new THREE.Mesh(deckGeoAll, deckMatAll);
+        deckMesh.frustumCulled = false;
+        scene.add(deckMesh);
+      }
+      if (mergedSkirt.length) {
+        var skirtMesh = new THREE.Mesh(mergeGeoms(mergedSkirt), skirtMatAll);
+        skirtMesh.frustumCulled = false;
+        scene.add(skirtMesh);
+      }
 
       // Stops are rebuilt from stopData by rebuildStops() (per-route colors,
       // paper-white hubs) whenever filters change; see the stops section.
