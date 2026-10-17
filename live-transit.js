@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261017-0150';
+  var STAMP = '20261017-0312';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -350,6 +350,13 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // under 22,000 so the local-street tier remains in the home view.
   // homePos/homeTarget below clone these values, so the rail's Home/Reset
   // control returns to exactly this framing.
+  // Project 16 (2026-10-17) re-examined this framing with the water layer
+  // built and RETAINED it: ground-sampled water share of the founding
+  // frame is 6.9% as shipped vs 7.2% at 17.5 km, 7.1% at 18.5 km, 6.9%
+  // at 30 degrees, 7.0% at 40 degrees/19 km — no candidate materially
+  // recomposes the frame, because the founding defect was unrendered
+  // geography (river painted as land, far shore unmarked), not camera
+  // geometry. Retention also keeps every LOD threshold as shipped.
   camera.position.set(8448, 11758, 22332);
 
   var controls = new OrbitControls(camera, renderer.domElement);
@@ -595,6 +602,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   var pmLabel = null, pmTether = null;
   var pmVisible = false; // OFF by default: user enables via pm-toggle
   var belleIsleLabel = null, belleIsleTether = null; // island landmass label (static layer)
+  var waterLabels = [];    // project 16 place labels {sprite, tether} (Detroit River / Windsor / Lake St. Clair)
   var PM_DECK_Y = 140;     // elevated guideway: floats above the highest DDOT route deck (~110)
 
   function project(lat, lon) {
@@ -6289,6 +6297,107 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     scene.add(belleIsleTether);
   }
 
+  // Project 16 (Default View Uplift): static water + far-shore layer.
+  // Geometry: assets/detroit-water.json — TIGER/Line 2025 areawater and
+  // OSM natural=water unioned, clipped to MOSAIC_BOUNDS, simplified at
+  // 3 m, pre-projected to scene meters by dvu-build/build_water.py
+  // (authoritative sources only; never hand-drawn). Draw calls: main
+  // fill at y=2 (above the ground plane, below the Belle Isle landmass
+  // fill at y=3 and the street tiers), Belle Isle interior fill at
+  // y=4.5 (above the island fill, so its canals and lakes read),
+  // far-shore landmass tint at y=1 (the Windsor shore: geometry and a
+  // label, deliberately unmapped — no streets or routes exist in this
+  // map's data for it), and one merged shoreline stroke tracing every
+  // ring. Static geography: meshes join the scene only, NEVER any pick
+  // target list — tap resolution is unchanged by construction.
+  function buildWater(W) {
+    if (!W || !W.polygons) return;
+    function triGeo(entries) {
+      var pos = [];
+      var bad = 0;
+      entries.forEach(function (e) {
+        if (!e.rings || !e.rings.length || e.rings[0].length < 3) return;
+        try {
+          var contour = e.rings[0].map(function (p) { return new THREE.Vector2(p[0], p[1]); });
+          var holes = [];
+          var all = contour.slice();
+          for (var h = 1; h < e.rings.length; h++) {
+            var hole = e.rings[h].map(function (p) { return new THREE.Vector2(p[0], p[1]); });
+            holes.push(hole);
+            all = all.concat(hole);
+          }
+          var faces = THREE.ShapeUtils.triangulateShape(contour, holes);
+          for (var f = 0; f < faces.length; f++) {
+            for (var k = 0; k < 3; k++) {
+              var v = all[faces[f][k]];
+              pos.push(v.x, 0, v.y);
+            }
+          }
+        } catch (err) { bad++; }
+      });
+      if (bad) console.warn('buildWater: skipped ' + bad + ' degenerate polygons');
+      var g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      g.computeVertexNormals();
+      return g;
+    }
+    function fillMesh(entries, y, color) {
+      var m = new THREE.Mesh(triGeo(entries),
+        new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide }));
+      m.position.y = y;
+      m.renderOrder = 1;
+      scene.add(m);
+      return m;
+    }
+    if (W.farShore && W.farShore.rings) fillMesh([W.farShore], 1, 0x0a0e13);
+    fillMesh(W.polygons, 2, 0x17344e);
+    if (W.islePolygons && W.islePolygons.length) fillMesh(W.islePolygons, 4.5, 0x17344e);
+    // Merged shoreline stroke: every ring of both water sets, seated
+    // just above its fill so the water's edge is drawn, not implied.
+    var seg = [];
+    function strokeSet(entries, y) {
+      entries.forEach(function (e) {
+        e.rings.forEach(function (ring) {
+          for (var i = 0; i < ring.length; i++) {
+            var a = ring[i], b = ring[(i + 1) % ring.length];
+            seg.push(a[0], y, a[1], b[0], y, b[1]);
+          }
+        });
+      });
+    }
+    strokeSet(W.polygons, 2.6);
+    if (W.islePolygons) strokeSet(W.islePolygons, 5.1);
+    var sg = new THREE.BufferGeometry();
+    sg.setAttribute('position', new THREE.Float32BufferAttribute(seg, 3));
+    var stroke = new THREE.LineSegments(sg,
+      new THREE.LineBasicMaterial({ color: 0x2e5a7d, transparent: true, opacity: 0.55 }));
+    stroke.renderOrder = 2;
+    scene.add(stroke);
+    // Place labels join the Belle Isle / People Mover static-geography
+    // family (pill + tether, visible when camDist > 7000; the frame
+    // loop applies the rule). Anchor points verified inside the built
+    // geometry: river point in the river polygon, lake point on the
+    // lake's in-frame water, Windsor point inside the far-shore tint.
+    function waterLabel(text, color, x, z) {
+      var s = makeLabel(text, color);
+      s.position.set(x, 560, z);
+      s.renderOrder = 36;
+      scene.add(s);
+      var t = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(x, 3, z),
+          new THREE.Vector3(x, 490, z)
+        ]),
+        new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0.4 })
+      );
+      scene.add(t);
+      waterLabels.push({ sprite: s, tether: t });
+    }
+    waterLabel('Detroit River', '#7fb0d8', 8700, 6200);
+    waterLabel('Windsor', '#9AA0A6', 9336, 7532);
+    waterLabel('Lake St. Clair', '#7fb0d8', 19605, 1111);
+  }
+
   // Screen-space nearest station (mirrors the stop touch fallback: forgiving
   // at far zooms, tighter for mouse). The pins are small; raycasting them
   // would be fiddly, so proximity picking is the primary path for both.
@@ -9634,6 +9743,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         .then(function (B) { buildBelleIsle(B); })
         .catch(function () { /* island is a bonus; map works without it */ });
 
+      // Water + far-shore static layer (project 16): built once from
+      // TIGER+OSM geometry. Absent (fetch failed) the map simply has
+      // no water layer.
+      fetch('assets/detroit-water.json?v=' + STAMP, { cache: 'no-store' })
+        .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+        .then(function (W) { buildWater(W); })
+        .catch(function () { /* water is a bonus; map works without it */ });
+
       /* LANDMARK-MASSING-BEGIN v20261006-1700 — staging-only Phase A.
          True-form OSM landmark massing (single merged mesh, 1 draw call).
          Geometry: /tmp/build_landmarks.py. Revert: delete this block and
@@ -9777,8 +9894,13 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           renderBusInstances();
         }
         // Label rule: route enabled, not confirmed not-running, AND (live buses
-        // on the route OR zoomed far out). Midpoint labels hide at street zoom
+        // on the route with a bus running). Midpoint labels hide at street zoom
         // (< 7 km) where bus badges and street names take over.
+        // Project 16 first-load label-density rule: the map labels what is
+        // alive and what orients you, nothing else. A route chip therefore
+        // shows only while its route has a live bus, at every distance —
+        // the former camDist > 15000 clause lit all 45 route chips in the
+        // founding frame, most of them naming routes with nothing running.
         var camDist = camera.position.distanceTo(controls.target);
         // LOD: local streets and stops declutter at city-scale zooms.
         if (streetLocal) streetLocal.visible = camDist < 22000;
@@ -9789,7 +9911,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         for (var i = 0; i < labelSprites.length; i++) {
           var L = labelSprites[i];
           var lvis = runningState[L.routeId] !== 'not-running' &&
-            ((liveCounts[L.routeId] > 0) || camDist > 15000) && camDist > 7000 &&
+            (liveCounts[L.routeId] > 0) && camDist > 7000 &&
             routeNearOk(L.routeId);
           L.sprite.visible = lvis;
           if (L.tether) L.tether.visible = lvis;
@@ -9809,6 +9931,13 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           var biLvis = camDist > 7000;
           belleIsleLabel.visible = biLvis;
           if (belleIsleTether) belleIsleTether.visible = biLvis;
+        }
+        // Project 16 water / far-shore place labels: same static-geography
+        // family rule as the Belle Isle label above.
+        for (var wi = 0; wi < waterLabels.length; wi++) {
+          var wvis = camDist > 7000;
+          waterLabels[wi].sprite.visible = wvis;
+          if (waterLabels[wi].tether) waterLabels[wi].tether.visible = wvis;
         }
         // MoGo bikeshare: count badges appear at close zoom only
         // (declutter rule, same family as the route labels above).
