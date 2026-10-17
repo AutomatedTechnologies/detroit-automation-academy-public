@@ -184,3 +184,24 @@
   border-color: #E85D1A;
   color: #E85D1A;
 }
+
+/* Return (project 11): restores the tile's previous state — a
+   distinct control from Get off, which ends the ride. It sits
+   directly above Get off in the ride body; Get off keeps the
+   sticky bottom slot. */
+.ra-return {
+  margin-top: 10px;
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  background: transparent;
+  color: #F5F2EA;
+  border: 1px solid rgba(232, 93, 26, 0.55);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.ra-return:hover {
+  border-color: #E85D1A;
+  color: #E85D1A;
+}
