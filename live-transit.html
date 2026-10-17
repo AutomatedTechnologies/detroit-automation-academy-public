@@ -459,6 +459,15 @@
   }
   .trip-live-badge { color: #0C1116; background: #FFB000; }
   .trip-disrupted-badge { color: #F5F2EA; background: #B3261E; }
+  /* Planner Bus Focus (project 9): a bus leg row is selectable. */
+  .trip-leg-row.focusable { cursor: pointer; }
+  .trip-leg-view {
+    justify-self: start; margin-top: .25rem; padding: .28rem .7rem;
+    font: inherit; font-size: .72rem; font-weight: 600;
+    color: #0C1116; background: #FFB000; border: 0; border-radius: 999px;
+    cursor: pointer;
+  }
+  .trip-leg-view:active { filter: brightness(1.15); }
   /* Phase 2c: active ride guidance banner */
   #trip-guidance[hidden] { display: none; }
   #trip-guidance {
@@ -925,7 +934,7 @@
   // was quota-paused on 2026-10-15 and is no longer consumed.
   window.FORGE_LIVE_PROXY = "live-data";
 </script>
-<script src="ride-along.js?v=20261016-1636"></script>
-<script type="module" src="live-transit.js?v=20261016-2029"></script>
+<script src="ride-along.js?v=20261016-2107"></script>
+<script type="module" src="live-transit.js?v=20261016-2107"></script>
 </body>
 </html>
