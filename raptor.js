@@ -16,6 +16,13 @@ var TT = null;
 var K_ROUNDS = 3; // max trips per journey => at most 2 transfers
 var INF = 1e15;
 var LIVE_FRESH_MS = 30 * 60 * 1000; // live delays only apply to near-term queries
+// Rank 5 (project 4): downstream projection factor — the measured delay
+// is projected onto downstream stop times at 0.6 persistence (buses
+// recover time downstream; flat projection carried a -49/-56 s fused
+// median bias on the two replay days). Same constant as live-transit.js
+// DELAY_PROJECTION; the stored delaySec stays the measured value.
+// Record: files/compute-accuracy/rank5-delivery-note-2026-10-18.md.
+var DELAY_PROJECTION = 0.6;
 
 export async function loadTimetable(url) {
   if (TT && TT.url === url) return TT;
@@ -222,7 +229,7 @@ function planImpl(tt, fromSeeds, toIdx, when) {
     var d = (t.depL2 ? t.depL2[pos] : t.dep[pos]);
     if (liveCtx) {
       var ld = liveDelays.get(t);
-      if (ld && !ld.disrupted && ld.delaySec) d += ld.delaySec;
+      if (ld && !ld.disrupted && ld.delaySec) d += ld.delaySec * DELAY_PROJECTION;
     }
     return d;
   }
@@ -230,7 +237,7 @@ function planImpl(tt, fromSeeds, toIdx, when) {
     var a = (t.arrL2 ? t.arrL2[pos] : t.arr[pos]);
     if (liveCtx) {
       var ld = liveDelays.get(t);
-      if (ld && !ld.disrupted && ld.delaySec) a += ld.delaySec;
+      if (ld && !ld.disrupted && ld.delaySec) a += ld.delaySec * DELAY_PROJECTION;
     }
     return a;
   }
@@ -348,7 +355,7 @@ function buildJourney(tt, k, target, seedOf, alight, walkPar, liveCtx) {
       // the strongest signal: live delay > empirical baseline > scheduled.
       var bSec = (hasL2 ? t.depL2[a.boardPos] : t.dep[a.boardPos]);
       var aSec = (hasL2 ? t.arrL2[a.alightPos] : t.arr[a.alightPos]);
-      if (ld && !ld.disrupted && ld.delaySec) { bSec += ld.delaySec; aSec += ld.delaySec; }
+      if (ld && !ld.disrupted && ld.delaySec) { bSec += ld.delaySec * DELAY_PROJECTION; aSec += ld.delaySec * DELAY_PROJECTION; }
       if (a.shift) { bSec += a.shift; aSec += a.shift; }
       legs.unshift({
         type: 'bus', routeId: r.id, routeName: r.name, color: r.color,
