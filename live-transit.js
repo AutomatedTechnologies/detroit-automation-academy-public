@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261018-1607';
+  var STAMP = '20261018-2052';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -8186,13 +8186,23 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         var trip = cands[ci].trip;
         var exp = tripExpected(trip, stopS, cands[ci].nowEff);
         if (!exp) continue;
-        // Stop-index gate: the bus can't be 2+ stops early, nor absurdly late.
+        // Stop-index gate (rank 4, dual form): a candidate is rejected
+        // only when the index gate AND the position-implied delay agree
+        // it is implausible. tImp is the delaySec estimator (computed
+        // after selection below) moved above the gate: the bus must be
+        // 2+ stops early AND more than 300 s ahead of its expected
+        // position, or 9+ stops late AND more than 1800 s behind it.
+        // Either witness alone is survivable, so a bus 10+ minutes late
+        // — a median 11 stops behind its interpolated expectation —
+        // is measured instead of falling off the index cliff alone.
+        // Gate record: files/compute-accuracy/rank4-retest-delivery-note-2026-10-18.md
         var vIdx = -1;
         for (var q = 0; q < exp.pts.length; q++) {
           if (exp.pts[q].s <= tr.s + 30) vIdx = q; else break;
         }
         var gate = vIdx - exp.expIdx;
-        if (gate > 1 || gate < -8) continue;
+        var tImp = -(tr.s - exp.sE) / Math.max(exp.vRef, 2);
+        if ((gate > 1 && tImp < -300) || (gate < -8 && tImp > 1800)) continue;
         var score = Math.abs(tr.s - exp.sE) - (headsignMatch(v.destination, trip.h) ? 500 : 0);
         if (!best || score < best.score) { second = best; best = { trip: trip, score: score, exp: exp, frameShift: cands[ci].nowEff - nowSec }; }
         else if (!second || score < second.score) { second = { trip: trip, score: score }; }
