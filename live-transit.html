@@ -43,12 +43,12 @@
 }
 </script>
 <link rel="icon" type="image/webp" href="assets/logo.webp">
-<link rel="stylesheet" href="ride-along.css?v=20261018-1802">
-<link rel="stylesheet" href="styles.css?v=20261018-1802">
+<link rel="stylesheet" href="ride-along.css?v=20261018-2226">
+<link rel="stylesheet" href="styles.css?v=20261018-2226">
 <script type="importmap">
 {
   "imports": {
-    "three": "./assets/three.module.min.js?v=20261018-1802",
+    "three": "./assets/three.module.min.js?v=20261018-2226",
     "three/addons/": "./assets/three-addons/"
   }
 }
@@ -166,6 +166,18 @@
   #browse-stop-search, #browse-bus-search { width: 100%; min-height: 44px; box-sizing: border-box; border-radius: 10px; border: 1px solid rgba(245,242,234,.2); background: rgba(245,242,234,.06); color: #F5F2EA; padding: .55rem .7rem; font-size: .9rem; margin-bottom: .6rem; font-family: "Inter", sans-serif; }
   #browse-stop-search::placeholder, #browse-bus-search::placeholder { color: #9AA0A6; }
   .browse-empty { color: #9AA0A6; font-size: .85rem; padding: .8rem 0; text-align: center; }
+  .passes-note { color: #9AA0A6; font-size: .78rem; line-height: 1.5; margin: 0 0 .7rem; }
+  .passes-note a { color: #E85D1A; }
+  .passes-list { list-style: none; margin: 0 0 .7rem; padding: 0; display: grid; gap: .35rem; }
+  .pass-row { display: flex; align-items: center; gap: .6rem; background: rgba(245,242,234,.05); border: 1px solid rgba(245,242,234,.12); border-radius: 10px; padding: .55rem .7rem; }
+  .pass-main { flex: 1; min-width: 0; }
+  .pass-main b { display: block; font-weight: 600; font-size: .85rem; color: #F5F2EA; }
+  .pass-main span { display: block; color: #9AA0A6; font-size: .75rem; margin-top: .15rem; }
+  .pass-buy { flex: none; min-height: 44px; display: inline-flex; align-items: center; border: 1px solid rgba(232,93,26,.6); color: #E85D1A; border-radius: 999px; padding: .3rem .7rem; font-size: .75rem; font-weight: 600; text-decoration: none; font-family: "Inter", sans-serif; }
+  .pass-buy:hover { background: rgba(232,93,26,.12); }
+  .pass-buy:focus-visible { outline: 2px solid #E85D1A; outline-offset: 2px; }
+  .trip-pass-line { font-size: .8rem; color: #9AA0A6; }
+  .trip-pass-link { background: none; border: none; padding: 0; color: #E85D1A; font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; }
   .f-head-btns { display: flex; gap: .4rem; }
   .f-group { margin-bottom: .7rem; }
   .f-group:last-child { margin-bottom: 0; }
@@ -752,6 +764,7 @@
           <div class="browse-tabs" role="tablist" aria-label="Browse buses or stops">
             <button id="browse-tab-buses" role="tab" aria-selected="true" aria-controls="browse-buses-pane">Buses <span id="browse-bus-count"></span></button>
             <button id="browse-tab-stops" role="tab" aria-selected="false" aria-controls="browse-stops-pane" tabindex="-1">Stops</button>
+            <button id="browse-tab-passes" role="tab" aria-selected="false" aria-controls="browse-passes-pane" tabindex="-1">Passes</button>
           </div>
           <div id="browse-buses-pane" role="tabpanel" aria-labelledby="browse-tab-buses" tabindex="0">
             <input type="search" id="browse-bus-search" placeholder="Search buses…" aria-label="Search buses" autocomplete="off">
@@ -760,6 +773,37 @@
           <div id="browse-stops-pane" role="tabpanel" aria-labelledby="browse-tab-stops" tabindex="0" hidden>
             <input type="search" id="browse-stop-search" placeholder="Search stops…" aria-label="Search stops" autocomplete="off">
             <ul id="browse-stop-list" class="browse-list"></ul>
+          </div>
+          <!-- Passes (project 24 deep-link floor): a hand-off, not a store.
+               Dart passes are sold by DDOT and SMART; this section only
+               links to the channels that sell them today. Spec:
+               files/pass-distribution/deep-link-floor-spec-2026-10-18.md -->
+          <div id="browse-passes-pane" role="tabpanel" aria-labelledby="browse-tab-passes" tabindex="0" hidden>
+            <p class="passes-note">Dart passes are sold by DDOT and SMART through their apps and stores. Live Transit does not sell passes.</p>
+            <ul class="passes-list">
+              <li class="pass-row">
+                <span class="pass-main"><b>Dart Regional — 4 Hour</b><span>$2 · $0.50 reduced</span></span>
+                <a class="pass-buy" href="https://tokentransit.com/app" target="_blank" rel="noopener">Buy in Token Transit</a>
+              </li>
+              <li class="pass-row">
+                <span class="pass-main"><b>Dart Regional — 24 Hour</b><span>$5 · $2 reduced</span></span>
+                <a class="pass-buy" href="https://tokentransit.com/app" target="_blank" rel="noopener">Buy in Token Transit</a>
+              </li>
+              <li class="pass-row">
+                <span class="pass-main"><b>Dart Regional — 7 Day</b><span>$22 · $10 reduced</span></span>
+                <a class="pass-buy" href="https://tokentransit.com/app" target="_blank" rel="noopener">Buy in Token Transit</a>
+              </li>
+              <li class="pass-row">
+                <span class="pass-main"><b>Dart Regional — 31 Day</b><span>$70 · $29 reduced</span></span>
+                <a class="pass-buy" href="https://tokentransit.com/app" target="_blank" rel="noopener">Buy in Token Transit</a>
+              </li>
+              <li class="pass-row">
+                <span class="pass-main"><b>SMART — 31 Day (SMART only)</b><span>$66 · $17 reduced</span></span>
+                <a class="pass-buy" href="https://www.smartbus.org/Fares/Buy-Passes" target="_blank" rel="noopener">Buy from SMART</a>
+              </li>
+            </ul>
+            <p class="passes-note">Prices as published by SMART/DDOT. Reduced fares: seniors 65+, people with disabilities, Medicare cardholders, and students with school ID.</p>
+            <p class="passes-note">Other ways to buy: <a href="https://transitapp.com/download.html" target="_blank" rel="noopener">Buy in Transit app</a> · <a href="https://www.smartbus.org/Fares/Buy-Passes" target="_blank" rel="noopener">SMART Buy Passes page</a> · <a href="https://detroitmi.gov/departments/detroit-department-transportation/transportation-fares" target="_blank" rel="noopener">DDOT fares page</a></p>
           </div>
         </div>
       </div>
@@ -961,7 +1005,7 @@
   // was quota-paused on 2026-10-15 and is no longer consumed.
   window.FORGE_LIVE_PROXY = "live-data";
 </script>
-<script src="ride-along.js?v=20261018-1802"></script>
-<script type="module" src="live-transit.js?v=20261018-1802"></script>
+<script src="ride-along.js?v=20261018-2226"></script>
+<script type="module" src="live-transit.js?v=20261018-2226"></script>
 </body>
 </html>
