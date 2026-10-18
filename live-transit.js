@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261017-1030';
+  var STAMP = '20261017-2032';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -1240,6 +1240,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     });
     // Nearest-first placement with screen-space collision: no overlapping labels.
     var placed = [];
+    // Project 21: the stop-label pass ran first this frame and
+    // published its placed rects — street labels yield that space.
+    for (var sr = 0; sr < stopLabelRects.length; sr++) placed.push(stopLabelRects[sr]);
     var h = camDist * 0.02;
     var rw = renderer.domElement.clientWidth, rh = renderer.domElement.clientHeight;
     var pxPerM = rh / (2 * camDist * Math.tan(camera.fov * 0.5 * DEG));
@@ -1936,12 +1939,96 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     return o;
   }
   var stopLabelPool = [];
-  for (var _svi = 0; _svi < 8; _svi++) {
+  // Project 21: the pool grows 8 -> 14 sprites — street view keeps its
+  // shipped cap of 8 placements; the orbit tier below caps at 12.
+  for (var _svi = 0; _svi < 14; _svi++) {
     var _svl = new THREE.Sprite(new THREE.SpriteMaterial({ depthTest: false, depthWrite: false, transparent: true, opacity: 0.95 }));
     _svl.visible = false;
     _svl.renderOrder = 36;
     scene.add(_svl);
     stopLabelPool.push(_svl);
+  }
+  // Screen rects of the stop labels placed by the most recent stop-label
+  // pass (either view). updateStreetLabels runs after this pass in the
+  // frame loop and seeds its collision set with these: street names
+  // yield screen space to stop names (project 21's hierarchy).
+  var stopLabelRects = [];
+  // Project 21: prominent-stop selection for the ORBIT view (the
+  // street-view selection in updateStopLabels keeps its shipped
+  // nearest-8-within-1 km behavior). Pure function of its inputs so the
+  // gate can assert tier membership from the shipped code: candidates
+  // are the governed stops (stopPickList — prominence changes
+  // presentation, never membership) plus People Mover stations when
+  // the PM layer is on. Weight W per stop = max(own visible routes,
+  // facility union from buildFacilityCounts). Tiers: 0 anchors
+  // (W >= 4, and every PM station), 1 transfer points (W 2-3),
+  // 2 live single-route stops (a serving visible route has a live
+  // bus), 3 the remaining governed stops. Distance bands decide which
+  // tiers may speak: > 13,000 m tiers 0-1 (city view — the default
+  // zoom), 7,000-13,000 m tiers 0-2, <= 7,000 m all tiers (the
+  // neighborhood fill, nearest first). Order: tier; within tier 0,
+  // facility weight first (landmark nodes before nearer ordinary
+  // crossings), then distance; other tiers nearest-first. Candidates
+  // within 0.62 x camDist; the caller places up to
+  // PROMINENT_LABEL_CAP with screen-space collision.
+  var PROMINENT_LABEL_CAP = 12;
+  function prominentStopPick(list, pmList, camDist, tx, tz, liveCounts, facCounts, onFn) {
+    var maxTier = camDist > 13000 ? 1 : (camDist > 7000 ? 2 : 3);
+    var R = camDist * 0.62, R2 = R * R;
+    var scored = [];
+    function consider(st, isPm) {
+      if (!st.n) return;
+      var dx = st.x - tx, dz = st.z - tz;
+      var d2 = dx * dx + dz * dz;
+      if (d2 > R2) return;
+      var tier;
+      if (isPm) {
+        tier = 0;
+      } else {
+        var own = 0, live = false;
+        (st.r || []).forEach(function (rid) {
+          if (onFn && !onFn(rid)) return;
+          own++;
+          if (liveCounts && liveCounts[rid] > 0) live = true;
+        });
+        var fac = facCounts ? (facCounts.get(st) || 0) : 0;
+        var w = Math.max(own, fac);
+        tier = w >= 4 ? 0 : (w >= 2 ? 1 : (live ? 2 : 3));
+      }
+      if (tier > maxTier) return;
+      scored.push({ stop: st, tier: tier, d2: d2, w: isPm ? 4 : w });
+    }
+    for (var i = 0; i < list.length; i++) consider(list[i], false);
+    if (pmList) for (var p = 0; p < pmList.length; p++) consider(pmList[p], true);
+    scored.sort(function (a, b) {
+      if (a.tier !== b.tier) return a.tier - b.tier;
+      // Within the anchor tier, the biggest nodes speak first (facility
+      // weight, then distance): at city scale the region's landmark
+      // stops — the transit centers — must not lose the budget to a
+      // dozen nearer ordinary crossings. Other tiers are nearest-first:
+      // they are local texture, and proximity is their meaning.
+      if (a.tier === 0 && a.w !== b.w) return b.w - a.w;
+      return a.d2 - b.d2;
+    });
+    // One label per name stem per place: direction pairs and terminal
+    // bays share a stem, and printing the same name twice side by side
+    // spends the budget without adding information — the nearest
+    // carrier holds the name; a same-stem stop 600+ m away (a
+    // different place that happens to share the name) still earns
+    // its own.
+    var out = [], carried = [];
+    for (var q = 0; q < scored.length && out.length < PROMINENT_LABEL_CAP; q++) {
+      var cand = scored[q], stem = facilityStem(cand.stop.n), dup = false;
+      for (var c = 0; c < carried.length; c++) {
+        if (carried[c].stem !== stem) continue;
+        var cdx = carried[c].x - cand.stop.x, cdz = carried[c].z - cand.stop.z;
+        if (cdx * cdx + cdz * cdz <= 600 * 600) { dup = true; break; }
+      }
+      if (dup) continue;
+      carried.push({ stem: stem, x: cand.stop.x, z: cand.stop.z });
+      out.push(cand);
+    }
+    return out;
   }
   var lastStopLabelUpdate = 0;
   function updateStopLabels() {
@@ -1950,7 +2037,51 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     lastStopLabelUpdate = now;
     var i;
     if (!streetView) {
-      for (i = 0; i < stopLabelPool.length; i++) stopLabelPool[i].visible = false;
+      // Project 21: orbit-view prominent-stop labels (selection:
+      // prominentStopPick above). Constant-screen-size pills a step
+      // above the street labels (world height camDist x 0.0215 vs the
+      // streets' 0.02), anchored at the pylon top, placed with the
+      // same screen-space collision discipline as the street-view
+      // path. Placed rects publish to stopLabelRects so the street
+      // pass, which runs after this one, yields them the space.
+      stopLabelRects = [];
+      if (!stopGroup || !stopGroup.visible) {
+        for (i = 0; i < stopLabelPool.length; i++) stopLabelPool[i].visible = false;
+        return;
+      }
+      var otx = controls.target.x, otz = controls.target.z;
+      var ocamDist = camera.position.distanceTo(controls.target);
+      var picks = prominentStopPick(stopPickList || [],
+        pmVisible ? pmStations : null, ocamDist, otx, otz,
+        liveCounts, stopFacilityCounts,
+        function (rid) { return routeIsOn(rid); });
+      var orw = renderer.domElement.clientWidth, orh = renderer.domElement.clientHeight;
+      var opxPerM = orh / (2 * ocamDist * Math.tan(camera.fov * 0.5 * DEG));
+      var oh = ocamDist * 0.0215;
+      var on2 = 0;
+      for (i = 0; i < picks.length && on2 < stopLabelPool.length; i++) {
+        var ost = picks[i].stop;
+        var oo = stopLabelTex(ost.n);
+        var oly = (ost.pm ? PM_DECK_Y : STOP_BASE_Y) + stopHeight((ost.r || []).length) * stopYS + 40;
+        _p3.set(ost.x, oly, ost.z).project(camera);
+        if (_p3.z > 1 || _p3.z < -1) continue;
+        var ocxp = (_p3.x * 0.5 + 0.5) * orw, ocyp = (-_p3.y * 0.5 + 0.5) * orh;
+        var olw = oh * oo.aspect * opxPerM, olh = oh * opxPerM;
+        var oclash = false;
+        for (var oc = 0; oc < stopLabelRects.length; oc++) {
+          var opr = stopLabelRects[oc];
+          if (Math.abs(ocxp - opr.x) < (olw + opr.w) / 2 + 8 &&
+              Math.abs(ocyp - opr.y) < (olh + opr.h) / 2 + 6) { oclash = true; break; }
+        }
+        if (oclash) continue;
+        stopLabelRects.push({ x: ocxp, y: ocyp, w: olw, h: olh });
+        var osp = stopLabelPool[on2++];
+        if (osp.userData.tex !== oo.tex) { osp.material.map = oo.tex; osp.userData.tex = oo.tex; osp.material.needsUpdate = true; }
+        osp.scale.set(oh * oo.aspect, oh, 1);
+        osp.position.set(ost.x, oly, ost.z);
+        osp.visible = true;
+      }
+      for (i = on2; i < stopLabelPool.length; i++) stopLabelPool[i].visible = false;
       return;
     }
     var tx = controls.target.x, tz = controls.target.z;
@@ -1978,7 +2109,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var camDist = camera.position.distanceTo(controls.target);
     var pxPerM = rh / (2 * camDist * Math.tan(camera.fov * 0.5 * DEG));
     var n = 0;
-    for (i = 0; i < scored.length && n < stopLabelPool.length; i++) {
+    for (i = 0; i < scored.length && n < 8; i++) {
       var st = scored[i][1];
       var o = stopLabelTex(st.n);
       var ly = (st.pm ? PM_DECK_Y : STOP_BASE_Y) + stopHeight((st.r || []).length) * stopYS + 40;
@@ -2000,6 +2131,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       sp.position.set(st.x, ly, st.z);
       sp.visible = true;
     }
+    // Project 21: street names yield to these rects too (same seeding
+    // as the orbit path).
+    stopLabelRects = placed;
     for (i = n; i < stopLabelPool.length; i++) stopLabelPool[i].visible = false;
   }
 
@@ -2030,12 +2164,17 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   function easeStopScale(camDist) {
     var target = stopScaleFor(camDist);
     var d = target - stopYS;
-    if (Math.abs(d) < 0.003) {
-      if (stopYS === target) return;
+    var xzTarget = stopXZFor(camDist);
+    var dxz = xzTarget - stopXZS;
+    if (Math.abs(d) < 0.003 && Math.abs(dxz) < 0.003) {
+      if (stopYS === target && stopXZS === xzTarget) return;
       stopYS = target;
+      stopXZS = xzTarget;
     } else {
-      stopYS += d * 0.16;
+      if (Math.abs(d) >= 0.003) stopYS += d * 0.16; else stopYS = target;
+      if (Math.abs(dxz) >= 0.003) stopXZS += dxz * 0.16; else stopXZS = xzTarget;
     }
+    stopXZU.value = stopXZS;
     syncStopScaleU();
     for (var p = 0; p < pmPins.length; p++) {
       var pin = pmPins[p];
@@ -2168,7 +2307,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var d = Math.hypot(px - sx, py - sy);
       if (d > (maxD != null ? maxD : 44)) continue;
       var wppS = (2 * distS * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)) / r.height;
-      var score = d - (wppS > 0 ? 16 / wppS : 0);
+      var score = d - (wppS > 0 ? stopAimRadiusM() / wppS : 0);
       if (score < bestScore) { bestScore = score; best = { stop: s, d: d, score: score }; }
     }
     return best;
@@ -2191,7 +2330,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var py = (-_stopV3.y * 0.5 + 0.5) * r.height;
     var d = Math.hypot(px - (cx - r.left), py - (cy - r.top));
     var wppS = (2 * distS * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)) / r.height;
-    return { d: d, score: d - (wppS > 0 ? 16 / wppS : 0) };
+    return { d: d, score: d - (wppS > 0 ? stopAimRadiusM() / wppS : 0) };
   }
   // Render-engine refactor Phase 3 (project 15): stop picking reads a
   // uniform grid over stopPickList instead of raycasting the whole
@@ -3655,7 +3794,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   var stopGroup = new THREE.Group();
   stopGroup.visible = false; // LOD-gated in the animation loop
   scene.add(stopGroup);
-  var STOP_LOD_DIST = 20000; // above the ~18.6km default home view: stops visible on load
+  var STOP_LOD_DIST = 26000; // Project 21 (2026-10-17): above the measured
+  // 20,500 m home distance (the camera literals at setup; the previous
+  // 20,000 value's "~18.6 km home view" premise no longer matched the
+  // shipped framing, so stops were switched off at the default view):
+  // stops render — and pick — on load at the default zoom.
 
   // Stop markers: one instanced pylon per stop. Height encodes importance:
   // 75m + 28m per serving route, so a 13-route mega-hub towers over a
@@ -3676,13 +3819,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // matrices at the current stopYS — picks are discrete events, so the
   // rewrite cost moved off the frame path entirely.
   var stopScaleU = { value: 1 };
+  var stopXZU = { value: 1 };
   var stopBakedYS = 1;
   var stopMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
   stopMat.onBeforeCompile = function (sh) {
     sh.uniforms.uStopScale = stopScaleU;
-    sh.vertexShader = 'uniform float uStopScale;\n' + sh.vertexShader.replace(
+    sh.uniforms.uStopXZ = stopXZU;
+    sh.vertexShader = 'uniform float uStopScale;\nuniform float uStopXZ;\n' + sh.vertexShader.replace(
       '#include <project_vertex>',
-      ['vec4 mvPosition = vec4( transformed, 1.0 );',
+      ['vec4 mvPosition = vec4( transformed.x * uStopXZ, transformed.y, transformed.z * uStopXZ, 1.0 );',
        '#ifdef USE_INSTANCING',
        '\tmvPosition = instanceMatrix * mvPosition;',
        '#endif',
@@ -3692,7 +3837,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
        '\tmvPosition = viewMatrix * mvPosition;',
        '\tgl_Position = projectionMatrix * mvPosition;'].join('\n'));
   };
-  stopMat.customProgramCacheKey = function () { return 'stopScale'; };
+  stopMat.customProgramCacheKey = function () { return 'stopScaleXZ'; };
   var stopIM = new THREE.InstancedMesh(
     new THREE.CylinderGeometry(14, 18, 1, 8), stopMat, STOP_MAX);
   stopIM.frustumCulled = false;
@@ -3707,6 +3852,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
   stopGroup.add(stopIM);
   var stopPickList = [];
+  // Project 21: per-stop facility route counts for the prominent-stop
+  // label tier, recomputed by rebuildStops (see buildFacilityCounts).
+  var stopFacilityCounts = new Map();
   var STOP_BASE_Y = 18; // street level: above the street lines, below casing
 
   var lastStopSig = null;
@@ -3726,6 +3874,22 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     t = t * t * (3 - 2 * t);
     return lo + (1 - lo) * t;
   }
+  // Project 21: footprint (XZ) prominence at city distances, through the
+  // uStopXZ shader uniform — the constant-screen-size pattern the street
+  // labels and places discs already use. True scale at and below
+  // 8,000 m (stopScaleFor's own full-height point); above it the pylon
+  // footprint grows in proportion to distance, holding ~4.3 px of screen
+  // width out to the 26,000 m LOD edge. Eased in easeStopScale exactly
+  // like stopYS: uniform writes only, never a matrix rewrite.
+  var stopXZS = 1;
+  function stopXZFor(d) {
+    if (d <= 8000) return 1;
+    return Math.min(d / 8000, 3.25);
+  }
+  // The pick aim credit is the RENDERED pylon radius: the shipped 16 m
+  // mean radius grown by the same XZ scale the shader applies — 16 m
+  // exactly wherever the scale is 1, so close-zoom scoring is unchanged.
+  function stopAimRadiusM() { return 16 * stopXZS; }
   function writeStopMatrices(list, withColors) {
     for (var i = 0; i < list.length; i++) {
       var s = list[i];
@@ -3756,6 +3920,42 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     stopBakedYS = stopYS;
     syncStopScaleU();
   }
+  // Project 21: facility weight for the prominent-stop tier. Terminals
+  // are modeled as per-bay stops ("Rosa Parks Transit Center - Bay 4" —
+  // one route each), so a route-count rule alone misses the city's
+  // biggest boarding points. A stop's facility count is the union of
+  // visible routes across governed stops that share its name stem
+  // (name minus bay/direction suffix) within 500 m. Computed once per
+  // governed-list rebuild — never per frame, never per label pass.
+  function facilityStem(n) {
+    return String(n || '').replace(/ - (Bay \d+|Northbound|Southbound|Eastbound|Westbound)$/, '');
+  }
+  function buildFacilityCounts(list, onFn) {
+    var counts = new Map();
+    var byStem = {};
+    for (var i = 0; i < list.length; i++) {
+      var k = facilityStem(list[i].n);
+      (byStem[k] || (byStem[k] = [])).push(list[i]);
+    }
+    for (var k2 in byStem) {
+      var grp = byStem[k2];
+      if (grp.length > 64) { // pathological stem: own counts stand
+        for (var g0 = 0; g0 < grp.length; g0++) counts.set(grp[g0], 0);
+        continue;
+      }
+      for (var a = 0; a < grp.length; a++) {
+        var set = {};
+        for (var b = 0; b < grp.length; b++) {
+          var dx = grp[a].x - grp[b].x, dz = grp[a].z - grp[b].z;
+          if (dx * dx + dz * dz <= 500 * 500) {
+            (grp[b].r || []).forEach(function (rid) { if (onFn(rid)) set[rid] = 1; });
+          }
+        }
+        counts.set(grp[a], Object.keys(set).length);
+      }
+    }
+    return counts;
+  }
   function rebuildStops() {
     // Stops only depend on route toggles: skip the full rebuild when the
     // visible route set hasn't changed (e.g. polls that only flip dimming).
@@ -3774,6 +3974,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
     stopPickList = list;
     writeStopMatrices(list, true);
+    // Project 21: the label tier's facility weights follow the governed
+    // list (visible routes only — prominence never invents service).
+    stopFacilityCounts = buildFacilityCounts(list, function (rid) { return routeIsOn(rid); });
     // Rebuilds recolor every instance: re-apply the selection highlight.
     selectedStopIndex = selectedStop ? list.indexOf(selectedStop) : -1;
     if (selectedStopIndex < 0 && selectedStop) hideStop();
@@ -10387,10 +10590,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         if (typeof placesFrameTick === 'function') placesFrameTick(camDist);
         if (stopHighlight.visible) {
           var shp = busPulse();
-          stopHighlight.scale.set(shp, shp, 1);
+          // Project 21: the ring hugs the pylon base — the base now
+          // carries the XZ prominence scale at city distances.
+          var shx = shp * stopXZS;
+          stopHighlight.scale.set(shx, shx, 1);
         }
-        updateStreetLabels();
+        // Project 21: stop labels place before street labels so the
+        // street pass can yield them screen space (stopLabelRects).
         updateStopLabels();
+        updateStreetLabels();
         easePillarScale(camDist);
         easeStopScale(camDist);
         easeGuideFade();
