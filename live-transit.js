@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261018-1705';
+  var STAMP = '20261018-1735';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -7998,8 +7998,21 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     } catch (err) {}
   }
 
+  var flBucketMemo = { key: null, val: null };
   function detroitBucket(d) {
     d = d || new Date();
+    // Rank 7 (2026-10-18, project 4): the bucket is a pure function of the
+    // Detroit weekday + hour, constant within any absolute hour (US DST
+    // transitions fall on absolute-hour boundaries), so it is memoized by
+    // absolute hour. This runs inside empiricalSpeed, which the frame loop
+    // calls once per tracked vehicle per frame; the unmemoized body built
+    // an Intl.DateTimeFormat + formatToParts on every call (measured
+    // 7.1 us of the call's 7.7 us on the audit VM). Value-identical to the
+    // unmemoized function — verified over a full year of timestamps
+    // including both DST transitions. Record:
+    // files/compute-accuracy/rank7-assessment-2026-10-18.md.
+    var ck = Math.floor(d.getTime() / 3600000);
+    if (flBucketMemo.key === ck) return flBucketMemo.val;
     var wd = null, hr = null;
     new Intl.DateTimeFormat('en-US', {
       timeZone: 'America/Detroit', weekday: 'short', hour: 'numeric', hourCycle: 'h23'
@@ -8007,13 +8020,16 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (p.type === 'weekday') wd = p.value;
       if (p.type === 'hour') hr = parseInt(p.value, 10);
     });
-    if (wd === 'Sat') return 'sat';
-    if (wd === 'Sun') return 'sun';
-    if (hr >= 6 && hr < 9) return 'wkd_am';
-    if (hr >= 9 && hr < 15) return 'wkd_mid';
-    if (hr >= 15 && hr < 19) return 'wkd_pm';
-    if (hr >= 19 && hr < 24) return 'wkd_eve';
-    return 'wkd_night';
+    var b;
+    if (wd === 'Sat') b = 'sat';
+    else if (wd === 'Sun') b = 'sun';
+    else if (hr >= 6 && hr < 9) b = 'wkd_am';
+    else if (hr >= 9 && hr < 15) b = 'wkd_mid';
+    else if (hr >= 15 && hr < 19) b = 'wkd_pm';
+    else if (hr >= 19 && hr < 24) b = 'wkd_eve';
+    else b = 'wkd_night';
+    flBucketMemo.key = ck; flBucketMemo.val = b;
+    return b;
   }
 
   function fetchTimingCells() {
@@ -8050,6 +8066,40 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // remaining times shifted (clamped); disrupted trips are flagged, never
   // shifted. Three quiet polls and the match reverts to scheduled.
   var tripDelayState = new Map(); // trip object -> {delaySec, vehicleId, misses, disrupted}
+  // --- Rank 8: matcher instrumentation (project 4, 2026-10-18) --------------
+  // Per-poll outcome counters for updateLiveDelays, read back via
+  // window.__flMatcherStats (the __flErrLog pattern). The telemetry archive
+  // cannot report production match rates or rejection classes — the rank-4
+  // evaluation had to reconstruct them by offline replay; these counters
+  // make the matcher observable in place. Classes mirror the replay tally:
+  // matched / gate / score / margin / noExpected / shadowed / disrupted,
+  // plus candidate-level gate sides (candGateEarly / candGateLate /
+  // candAdmitted) and the matched-delay distribution. On-device only:
+  // nothing is transmitted, no fetch, no beacon (the owner.js telemetry
+  // endpoint stays null). Counting never touches control flow — the proof
+  // is in files/compute-accuracy/rank8-delivery-note-2026-10-18.md.
+  var flMatchLast = null;     // most recent completed poll's counters
+  var flMatchCum = null;      // cumulative counters; t = first poll's time
+  function flMatchZero() {
+    return { t: 0, fixes: 0, ghostRoute: 0, noCandidates: 0, noExpected: 0,
+      gate: 0, score: 0, margin: 0, shadowed: 0, matched: 0, disrupted: 0,
+      candGateEarly: 0, candGateLate: 0, candAdmitted: 0,
+      delayN: 0, delaySum: 0, delayHist: [0, 0, 0, 0, 0, 0, 0, 0],
+      tripsLive: 0, tripsDisrupted: 0, tripsLayover: 0 };
+  }
+  function flMatchCopy(o) {
+    if (!o) return null;
+    var c = {};
+    for (var k in o) c[k] = (k === 'delayHist') ? o[k].slice() : o[k];
+    return c;
+  }
+  // Read-back hook for support/diagnostics (read-only copies). delayHist
+  // buckets, matched non-disrupted delaySec:
+  // [-300,-120) [-120,-30) [-30,30) [30,120) [120,300) [300,600)
+  // [600,1200) [1200,1800]
+  window.__flMatcherStats = function () {
+    return { last: flMatchCopy(flMatchLast), cum: flMatchCopy(flMatchCum) };
+  };
   var rrLayCache = { key: null, byRoute: null }; // Route Reverse layover candidates, per service-day pair
   var stopArcCache = {};          // routeId|pathIdx -> {stopId: arc s}
   var ttRouteIdxById = null;      // built per timetable
@@ -8173,6 +8223,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       lastEmpiricalRun = nowMs;
       applyEmpiricalBaseline();
     }
+    var mstat = flMatchZero(); // rank 8: this poll's matcher outcome counters
+    mstat.t = nowMs;
     if (!ttRouteIdxById) {
       ttRouteIdxById = {};
       tt.routes.forEach(function (r, i) { ttRouteIdxById[String(r.id)] = i; });
@@ -8201,17 +8253,19 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       // dead-reckoning horizon (PREDICT_HORIZON_S).
       var fixAgeMs = v.updated_at ? (Date.now() - new Date(v.updated_at).getTime()) : 0;
       if (fixAgeMs > 150000) continue; // GPS fix too old to measure delay
+      mstat.fixes++;
       var routeStr = String(v.route_id);
       var ridx = ttRouteIdxById[routeStr];
-      if (ridx == null) continue; // ghost route: nothing to match against
+      if (ridx == null) { mstat.ghostRoute++; continue; } // ghost route: nothing to match against
       var stopS = stopArcMap(routeStr, tr.pathIdx);
       var cands = candsFor(ridx);
-      if (!cands.length) continue;
-      var best = null, second = null;
+      if (!cands.length) { mstat.noCandidates++; continue; }
+      var best = null, second = null, anyExp = false;
       for (var ci = 0; ci < cands.length; ci++) {
         var trip = cands[ci].trip;
         var exp = tripExpected(trip, stopS, cands[ci].nowEff);
         if (!exp) continue;
+        anyExp = true;
         // Stop-index gate (rank 4, dual form): a candidate is rejected
         // only when the index gate AND the position-implied delay agree
         // it is implausible. tImp is the delaySec estimator (computed
@@ -8228,11 +8282,21 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         }
         var gate = vIdx - exp.expIdx;
         var tImp = -(tr.s - exp.sE) / Math.max(exp.vRef, 2);
-        if ((gate > 1 && tImp < -300) || (gate < -8 && tImp > 1800)) continue;
+        if ((gate > 1 && tImp < -300) || (gate < -8 && tImp > 1800)) {
+          if (gate > 1 && tImp < -300) mstat.candGateEarly++; else mstat.candGateLate++;
+          continue;
+        }
+        mstat.candAdmitted++;
         var score = Math.abs(tr.s - exp.sE) - (headsignMatch(v.destination, trip.h) ? 500 : 0);
         if (!best || score < best.score) { second = best; best = { trip: trip, score: score, exp: exp, frameShift: cands[ci].nowEff - nowSec }; }
         else if (!second || score < second.score) { second = { trip: trip, score: score }; }
       }
+      // Rank 8: classify this fix's outcome (counters only — the checks
+      // below decide control flow exactly as before).
+      if (!anyExp) mstat.noExpected++;
+      else if (!best) mstat.gate++;
+      else if (best.score >= 4000) mstat.score++;
+      else if (second && (second.score - best.score) <= 300) mstat.margin++;
       // Clear margin or no match. 4000 m bound: beyond that the residual is
       // not a credible delay measurement.
       if (!best || best.score >= 4000) continue;
@@ -8254,8 +8318,19 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var cur = byTrip.get(m.trip);
       if (!cur || m.score < cur.score) byTrip.set(m.trip, m);
     });
+    mstat.shadowed += matches.length - byTrip.size; // rank 8
     var matchedTrips = new Set(byTrip.keys());
     byTrip.forEach(function (m, trip) {
+      // Rank 8: matched outcome + delay distribution (instantaneous
+      // measured delay, the replay tally's delayInst).
+      mstat.matched++;
+      if (m.disrupted) mstat.disrupted++;
+      else {
+        mstat.delayN++;
+        mstat.delaySum += m.delaySec;
+        var mdb = m.delaySec;
+        mstat.delayHist[mdb < -120 ? 0 : mdb < -30 ? 1 : mdb < 30 ? 2 : mdb < 120 ? 3 : mdb < 300 ? 4 : mdb < 600 ? 5 : mdb < 1200 ? 6 : 7]++;
+      }
       var st = tripDelayState.get(trip);
       if (m.disrupted) {
         tripDelayState.set(trip, { delaySec: 0, vehicleId: m.vehicleId, misses: 0, disrupted: true, fixStamp: m.fixStamp, frameShift: m.frameShift || 0 });
@@ -8355,9 +8430,24 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
     var delayMap = new Map();
     tripDelayState.forEach(function (st, trip) {
+      if (st.disrupted) mstat.tripsDisrupted++; // rank 8: state census
+      if (st.layover) mstat.tripsLayover++;
       delayMap.set(trip, { delaySec: st.delaySec, disrupted: st.disrupted, vehicleId: st.vehicleId, fixStamp: st.fixStamp || 0 });
     });
+    mstat.tripsLive = tripDelayState.size;
     tripRaptor.setLiveDelays(tt, delayMap, nowMs);
+    // Rank 8: publish this poll's matcher counters (window.__flMatcherStats).
+    flMatchLast = mstat;
+    if (!flMatchCum) { flMatchCum = flMatchZero(); flMatchCum.t = mstat.t; }
+    for (var mk8 in mstat) {
+      if (mk8 === 't' || mk8 === 'delayHist' || mk8 === 'tripsLive' ||
+          mk8 === 'tripsDisrupted' || mk8 === 'tripsLayover') continue;
+      flMatchCum[mk8] += mstat[mk8];
+    }
+    for (var hb8 = 0; hb8 < 8; hb8++) flMatchCum.delayHist[hb8] += mstat.delayHist[hb8];
+    flMatchCum.tripsLive = mstat.tripsLive;
+    flMatchCum.tripsDisrupted = mstat.tripsDisrupted;
+    flMatchCum.tripsLayover = mstat.tripsLayover;
     // Keep the open trip card live: re-plan "leave now" queries per poll.
     // Both planner-path calls are contained (step 2, §4.2): a fault here
     // is logged as a planner fault and quarantined for this poll — it
