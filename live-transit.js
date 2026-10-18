@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261017-2308';
+  var STAMP = '20261017-2342';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -1357,11 +1357,18 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     _m4.compose(_p3, _q3, _s3);
     pillarBeaconIM.setMatrixAt(k, _m4);
     _p3.set(b.x, 4, b.z);
-    _s3.set(exz * 1.35, exz * 1.35, 1);
+    // Position Integrity item 2: in the stale treatment the ground
+    // ring is the marker's ground statement (the halo disc is gone —
+    // see below), so it renders larger than the fresh base ring.
+    var ringK = exz * (b.staleFx ? 2.0 : 1.35);
+    _s3.set(ringK, ringK, 1);
     _m4.compose(_p3, _ringQ, _s3);
     pillarRingIM.setMatrixAt(k, _m4);
     // Uncertainty halo: flat disc at y=8, scaled to the 3σ radius.
-    var hr = b.haloR || 15;
+    // Halo honesty (Position Integrity item 2): a STALE marker carries
+    // no disc at all — no disc may imply a bound the data does not
+    // support. The ring above replaces it.
+    var hr = b.staleFx ? 0 : (b.haloR || 15);
     _p3.set(b.x, 8, b.z);
     _q3.identity();
     _s3.set(hr, hr, 1);
@@ -1383,7 +1390,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           d.group.rotation.y = s.rotY;
           d.body.scale.set(fi.length_m, fi.height_m, fi.width_m);
           d.body.position.y = fi.height_m / 2 + 0.35;
-          d.body.material.color.copy(s.color);
+          d.body.material.color.copy(busMarkerColor(s));
           var isSelD = !!selectedVehicleId && s.vehicle.vehicle_id === selectedVehicleId;
           var dsc = isSelD ? 1.45 : 1; // selected bus expands
           d.group.scale.set(dsc, dsc, dsc);
@@ -1413,9 +1420,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var b = busSlots[k];
       writeBusMatrices(k, b, 1);
       // Itinerary focus: darken pillars for routes not in the active trip.
-      var pc = b.color;
+      var pc = busMarkerColor(b);
       if (itineraryDims(b.vehicle.route_id)) {
-        pc = b.color.clone().multiplyScalar(0.25);
+        pc = pc.clone().multiplyScalar(0.25);
       }
       pillarGlowIM.setColorAt(k, pc);
       pillarCoreIM.setColorAt(k, pc);
@@ -1458,7 +1465,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           sp.visible = false;
           continue;
         }
-        var bt = routeBadgeTexture(bs.vehicle.route_id);
+        var bt = markerStale(bs, performance.now()) ? staleBadgeTexture(bs) : routeBadgeTexture(bs.vehicle.route_id);
         if (sp.material.map !== bt.tex) { sp.material.map = bt.tex; sp.material.needsUpdate = true; }
         sp.userData.aspect = bt.aspect;
         sp.userData.slot = bi;
@@ -6397,7 +6404,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     sl._predT = now;
     if (dt <= 0) return;
     var ageS = (now - (tr.fixObsT != null ? tr.fixObsT : tr.fixT)) / 1000;
-    if (ageS >= PREDICT_HORIZON_S) return;
+    if (ageS >= PREDICT_HORIZON_S) {
+      // Position Integrity item 2: past the horizon the shadow claims
+      // the map-matched fix, not the frozen extrapolation — the same
+      // rule the visible marker lives by (staleMarkerStep). Nothing
+      // renders here, so the placement is direct, no ease.
+      var stalePt = staleFixPoint(tr);
+      if (stalePt) { sl.x = stalePt.x; sl.z = stalePt.z; }
+      return;
+    }
     if (!tr.seg || tr.segPath !== tr.pathIdx || tr.kS < tr.seg.s0 || tr.kS > tr.seg.s1) {
       tr.seg = segmentAt(tr.routeId, tr.pathIdx, tr.kS);
       tr.segPath = tr.pathIdx;
@@ -7352,6 +7367,208 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     return best;
   }
 
+  // === POSITION INTEGRITY — STALE MARKER (project 6, item 2) ============
+  // Spec: files/position-integrity/analysis-2026-10-16.md §2 points 2–3.
+  // Past PREDICT_HORIZON_S the prediction stops — and before this item
+  // the marker simply froze wherever the extrapolation had carried it
+  // (up to ~1 km past the fix in the founding sample, ~2.7 km from the
+  // truth), still wearing its 150 m-clamped σ halo. The stale rule:
+  // the marker EASES BACK to the map-matched fix position — the last
+  // truth — and renders in the stale treatment (desaturated, ground
+  // ring instead of halo, fix time on its badge chip). The rendered
+  // claim becomes "last seen here at 3:50 PM".
+  //
+  // The ease speaks the page's own motion language: the minimum-jerk
+  // quintic stepStreetTween glides the camera with, over 2000 ms —
+  // the prediction module's own ease-in scale ("small fix divergences
+  // ease in over ~2 s"). It runs along the route arc when the fix is
+  // map-matched (the marker retraces its path, never cuts a corner),
+  // straight-line for a raw (detour) fix. A fresh fix takes over
+  // cleanly: the poll rebuilds the slot from the Kalman state — which
+  // the ease never touches — and the ease state is dropped, so the
+  // predictor and the ease never fight. A poll that lands mid-ease
+  // cannot move the marker either: the ease restarts from the last
+  // RENDERED position (tr.renderS/renderX/renderZ), not from wherever
+  // the poll's reconcile placed the new slot, so the first frame after
+  // the poll continues the curve instead of jumping.
+  var STALE_EASE_MS = 2000;   // ease-back duration (see above)
+  var STALE_DESAT = 0.65;     // stale desaturation: lerp toward luminance gray
+  function minJerk(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+  // One age for the marker surfaces: the prediction loop's own anchor
+  // rule (fixObsT, else fixT) against the horizon. Item 1's
+  // fixAgeOfSlot governs the card's text claim; the two agree wherever
+  // the source carries a measured stamp.
+  function markerStale(slot, nowPerf) {
+    if (typeof slot.staleFx === 'boolean') return slot.staleFx;
+    var tr = slot.tracker;
+    if (!tr) return false;
+    var anchor = (tr.fixObsT != null ? tr.fixObsT : tr.fixT);
+    if (!anchor) return false;
+    return (nowPerf - anchor) / 1000 > PREDICT_HORIZON_S;
+  }
+  // The map-matched fix position: the last truth. On-arc when the last
+  // fix matched (tr.matchS on the current arc), else the raw fix.
+  function staleFixPoint(tr) {
+    if (!tr) return null;
+    if (tr.arc && tr.matchS != null && tr.matchPath === tr.pathIdx) {
+      var pt = pointAt(tr.arc, tr.matchS);
+      return { x: pt.x, z: pt.z, s: tr.matchS };
+    }
+    if (tr.lastX != null && tr.lastZ != null) return { x: tr.lastX, z: tr.lastZ, s: null };
+    return null;
+  }
+  function desatCopy(c) {
+    var g = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+    return new THREE.Color(
+      c.r + (g - c.r) * STALE_DESAT,
+      c.g + (g - c.g) * STALE_DESAT,
+      c.b + (g - c.b) * STALE_DESAT);
+  }
+  // The color a marker surface should show for this slot right now.
+  function busMarkerColor(slot) {
+    return markerStale(slot, performance.now()) ? desatCopy(slot.color) : slot.color;
+  }
+  // Re-apply the stale treatment (or its removal) to a slot's rendered
+  // colors after a class flip between polls: pillar instance colors in
+  // pillar mode, the detail body in bus mode. Mirrors the color logic
+  // renderBusInstances applies at poll time, itinerary dim included.
+  function applyMarkerTreatment(i, sl, isStale) {
+    var col = isStale ? desatCopy(sl.color) : sl.color;
+    if (busMode) {
+      var d = detailPool[i];
+      if (d) d.body.material.color.copy(col);
+    } else {
+      var pc = col;
+      if (itineraryDims(sl.vehicle.route_id)) pc = col.clone().multiplyScalar(0.25);
+      pillarGlowIM.setColorAt(i, pc);
+      pillarCoreIM.setColorAt(i, pc);
+      pillarBeaconIM.setColorAt(i, pc);
+      pillarRingIM.setColorAt(i, pc);
+      markColorsDirty();
+    }
+  }
+  // The stale badge chip: the route badge's own silhouette, stroke in
+  // the desaturated route color, the route number shifted up and the
+  // fix's clock time under it in the site amber — the same amber the
+  // card's stale chip (item 1) wears. Drawn on demand; cached per
+  // route + fix minute (the text cannot go staler than a minute
+  // without a redraw, and a new fix minute is a new key).
+  var staleBadgeTexCache = {};
+  function staleBadgeTexture(slot) {
+    var info = fixAgeOfSlot(slot, performance.now(), Date.now());
+    if (!info) return routeBadgeTexture(slot.vehicle.route_id);
+    var rid = slot.vehicle.route_id;
+    var key = rid + '@' + Math.floor(info.fixWallMs / 60000);
+    var t = staleBadgeTexCache[key];
+    if (t) return t;
+    var rc = routeColors[rid];
+    var col = '#' + (rc ? desatCopy(rc).getHexString() : '9aa0a6');
+    var label = String(rid);
+    var c = document.createElement('canvas');
+    var W = 168, H = 84;
+    c.width = W; c.height = H;
+    var x = c.getContext('2d');
+    x.fillStyle = 'rgba(5,7,10,0.95)';
+    x.fillRect(18, 0, 16, 10);
+    x.fillRect(W - 34, 0, 16, 10);
+    x.fillRect(18, H - 10, 16, 10);
+    x.fillRect(W - 34, H - 10, 16, 10);
+    x.fillStyle = 'rgba(9,13,17,0.88)';
+    x.beginPath();
+    if (x.roundRect) x.roundRect(8, 6, W - 16, H - 12, 14); else x.rect(8, 6, W - 16, H - 12);
+    x.fill();
+    x.lineWidth = 4; x.strokeStyle = col; x.stroke();
+    x.fillStyle = 'rgba(180,200,215,0.35)';
+    x.fillRect(20, 14, W - 40, 10);
+    x.fillStyle = '#ffffff';
+    x.font = '700 26px system-ui, -apple-system, sans-serif';
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    var tw = x.measureText(label).width;
+    if (tw > W - 48) {
+      x.font = '700 ' + Math.floor(26 * (W - 48) / tw) + 'px system-ui, -apple-system, sans-serif';
+    }
+    x.fillText(label, W / 2, H / 2 - 2);
+    x.fillStyle = '#FFB000';
+    x.font = '600 19px system-ui, -apple-system, sans-serif';
+    x.fillText(formatClock12(info.fixWallMs), W / 2, H / 2 + 22);
+    var tex = new THREE.CanvasTexture(c);
+    tex.anisotropy = 4;
+    t = { tex: tex, aspect: c.width / c.height };
+    staleBadgeTexCache[key] = t;
+    return t;
+  }
+  // Per-frame stale step for one slot. Returns 0 (nothing), 1 (the
+  // marker moved / its ground statement changed — rewrite it), 2 (the
+  // slot flipped INTO the stale class), or 3 (it flipped OUT — a fresh
+  // fix took over). Flips ask the caller to re-apply the treatment and
+  // refresh the badge chip. The ease state lives on the tracker; the
+  // Kalman state (kS/kV/kP) is never touched here — prediction owns it.
+  function staleMarkerStep(sl, tr, ageS, now) {
+    var isStale = ageS > PREDICT_HORIZON_S;
+    var code = 0;
+    if ((sl.staleFx === true) !== isStale) {
+      sl.staleFx = isStale;
+      code = isStale ? 2 : 3;
+    } else if (typeof sl.staleFx !== 'boolean') {
+      sl.staleFx = isStale; // normalize silently: no flip, no treatment change
+    }
+    if (!isStale) {
+      if (tr.ease) { tr.ease = null; tr.renderS = null; tr.renderX = null; tr.renderZ = null; }
+      return code;
+    }
+    sl.haloR = 0; // halo honesty: no disc in the stale class
+    var fp = staleFixPoint(tr);
+    if (!fp) return code;
+    var stamp = (tr.fixObsT != null ? tr.fixObsT : tr.fixT);
+    var ez = tr.ease;
+    if (!ez || ez.stamp !== stamp) {
+      // (Re)start from the last RENDERED position — a poll that landed
+      // mid-ease rebuilt the slot from the reconcile, and the marker
+      // must not jump to meet it.
+      ez = tr.ease = {
+        stamp: stamp, t0: now, done: false,
+        fromS: (fp.s != null ? (tr.renderS != null ? tr.renderS : tr.s) : null),
+        fromX: (tr.renderX != null ? tr.renderX : sl.x),
+        fromZ: (tr.renderZ != null ? tr.renderZ : sl.z)
+      };
+    }
+    if (fp.s != null && ez.fromS != null) {
+      // On-arc ease: retrace the route to the matched fix.
+      var sNow;
+      if (ez.done) {
+        sNow = fp.s;
+      } else {
+        var pA = Math.min(1, (now - ez.t0) / STALE_EASE_MS);
+        sNow = ez.fromS + (fp.s - ez.fromS) * minJerk(pA);
+        if (pA >= 1) { sNow = fp.s; ez.done = true; }
+      }
+      var ptA = pointAt(tr.arc, sNow);
+      if (Math.abs(sNow - tr.s) > 0.001 || Math.abs(ptA.x - sl.x) > 0.01 || Math.abs(ptA.z - sl.z) > 0.01) {
+        tr.s = sNow;
+        code = code || 1;
+      }
+      tr.renderS = sNow;
+      return code;
+    }
+    // Raw fix (detour / unmatched): straight-line ease in scene space.
+    var nx, nz;
+    if (ez.done) {
+      nx = fp.x; nz = fp.z;
+    } else {
+      var pB = Math.min(1, (now - ez.t0) / STALE_EASE_MS);
+      var eB = minJerk(pB);
+      nx = ez.fromX + (fp.x - ez.fromX) * eB;
+      nz = ez.fromZ + (fp.z - ez.fromZ) * eB;
+      if (pB >= 1) { nx = fp.x; nz = fp.z; ez.done = true; }
+    }
+    if (Math.abs(nx - sl.x) > 0.01 || Math.abs(nz - sl.z) > 0.01) {
+      sl.x = nx; sl.z = nz;
+      code = code || 1;
+    }
+    tr.renderX = nx; tr.renderZ = nz;
+    return code;
+  }
+
   // Advance every tracker's dead reckoning and push the predicted positions
   // into slots, badges, and true-scale models. Runs every frame; cheap.
   var lastMotionT = 0;
@@ -7361,11 +7578,23 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     lastMotionT = now;
     if (dt <= 0) return;
     var anyMoved = false;
+    var badgeDirty = false;
     for (var i = 0; i < busSlots.length; i++) {
       var sl = busSlots[i], tr = sl.tracker;
-      if (!tr || !tr.arc) continue;
+      if (!tr) continue;
       var moved = false;
       var ageS = (now - (tr.fixObsT != null ? tr.fixObsT : tr.fixT)) / 1000;
+      // Position Integrity item 2: horizon lapse — ease back to the
+      // fix and wear the stale treatment (staleMarkerStep). Runs for
+      // arc-less (detour) trackers too: their position is already the
+      // raw fix, but the treatment still flips with the class.
+      var stCode = staleMarkerStep(sl, tr, ageS, now);
+      if (stCode) {
+        moved = true;
+        anyMoved = true;
+        if (stCode >= 2) { applyMarkerTreatment(i, sl, stCode === 2); badgeDirty = true; }
+      }
+      if (!tr.arc) continue;
       if (ageS < PREDICT_HORIZON_S && tr.kInit) {
         // Kalman predict: constant-velocity model, F = [[1,dt],[0,1]].
         // The empirical segment speed enters as a velocity prior (the old
@@ -7399,9 +7628,17 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         if (sp && sp.visible) { sp.position.x = pt.x; sp.position.z = pt.z; }
         // Uncertainty halo: radius = 3σ of the position variance, clamped.
         // Grows between fixes, collapses on the Kalman update — the honest
-        // rendering of "we're less sure where this bus is."
-        sl.haloR = Math.max(15, Math.min(150, 3 * Math.sqrt(Math.max(tr.kP, 1))));
+        // rendering of "we're less sure where this bus is." A stale
+        // marker carries no disc (item 2): the guard keeps this block
+        // from resurrecting one when it repositions an easing marker.
+        sl.haloR = sl.staleFx ? 0 : Math.max(15, Math.min(150, 3 * Math.sqrt(Math.max(tr.kP, 1))));
       }
+    }
+    if (badgeDirty) {
+      // A class flip changes which chip a bus wears (route badge vs
+      // stale badge with the fix time) — refresh textures now, not at
+      // the next poll.
+      updateBusBadges(busSlots.length, busMode ? 430 : PILLAR_H * pillarYS + 80);
     }
     if (!anyMoved) return;
     if (!busMode) {
