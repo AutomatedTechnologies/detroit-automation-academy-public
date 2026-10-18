@@ -43,12 +43,12 @@
 }
 </script>
 <link rel="icon" type="image/webp" href="assets/logo.webp">
-<link rel="stylesheet" href="ride-along.css?v=20261018-1735">
-<link rel="stylesheet" href="styles.css?v=20261018-1735">
+<link rel="stylesheet" href="ride-along.css?v=20261018-1802">
+<link rel="stylesheet" href="styles.css?v=20261018-1802">
 <script type="importmap">
 {
   "imports": {
-    "three": "./assets/three.module.min.js?v=20261018-1735",
+    "three": "./assets/three.module.min.js?v=20261018-1802",
     "three/addons/": "./assets/three-addons/"
   }
 }
@@ -605,6 +605,10 @@
      module); static rings and glyphs remain, so no information is lost. */
   @media (prefers-reduced-motion: reduce) {
     .map-live .live-dot { animation: none; }
+    /* Motion posture (project 28 item 4, register C-10): stage chrome
+       transitions still under the same preference; camera and marker
+       motion are stilled in live-transit.js from the same query. */
+    .map-stage * { transition: none !important; }
   }
   .filter-btn { white-space: nowrap; }
 </style>
@@ -957,7 +961,7 @@
   // was quota-paused on 2026-10-15 and is no longer consumed.
   window.FORGE_LIVE_PROXY = "live-data";
 </script>
-<script src="ride-along.js?v=20261018-1735"></script>
-<script type="module" src="live-transit.js?v=20261018-1735"></script>
+<script src="ride-along.js?v=20261018-1802"></script>
+<script type="module" src="live-transit.js?v=20261018-1802"></script>
 </body>
 </html>
