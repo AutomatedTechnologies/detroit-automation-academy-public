@@ -46,12 +46,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ride-along.css?v=20261017-2224">
+<link rel="stylesheet" href="ride-along.css?v=20261017-2308">
 <link rel="stylesheet" href="styles.css?v=20261010-2130">
 <script type="importmap">
 {
   "imports": {
-    "three": "./assets/three.module.min.js?v=20261017-2224",
+    "three": "./assets/three.module.min.js?v=20261017-2308",
     "three/addons/": "./assets/three-addons/"
   }
 }
@@ -340,6 +340,15 @@
   .stop-live-row .stop-live-bus { margin-left: 0; color: #9AA0A6; }
   .bus-upcoming { margin-top: .6rem; }
   .bus-upcoming[hidden] { display: none; }
+  /* Position Integrity (project 6, item 1): the bus card's fix-age line.
+     Sits outside the compact-hidden set (eyebrow/h2/dl/actions) so the
+     compact AND expanded cards both carry the claim's age; the stale
+     chip rides the same line and appears only in the STALE class. */
+  .bus-fixline { display: flex; align-items: center; gap: .5rem; margin-top: .55rem; font-size: .78rem; line-height: 1.4; color: #9AA0A6; font-variant-numeric: tabular-nums; }
+  .bus-fixline[hidden] { display: none; }
+  .bus-fixline.stale #bus-fix-age { color: #FFB000; }
+  .bus-stale-chip { flex: none; font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .1rem .38rem; border: 1px solid #FFB000; border-radius: 999px; color: #FFB000; }
+  .bus-stale-chip[hidden] { display: none; }
   #bus-card.compact .bus-upcoming { display: none; }
   .suggest-tile { margin-top: .7rem; }
   .suggest-tile[hidden] { display: none; }
@@ -747,6 +756,7 @@
           </button>
           <button class="bus-follow-btn" type="button" aria-pressed="false">Follow</button>
         </div>
+        <div class="bus-fixline" id="bus-fixline" hidden><span id="bus-fix-age"></span><span class="bus-stale-chip" id="bus-stale-chip" hidden></span></div>
         <div class="sel-eyebrow">Bus</div>
         <h2><i id="bus-chip"></i><span id="bus-title">Bus</span></h2>
         <div class="bus-actions"><button class="bus-follow-btn" type="button" aria-pressed="false">Follow</button></div>
@@ -934,7 +944,7 @@
   // was quota-paused on 2026-10-15 and is no longer consumed.
   window.FORGE_LIVE_PROXY = "live-data";
 </script>
-<script src="ride-along.js?v=20261017-2224"></script>
-<script type="module" src="live-transit.js?v=20261017-2224"></script>
+<script src="ride-along.js?v=20261017-2308"></script>
+<script type="module" src="live-transit.js?v=20261017-2308"></script>
 </body>
 </html>
