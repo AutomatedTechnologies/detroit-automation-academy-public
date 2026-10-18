@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261018-0005';
+  var STAMP = '20261018-0030';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -5795,6 +5795,47 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // (syncRidePickLabels runs on each vehicle push and tile change).
   var ridePickGroup = null;
   var ridePickSprites = {}; // vid -> { sprite, key }
+  // Project 23: the pick label's world height follows the camera so
+  // its SCREEN height holds at ~3x the prominent stop labels' across
+  // the pick working range — stop labels ride camDist x 0.0215
+  // (updateStopLabels), so three of those is camDist x 0.0645, the
+  // same distance-compensation discipline badgeHeight() applies to
+  // the bus badges and placeBusInfo to the selected-bus sprite. Past
+  // 7,000 m the height caps and the label shrinks with the world, as
+  // a world-fixed sprite does; the previous fixed H = 210 m stood
+  // ~10x every other label in the scene at pick zooms and grew
+  // without bound zooming in (founding case, 2026-10-17 23:59).
+  function ridePickHeight() {
+    if (typeof camera === 'undefined' || typeof controls === 'undefined' || !camera || !controls) return 210;
+    var camDist = camera.position.distanceTo(controls.target);
+    return Math.min(camDist * 0.0645, 7000 * 0.0645);
+  }
+  // Project 23: a candidate bus at its terminal — layover-bound (S2)
+  // or at-terminal unbound (S3) — is not traveling toward the headsign
+  // its next trip will carry, so its pick label names where the bus
+  // IS, in the tile's own words (the S2 view's "At {terminal}", the
+  // picker's "· at terminal"), never an arrow at the next trip's
+  // destination over the rider's distance to the bus: the founding
+  // frame read "→ Michigan / 0.3 mi" for a bus dwelling AT
+  // Providence, 13.47 route-miles from Michigan. The name comes from
+  // the layover binding's origin stop — the tile S2 view's own
+  // source — else from rrTerminalAt's geometric test; a layover bus
+  // whose name neither resolves is still terminal (''). Returns null
+  // for an en-route candidate. The name shortens past 24 chars in
+  // formatDest's house pattern; the state word "at" never drops.
+  function ridePickTerminalName(v) {
+    if (v.layover) {
+      var b = tripBindingFor(v.vehicle_id);
+      var oStop = (b && typeof stopData !== 'undefined' && stopData) ? stopData[b.trip.stops[0]] : null;
+      if (oStop && oStop.n) return oStop.n.length > 24 ? oStop.n.slice(0, 23) + '\u2026' : oStop.n;
+      var g = rrTerminalAt(v);
+      if (g) return g.length > 24 ? g.slice(0, 23) + '\u2026' : g;
+      return '';
+    }
+    var t = rrTerminalAt(v);
+    if (t && t.length > 24) return t.slice(0, 23) + '\u2026';
+    return t;
+  }
   function makeRidePickSprite(text, sub, colorHex) {
     var c = document.createElement('canvas');
     var mx = c.getContext('2d');
@@ -5823,8 +5864,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var tex = new THREE.CanvasTexture(c);
     tex.anisotropy = 4;
     var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false }));
-    var H = 210;
-    sp.scale.set(H * c.width / c.height, H, 1);
+    sp.userData.aspect = c.width / c.height;
+    var H = ridePickHeight();
+    sp.scale.set(H * sp.userData.aspect, H, 1);
     sp.renderOrder = 30;
     return sp;
   }
@@ -5854,8 +5896,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     for (var i = 0; i < cands.length; i++) {
       var v = cands[i];
       seen[v.vehicle_id] = true;
-      var dest = displayDest(v);
-      var text = dest ? '\u2192 ' + dest : routeLabel(v.route_id);
+      var termName = ridePickTerminalName(v);
+      var text;
+      if (termName != null) {
+        text = routeLabel(v.route_id) + ' \u00b7 at ' + (termName || 'terminal');
+      } else {
+        var dest = displayDest(v);
+        text = dest ? '\u2192 ' + dest : routeLabel(v.route_id);
+      }
       var sub = '';
       if (typeof userXZ !== 'undefined' && userXZ && v.x != null && v.z != null) {
         sub = rideFmtDist(Math.hypot(v.x - userXZ[0], v.z - userXZ[1]));
@@ -5887,12 +5935,20 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
   function ridePickTick() {
     if (!ridePickGroup || !ridePickGroup.visible) return;
+    var H = ridePickHeight();
     for (var vid in ridePickSprites) {
       for (var i = 0; i < busSlots.length; i++) {
         var sl = busSlots[i];
         if (sl.vehicle && sl.vehicle.vehicle_id === vid) {
-          ridePickSprites[vid].sprite.position.set(sl.x,
-            (busMode ? 150 : PILLAR_H * pillarYS + 80) + 200, sl.z);
+          var sp2 = ridePickSprites[vid].sprite;
+          if (sp2.userData.aspect) sp2.scale.set(H * sp2.userData.aspect, H, 1);
+          // The anchor lift rides the same screen discipline: the
+          // sprite's center sits 0.68 x its height above the badge
+          // anchor, so its lower edge clears the badge by a fixed
+          // ~12 px at every distance in the band (previously a fixed
+          // +200 m, which let the label swallow its own bus zoomed in).
+          sp2.position.set(sl.x,
+            (busMode ? 150 : PILLAR_H * pillarYS + 80) + H * 0.68, sl.z);
           break;
         }
       }
