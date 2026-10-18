@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261017-2224';
+  var STAMP = '20261017-2308';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -2762,6 +2762,83 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
   var _busReturnFocus = null;
   var _stopReturnFocus = null;
+  // === POSITION INTEGRITY — FIX AGE (project 6, item 1) ===================
+  // Principle (files/position-integrity/analysis-2026-10-16.md §2): a
+  // rendered position is a claim with an age. The slot's tracker already
+  // anchors the fix's own instant (fixObsT, project 12), so the age below
+  // is computed from the same anchor the prediction loop uses — one age,
+  // every surface. Classes: FRESH < 75 s; AGING 75–150 s; STALE > 150 s
+  // (PREDICT_HORIZON_S — past it the marker no longer advances on this
+  // fix). Item 1 surfaces the age on the bus cards only; the marker's
+  // stale treatment is item 2, which consumes fixAgeClass/fixAgeOfSlot.
+  // S6 discipline, mirroring the SMART freshness graft: the age is text,
+  // never appearance alone; where the source carries no measured fix
+  // time there is no age claim at all (the line hides rather than read
+  // "0 s old"). Format follows the filed examples: "fix 20 s old",
+  // "fix 10 min old — 3:50 PM" — the fix's clock time joins the sentence
+  // once the fix is STALE, and rides the stale chip as well.
+  function fixAgeClass(ageS) {
+    if (ageS > 150) return 'stale';
+    if (ageS >= 75) return 'aging';
+    return 'fresh';
+  }
+  function fixAgeOfSlot(slot, nowPerfMs, nowWallMs) {
+    if (!slot || !slot.tracker || !slot.vehicle) return null;
+    var stampMs = slot.vehicle.updated_at ? new Date(slot.vehicle.updated_at).getTime() : NaN;
+    if (isNaN(stampMs)) return null; // no measured fix time: no age claim (S6)
+    var tr = slot.tracker;
+    var fixPerf = (tr.fixObsT != null ? tr.fixObsT : tr.fixT);
+    if (!fixPerf) return null;
+    var ageMs = Math.max(0, nowPerfMs - fixPerf);
+    var ageS = ageMs / 1000;
+    return { ageS: ageS, cls: fixAgeClass(ageS), fixWallMs: nowWallMs - ageMs };
+  }
+  function formatFixAge(ageS, fixWallMs) {
+    var s = Math.max(0, ageS);
+    var txt;
+    if (s < 59.5) {
+      txt = 'fix ' + Math.round(s) + ' s old';
+    } else {
+      var rm = Math.round(s / 60);
+      if (rm < 60) {
+        txt = 'fix ' + rm + ' min old';
+      } else {
+        var hh = Math.floor(rm / 60), mm = rm - hh * 60;
+        txt = 'fix ' + hh + ' h' + (mm ? ' ' + mm + ' min' : '') + ' old';
+      }
+    }
+    if (s > 150 && fixWallMs) txt += ' \u2014 ' + formatClock12(fixWallMs);
+    return txt;
+  }
+  // Re-renders the open bus card's fix-age line (and, when the fix is
+  // STALE, its stale chip) from the selected bus's slot. Called on
+  // selection, on every poll, and on the 30 s between-polls tick that
+  // mirrors the stop card's — a rider watching the card watches the
+  // claim age in real time.
+  function refreshBusFixAge() {
+    var line = $('bus-fixline');
+    if (!line) return;
+    var info = null;
+    if (selectedVehicleId) {
+      var sl = null;
+      for (var i = 0; i < busSlots.length; i++) {
+        if (busSlots[i].vehicle && busSlots[i].vehicle.vehicle_id === selectedVehicleId) { sl = busSlots[i]; break; }
+      }
+      if (!sl && rideShadowSlot && rideShadowSlot.vehicle && rideShadowSlot.vehicle.vehicle_id === selectedVehicleId) sl = rideShadowSlot;
+      if (sl) info = fixAgeOfSlot(sl, performance.now(), Date.now());
+    }
+    if (!info) { line.hidden = true; return; }
+    line.hidden = false;
+    line.className = 'bus-fixline ' + info.cls;
+    $('bus-fix-age').textContent = formatFixAge(info.ageS, info.fixWallMs);
+    var chip = $('bus-stale-chip');
+    if (info.cls === 'stale') {
+      chip.hidden = false;
+      chip.textContent = 'Stale fix \u2014 ' + formatClock12(info.fixWallMs);
+    } else {
+      chip.hidden = true;
+    }
+  }
   function showBus(v) {
     if (!v) return;
     camMemTake();
@@ -2798,6 +2875,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var when = v.updated_at ? new Date(v.updated_at) : null;
     $('bus-card-updated').textContent = (when && !isNaN(when)) ? when.toLocaleTimeString() : '–';
     $('bus-card').hidden = false;
+    refreshBusFixAge(); // Position Integrity item 1: the card opens with its fix age stated
     // Ride Along: while ride mode is on, a bus selection from any surface
     // (map tap, Browse list, arrow keys — all funnel through showBus)
     // boards that bus in the widget, so the rider's-seat view follows the
@@ -4389,6 +4467,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (document.hidden || !selectedStop) return;
     var card = $('stop-card');
     if (card && !card.hidden) renderStopLive();
+  }, 30000);
+  // Position Integrity (project 6, item 1): the same discipline for the
+  // bus card — a rider watching the card watches its fix age advance
+  // between polls (visible tab and open card only, no network traffic).
+  setInterval(function () {
+    if (document.hidden || !selectedVehicleId) return;
+    var bcard = $('bus-card');
+    if (bcard && !bcard.hidden) refreshBusFixAge();
   }, 30000);
   function hideStop() {
     var _hadFocus = $('stop-card').contains(document.activeElement);
@@ -8056,6 +8142,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       try { plannerFocusPoll(); } catch (e) { errLog('planner', 'focus-poll: ' + (e && e.message || e), e); }
     }
     if (selectedVehicleId) refreshBusInfo(); // tapped bus moved / new data
+    if (selectedVehicleId) refreshBusFixAge(); // Position Integrity item 1: age tracks the new fix
     return busSlots.length;
   }
 
