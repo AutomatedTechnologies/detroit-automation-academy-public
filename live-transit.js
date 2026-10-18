@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261017-2032';
+  var STAMP = '20261017-2138';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -1313,6 +1313,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // busSlots[i]: one entry per currently visible bus (index == instance id).
   var busSlots = [];
   var selectedVehicleId = null; // tapped bus; its indicator renders expanded
+  // Product Defect Reconciliation, candidate C3: while a ride is
+  // boarded and the boarded vehicle's route is gate-hidden, its
+  // reconciled slot lives here instead of busSlots — session state
+  // only. It is never rendered, counted, or offered for picking;
+  // the ride's own consumers (the vehicle seam, the 5 s position
+  // push, camera follow) read it so the ride keeps the same live
+  // position quality the visible set gets. Null at all other times.
+  var rideShadowSlot = null;
 
   var _m4 = new THREE.Matrix4();
   var _p3 = new THREE.Vector3();
@@ -2633,6 +2641,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     for (var i = 0; i < busSlots.length; i++) {
       if (busSlots[i].vehicle && busSlots[i].vehicle.vehicle_id === followVId) { sl = busSlots[i]; break; }
     }
+    // Candidate C3: the followed bus is the boarded vehicle of an
+    // active ride and its route is gate-hidden — follow continues
+    // against the shadow slot. The ride session owns this camera;
+    // a plain selection gets no such exemption and stops below.
+    if (!sl && rideShadowSlot && rideWidget && rideWidget.currentVehicleId === followVId &&
+        rideShadowSlot.vehicle && rideShadowSlot.vehicle.vehicle_id === followVId) {
+      sl = rideShadowSlot;
+    }
     if (!sl) { setFollow(null); return; } // bus left the visible set: stop
     if (streetTween || (typeof tripFly !== 'undefined' && tripFly)) {
       _followPrev.set(sl.x, 0, sl.z); // a glide owns the camera: keep the seed fresh
@@ -2842,6 +2858,34 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
   $('bus-close').addEventListener('click', hideBus);
   $('bus-card').addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); hideBus(); } });
+  // Product Defect Reconciliation, candidate C1: the bus card
+  // obeys the same gate as the vehicles layer it presents.
+  // applyFilters — the single reconciliation entry — calls this
+  // after the rebuild: when the selected vehicle's route closes
+  // (chip or group toggle, near-me, hide-idle), the card
+  // reconciles away through hideBus, exactly as rebuildStops
+  // closes the stop card in the same pass. Poll absence alone
+  // never closes it — the vehicle must be unpresentable because
+  // its ROUTE is gate-closed — so selection persistence across
+  // polls (the 1542 behavior) holds while the route is shown.
+  function reconcileBusCard() {
+    if (!selectedVehicleId || !lastVehicles) return;
+    for (var i = 0; i < lastVehicles.length; i++) {
+      if (lastVehicles[i].vehicle_id === selectedVehicleId) {
+        if (routeShown(lastVehicles[i].route_id)) return;
+        var vid = selectedVehicleId;
+        hideBus();
+        // The card is presentation and closes; an active RIDE on
+        // this bus is a session (candidate C3) — hideBus stopped
+        // the selection's follow, so re-engage the ride's follow
+        // against the shadow slot the same pass maintained.
+        if (rideMode && rideWidget && rideWidget.currentVehicleId === vid && rideShadowSlot) {
+          setFollow(vid, rideShadowSlot);
+        }
+        return;
+      }
+    }
+  }
   // --- D1a compact bar + D2b Follow button ---------------------------------
   // On mobile the bus card opens collapsed to a route/vehicle bar; tapping
   // the bar expands the full details. The Follow button toggles tracking on
@@ -6165,6 +6209,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     for (var s = 0; s < busSlots.length; s++) {
       if (busSlots[s].vehicle) slotById[busSlots[s].vehicle.vehicle_id] = busSlots[s];
     }
+    // Candidate C3: the boarded vehicle's shadow slot (its route is
+    // gate-hidden mid-ride) supplies the same slot-quality position
+    // the visible set gets — the seam prefers it over the raw fix,
+    // so the ride view never falls back to stale-fix positions.
+    if (rideShadowSlot && rideShadowSlot.vehicle) slotById[rideShadowSlot.vehicle.vehicle_id] = rideShadowSlot;
     var mapped = (vehicles || []).map(function (v) {
       var sl = slotById[v.vehicle_id];
       if (sl) {
@@ -6207,6 +6256,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         if (ab.trip.h) rideVehicles[ai].destination = ab.trip.h;
         if (ab.st.layover) rideVehicles[ai].layover = true;
       }
+      // Candidate C3: an exempt vehicle whose route the gate has
+      // closed is marked, so the tile can state the divergence —
+      // the ride continues, but never in silence.
+      if (typeof routeShown === 'function' && !routeShown(rideVehicles[ai].route_id)) rideVehicles[ai].gateClosed = true;
     }
     rideWidget.setVehicles(rideVehicles);
     // The rider's own position, for the picker's endpoint indication
@@ -6237,6 +6290,42 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // promoted, and the stop times are re-derived from the times
   // provider. No user interaction is involved. The guard makes the
   // interval a no-op unless a bus is boarded in Ride Along.
+  // Candidate C3: advance the shadow slot's tracker between polls
+  // with the same constant-velocity Kalman predict updateBusMotion
+  // runs per frame for visible slots — same empirical velocity
+  // prior, same horizon rule. The shadow renders nothing, so only
+  // the position state advances; the covariance is carried so the
+  // next poll's update starts from the predicted state, exactly as
+  // it does for a visible bus. Step time accumulates on the slot
+  // record (_predT) from the poll that reconciled it.
+  function predictRideShadow(now) {
+    var sl = rideShadowSlot, tr = sl && sl.tracker;
+    if (!tr || !tr.arc || !tr.kInit) return;
+    var dt = sl._predT ? Math.min(6, (now - sl._predT) / 1000) : 0;
+    sl._predT = now;
+    if (dt <= 0) return;
+    var ageS = (now - (tr.fixObsT != null ? tr.fixObsT : tr.fixT)) / 1000;
+    if (ageS >= PREDICT_HORIZON_S) return;
+    if (!tr.seg || tr.segPath !== tr.pathIdx || tr.kS < tr.seg.s0 || tr.kS > tr.seg.s1) {
+      tr.seg = segmentAt(tr.routeId, tr.pathIdx, tr.kS);
+      tr.segPath = tr.pathIdx;
+    }
+    var v0 = tr.speedMps;
+    var vEmp = empiricalSpeed(tr.routeId, tr.seg);
+    var vPrior = (vEmp != null && vEmp < v0) ? vEmp : v0;
+    tr.kV += (vPrior - tr.kV) * (1 - Math.exp(-dt / REVERT_TAU_S));
+    tr.kS += tr.kV * dt;
+    var p00 = tr.kP, p01 = tr.kPvS, p11 = tr.kPv;
+    tr.kP = p00 + 2 * dt * p01 + dt * dt * p11 + KALMAN_Q_POS * dt;
+    tr.kPvS = p01 + dt * p11;
+    tr.kPv = p11 + KALMAN_Q_VEL * dt;
+    if (Math.abs(tr.kV) > 0.3 || tr.kP > KALMAN_R * 4) {
+      tr.s = Math.max(0, Math.min(tr.arc.len, tr.kS));
+      var pt = pointAt(tr.arc, tr.s);
+      sl.x = pt.x; sl.z = pt.z;
+    }
+  }
+
   function pushRidePosition() {
     if (!rideMode || !rideWidget || !rideWidget.currentVehicleId) return;
     var vid = rideWidget.currentVehicleId;
@@ -6250,6 +6339,19 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         rideWidget.updateVehicle(rec);
         return;
       }
+    }
+    // Candidate C3: no visible slot — the boarded bus's route is
+    // gate-hidden and its position lives in the shadow slot.
+    // Advance it and push exactly as the visible path does, so the
+    // ride view's 5 s cadence survives the toggle-off.
+    if (rideShadowSlot && rideShadowSlot.vehicle && rideShadowSlot.vehicle.vehicle_id === vid) {
+      predictRideShadow(performance.now());
+      var sv = rideShadowSlot.vehicle;
+      var srec = {};
+      for (var sk in sv) srec[sk] = sv[sk];
+      srec.x = rideShadowSlot.x; srec.z = rideShadowSlot.z;
+      if (srec.speed == null && sv.speed_mph != null) srec.speed = sv.speed_mph;
+      rideWidget.updateVehicle(srec);
     }
   }
   setInterval(function () { pushRidePosition(); }, 5000);
@@ -6510,6 +6612,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     });
     rebuildStops();
     if (lastVehicles) updateBuses(lastVehicles);
+    reconcileBusCard(); // candidate C1: an open bus card obeys the gate
     refreshHeaderCount();
     syncStreetExt();
     // Announce filter changes through #sr-status, but only when the number
@@ -7808,7 +7911,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var v = vehicles[i];
       if (v.lat == null || v.lon == null) continue;
       var grp = routeGroups[v.route_id];
-      if (!grp || !grp.visible) continue; // unknown or filtered route: skip
+      // Candidate C3: a gate-hidden vehicle is skipped — unless it
+      // is the boarded vehicle of an active ride. The ride is a
+      // session, not a presentation surface: its tracker keeps
+      // reconciling below and the resulting slot is held in
+      // rideShadowSlot (never busSlots), so the map, the header
+      // count, and every pick surface stay gate-clean while the
+      // ride keeps its live position.
+      var gateHidden = !grp || !grp.visible;
+      if (gateHidden && !(rideWidget && rideWidget.currentVehicleId === v.vehicle_id)) continue; // unknown or filtered route: skip
       var p = project(v.lat, v.lon);
       // Reconcile the per-vehicle tracker: new buses start one, existing
       // ones get their fix map-matched and their speed refreshed.
@@ -7895,14 +8006,28 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var rotY = (v.bearing != null && !isNaN(v.bearing))
         ? (90 - v.bearing) * DEG
         : (pt ? Math.atan2(-pt.dz, pt.dx) : 0);
-      busSlots.push({
+      var slotRec = {
         vehicle: v,
         x: pt ? pt.x : p[0], z: pt ? pt.z : p[1],
         rotY: rotY,
         color: routeColors[v.route_id] || new THREE.Color(0xf5f2ea),
         tracker: tr
-      });
+      };
+      if (gateHidden) rideShadowSlot = slotRec; else busSlots.push(slotRec);
       seen[v.vehicle_id] = true;
+    }
+    // The shadow lives exactly one poll past its last reconcile:
+    // the boarded bus leaving the feed, the rider alighting or
+    // boarding another bus (it is no longer the boarded vehicle,
+    // so it is neither refreshed nor seen), or the route's gate
+    // reopening (a real slot exists again) all retire it here.
+    if (rideShadowSlot) {
+      var _shVid = rideShadowSlot.vehicle.vehicle_id;
+      var _shSlotted = false;
+      for (var _si = 0; _si < busSlots.length; _si++) {
+        if (busSlots[_si].vehicle && busSlots[_si].vehicle.vehicle_id === _shVid) { _shSlotted = true; break; }
+      }
+      if (_shSlotted || !seen[_shVid]) rideShadowSlot = null;
     }
     for (var id in busTrackers) if (!seen[id]) delete busTrackers[id];
     lastPollT = now;
