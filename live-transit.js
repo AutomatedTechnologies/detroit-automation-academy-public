@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261017-2342';
+  var STAMP = '20261018-0005';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -8480,7 +8480,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // vehicles — so vehicle counts are never a signal. S6: the notice
   // claims only the freshness and source state the envelope measures,
   // and names the data's age whenever positions may be old.
-  var SVC_STALE_MS = 15 * 60 * 1000; // 3x the feed's 5-minute build cadence
+  // Position Integrity item 3 (analysis-2026-10-16 §2 point 4): the
+  // stale-feed state fires at 12 minutes — past the feed's measured
+  // practical cadence (~10 min between builds in the founding stall),
+  // ahead of the hourly production check's ~20 min ops flag — so a
+  // stalled pipeline surfaces to riders while the positions on screen
+  // are still young. Supersedes the 2026-10-15 record's 15 min
+  // (3 build cycles), under which the founding stall never tripped
+  // this notice at all.
+  var SVC_STALE_MS = 12 * 60 * 1000;
   var svcAttempted = false;   // at least one poll attempt has completed
   var svcLastOk = false;      // the most recent poll attempt succeeded
   var svcLastPayload = null;  // last successfully parsed vehicles envelope
@@ -8489,7 +8497,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   var svcExpanded = false;
 
   var SVC_SHORT = {
-    'stale': 'positions out of date',
+    'stale': 'live positions delayed',
     'ddot-not-configured': 'DDOT positions not connected',
     'ddot-down': 'DDOT positions unavailable',
     'ddot-partial': 'DDOT positions incomplete',
@@ -8538,7 +8546,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       case 'unreachable':
         return 'Live vehicle positions unavailable. The live feed cannot be reached.';
       case 'stale':
-        return 'Live vehicle positions are out of date. Last updated ' +
+        return 'Live positions delayed — last update ' +
           fmtTime(new Date(c.genAt)) + ', ' + c.ageMin +
           (c.ageMin === 1 ? ' minute' : ' minutes') + ' ago.';
       case 'ddot-not-configured':
