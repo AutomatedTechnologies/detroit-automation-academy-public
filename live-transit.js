@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261018-1601';
+  var STAMP = '20261018-1607';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -3998,7 +3998,27 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
     return null;
   }
+  // Rank 5 (project 4, audit-2026-10-16 rec 5): downstream projection
+  // factor. tripDelayState's delaySec is the MEASURED delay (0.5 EMA of
+  // position-lag measurements); it is never stored scaled. But a delay
+  // measured at the bus's current position does not persist in full to
+  // downstream stops — buses recover time (dwell and schedule slack read
+  // as lag but do not propagate 1:1), so projecting the measurement flat
+  // overstated every downstream ETA (fused median bias -49 s / -56 s on
+  // the two replay days). Every surface that projects the measurement
+  // onto a stop time applies DELAY_PROJECTION instead: rideTimesFor and
+  // computeStopArrivals here, liveLegTime in the Phase 2c block, and
+  // depA/arrA/buildJourney in raptor.js (same constant, same value).
+  // The factor is declared at the top of each consuming function rather
+  // than once at file scope: the standing test rigs extract these
+  // functions standalone, and the value must travel with the function. 
+  // Two-day crossing replay (tune Fri 2026-10-16, validate Wed
+  // 2026-10-14; 52,492 / 46,509 non-disrupted crossings): fused MAE
+  // 82.4 -> 60.7 and 79.4 -> 56.7, median bias -49 -> +1 and -56 -> -2.
+  // Full grid + gate record:
+  // files/compute-accuracy/rank5-delivery-note-2026-10-18.md.
   function rideTimesFor(v) {
+    var DELAY_PROJECTION = 0.6; // rank 5 — record above this function
     if (!v) return null;
     if (v.agency === 'qline') {
       return { byStop: {}, onlyIds: null, note: 'QLINE stop times are not published to this view. Stops are listed in order.' };
@@ -4033,7 +4053,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var nowSec = detroitParts(Date.now()).sec + (st.frameShift || 0);
     var byStop = {}, onlyIds = {}, seqIds = [];
     for (var j = 0; j < trip.stops.length; j++) {
-      var eta = arr[j] + (st.disrupted ? 0 : st.delaySec);
+      var eta = arr[j] + (st.disrupted ? 0 : st.delaySec * DELAY_PROJECTION);
       if (eta < nowSec - 30) continue; // already served (30 s grace for the stop the bus is standing at)
       var sObj = stopData && stopData[trip.stops[j]];
       if (!sObj || sObj.id == null) continue;
@@ -4406,6 +4426,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // and the SMART TRIP UPDATES section. That payload is display-only
   // and is never an input to this function or the planner.
   function computeStopArrivals(idx, nowMs) {
+    var DELAY_PROJECTION = 0.6; // rank 5 — record above rideTimesFor
     var out = { state: 'ready', rows: [] };
     if (!tripTT || !tripRaptor || !tripRaptor.serviceFor) { out.state = 'loading'; return out; }
     if (idx == null || idx < 0 || idx >= tripTT.nStops) { out.state = 'na'; return out; }
@@ -4430,7 +4451,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         var dstate = (typeof tripDelayState !== 'undefined') ? tripDelayState.get(t) : null;
         var isLive = !!(dstate && dstate.vehicleId && !dstate.disrupted);
         if (isLive) {
-          eta += dstate.delaySec;
+          eta += dstate.delaySec * DELAY_PROJECTION;
           if (eta < nowSec - 30) continue;
         }
         var head = t.h || '';
@@ -5181,10 +5202,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
   // Live-adjusted leg time: refresh the plan-time delay with the current one.
   function liveLegTime(leg, which) {
+    var DELAY_PROJECTION = 0.6; // rank 5 — record above rideTimesFor
     var base = which === 'board' ? leg.boardSec : leg.alightSec;
     if (!leg.tripRef) return base;
     var st = tripDelayState.get(leg.tripRef);
-    if (st && !st.disrupted) return base - (leg.delaySec || 0) + st.delaySec;
+    if (st && !st.disrupted) return base - (leg.delaySec || 0) * DELAY_PROJECTION + st.delaySec * DELAY_PROJECTION;
     return base;
   }
   function guidanceForLeg(leg) {
