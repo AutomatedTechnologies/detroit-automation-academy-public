@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261018-1404';
+  var STAMP = '20261018-1504';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -8184,6 +8184,19 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // the measured total is always preserved. No-ops until cells mature.
   // The delay layer measures against this baseline when present, else against
   // the raw schedule.
+  // Rank 3 (2026-10-18, project 4): substitution into rider-facing times
+  // is DISABLED. The 2026-10-16 compute-accuracy audit found the L2 shifts
+  // overstate lateness ~4-5x, and the rank-3 held-out replay (Friday
+  // 2026-10-16, cells fit only from days <= Oct 15; 52,494 stop crossings)
+  // confirmed no recalibration passes the audit's gate: scheduled-only
+  // crossing MAE 109.5 s vs mean_s 392.0, p50_s 436.1, p50_s with the
+  // 13 m/s implied-speed filter 477.0, and the n>=10 maturity floor
+  // 151.3-159.3. applyEmpiricalBaseline therefore leaves depL2/arrL2 null
+  // and every surface (planner, Ride Along, stop cards, and the matcher
+  // expectation) presents and measures against scheduled times. The
+  // timing cells still load: empiricalSpeed's motion prior consumes them
+  // and is display-only, unaffected by this disablement. Record:
+  // files/compute-accuracy/rank3-delivery-note-2026-10-18.md.
   // Timetable stop entries are page indices into ddot-routes-3d.json;
   // timing cells are keyed by GTFS stop_id. Translate before lookup —
   // the numeric spaces overlap but are not the same (e.g. page 741 is
@@ -8195,74 +8208,17 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
   function applyEmpiricalBaseline() {
     if (!tripTT) return 0;
+    // Disabled 2026-10-18 (rank 3, project 4): no empirical candidate
+    // beat the scheduled-only gate on the held-out day — see the Phase
+    // 2b-ii header note above. depL2/arrL2 stay null so every consumer
+    // (planner, Ride Along, stop cards, matcher expectation) falls back
+    // to scheduled times; the explicit null assignment keeps the
+    // post-call invariant the substituting implementation maintained.
     var tt = tripTT;
-    var bucket = detroitBucket(new Date());
-    var nSub = 0;
-    var hasCells = false;
-    if (timingCells) {
-      for (var k in timingCells) {
-        if (k.indexOf('|') >= 0) { hasCells = true; break; }
-      }
-    }
     tt.patterns.forEach(function (pat) {
-      var routeId = String(tt.routes[pat.route].id);
-      pat.trips.forEach(function (t) {
-        var dep2 = null, arr2 = null;
-        if (hasCells) {
-          // Index this trip's observed spans by stop position (GTFS IDs).
-          var gids = [];
-          for (var s = 0; s < t.stops.length; s++) gids.push(ttStopId(t.stops[s]));
-          var stopPos = {};
-          for (var s2 = 0; s2 < gids.length; s2++) stopPos[gids[s2]] = s2;
-          var spans = [];
-          for (var k in timingCells) {
-            var p = k.split('|');
-            if (p.length !== 4 || p[0] !== routeId || p[3] !== bucket) continue;
-            var sc = timingCells[k];
-            if (!sc || !(sc.n >= 3) || !(sc.mean_s > 0)) continue;
-            var ia = stopPos[p[1]], ib = stopPos[p[2]];
-            if (ia == null || ib == null || ib <= ia) continue;
-            spans.push({ ia: ia, ib: ib, mean_s: sc.mean_s, n: sc.n });
-          }
-          for (var j = 0; j + 1 < t.stops.length; j++) {
-            var emp = null;
-            var exact = timingCells[routeId + '|' + gids[j] + '|' + gids[j + 1] + '|' + bucket];
-            if (exact && exact.n >= 3 && exact.mean_s > 0) {
-              emp = exact.mean_s;
-            } else {
-              var bestS = null;
-              for (var q = 0; q < spans.length; q++) {
-                var sp = spans[q];
-                if (sp.ia <= j && j + 1 <= sp.ib) {
-                  if (!bestS || (sp.ib - sp.ia) < (bestS.ib - bestS.ia) ||
-                      ((sp.ib - sp.ia) === (bestS.ib - bestS.ia) && sp.n > bestS.n)) bestS = sp;
-                }
-              }
-              if (bestS) {
-                var spanSched = t.dep[bestS.ib] - t.dep[bestS.ia];
-                var pairSched = t.dep[j + 1] - t.dep[j];
-                if (spanSched > 0 && pairSched >= 0) {
-                  emp = bestS.mean_s * (pairSched / spanSched);
-                } else {
-                  emp = bestS.mean_s / (bestS.ib - bestS.ia);
-                }
-              }
-            }
-            if (emp != null && emp > 0) {
-              var delta = emp - (t.dep[j + 1] - t.dep[j]);
-              if (Math.abs(delta) >= 1) {
-                if (!dep2) { dep2 = t.dep.slice(); arr2 = t.arr.slice(); }
-                for (var m = j + 1; m < dep2.length; m++) { dep2[m] += delta; arr2[m] += delta; }
-                nSub++;
-              }
-            }
-          }
-        }
-        t.depL2 = dep2;
-        t.arrL2 = arr2;
-      });
+      pat.trips.forEach(function (t) { t.depL2 = null; t.arrL2 = null; });
     });
-    return nSub;
+    return 0;
   }
 
   // Step 2 (§4.2): the planner path inside the poll is contained at
