@@ -10,13 +10,18 @@ could not see it. Until now the rule was enforced by memory alone.
 
 What this checks, for a base..HEAD diff (default HEAD~1..HEAD):
 
-  1. Changed-without-bump: a SHARED stamped asset (referenced with a
-     ?v=YYYYMMDD-HHMM stamp by at least --shared-min distinct pages)
-     whose bytes differ between base and HEAD, while no page that
-     referenced it at base carries a different stamp at HEAD.
-  2. Mixed stamps: a shared stamped asset referenced at HEAD with
-     more than one distinct stamp across pages (a partial bump — the
-     residue of the same failure).
+  Changed-without-bump: a SHARED stamped asset (referenced with a
+  ?v=YYYYMMDD-HHMM stamp by at least --shared-min distinct pages)
+  whose bytes differ between base and HEAD, while no page that
+  referenced it at base carries a different stamp at HEAD.
+
+  Deliberately NOT checked: mixed stamps at HEAD. The live-transit
+  page stamps everything it loads with its own build stamp on every
+  build, so a shared asset legitimately carries two stamps site-wide
+  at almost all times (its page's build stamp + the site stamp). A
+  plurality rule would warn on the standing convention forever; the
+  guarded invariant is the founding failure — bytes moved, no stamp
+  did.
 
 Per-page app bundles (an asset referenced by one or two pages, e.g.
 live-transit.js on its own page) are out of scope by design: their
@@ -97,13 +102,6 @@ def main():
         )
         if not shared:
             continue
-        # Mixed stamps at HEAD: a partial bump leaves pages disagreeing.
-        distinct = sorted(set(head_pages.values()))
-        if len(distinct) > 1:
-            findings.append(
-                f"{asset}: mixed stamps at HEAD {distinct} across "
-                f"{len(head_pages)} pages (partial stamp bump)"
-            )
         # Changed-without-bump: bytes moved, no base page's stamp did.
         if asset not in base_files:
             continue  # not tracked at base; nothing cached under it
