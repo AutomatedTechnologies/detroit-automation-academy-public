@@ -345,7 +345,18 @@
     var i = this.vehicles.findIndex(function (v) {
       return v.vehicle_id === vehicle.vehicle_id;
     });
-    if (i >= 0) this.vehicles[i] = vehicle;
+    if (i >= 0) {
+      // Host annotations ride the seam's copies, not the raw feed
+      // records the position push carries: keep the last asserted
+      // gate state (candidate C3) and binding label across a push,
+      // or the tile's statements flicker on the 5 s cadence. The
+      // next poll's setVehicles re-asserts them from the seam.
+      var prev = this.vehicles[i];
+      if (prev.gateClosed && vehicle.gateClosed == null) vehicle.gateClosed = true;
+      if (prev.destination && vehicle.destination == null) vehicle.destination = prev.destination;
+      if (prev.layover && vehicle.layover == null) vehicle.layover = true;
+      this.vehicles[i] = vehicle;
+    }
     else this.vehicles.push(vehicle);
     if (vehicle.vehicle_id === this.currentVehicleId) {
       this._boardedRec = vehicle;
@@ -441,6 +452,19 @@
     if (cls) e.className = cls;
     if (text != null) e.textContent = text;
     return e;
+  }
+
+  // Candidate C3 (project 13): the host marks the boarded
+  // vehicle's record gateClosed when the rider's own filters have
+  // switched its route off mid-ride. The ride keeps tracking —
+  // the session is the rider's, not the filter's — but the
+  // divergence is stated in the tile, with the remedy named,
+  // never left silent.
+  function gateNoteEl(v) {
+    if (!v || !v.gateClosed) return null;
+    return el('p', 'ra-note',
+      'This route is off in your filters, so the bus and its stops are hidden on the map. ' +
+      'Your ride keeps tracking; turn the route on in Filters to see it on the map again.');
   }
 
   // ---- Planner Bus Focus (project 9): scheduled + missing views ----
@@ -582,6 +606,8 @@
     head.appendChild(el('b', 'ra-route', title));
     frag.appendChild(head);
     frag.appendChild(el('p', 'ra-bus', 'Bus ' + this.currentVehicleId));
+    var gnM = gateNoteEl(rec);
+    if (gnM) frag.appendChild(gnM);
     frag.appendChild(el('p', 'ra-note',
       'This bus has stopped reporting.' +
       (when ? ' Last reported ' + when + (ageTxt ? ' · ' + ageTxt : '') + '.' : '')));
@@ -624,6 +650,8 @@
     if (v.destination) head.appendChild(el('span', 'ra-dest', '\u2192 ' + v.destination));
     body.appendChild(head);
     body.appendChild(el('p', 'ra-bus', 'Bus ' + v.vehicle_id));
+    var gnL = gateNoteEl(v);
+    if (gnL) body.appendChild(gnL);
     body.appendChild(el('p', 'ra-here', 'At ' + lay.terminal + ' \u00b7 end of the line'));
     var card = el('div', 'ra-next');
     card.appendChild(el('p', 'ra-next-kicker', 'Next departure'));
@@ -678,6 +706,8 @@
     if (v.destination) head.appendChild(el('span', 'ra-dest', '\u2192 ' + v.destination));
     body.appendChild(head);
     body.appendChild(el('p', 'ra-bus', 'Bus ' + v.vehicle_id));
+    var gnT = gateNoteEl(v);
+    if (gnT) body.appendChild(gnT);
     body.appendChild(el('p', 'ra-here', 'At ' + tp.atTerminal + ' \u00b7 end of the line'));
     if (tp.note) body.appendChild(el('p', 'ra-note', tp.note));
     var rBtnT = this._returnBtn();
@@ -807,6 +837,8 @@
     body.appendChild(head);
     body.appendChild(el('p', 'ra-bus', 'Bus ' + v.vehicle_id +
       (v.speed != null ? ' · ' + Math.round(v.speed) + ' mph' : '')));
+    var gn = gateNoteEl(v);
+    if (gn) body.appendChild(gn);
 
     // The rider's position along the sequence: the bus is the rider's
     // vehicle, so its place on the path is the rider's place.
