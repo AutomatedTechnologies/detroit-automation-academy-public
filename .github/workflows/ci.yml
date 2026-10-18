@@ -74,3 +74,27 @@ jobs:
             fi
           done
           echo "✓ All required documentation present"
+
+  stamp-discipline:
+    runs-on: ubuntu-latest
+    name: Stamp Discipline (warn-first)
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Warn-first (project 28, register C-15): a shared stamped asset
+      # whose bytes change without a ?v= stamp bump on any referencing
+      # page leaves returning visitors on the cached asset — the
+      # Find-lane failure of 2026-10-16. The check prints ::warning::
+      # annotations and exits 0 in this phase. Promotion to a hard
+      # gate: drop --warn (see tools/check_stamps.py).
+      - name: Check shared-asset stamp discipline
+        if: github.event_name == 'push'
+        run: python3 tools/check_stamps.py --base HEAD~1 --warn
