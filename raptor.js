@@ -87,6 +87,15 @@ function serviceFor(tt, ymd, dow) {
     var s = tt.services[i];
     if (ymd >= s.start && ymd <= s.end && s.mask[mi]) best = i;
   }
+  // GTFS calendar_dates exceptions: the builder stores the raw
+  // exception_type in `added` (1 = service added, 2 = service removed).
+  // Test the value, never the truthiness — 2 is truthy, and processing a
+  // removal as an addition made exception dates resolve to the removed
+  // service (holidays planned weekday service). Collect the date's
+  // exceptions first, then apply them as a set: a removal of the
+  // calendar's pick re-scans the calendar for another service that runs
+  // this date and was not itself removed; an addition then governs.
+  var exRemoved = {}, exAdded = -1;
   for (i = 0; i < tt.exceptions.length; i++) {
     var e = tt.exceptions[i];
     if (e.date === ymd) {
@@ -94,9 +103,19 @@ function serviceFor(tt, ymd, dow) {
       for (var j = 0; j < tt.services.length; j++) {
         if (tt.services[j].id === e.service) { si = j; break; }
       }
-      if (e.added) best = si; else if (si === best) best = -1;
+      if (si < 0) continue;
+      if (e.added === 1) exAdded = si;
+      else if (e.added === 2) exRemoved[si] = true;
     }
   }
+  if (best >= 0 && exRemoved[best]) {
+    best = -1;
+    for (i = 0; i < tt.services.length; i++) {
+      var s2 = tt.services[i];
+      if (!exRemoved[i] && ymd >= s2.start && ymd <= s2.end && s2.mask[mi]) best = i;
+    }
+  }
+  if (exAdded >= 0) best = exAdded;
   return best;
 }
 
