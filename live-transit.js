@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261018-2052';
+  var STAMP = '20261018-1705';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -316,6 +316,32 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       e.preventDefault();
       stageGesture = null;
     }, { passive: false });
+    // Selection discipline (project 28 item 6, register C-19): the CSS in
+    // live-transit.html opts the whole stage out of text selection and
+    // re-enables it only in the reading surfaces (cards, panels, Help,
+    // the fallback message), but CSS alone cannot stop a selection that
+    // STARTS on the canvas — a non-selectable element — and anchors as
+    // the drag sweeps across one of those kept-selectable surfaces in
+    // iPad Safari (founding capture 2026-10-18: an external-mouse drag
+    // painting a select-all highlight across the map chrome). A
+    // mousedown on the stage outside the reading surfaces and the form
+    // fields is a navigation gesture, so its default — selection
+    // start — is prevented here. Nothing else rides that default:
+    // OrbitControls, the picks and the gesture bridge consume
+    // pointer/gesture events, and click still fires. One side effect is
+    // repaired explicitly: a prevented mousedown would keep a mouse
+    // click from focusing #live-map, the documented entry to the
+    // keyboard map ("click the map: arrow keys move"), so a canvas
+    // mousedown restores that focus itself.
+    mapStage.addEventListener('mousedown', function (e) {
+      var t = e.target;
+      if (t && t !== mapStage && t.closest &&
+          t.closest('input, textarea, select, [contenteditable], .bus-card, .filter-panel, .browse-panel, .nav-card, .map-fallback')) return;
+      e.preventDefault();
+      if (renderer && t === renderer.domElement && container && container.focus) {
+        try { container.focus({ preventScroll: true }); } catch (err) { container.focus(); }
+      }
+    });
   }
   var $ = function (id) { return document.getElementById(id); };
   // Shared screen-reader announcements (defect sr-status): one polite live
