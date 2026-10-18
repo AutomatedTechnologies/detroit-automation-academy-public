@@ -43,12 +43,12 @@
 }
 </script>
 <link rel="icon" type="image/webp" href="assets/logo.webp">
-<link rel="stylesheet" href="ride-along.css?v=20261018-2052">
-<link rel="stylesheet" href="styles.css?v=20261018-2052">
+<link rel="stylesheet" href="ride-along.css?v=20261018-1705">
+<link rel="stylesheet" href="styles.css?v=20261018-1705">
 <script type="importmap">
 {
   "imports": {
-    "three": "./assets/three.module.min.js?v=20261018-2052",
+    "three": "./assets/three.module.min.js?v=20261018-1705",
     "three/addons/": "./assets/three-addons/"
   }
 }
@@ -70,6 +70,22 @@
   #live-map { position: absolute; inset: 0; z-index: 0; }
   #live-map:focus-visible { outline: 2px solid #E85D1A; outline-offset: -2px; }
   #live-map canvas { display: block; width: 100% !important; height: 100% !important; }
+  /* Selection discipline (project 28 item 6, register C-19): on this
+     stage a pointer drag is a navigation gesture, never a text
+     selection — iPadOS Safari treats an external-mouse drag as a
+     selection gesture, and with no opt-out the drag painted a
+     select-all highlight across the map chrome (founding capture,
+     2026-10-18). The stage opts out wholesale, so chrome created at
+     runtime is covered too; the reading surfaces explicitly opt back
+     in — a card is text a rider may copy — and form fields keep full
+     editing selection (user-select: text is the field value; it also
+     keeps a field usable under the stage's none). The mousedown guard
+     in live-transit.js covers the sweep case CSS cannot reach: a
+     selection starting on the canvas and crossing a card. */
+  .map-stage { -webkit-user-select: none; user-select: none; }
+  #live-map, .map-bar, .map-tools, .map-hint, .svc-notice, .map-toast { -webkit-touch-callout: none; }
+  .map-stage .bus-card, .map-stage .filter-panel, .map-stage .browse-panel, .map-stage .nav-card, .map-stage .map-fallback { -webkit-user-select: text; user-select: text; }
+  .map-stage input, .map-stage textarea, .map-stage select { -webkit-user-select: text; user-select: text; }
   .map-ui { position: absolute; inset: 0; z-index: 1; pointer-events: none; font-family: "Inter", sans-serif; }
   .map-ui > * { pointer-events: auto; }
   /* Direction C — one 52px control bar replaces the site header, the
@@ -941,7 +957,7 @@
   // was quota-paused on 2026-10-15 and is no longer consumed.
   window.FORGE_LIVE_PROXY = "live-data";
 </script>
-<script src="ride-along.js?v=20261018-2052"></script>
-<script type="module" src="live-transit.js?v=20261018-2052"></script>
+<script src="ride-along.js?v=20261018-1705"></script>
+<script type="module" src="live-transit.js?v=20261018-1705"></script>
 </body>
 </html>
