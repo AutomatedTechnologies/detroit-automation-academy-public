@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261017-2207';
+  var STAMP = '20261017-2224';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -950,6 +950,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     for (var i = 0; i < list.length; i++) {
       var r = list[i];
       if (r.time < nowSec - 30 || r.time > nowSec + 3 * 3600) continue;
+      // Project 13, candidate C2 (Justin's decision, 2026-10-17:
+      // "TU rows obey the toggles like every other surface") — the
+      // same one-line gate computeStopArrivals applies to DDOT
+      // arrivals: a TU row whose route is switched off (directly or
+      // by its group header) or near-me-excluded does not present.
+      if (!routeIsOn(r.rid) || !routeNearOk(r.rid)) continue;
       rows.push(r);
     }
     rows.sort(function (a, b) { return a.time - b.time; });
