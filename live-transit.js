@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261018-1504';
+  var STAMP = '20261018-1601';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -252,19 +252,70 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
   var container = document.getElementById('live-map');
   if (!container) return;
-  // Map gesture containment backstop (2026-10-15): iOS Safari drives page
-  // pinch-zoom through the proprietary gesture events when a pinch starts
-  // on a surface touch-action does not cover. The CSS in live-transit.html
-  // sets touch-action on every stage surface; this listener closes the
-  // remaining path by cancelling gesture events that originate inside the
-  // map stage. Scoped to the stage: pinch on the rest of the page is
-  // untouched, and OrbitControls consumes pointer events (never gesture
-  // events) on the canvas, so camera control is unaffected.
+  // Map gesture containment + trackpad-pinch bridge (backstop 2026-10-15;
+  // bridge 2026-10-18, project 28 C-2): iOS Safari drives page pinch-zoom
+  // through the proprietary gesture events when a pinch starts on a
+  // surface touch-action does not cover, so gesture events originating
+  // inside the map stage are always cancelled here (the document handler
+  // further down is the second layer). The 2026-10-15 reasoning — camera
+  // control is unaffected because OrbitControls consumes pointer events,
+  // never gesture events — holds for TOUCHSCREEN pinch and fails for a
+  // Magic Trackpad pinch on iPad, which arrives ONLY as gesture events:
+  // the cancelled-and-dropped gesture left trackpad users with no pinch
+  // zoom at all (project 28's founding defect). The stage handlers below
+  // therefore CONSUME a canvas gesture while cancelling it: e.scale maps
+  // to an anchored camera dolly (dollyAroundPoint, with the distance
+  // clamps of zoomStep). Guards keep the touchscreen path exactly as
+  // shipped: a gesture that begins while touch pointers are live on the
+  // canvas belongs to the OrbitControls pointer pinch and is never consumed,
+  // and if the camera moves during a gesture without the bridge moving
+  // it, the bridge stands down for the rest of that gesture. Gestures
+  // starting on panels (target is not the canvas) keep the plain
+  // cancel-only defense.
   var mapStage = document.querySelector('.map-stage');
+  var stageTouchPointers = 0;
+  var stageGesture = null;
   if (mapStage && mapStage.addEventListener) {
-    var killStageGesture = function (e) { e.preventDefault(); };
-    mapStage.addEventListener('gesturestart', killStageGesture, { passive: false });
-    mapStage.addEventListener('gesturechange', killStageGesture, { passive: false });
+    mapStage.addEventListener('pointerdown', function (e) {
+      if (e.pointerType === 'touch' && renderer && e.target === renderer.domElement) stageTouchPointers++;
+    }, true);
+    mapStage.addEventListener('pointerup', function (e) {
+      if (e.pointerType === 'touch' && stageTouchPointers > 0) stageTouchPointers--;
+    }, true);
+    mapStage.addEventListener('pointercancel', function (e) {
+      if (e.pointerType === 'touch' && stageTouchPointers > 0) stageTouchPointers--;
+    }, true);
+    mapStage.addEventListener('gesturestart', function (e) {
+      e.preventDefault();
+      stageGesture = null;
+      if (!renderer || e.target !== renderer.domElement) return;
+      if (stageTouchPointers > 0) return; // touchscreen pinch: OrbitControls owns it
+      if (typeof e.scale !== 'number' || !(e.scale > 0)) return;
+      var dist = camera.position.distanceTo(controls.target);
+      if (!(dist > 0)) return;
+      stageGesture = { base: dist, last: dist, x: e.clientX, y: e.clientY };
+    }, { passive: false });
+    mapStage.addEventListener('gesturechange', function (e) {
+      e.preventDefault();
+      if (!stageGesture) return;
+      if (typeof e.scale !== 'number' || !(e.scale > 0)) { stageGesture = null; return; }
+      var dist = camera.position.distanceTo(controls.target);
+      if (Math.abs(dist - stageGesture.last) > Math.max(2, stageGesture.last * 0.02)) {
+        stageGesture = null; // the camera moved without the bridge: not ours
+        return;
+      }
+      if (typeof e.clientX === 'number' && typeof e.clientY === 'number') {
+        stageGesture.x = e.clientX; stageGesture.y = e.clientY;
+      }
+      var want = stageGesture.base / e.scale;
+      want = Math.max(controls.minDistance, Math.min(controls.maxDistance, want));
+      dollyAroundPoint(stageGesture.x, stageGesture.y, want / dist);
+      stageGesture.last = camera.position.distanceTo(controls.target);
+    }, { passive: false });
+    mapStage.addEventListener('gestureend', function (e) {
+      e.preventDefault();
+      stageGesture = null;
+    }, { passive: false });
   }
   var $ = function (id) { return document.getElementById(id); };
   // Shared screen-reader announcements (defect sr-status): one polite live
@@ -379,6 +430,17 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   if (isTouch) {
     controls.touches.ONE = THREE.TOUCH.PAN;
     controls.touches.TWO = THREE.TOUCH.DOLLY_ROTATE;
+    // Pointer parity on touch-first hardware (project 28, C-3): a mouse
+    // or trackpad attached to a touch device mirrors the touch grammar —
+    // primary drag pans, right-drag orbits/tilts — instead of the
+    // OrbitControls desktop defaults (primary orbits, pan on right-drag
+    // only), under which an iPad pointer has no pan path at all (no
+    // button-2 drag stream is deliverable there). Non-touch desktops
+    // keep the defaults untouched. mouseButtons governs mouse/pen
+    // pointers only; the touch mapping above is unchanged.
+    controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
+    controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
+    controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
   }
 
   scene.add(new THREE.HemisphereLight(0xf5f2ea, 0x0c1116, 0.9));
@@ -3194,6 +3256,58 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     off.setLength(len);
     camera.position.copy(controls.target).add(off);
   }
+  // Anchored dolly (project 28): the ground point under a screen
+  // position, from the same raycaster the pick machinery uses,
+  // intersected with the ground plane. Null when the ray runs parallel
+  // to the ground or the intersection falls behind the camera.
+  function screenGroundPoint(cx, cy) {
+    var r = renderer.domElement.getBoundingClientRect();
+    pointerNDC.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
+    raycaster.setFromCamera(pointerNDC, camera);
+    var o = raycaster.ray.origin, d = raycaster.ray.direction;
+    if (Math.abs(d.y) < 1e-9) return null;
+    var t = -o.y / d.y;
+    if (!(t > 0)) return null;
+    return new THREE.Vector3(o.x + d.x * t, 0, o.z + d.z * t);
+  }
+  // Dolly by factor (< 1 in, > 1 out) holding the ground point under
+  // (cx, cy) fixed on screen — the zoomToCursor anchoring OrbitControls
+  // gives the wheel path, extended to the gesture bridge and the
+  // double-click step. Distance clamps match zoomStep. With no usable
+  // anchor the dolly falls back to the orbit target (a plain dolly).
+  function dollyAroundPoint(cx, cy, factor) {
+    var dist = camera.position.distanceTo(controls.target);
+    if (!(dist > 0) || !(factor > 0) || factor === 1) return;
+    var nd = Math.max(controls.minDistance, Math.min(controls.maxDistance, dist * factor));
+    var f = nd / dist;
+    if (f === 1) return;
+    var p = (typeof cx === 'number' && typeof cy === 'number') ? screenGroundPoint(cx, cy) : null;
+    if (!p) p = controls.target;
+    camera.position.sub(p).multiplyScalar(f).add(p);
+    if (p !== controls.target) controls.target.sub(p).multiplyScalar(f).add(p);
+    if (typeof controls.update === 'function') controls.update();
+  }
+  // Keyboard tilt (project 28, C-10): rotate the camera offset around
+  // the horizontal axis through the orbit target by one 6-degree step,
+  // clamped to the polar range OrbitControls enforces. dir > 0 (PageUp)
+  // raises the camera toward overhead; dir < 0 (PageDown) lowers it
+  // toward the horizon.
+  function tiltStep(dir) {
+    var off = camera.position.clone().sub(controls.target);
+    var len = off.length();
+    if (!(len > 0)) return;
+    var polar = Math.acos(Math.max(-1, Math.min(1, off.y / len)));
+    var want = polar + (dir > 0 ? -1 : 1) * (Math.PI / 30);
+    want = Math.max(0.1, Math.min(controls.maxPolarAngle, want));
+    if (Math.abs(want - polar) < 1e-9) return;
+    var fwd = new THREE.Vector3(-off.x, 0, -off.z);
+    if (fwd.lengthSq() === 0) return;
+    fwd.normalize();
+    var right = new THREE.Vector3(-fwd.z, 0, fwd.x);
+    off.applyAxisAngle(right, want - polar);
+    camera.position.copy(controls.target).add(off);
+    if (typeof controls.update === 'function') controls.update();
+  }
   function resetView() {
     cancelStreetTween();
     camera.position.copy(homePos);
@@ -3203,6 +3317,22 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   $('zoom-in').addEventListener('click', function () { zoomStep(1); });
   $('zoom-out').addEventListener('click', function () { zoomStep(-1); });
   $('view-reset').addEventListener('click', resetView);
+  // Double-click / double-tap zoom (project 28, P-7): one anchored step
+  // at the pointer, the 0.8 / 1.25 factors of the rail buttons (Shift = out).
+  // A double-tap that lands on anything pickable is a pick, not a zoom —
+  // the pointerup handler has already resolved it through the contested
+  // arbitration — so the zoom stands down wherever the pick machinery
+  // finds a candidate at the point (the wider touch aim radii as the
+  // net, for every pointer type).
+  renderer.domElement.addEventListener('dblclick', function (e) {
+    if (tapHitsBusInfo(e.clientX, e.clientY)) return;
+    if (pickTopHit(e.clientX, e.clientY)) return;
+    var r = renderer.domElement.getBoundingClientRect();
+    if (pickNearestScreenD(e.clientX, e.clientY, r, 48)) return;
+    if (pickStopScreenD(e.clientX, e.clientY, r, 44)) return;
+    dollyAroundPoint(e.clientX, e.clientY, e.shiftKey ? 1.25 : 0.8);
+    e.preventDefault();
+  });
   // Keyboard camera (defect keyboard-camera): arrow keys pan and +/-
   // zoom when #live-map has focus (tabindex="0" in the HTML; the canvas
   // is its only child, so keydown events from the map reach this listener
@@ -3213,6 +3343,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   container.addEventListener('keydown', function (e) {
     if (e.key === '+' || e.key === '=') { zoomStep(1); e.preventDefault(); e.stopPropagation(); return; }
     if (e.key === '-' || e.key === '_') { zoomStep(-1); e.preventDefault(); e.stopPropagation(); return; }
+    // Tilt and reset keys (project 28, C-10/C-13): PageUp/PageDown tilt,
+    // Home is Reset view (the rail control), under the same focus gate as every camera
+    // key here. iPad hardware keyboards reach all three via Fn + arrows.
+    if (e.key === 'PageUp') { tiltStep(1); e.preventDefault(); e.stopPropagation(); return; }
+    if (e.key === 'PageDown') { tiltStep(-1); e.preventDefault(); e.stopPropagation(); return; }
+    if (e.key === 'Home') { resetView(); e.preventDefault(); e.stopPropagation(); return; }
     if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
     if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && (selectedVehicleId || selectedStop)) return;
     var dist = camera.position.distanceTo(controls.target);
@@ -3255,6 +3391,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops from the rider\u2019s seat, ordered by travel direction. If a bus is already selected it rides that bus; selecting a bus on the map while Ride along is open rides it too, and the camera follows it.'],
     [ICO_FINDME, 'Find me', 'Center the map on your location. "Routes near me" then shows only routes with a stop within 1,250 m of you.'],
     [ICO_FULL, 'Fullscreen', 'Fill the screen with the map.'],
+    ['\u2328', 'Keyboard', 'Click the map to focus it, then: arrow keys move, + / \u2212 zoom, Page Up / Page Down tilt, Home resets the view. While a bus or stop card is open, Left / Right cycle buses and stops instead.'],
     ['\u2302', 'Reset view', 'Return to the full-system view.']
   ];
   var NAV_STEPS_DESK = [
@@ -3268,6 +3405,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops from the rider\u2019s seat, ordered by travel direction. If a bus is already selected it rides that bus; selecting a bus on the map while Ride along is open rides it too, and the camera follows it.'],
     [ICO_FINDME, 'Find me', 'Center the map on your location. "Routes near me" then shows only routes with a stop within 1,250 m of you.'],
     [ICO_FULL, 'Fullscreen', 'Fill the screen with the map.'],
+    ['\u2328', 'Keyboard', 'Click the map to focus it, then: arrow keys move, + / \u2212 zoom, Page Up / Page Down tilt, Home resets the view. While a bus or stop card is open, Left / Right cycle buses and stops instead.'],
     ['\u2302', 'Reset view', 'Return to the full-system view.']
   ];
   function buildNavOverlay() {
