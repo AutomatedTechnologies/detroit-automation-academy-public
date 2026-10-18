@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261018-1802';
+  var STAMP = '20261018-2226';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -3147,7 +3147,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       buildBrowseStops();
       refreshBrowseBuses(true);
       // Move focus into the dialog so keyboard users land on the tabs.
-      ($('browse-buses-pane').hidden ? $('browse-tab-stops') : $('browse-tab-buses')).focus();
+      var selTab = document.querySelector('#browse-panel .browse-tabs [aria-selected="true"]');
+      (selTab || $('browse-tab-buses')).focus();
     } else if (p.contains(document.activeElement)) {
       $('browse-toggle').focus(); // return focus to the toggle on close
     }
@@ -3158,22 +3159,30 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   });
   $('browse-close').addEventListener('click', function () { setBrowse(false); });
   function browseTab(which) {
-    var stops = which === 'stops';
-    $('browse-tab-stops').setAttribute('aria-selected', String(stops));
-    $('browse-tab-buses').setAttribute('aria-selected', String(!stops));
-    $('browse-tab-stops').tabIndex = stops ? 0 : -1;
-    $('browse-tab-buses').tabIndex = stops ? -1 : 0;
-    $('browse-stops-pane').hidden = !stops;
-    $('browse-buses-pane').hidden = stops;
-    if (!stops) refreshBrowseBuses(true);
+    var tabs = { buses: $('browse-tab-buses'), stops: $('browse-tab-stops'), passes: $('browse-tab-passes') };
+    var panes = { buses: $('browse-buses-pane'), stops: $('browse-stops-pane'), passes: $('browse-passes-pane') };
+    Object.keys(tabs).forEach(function (k) {
+      var on = k === which;
+      tabs[k].setAttribute('aria-selected', String(on));
+      tabs[k].tabIndex = on ? 0 : -1;
+      panes[k].hidden = !on;
+    });
+    if (which === 'buses') refreshBrowseBuses(true);
+  }
+  // Passes (project 24 deep-link floor): open the browse panel on the
+  // Passes tab — the hand-off surface the trip-detail line points at.
+  function openPasses() {
+    setBrowse(true);
+    browseTab('passes');
   }
   $('browse-tab-stops').addEventListener('click', function () { browseTab('stops'); });
   $('browse-tab-buses').addEventListener('click', function () { browseTab('buses'); });
+  $('browse-tab-passes').addEventListener('click', function () { browseTab('passes'); });
   // WAI-ARIA tab keyboard support: Arrow keys / Home / End move focus between
   // tabs with automatic activation. Roving tabindex keeps the inactive tab out
   // of the Tab order, so the arrow keys are its only keyboard path.
   document.querySelector('#browse-panel .browse-tabs').addEventListener('keydown', function (e) {
-    var tabs = [$('browse-tab-buses'), $('browse-tab-stops')];
+    var tabs = [$('browse-tab-buses'), $('browse-tab-stops'), $('browse-tab-passes')];
     var i = tabs.indexOf(document.activeElement);
     if (i < 0) return;
     var j = null;
@@ -3184,7 +3193,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (j === null || j === i) return;
     e.preventDefault();
     tabs[j].focus();
-    browseTab(tabs[j] === $('browse-tab-stops') ? 'stops' : 'buses');
+    browseTab(tabs[j].id.replace('browse-tab-', ''));
   });
   function browseStopRow(st) {
     var li = document.createElement('li');
@@ -5708,6 +5717,27 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           ' — this itinerary uses that route; the leg below states what changed.';
         det.appendChild(ban);
       }
+    }
+    // Passes (project 24 deep-link floor): a journey with a DDOT or SMART
+    // bus leg is covered by a Dart pass — one line at the top of the
+    // itinerary pointing at the Passes section. No price claim, no
+    // purchase claim; the section carries the verified catalog.
+    var dartCovered = mergeWalkLegs(tripJourneys[tripSel].legs).some(function (l) {
+      if (l.type !== 'bus' || !l.routeId) return false;
+      var r = (typeof routeById !== 'undefined') ? routeById[l.routeId] : null;
+      return !!r && r.group !== 'qline';
+    });
+    if (dartCovered) {
+      var passLine = document.createElement('div');
+      passLine.className = 'trip-pass-line';
+      passLine.textContent = 'This trip is covered by a Dart pass \u2014 ';
+      var passBtn = document.createElement('button');
+      passBtn.type = 'button';
+      passBtn.className = 'trip-pass-link';
+      passBtn.textContent = 'see Passes';
+      passBtn.addEventListener('click', function () { openPasses(); });
+      passLine.appendChild(passBtn);
+      det.appendChild(passLine);
     }
     mergeWalkLegs(tripJourneys[tripSel].legs).forEach(function (l) {
       var row = document.createElement('div');
