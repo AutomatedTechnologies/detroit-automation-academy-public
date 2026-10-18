@@ -335,6 +335,10 @@ def render_html(items: list[dict]) -> str:
     )
     feed_title = "Detroit Automation Academy \u2014 RSS feed"
     foot = "every edition and installment, as it publishes."
+    legal = (
+        '<a href="/terms.html">Terms of Service</a> · '
+        '<a href="/privacy.html">Privacy Policy</a>'
+    )
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -442,6 +446,7 @@ def render_html(items: list[dict]) -> str:
     </div>
     <p class="footer-line">Built without funding. Finished on principle.</p>
     <p class="footer-line"><a href="/feed/">RSS feed</a> — {foot}</p>
+    <p class="footer-line">{legal}</p>
     <p class="footer-fine">© 2026 Detroit Automation Academy · Detroit, Michigan</p>
   </div>
 </footer>
