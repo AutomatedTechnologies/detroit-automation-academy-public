@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261018-1735';
+  var STAMP = '20261018-1802';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -41,6 +41,27 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // Step 4a input stamps: passive listeners only observe; they never
   // intercept, preventDefault, or alter the event's path.
   var lastInputAt = 0, inputSeq = 0, flInputSeqSeen = 0;
+  // Reduced-motion posture (project 28 item 4, register C-10): one flag
+  // for the whole page, read from the OS preference at boot and kept
+  // current if the preference changes mid-session. It governs camera
+  // and marker MOTION only: OrbitControls damping off, camera glides
+  // and planner flights complete in place, the stale-marker ease-back
+  // starts already done, and the you-badge bob stills. Motion that
+  // carries information (positions, treatments, the live dot) is never
+  // gated by it — only the interpolation between states. The alerts
+  // module reads the same media query at its own seam for the pulse
+  // rings; that seam predates this flag and is left as shipped.
+  var reducedMotionMq = (typeof window !== 'undefined' && window.matchMedia)
+    ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  var reducedMotion = !!(reducedMotionMq && reducedMotionMq.matches);
+  if (reducedMotionMq && reducedMotionMq.addEventListener) {
+    reducedMotionMq.addEventListener('change', function (e) {
+      reducedMotion = !!e.matches;
+      if (typeof controls !== 'undefined' && controls) {
+        controls.enableDamping = !reducedMotion;
+      }
+    });
+  }
   // Recovery ladder state (§4.6): per-rung fire counters, reset on boot
   // and after a rung's condition has stayed clear for 60 s.
   var ladderCounts = { interaction: 0, planner: 0, camera: 0 };
@@ -438,7 +459,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
   var controls = new OrbitControls(camera, renderer.domElement);
   controls.target.set(8448, 0, 5539);
-  controls.enableDamping = true;
+  controls.enableDamping = !reducedMotion;
   controls.dampingFactor = 0.08;
   // Pinch/wheel zoom anchors to the fingers/cursor, not the orbit target —
   // otherwise the point you meant to zoom into drifts away mid-gesture.
@@ -1797,6 +1818,17 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
 
   function glideTo(pos, tgt, dur, onDone) {
+    // Reduced motion (C-10): the glide completes in place — the camera
+    // lands on the destination framing and the completion directive
+    // runs, exactly the state a finished tween leaves behind.
+    if ((typeof reducedMotion !== 'undefined') && reducedMotion) {
+      streetTween = null;
+      camera.position.copy(pos);
+      controls.target.copy(tgt);
+      if (!(typeof tripFly !== 'undefined' && tripFly)) controls.enabled = true;
+      if (typeof onDone === 'function') { try { onDone(); } catch (err) {} }
+      return;
+    }
     streetTween = {
       t0: performance.now(), dur: dur || 1400,
       fromPos: camera.position.clone(), toPos: pos.clone(),
@@ -3276,6 +3308,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
   // --- map navigation tools ----------------------------------------------------
   function zoomStep(dir) {
+    if (typeof noteZoomStep === 'function') noteZoomStep();
     var off = camera.position.clone().sub(controls.target);
     var len = off.length() * (dir > 0 ? 0.8 : 1.25);
     len = Math.max(controls.minDistance, Math.min(controls.maxDistance, len));
@@ -3730,6 +3763,71 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
   });
 
+  // === Global camera keys (project 28 item 4, register C-13(ii)) =====
+  // The keyboard map is focus-gated on #live-map: a rider who clicks
+  // the map gets it, but once focus has fallen back to the page body
+  // (a click on non-focusable chrome, a card closed) the same presses
+  // reach nothing — the arrows scroll the page instead. This fallback
+  // answers camera keys at body level under yield rules audited to be
+  // exhaustive; wherever a rule yields, the key keeps its legacy
+  // behavior exactly:
+  //   - modifier chords (Ctrl / Meta / Alt) belong to the browser;
+  //   - form fields and buttons own their keys — the yield the
+  //     document selection handler above already applies, extended
+  //     here to SELECT elements and contenteditable surfaces;
+  //   - a press inside a card, a panel, the Help overlay, the service
+  //     notice, the toast, or the trip planner/results belongs to
+  //     that surface (its scrolling, its own handlers);
+  //   - the Help overlay being open yields every camera key, focused
+  //     or not — a reading surface is up;
+  //   - ArrowLeft / ArrowRight yield while a bus or stop selection is
+  //     active: the cycling handler owns them, the same arrangement
+  //     the container handler makes;
+  //   - focus on #live-map never reaches this handler at all (the
+  //     container handler stops propagation), so the two paths
+  //     cannot double-act on one press.
+  // The arrow pan math mirrors the container handler line for line.
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var k = e.key;
+    var isZoomK = (k === '+' || k === '=' || k === '-' || k === '_');
+    var isTiltK = (k === 'PageUp' || k === 'PageDown');
+    var isArrowK = (k === 'ArrowUp' || k === 'ArrowDown' ||
+                    k === 'ArrowLeft' || k === 'ArrowRight');
+    if (!isZoomK && !isTiltK && !isArrowK && k !== 'Home') return;
+    var t = e.target;
+    var tag = (t && t.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' ||
+        tag === 'BUTTON') return;
+    if (t && t.isContentEditable) return;
+    if (t && t.closest && t.closest('.bus-card, .filter-panel, ' +
+      '.browse-panel, .nav-card, .svc-notice, .map-toast, ' +
+      '#nav-overlay, #trip-planner, #trip-results')) return;
+    var navOv = $('nav-overlay');
+    if (navOv && !navOv.hidden) return;
+    if (isArrowK && (selectedVehicleId || selectedStop)) return;
+    if (isZoomK) { zoomStep((k === '+' || k === '=') ? 1 : -1); e.preventDefault(); return; }
+    if (isTiltK) { tiltStep(k === 'PageUp' ? 1 : -1); e.preventDefault(); return; }
+    if (k === 'Home') { resetView(); e.preventDefault(); return; }
+    var dist = camera.position.distanceTo(controls.target);
+    var step = Math.max(50, dist * 0.12);
+    var fwd = new THREE.Vector3();
+    fwd.subVectors(controls.target, camera.position); fwd.y = 0;
+    if (fwd.lengthSq() === 0) return;
+    fwd.normalize();
+    var right = new THREE.Vector3(-fwd.z, 0, fwd.x);
+    var move = new THREE.Vector3();
+    if (k === 'ArrowUp') move.addScaledVector(fwd, step);
+    else if (k === 'ArrowDown') move.addScaledVector(fwd, -step);
+    else if (k === 'ArrowRight') move.addScaledVector(right, step);
+    else move.addScaledVector(right, -step);
+    camera.position.add(move);
+    controls.target.add(move);
+    if (typeof controls.update === 'function') controls.update();
+    e.preventDefault();
+  });
+  // === GLOBAL-KEYS-END ===
+
   // --- location services ---------------------------------------------------------
   // Coverage = the Detroit street mosaic bounds (DDOT's service area),
   // extended to the full mosaic while the SMART group is displayed.
@@ -3846,6 +3944,39 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     t.hidden = false;
   }
   $('map-toast').addEventListener('click', hideToast);
+  // === Adaptive input hint (project 28 item 4, register C-11(i)) ======
+  // A withheld-modality session has a detectable local signature: a
+  // hardware pointer is active (mouse/pen pointerdowns), the wheel has
+  // never delivered a single event, and the rider is zooming through
+  // the fallback paths (rail buttons, keyboard steps) instead. That is
+  // the Chrome-on-iPadOS shape from the founding session, where the
+  // browser withholds the wheel class from web content. Detection is
+  // local only: counters live in this closure, nothing is persisted,
+  // and nothing leaves the device — the telemetry beacon stays dormant,
+  // because collection is a legal-instrument decision (C-11(ii)), not
+  // an engineering one. The hint fires at most once per session through
+  // the standing toast (auto-hiding, click to dismiss), and its
+  // wording is conditional, so a rider whose wheel works and who
+  // simply prefers the buttons is told nothing false.
+  var hintPtrActive = 0;   // mouse/pen pointerdowns this session
+  var hintWheelSeen = 0;   // wheel events delivered this session
+  var hintZoomSteps = 0;   // zoomStep calls this session
+  var hintShown = false;
+  window.addEventListener('pointerdown', function (e) {
+    if (e && (e.pointerType === 'mouse' || e.pointerType === 'pen')) hintPtrActive++;
+  }, { passive: true, capture: true });
+  window.addEventListener('wheel', function () {
+    hintWheelSeen++;
+  }, { passive: true, capture: true });
+  function noteZoomStep() {
+    hintZoomSteps++;
+    if (hintShown || !isTouch) return;
+    if (hintWheelSeen > 0 || hintPtrActive < 2 || hintZoomSteps < 2) return;
+    hintShown = true;
+    showToast('Zoom tip: if the scroll wheel does not zoom in this ' +
+      'browser, double-click the map or use the + / \u2212 buttons.');
+  }
+  // === ADAPTIVE-HINT-END ===
   var locateBtn = $('view-locate'), locating = false;
   function onLocated(lat, lon, accMeters) {
     if (!proj) { showToast('Map is still loading — try again in a moment.'); return; }
@@ -5756,7 +5887,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     tripFly = {
       curve: new THREE.CatmullRomCurve3(pts),
       t0: performance.now(),
-      dur: Math.min(6500, 2600 + pts.length * 45)
+      // Reduced motion (C-10): a 1 ms duration makes the first flight
+      // step land on the final framing through the normal completion
+      // path — no separate instant-frame code to drift from it.
+      dur: ((typeof reducedMotion !== 'undefined') && reducedMotion)
+        ? 1 : Math.min(6500, 2600 + pts.length * 45)
     };
     controls.enabled = false;
   }
@@ -7768,7 +7903,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       // mid-ease rebuilt the slot from the reconcile, and the marker
       // must not jump to meet it.
       ez = tr.ease = {
-        stamp: stamp, t0: now, done: false,
+        stamp: stamp, t0: now,
+        // Reduced motion (C-10): the ease starts already done, so the
+        // marker renders at the fix — the same end state, no travel.
+        done: ((typeof reducedMotion !== 'undefined') && reducedMotion),
         fromS: (fp.s != null ? (tr.renderS != null ? tr.renderS : tr.s) : null),
         fromX: (tr.renderX != null ? tr.renderX : sl.x),
         fromZ: (tr.renderZ != null ? tr.renderZ : sl.z)
@@ -11262,7 +11400,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           var t = performance.now();
           var s = 1 + 0.22 * Math.sin(t / 420);
           youMarker.ring.scale.set(s, s, s);
-          youMarker.badge.position.y = YOU_BADGE_Y + YOU_BADGE_BOB * Math.sin(t / 650);
+          youMarker.badge.position.y = YOU_BADGE_Y +
+            (((typeof reducedMotion !== 'undefined') && reducedMotion)
+              ? 0 : YOU_BADGE_BOB * Math.sin(t / 650));
         }
         // Selected bus pulses at the same rate as the user-location ring.
         // Trip-journey highlight breathes at the same shared rate.
