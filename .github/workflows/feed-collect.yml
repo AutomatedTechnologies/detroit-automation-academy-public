@@ -1,0 +1,117 @@
+name: Feed collect (raw source payloads)
+
+# Project 30 keyless split (2026-10-19): the API keys never leave
+# GitHub Actions, so this workflow performs ONLY the keyed source
+# fetches for the Live Transit feed — DDOT BusTime getvehicles +
+# getservicebulletins, Swiftly GTFS-RT vehicle positions + trip
+# updates, and the public QLINE GTFS-RT feed — and commits the RAW
+# payloads, with fetch outcomes and timestamps, as a feed-raw-bundle/v1
+# to the feed-raw orphan branch (path raw-feed/current/). No build, no
+# transform, no deploy: the VM feed-publisher consumes the bundle,
+# runs the builder's transform half locally as single writer, commits
+# the finished feed files to main and dispatches the Pages deploy.
+#
+# The builder script itself runs in collect mode (FEED_COLLECT_DIR):
+# the same file, the same fetch code — its fetch cadence REPLACES the
+# live build's fetches (including the 55-minute bulletin sub-cadence,
+# decided against the previous bundle's manifest), so the DDOT draw
+# does not double. The publisher makes zero source calls.
+#
+# Triggers: workflow_dispatch only. Cadence is owned by the VM (the
+# publisher dispatches on bundle age; the dispatch driver backstops on
+# served age) — GitHub's scheduler delivers ~2.4% of */5 crons in this
+# account (measured, Project 30 diagnosis), so no schedule is declared.
+# The orphan branch keeps the site repo's Pages copy list (built from
+# main) and CI (branches: main/develop) untouched, and GITHUB_TOKEN
+# pushes trigger no workflows.
+#
+# Secrets (repo owner; never committed): DDOT_BUSTIME_KEY,
+# SWIFTLY_KEY — the same Actions secrets live-feed.yml uses. Absent
+# key = the leg records its dormant/not-configured state and makes
+# zero calls, exactly as the builder's legs behave.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: feed-collect
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main (builder script)
+        uses: actions/checkout@v4
+        with:
+          path: src
+
+      - name: Checkout feed-raw branch (previous bundle)
+        run: |
+          if git ls-remote --exit-code --heads https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git feed-raw >/dev/null 2>&1; then
+            git clone --depth 1 --branch feed-raw \
+              https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git prev
+          else
+            echo "feed-raw branch absent; bootstrapping empty"
+            mkdir -p prev/raw-feed
+          fi
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Collect raw source payloads
+        env:
+          DDOT_BUSTIME_KEY: ${{ secrets.DDOT_BUSTIME_KEY }}
+          SWIFTLY_KEY: ${{ secrets.SWIFTLY_KEY }}
+          FEED_COLLECT_DIR: ${{ runner.temp }}/bundle
+          FEED_PREV_BUNDLE_DIR: ${{ github.workspace }}/prev/raw-feed/current
+        run: node src/tools/feed/build-feed.mjs
+
+      - name: Commit bundle to feed-raw branch
+        run: |
+          cd prev
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if [ ! -d .git ]; then
+            git init -b feed-raw .
+            git remote add origin https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+          fi
+          rm -rf raw-feed/current
+          mkdir -p raw-feed
+          cp -r "$RUNNER_TEMP/bundle" raw-feed/current
+          if [ ! -f raw-feed/README.md ]; then
+            cat > raw-feed/README.md <<'EOF'
+          # feed-raw — raw feed payload bundles (Project 30)
+
+          Orphan branch holding feed-raw-bundle/v1 payload bundles at
+          `raw-feed/current/` (bundle.json manifest + raw source
+          payloads), produced by the Feed collect workflow and consumed
+          by the VM feed-publisher. Transient hand-off buffer, not an
+          archive: only the newest bundle is kept at the tip.
+          EOF
+          fi
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Bundle identical to previous; nothing to commit."
+            exit 0
+          fi
+          collected=$(node -e "console.log(JSON.parse(require('fs').readFileSync('raw-feed/current/bundle.json','utf8')).collected_at)")
+          # Single writer (this workflow's concurrency group), but keep
+          # the house race pattern: fetch + rebase + retry x3, fail loud.
+          for attempt in 1 2 3; do
+            git commit -m "feed-raw: collect ${collected} [skip ci]"
+            if git push origin HEAD:feed-raw; then
+              echo "bundle pushed on attempt $attempt"
+              exit 0
+            fi
+            echo "push raced (attempt $attempt); rebasing"
+            git fetch origin feed-raw
+            git rebase origin/feed-raw || { git rebase --abort; git reset --hard origin/feed-raw; }
+          done
+          echo 'failed to push bundle after 3 attempts' >&2
+          exit 1
