@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261018-2226';
+  var STAMP = '20261018-2036';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -10926,7 +10926,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         : placesLoadState === 'ok'
           ? 'Points of interest from OpenStreetMap (\u00A9 OpenStreetMap contributors, ODbL): ' +
             (placesData.meta && placesData.meta.counts ? placesData.meta.counts.total : placesData.places.length) +
-            ' points of interest in the dataset, ' + shown.length + ' shown.'
+            ' points of interest in the dataset, ' + shown.length + ' shown.' +
+            (shown.length ? ' Sponsored: the Starbucks and Planet Fitness layers are partnership placements.' : '')
           : 'Points of interest are off. Enable Points of interest in the filter panel to list them here.';
     }
   }
@@ -10948,6 +10949,20 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   function placesSyncToggles() {
     var t = $('places-toggle');
     if (t) t.setAttribute('aria-pressed', String(placesAllOn()));
+    // Gate 5 labeling (2026-10-18): both brands in this group are
+    // partnership placements (inventory: PLACES-SB / PLACES-PF in
+    // commercial-posture-audit/places-inventory-2026-10-18.md), so the
+    // "Sponsored" tag on the toggle row and the legend line in the
+    // layer's note follow the layer state exactly — visible whenever
+    // the layer is enabled, absent when it is off, and removable by
+    // no control while it is on. Labeling only: this block reads
+    // layer state and touches nothing about ranking, ordering, or
+    // prominence of any transit information (editorial firewall).
+    var sponsored = placesAllOn();
+    var stag = $('places-sponsored-tag');
+    if (stag) stag.hidden = !sponsored;
+    var snote = $('places-sponsored-note');
+    if (snote) snote.hidden = !sponsored;
     var err = placesLoadState === 'error';
     var counts = (placesData && placesData.meta && placesData.meta.counts) || null;
     var allC = $('places-count');
