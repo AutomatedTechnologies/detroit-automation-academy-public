@@ -43,12 +43,12 @@
 }
 </script>
 <link rel="icon" type="image/webp" href="assets/logo.webp">
-<link rel="stylesheet" href="ride-along.css?v=20261018-2226">
-<link rel="stylesheet" href="styles.css?v=20261018-2226">
+<link rel="stylesheet" href="ride-along.css?v=20261018-2036">
+<link rel="stylesheet" href="styles.css?v=20261018-2036">
 <script type="importmap">
 {
   "imports": {
-    "three": "./assets/three.module.min.js?v=20261018-2226",
+    "three": "./assets/three.module.min.js?v=20261018-2036",
     "three/addons/": "./assets/three-addons/"
   }
 }
@@ -208,6 +208,13 @@
   #places-toggle[aria-pressed="true"] { border-color: rgba(232,93,26,.45); }
   #places-toggle[aria-pressed="false"] .f-box { background: transparent; }
   #places-toggle:focus-visible { outline: 2px solid #FFB000; outline-offset: 2px; }
+  /* Gate 5 labeling (2026-10-18): the "Sponsored" tag on the Places toggle
+     row and the legend line in the layer's note. Understated by design — a
+     disclosure, not a creative; it derives from layer state in
+     placesSyncToggles() and no control removes it while the layer is on. */
+  .sponsored-tag { font-size: .6rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: #F5F2EA; border: 1px solid rgba(245,242,234,.45); border-radius: 3px; padding: .1rem .32rem; opacity: .85; flex: none; }
+  .sponsored-tag[hidden] { display: none; }
+  .sponsored-note[hidden] { display: none; }
   .stop-place { margin-top: .7rem; }
   .stop-place[hidden] { display: none; }
   .stop-place-note { color: #9AA0A6; font-size: .78rem; line-height: 1.5; margin: .5rem 0 0; }
@@ -741,8 +748,8 @@
         </div>
         <p class="f-note">In the trip planner, suggest a live transfer near the trip start, ranked by walk time plus wait from live bus positions.</p>
         <p class="f-note">Routes with no live buses reporting are dimmed or hidden automatically. DDOT schedule data is current through Feb 7, 2027 &mdash; this page shows live bus positions; the trip planner uses scheduled times.</p>
-        <button class="f-group-head" id="places-toggle" aria-pressed="false" title="Show points of interest — Starbucks coffee shops and Planet Fitness gyms"><span class="f-box"></span><b>Points of interest</b><span class="f-count" id="places-count">42 points of interest</span></button>
-        <p class="f-note">Starbucks and Planet Fitness points of interest from OpenStreetMap (&copy; OpenStreetMap contributors, ODbL), within the map&rsquo;s street boundary. Flat discs colored by brand carry letter badges at close zoom &mdash; S for Starbucks, PF for Planet Fitness. Community map data may not list every point of interest; licensed counters inside other stores are the likeliest gaps.</p>
+        <button class="f-group-head" id="places-toggle" aria-pressed="false" title="Show points of interest — Starbucks coffee shops and Planet Fitness gyms"><span class="f-box"></span><b>Points of interest</b><span class="f-count" id="places-count">42 points of interest</span><span class="sponsored-tag" id="places-sponsored-tag" hidden>Sponsored</span></button>
+        <p class="f-note">Starbucks and Planet Fitness points of interest from OpenStreetMap (&copy; OpenStreetMap contributors, ODbL), within the map&rsquo;s street boundary. Flat discs colored by brand carry letter badges at close zoom &mdash; S for Starbucks, PF for Planet Fitness. Community map data may not list every point of interest; licensed counters inside other stores are the likeliest gaps. <span class="sponsored-note" id="places-sponsored-note" hidden><b>Sponsored</b> &mdash; the Starbucks and Planet Fitness layers are partnership placements.</span></p>
         <div id="filter-groups"></div>
         <div class="f-static">
           <button class="f-group-head" id="pm-toggle" aria-pressed="true" title="Show the People Mover downtown loop and stations"><span class="f-box"></span><b>People Mover loop</b><span class="f-count">static</span></button>
@@ -1005,7 +1012,7 @@
   // was quota-paused on 2026-10-15 and is no longer consumed.
   window.FORGE_LIVE_PROXY = "live-data";
 </script>
-<script src="ride-along.js?v=20261018-2226"></script>
-<script type="module" src="live-transit.js?v=20261018-2226"></script>
+<script src="ride-along.js?v=20261018-2036"></script>
+<script type="module" src="live-transit.js?v=20261018-2036"></script>
 </body>
 </html>
