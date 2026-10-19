@@ -67,6 +67,9 @@ jobs:
 
       - name: Commit if changed
         id: commit
+        env:
+          DDOT_BUSTIME_KEY: ${{ secrets.DDOT_BUSTIME_KEY }}
+          SWIFTLY_KEY: ${{ secrets.SWIFTLY_KEY }}
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -90,12 +93,59 @@ jobs:
           if git diff --cached --quiet; then
             echo "No material change; nothing to commit."
             echo "pushed=false" >> "$GITHUB_OUTPUT"
-          else
-            git commit -m "live-data: feed update $(date -u +%Y-%m-%dT%H:%MZ)"
-            git pull --rebase origin main
-            git push origin main
-            echo "pushed=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          # Race-hardened push (Project 30, RC3): a sibling run or a site
+          # push can advance main on these same files between checkout and
+          # push. On a rebase conflict or a lost push race, rebuild the
+          # feed on the new tip (the builder's bulletin-reuse read sees
+          # the newest committed alerts.json) and retry, 3 attempts,
+          # then fail loud. Mirrors build-timing.yml's proven pattern.
+          for attempt in 1 2 3; do
+            git commit -m "live-data: feed update $(date -u +%Y-%m-%dT%H:%MZ)"
+            git fetch origin main
+            if ! git rebase origin/main; then
+              echo "rebase conflict (attempt $attempt): rebuilding on new tip"
+              git rebase --abort
+              git reset --hard origin/main
+              node tools/feed/build-feed.mjs
+              git add live-data/vehicles.json live-data/alerts.json
+              if [ -e live-data/smart-display.json ] || git ls-files --error-unmatch live-data/smart-display.json >/dev/null 2>&1; then
+                git add -A -- live-data/smart-display.json
+              fi
+              if [ -e live-data/smart-trip-updates.json ] || git ls-files --error-unmatch live-data/smart-trip-updates.json >/dev/null 2>&1; then
+                git add -A -- live-data/smart-trip-updates.json
+              fi
+              if git diff --cached --quiet; then
+                echo "Rebuild on new tip produced no change."
+                echo "pushed=false" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              continue
+            fi
+            if git push origin HEAD:main; then
+              echo "pushed on attempt $attempt"
+              echo "pushed=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "push raced (attempt $attempt); rebuilding on new tip"
+            git reset --hard origin/main
+            node tools/feed/build-feed.mjs
+            git add live-data/vehicles.json live-data/alerts.json
+            if [ -e live-data/smart-display.json ] || git ls-files --error-unmatch live-data/smart-display.json >/dev/null 2>&1; then
+              git add -A -- live-data/smart-display.json
+            fi
+            if [ -e live-data/smart-trip-updates.json ] || git ls-files --error-unmatch live-data/smart-trip-updates.json >/dev/null 2>&1; then
+              git add -A -- live-data/smart-trip-updates.json
+            fi
+            if git diff --cached --quiet; then
+              echo "Rebuild on new tip produced no change."
+              echo "pushed=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done
+          echo 'failed to push after 3 attempts' >&2
+          exit 1
 
       - name: Dispatch Pages deploy for the new feed files
         if: steps.commit.outputs.pushed == 'true'
