@@ -174,7 +174,8 @@ def pack(tt, geos):
                 if 0 <= p < len(stop_seq):
                     bits[p // 8] |= 1 << (p % 8)
             trips_blob += bits
-    assert neg_deltas == 0, f"negative travel/dwell deltas: {neg_deltas}"
+    if neg_deltas != 0:
+        raise ValueError(f"negative travel/dwell deltas: {neg_deltas}")
     sizes["pattern_dir"] = len(pat_dir)
     sizes["pattern_stops"] = len(pat_stops_blob)
     sizes["trips"] = len(trips_blob)
@@ -185,7 +186,8 @@ def pack(tt, geos):
     # ---- transfers (sorted u16 triplets) ----
     tr_blob = bytearray()
     for a, b, w in sorted(tt["transfers"]):
-        assert 0 <= a < 65536 and 0 <= b < 65536 and 0 <= w < 65536
+        if not (0 <= a < 65536 and 0 <= b < 65536 and 0 <= w < 65536):
+            raise ValueError(f"transfer out of u16 range: {(a, b, w)}")
         tr_blob += struct.pack("<HHH", a, b, w)
     sizes["transfers"] = len(tr_blob)
     counts["transfers"] = len(tt["transfers"])
@@ -229,7 +231,8 @@ def pack(tt, geos):
         + bytes(trips_blob)
         + bytes(tr_blob)
     )
-    assert len(blob) == total, (len(blob), total)
+    if len(blob) != total:
+        raise ValueError(f"blob length {len(blob)} != header total {total}")
     return blob, sizes, counts
 
 
@@ -238,7 +241,8 @@ class Reader:
 
     def __init__(self, blob):
         self.b = blob
-        assert blob[:4] == b"LTWB"
+        if blob[:4] != b"LTWB":
+            raise ValueError("bad LTWB magic")
         (self.schema,) = struct.unpack_from("<H", blob, 4)
         (self.fv_off,) = struct.unpack_from("<I", blob, 8)
         (self.valid_from,) = struct.unpack_from("<I", blob, 12)
