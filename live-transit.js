@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261019-0149';
+  var STAMP = '20261018-2200';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -437,8 +437,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }, false);
 
   var scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0c1116);
-  scene.fog = new THREE.Fog(0x0c1116, 32000, 75000);
+  scene.background = new THREE.Color(0x010103);
+  scene.fog = new THREE.Fog(0x010103, 32000, 75000);
 
   var camera = new THREE.PerspectiveCamera(42, 1, 100, 140000);
   // Home framing (2026-10-18, Project 16 overhaul gate, Option A —
@@ -7057,25 +7057,51 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // (shader recompiles are never per-frame).
   var streetGuideFade = 1, streetGuideFadeTarget = 1;
   var streetGlowMats = []; // per-route ground-glow materials (not dimmed by running state)
+  // Project 22 (Neon Vector) dynamics clock: seconds, advanced by
+  // easeGuideFade only while the reduced-motion preference is off
+  // (P28 C-10 posture: the dynamics still, values at base). The water
+  // band material's uTime uniform is written from it in the same
+  // function; the glow breathing reads it there too. Uniform/property
+  // writes only — zero per-frame CPU geometry work (P15 economics).
+  var neonT = 0, neonLastNow = 0;
+  var neonWaterTimeU = { value: 0 };
+  var neonShoreTexU = { value: null };
+  var neonShoreBoundsU = { value: new THREE.Vector4(0, 0, 1, 1) };
   // Phase 1: guideEntryOpacity / syncGuideEntry are gone with the
   // per-route materials they served. Per-route guide alpha now lives in
   // routeAlphaU (see refreshRouteAlpha / applyDim); the composition rule
   // is unchanged: (dimmed ? DIM_OPACITY : 1) x streetGuideFade.
   function easeGuideFade() {
     var d = streetGuideFadeTarget - streetGuideFade;
+    var settled = false;
     if (Math.abs(d) < 0.005) {
-      if (streetGuideFade === streetGuideFadeTarget) return;
+      if (streetGuideFade === streetGuideFadeTarget) settled = true;
       streetGuideFade = streetGuideFadeTarget;
     } else {
       streetGuideFade += d * 0.12;
     }
-    for (var ri = 0; ri < routeOrder.length; ri++) refreshRouteAlpha(routeOrder[ri]);
+    if (!settled) {
+      for (var ri = 0; ri < routeOrder.length; ri++) refreshRouteAlpha(routeOrder[ri]);
+    }
+    // Project 22 (Neon Vector): advance the dynamics clock (frozen
+    // under reduced motion, P28 C-10) and write the water uTime.
+    var neonNow = performance.now();
+    if (neonLastNow) {
+      var neonDt = Math.min(0.1, (neonNow - neonLastNow) / 1000);
+      if (!((typeof reducedMotion !== 'undefined') && reducedMotion)) neonT += neonDt;
+    }
+    neonLastNow = neonNow;
+    var rmNow = (typeof reducedMotion !== 'undefined') && reducedMotion;
+    neonWaterTimeU.value = rmNow ? 0 : neonT;
     // Shared casing + ground glows answer only to the street fade.
+    // The glow ribbon breathes 0.20 +/- 0.03 on a 12 s sine (cabinet
+    // idle life); under reduced motion it sits at the 0.20 base.
+    var glowBase = rmNow ? 0.20 : 0.20 + 0.03 * Math.sin(neonT * (Math.PI * 2 / 12));
     if (typeof casingMat !== 'undefined' && casingMat) {
-      casingMat.opacity = 0.9 * streetGuideFade;
+      casingMat.opacity = 0.95 * streetGuideFade;
     }
     for (var gi = 0; gi < streetGlowMats.length; gi++) {
-      streetGlowMats[gi].opacity = 0.13 * streetGuideFade;
+      streetGlowMats[gi].opacity = glowBase * streetGuideFade;
     }
   }
 
@@ -7397,7 +7423,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
     g.computeVertexNormals();
-    var island = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0x15211b }));
+    var island = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0x08130c }));
     island.position.y = 3;
     island.renderOrder = 1;
     scene.add(island);
@@ -7407,7 +7433,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
     var shore = new THREE.LineLoop(
       new THREE.BufferGeometry().setFromPoints(shorePts),
-      new THREE.LineBasicMaterial({ color: 0x33523f, transparent: true, opacity: 0.9 })
+      new THREE.LineBasicMaterial({ color: 0x14532d, transparent: true, opacity: 0.9 })
     );
     shore.renderOrder = 2;
     scene.add(shore);
@@ -7478,9 +7504,167 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       scene.add(m);
       return m;
     }
+    // Project 22, Treatment 1 (Neon Vector): the water fills draw hard
+    // indigo bands from a baked shore-distance field — deep 0x0d0d33
+    // (>= 300 m from shore), mid 0x0f2233 (60-300 m), shore accent
+    // 0x1c1c6e (< 60 m, shimmering +/-4% via uTime). The mid band
+    // carries Project 16 Option A's governing water value 0x0f2233
+    // (A owns water luminance; the band structure, thresholds, and
+    // the deep and shore-accent values are Neon Vector's): A's value
+    // sits between the deep band and the shore accent on the
+    // luminance scale, so it takes the mid band — as the deep band
+    // it would invert the shore-brightening order. The far shore
+    // fill below is A's 0x0e151d for the same reason. The field is baked
+    // ONCE at load into a single-channel texture: the water mask is
+    // scanline-rasterized from the same rings triGeo renders, and a
+    // two-pass chamfer distance transform gives every cell its
+    // distance to the nearest shoreline (the gate prototypes were
+    // painted by exactly this distance-transform method). A per-vertex
+    // attribute cannot carry the field on this geometry — earcut
+    // emits only ring vertices, all at distance 0 — and subdividing
+    // to resolve the bands measured 410k triangles / ~21.6 s of load
+    // time on the real data, so the bake lives in the texture and the
+    // rendered geometry is byte-identical to the flat fill it
+    // replaces. One shared patched material (one new shader program)
+    // serves both water fills. Zero per-frame CPU: the frame loop
+    // writes the uTime uniform only.
+    var waterBandMat = null;
+    function getWaterBandMat() {
+      if (waterBandMat) return waterBandMat;
+      var m = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+      m.onBeforeCompile = function (sh) {
+        sh.uniforms.uTime = neonWaterTimeU;
+        sh.uniforms.uShoreTex = neonShoreTexU;
+        sh.uniforms.uShoreBounds = neonShoreBoundsU;
+        sh.vertexShader = 'varying vec2 vWPos;\n' +
+          sh.vertexShader.replace('#include <begin_vertex>',
+            '#include <begin_vertex>\n\tvWPos = (modelMatrix * vec4(transformed, 1.0)).xz;');
+        sh.fragmentShader = ('uniform float uTime;\nuniform sampler2D uShoreTex;\n' +
+          'uniform vec4 uShoreBounds;\nvarying vec2 vWPos;\n') +
+          sh.fragmentShader.replace('#include <color_fragment>',
+            ['#include <color_fragment>',
+             '\tvec2 shoreUv = (vWPos - uShoreBounds.xy) / uShoreBounds.zw;',
+             '\tfloat shoreD = texture2D(uShoreTex, shoreUv).r * 650.0;',
+             '\tvec3 waterCol = vec3(0.05098, 0.05098, 0.20000);',
+             '\tif (shoreD < 300.0) waterCol = vec3(0.05882, 0.13333, 0.20000);',
+             '\tif (shoreD < 60.0) waterCol = vec3(0.10980, 0.10980, 0.43137) * (1.0 + 0.04 * sin(uTime * 0.35));',
+             '\tdiffuseColor.rgb = waterCol;'].join('\n'));
+      };
+      m.customProgramCacheKey = function () { return 'waterBand'; };
+      waterBandMat = m;
+      return m;
+    }
+    function bakeShoreField(entries) {
+      var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      entries.forEach(function (e) {
+        if (!e.rings) return;
+        e.rings.forEach(function (ring) {
+          ring.forEach(function (p) {
+            if (p[0] < minX) minX = p[0];
+            if (p[0] > maxX) maxX = p[0];
+            if (p[1] < minY) minY = p[1];
+            if (p[1] > maxY) maxY = p[1];
+          });
+        });
+      });
+      var CELL = 20;
+      var gw = Math.max(1, Math.ceil((maxX - minX) / CELL));
+      var gh = Math.max(1, Math.ceil((maxY - minY) / CELL));
+      var mask = new Uint8Array(gw * gh);
+      entries.forEach(function (e) {
+        if (!e.rings || !e.rings.length) return;
+        var edges = [];
+        e.rings.forEach(function (ring) {
+          for (var i = 0; i < ring.length; i++) {
+            var a = ring[i], b = ring[(i + 1) % ring.length];
+            edges.push(a[0], a[1], b[0], b[1]);
+          }
+        });
+        var yLo = Infinity, yHi = -Infinity;
+        for (var q = 1; q < edges.length; q += 2) {
+          if (edges[q] < yLo) yLo = edges[q];
+          if (edges[q] > yHi) yHi = edges[q];
+        }
+        var r0 = Math.max(0, Math.floor((yLo - minY) / CELL));
+        var r1 = Math.min(gh - 1, Math.floor((yHi - minY) / CELL));
+        for (var r = r0; r <= r1; r++) {
+          var wy = minY + (r + 0.5) * CELL;
+          var xs = [];
+          for (var ei = 0; ei < edges.length; ei += 4) {
+            var x1 = edges[ei], y1 = edges[ei + 1], x2 = edges[ei + 2], y2 = edges[ei + 3];
+            if ((y1 <= wy && y2 > wy) || (y2 <= wy && y1 > wy)) {
+              xs.push(x1 + (wy - y1) * (x2 - x1) / (y2 - y1));
+            }
+          }
+          if (xs.length < 2) continue;
+          xs.sort(function (a, b) { return a - b; });
+          for (var xi = 0; xi + 1 < xs.length; xi += 2) {
+            var c0 = Math.max(0, Math.floor((xs[xi] - minX) / CELL));
+            var c1 = Math.min(gw - 1, Math.floor((xs[xi + 1] - minX) / CELL));
+            for (var c = c0; c <= c1; c++) mask[r * gw + c] = 1;
+          }
+        }
+      });
+      var dt = new Float32Array(gw * gh);
+      var INF = 1e9, SQ2 = Math.SQRT2;
+      for (var i = 0; i < dt.length; i++) dt[i] = mask[i] ? INF : 0;
+      var x, y, idx, v;
+      for (y = 0; y < gh; y++) {
+        for (x = 0; x < gw; x++) {
+          idx = y * gw + x;
+          if (!mask[idx]) continue;
+          v = dt[idx];
+          if (x > 0) v = Math.min(v, dt[idx - 1] + 1);
+          if (y > 0) {
+            v = Math.min(v, dt[idx - gw] + 1);
+            if (x > 0) v = Math.min(v, dt[idx - gw - 1] + SQ2);
+            if (x < gw - 1) v = Math.min(v, dt[idx - gw + 1] + SQ2);
+          }
+          dt[idx] = v;
+        }
+      }
+      for (y = gh - 1; y >= 0; y--) {
+        for (x = gw - 1; x >= 0; x--) {
+          idx = y * gw + x;
+          if (!mask[idx]) continue;
+          v = dt[idx];
+          if (x < gw - 1) v = Math.min(v, dt[idx + 1] + 1);
+          if (y < gh - 1) {
+            v = Math.min(v, dt[idx + gw] + 1);
+            if (x < gw - 1) v = Math.min(v, dt[idx + gw + 1] + SQ2);
+            if (x > 0) v = Math.min(v, dt[idx + gw - 1] + SQ2);
+          }
+          dt[idx] = v;
+        }
+      }
+      var data = new Uint8Array(gw * gh);
+      for (var k = 0; k < dt.length; k++) {
+        var dm = dt[k] * CELL + CELL * 0.5;
+        data[k] = dm >= 650 ? 255 : Math.round(dm / 650 * 255);
+      }
+      var tex = new THREE.DataTexture(data, gw, gh, THREE.RedFormat);
+      tex.minFilter = THREE.LinearFilter;
+      tex.magFilter = THREE.LinearFilter;
+      tex.wrapS = THREE.ClampToEdgeWrapping;
+      tex.wrapT = THREE.ClampToEdgeWrapping;
+      tex.generateMipmaps = false;
+      tex.needsUpdate = true;
+      console.info('buildWater: shore field baked, ' + gw + 'x' + gh + ' cells at ' + CELL + ' m');
+      return { tex: tex, bounds: new THREE.Vector4(minX, minY, gw * CELL, gh * CELL) };
+    }
+    function fillWater(entries, y) {
+      var m = new THREE.Mesh(triGeo(entries), getWaterBandMat());
+      m.position.y = y;
+      m.renderOrder = 1;
+      scene.add(m);
+      return m;
+    }
     if (W.farShore && W.farShore.rings) fillMesh([W.farShore], 1, 0x0e151d);
-    fillMesh(W.polygons, 2, 0x0f2233);
-    if (W.islePolygons && W.islePolygons.length) fillMesh(W.islePolygons, 4.5, 0x0f2233);
+    var shoreField = bakeShoreField(W.islePolygons ? W.polygons.concat(W.islePolygons) : W.polygons);
+    neonShoreTexU.value = shoreField.tex;
+    neonShoreBoundsU.value.copy(shoreField.bounds);
+    fillWater(W.polygons, 2);
+    if (W.islePolygons && W.islePolygons.length) fillWater(W.islePolygons, 4.5);
     // Merged shoreline stroke: every ring of both water sets, seated
     // just above its fill so the water's edge is drawn, not implied.
     var seg = [];
@@ -7499,7 +7683,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var sg = new THREE.BufferGeometry();
     sg.setAttribute('position', new THREE.Float32BufferAttribute(seg, 3));
     var stroke = new THREE.LineSegments(sg,
-      new THREE.LineBasicMaterial({ color: 0x2e5a7d, transparent: true, opacity: 0.55 }));
+      new THREE.LineBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.9 }));
     stroke.renderOrder = 2;
     scene.add(stroke);
     // Place labels join the Belle Isle / People Mover static-geography
@@ -11112,15 +11296,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       // the SMART group is displayed (see syncStreetExt).
       var streetLocal = null;
       (function buildStreets() {
-        // Ground covers the full mosaic bbox permanently. #0d1319 against the
-        // #0c1116 scene background is near-identical, so the larger ground is
+        // Ground covers the full mosaic bbox permanently. #0b0b1a against the
+        // #010103 scene background is near-identical, so the larger ground is
         // visually a no-op while the extension is hidden.
         var gnw = project(MOSAIC_BOUNDS.latN, MOSAIC_BOUNDS.lonW);
         var gse = project(MOSAIC_BOUNDS.latS, MOSAIC_BOUNDS.lonE);
         var gw = gse[0] - gnw[0], gh = gse[1] - gnw[1];
         var ground = new THREE.Mesh(
           new THREE.PlaneGeometry(gw, gh),
-          new THREE.MeshBasicMaterial({ color: 0x0d1319 })
+          new THREE.MeshBasicMaterial({ color: 0x0b0b1a })
         );
         ground.rotation.x = -Math.PI / 2;
         ground.position.set(gnw[0] + gw / 2, 0, gnw[1] + gh / 2);
@@ -11207,17 +11391,17 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           return lines;
         }
         var fw = splitTier(streetData.freeway);
-        addTier(fw.core, 0x8a94a0, 0.95, 16, scene);
-        addTier(fw.ext, 0x8a94a0, 0.95, 16, streetExt);
+        addTier(fw.core, 0x33415a, 0.95, 16, scene);
+        addTier(fw.ext, 0x33415a, 0.95, 16, streetExt);
         var ar = splitTier(streetData.arterial);
-        addTier(ar.core, 0x4d5763, 0.9, 15, scene);
-        addTier(ar.ext, 0x4d5763, 0.9, 15, streetExt);
+        addTier(ar.core, 0x232c3d, 0.9, 15, scene);
+        addTier(ar.ext, 0x232c3d, 0.9, 15, streetExt);
         var lo = splitTier(streetData.local);
-        streetLocal = addTier(lo.core, 0x333c46, 0.8, 14, scene);
-        streetExtLocal = addTier(lo.ext, 0x333c46, 0.8, 14, streetExt);
+        streetLocal = addTier(lo.core, 0x141824, 0.8, 14, scene);
+        streetExtLocal = addTier(lo.ext, 0x141824, 0.8, 14, streetExt);
       })();
 
-      var casingMat = routeShader(new THREE.MeshBasicMaterial({ color: 0x0c1116, transparent: true, opacity: 0.9, side: THREE.DoubleSide }), false);
+      var casingMat = routeShader(new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.95, side: THREE.DoubleSide }), false);
 
       // Per-group containers (stops clouds toggle with the group filter).
       groupOrder = data.groups.map(function (g) { return g.id; });
@@ -11237,7 +11421,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var skirtMatAll = routeShader(new THREE.MeshLambertMaterial({
         color: 0xffffff, vertexColors: true, side: THREE.DoubleSide, transparent: true }), true);
       var glowMatAll = routeShader(new THREE.MeshBasicMaterial({
-        color: 0xffffff, vertexColors: true, transparent: true, opacity: 0.13,
+        color: 0xffffff, vertexColors: true, transparent: true, opacity: 0.20,
         blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }), false);
       streetGlowMats.push(glowMatAll);
       var mergedGlow = [], mergedCase = [], mergedDeck = [], mergedSkirt = [];
