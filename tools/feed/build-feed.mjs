@@ -70,6 +70,22 @@
  *    per 15 minutes against the issuance limit of 180 per 15
  *    minutes (~3.3%).
  *
+ *  - SMART trip-updates watch derivative (Project 29 item 4, added
+ *    2026-10-19; authorized by the registered Project 29 decision-5
+ *    pick): the same normalized trips are re-encoded in the same run
+ *    into per-route trimmed files under live-data/smart-tu/ plus an
+ *    index.json, in the positional schema of the Project 29
+ *    data-stream specification §3.2/§3.3, so an Apple Watch can fetch
+ *    only the routes serving its context instead of the 3.6 MB
+ *    payload. It is a re-encoding of the SAME display data — no new
+ *    source, no new request, the §4(vi) display-only posture is
+ *    unchanged, and nothing about it enters vehicles.json, the
+ *    telemetry archive, or any computation. Lifecycle mirrors the
+ *    trip-updates payload: published only while SWIFTLY_KEY is
+ *    active and the trip-updates leg succeeded; on a leg failure the
+ *    previously published derivative is left untouched (its gen ages
+ *    honestly); on key withdrawal the whole directory is deleted.
+ *
  * Output envelopes are byte-compatible with the proxy contract the page
  * consumes:
  *  vehicles.json: {generated_at, count, vehicles[], sources:{ddot, smart, qline}}
@@ -443,6 +459,107 @@ function mapGtfsRtTripUpdates(buffer, nowIso) {
   } catch {
     return [];
   }
+}
+
+/* ------------- SMART trip-updates watch derivative -------------
+ * Project 29 item 4 (2026-10-19), spec: Project 29 data-stream
+ * specification §3.2 (trimmed schema) + §3.3 (derivative contract).
+ * Pure functions of the normalized trips above, so the derivative is
+ * testable without the network and adds zero upstream requests.
+ *
+ * Trimming rules (§3.2): an update's time is its departure epoch,
+ * falling back to arrival; its delay is the departure delay, falling
+ * back to arrival (null = schedule-based prediction, still carried);
+ * SKIPPED updates are omitted entirely (absence at a stop means "not
+ * served"); only updates inside [gen - 300 s, gen + 120 min] are
+ * kept. Trip tuple: [trip_id, route_id, direction_id, updates], with
+ * the trip's schedule_relationship appended as a 5th element when it
+ * is not SCHEDULED. Trips keep the source payload's (route, trip)
+ * sort, so bytes are stable across runs over unchanged input. */
+const SMART_TU_WINDOW_AHEAD_S = 120 * 60;
+const SMART_TU_WINDOW_BEHIND_S = 300;
+
+function trimSmartTuTrip(t, genSec) {
+  const ups = [];
+  for (const u of t.stop_time_updates || []) {
+    if (!u.stop_id || u.schedule_relationship === 'SKIPPED') continue;
+    const ts = u.departure_time ?? u.arrival_time;
+    if (ts === null || ts === undefined) continue;
+    if (ts < genSec - SMART_TU_WINDOW_BEHIND_S || ts > genSec + SMART_TU_WINDOW_AHEAD_S) continue;
+    const delay = u.departure_delay_sec ?? u.arrival_delay_sec ?? null;
+    ups.push([String(u.stop_id), ts, delay]);
+  }
+  if (!ups.length) return null;
+  const tuple = [String(t.trip_id || ''), String(t.route_id || ''), t.direction_id ?? null, ups];
+  if (t.schedule_relationship && t.schedule_relationship !== 'SCHEDULED') tuple.push(t.schedule_relationship);
+  return tuple;
+}
+
+/** route_id -> windowed trimmed trip tuples (possibly an empty list
+ *  for a route present in the payload with no in-window updates). */
+function buildSmartTuDerivative(trips, genSec) {
+  const byRoute = new Map();
+  for (const t of trips) {
+    const rid = String(t.route_id || '');
+    if (!rid) continue;
+    if (!byRoute.has(rid)) byRoute.set(rid, []);
+    const tuple = trimSmartTuTrip(t, genSec);
+    if (tuple) byRoute.get(rid).push(tuple);
+  }
+  return byRoute;
+}
+
+/** Filename for a route's derivative file. Route ids in the payload
+ *  are plain tokens today; encodeURIComponent keeps any future id
+ *  filesystem-safe while leaving plain ids byte-identical. */
+function smartTuFileName(routeId) {
+  return encodeURIComponent(routeId) + '.json';
+}
+
+/**
+ * Write the derivative under `dir`: one file per route in the
+ * universe (routes in `byRoute` UNION routes in the previously
+ * published index, so a route with no in-window trips still
+ * publishes an explicit empty file rather than a 404) plus
+ * index.json. Files are written whole, never patched; unchanged
+ * input reproduces byte-identical files, so the workflow's commit
+ * step sees a change only when the data changed. Returns a summary
+ * for the run log.
+ */
+function writeSmartTuDerivative(dir, byRoute, genSec) {
+  const priorIndex = readExisting(path.join(dir, 'index.json'));
+  if (priorIndex && Array.isArray(priorIndex.routes)) {
+    for (const r of priorIndex.routes) {
+      const rid = r && r.route_id ? String(r.route_id) : '';
+      if (rid && !byRoute.has(rid)) byRoute.set(rid, []);
+    }
+  }
+  fs.mkdirSync(dir, { recursive: true });
+  const routeIds = [...byRoute.keys()].sort();
+  const wanted = new Set();
+  const indexRoutes = [];
+  let totalBytes = 0;
+  let totalTrips = 0;
+  for (const rid of routeIds) {
+    const tripsArr = byRoute.get(rid);
+    const body = { v: 1, gen: genSec, route_id: rid, source_ok: true, trips: tripsArr };
+    const text = JSON.stringify(body) + '\n';
+    const fname = smartTuFileName(rid);
+    wanted.add(fname);
+    fs.writeFileSync(path.join(dir, fname), text);
+    const bytes = Buffer.byteLength(text);
+    indexRoutes.push({ route_id: rid, bytes, trips: tripsArr.length });
+    totalBytes += bytes;
+    totalTrips += tripsArr.length;
+  }
+  for (const f of fs.readdirSync(dir)) {
+    if (f.endsWith('.json') && f !== 'index.json' && !wanted.has(f)) {
+      fs.unlinkSync(path.join(dir, f));
+    }
+  }
+  const indexBody = { v: 1, gen: genSec, source_ok: true, routes: indexRoutes };
+  fs.writeFileSync(path.join(dir, 'index.json'), JSON.stringify(indexBody) + '\n');
+  return { routes: routeIds.length, trips: totalTrips, bytes: totalBytes };
 }
 
 /* ---------------- vehicle legs (vehicles.js port) ---------------- */
@@ -948,10 +1065,35 @@ async function main() {
     smartTuNote = 'smart-trip-updates.json: not written (SWIFTLY_KEY not set; leg dormant)';
   }
 
+  /* SMART trip-updates watch derivative (Project 29 item 4,
+   * 2026-10-19) — per-route trimmed files under live-data/smart-tu/
+   * plus index.json, derived in THIS run from the same normalized
+   * trips written above (no extra fetch). Posture mirrors the
+   * trip-updates payload, with one deliberate difference: when the
+   * trip-updates leg FAILS on a cycle, the derivative is left
+   * untouched rather than republished empty — empty files would
+   * claim "no service" for what is a fetch failure, while a frozen
+   * gen is honest and the watch's age rules retire the data on
+   * schedule. When the key is withdrawn the whole directory is
+   * deleted, exactly like the payloads above. */
+  const smartTuDir = path.join(OUT_DIR, 'smart-tu');
+  let smartTuDerivNote;
+  if (smartActive && smartTu.state.ok) {
+    const genSec = Math.floor(Date.parse(nowIso) / 1000);
+    const summary = writeSmartTuDerivative(smartTuDir, buildSmartTuDerivative(smartTu.trips, genSec), genSec);
+    smartTuDerivNote = `smart-tu/: ${summary.routes} route files (${summary.trips} windowed trips, ${summary.bytes} B) + index.json`;
+  } else if (smartActive) {
+    smartTuDerivNote = 'smart-tu/: left unchanged (Swiftly trip-updates leg failed this cycle)';
+  } else {
+    if (fs.existsSync(smartTuDir)) fs.rmSync(smartTuDir, { recursive: true, force: true });
+    smartTuDerivNote = 'smart-tu/: not written (SWIFTLY_KEY not set; leg dormant)';
+  }
+
   console.log(`vehicles.json: ${v} (ddot=${ddot.vehicles.length} ok=${ddot.state.ok}, qline=${qline.vehicles.length} ok=${qline.state.ok})`);
   console.log(`alerts.json: ${a} (ddot alerts=${ddotAlerts.alerts.length} ok=${ddotAlerts.state.ok})`);
   console.log(smartNote);
   console.log(smartTuNote);
+  console.log(smartTuDerivNote);
   console.log(
     `bustime calls: vehicles=${ddot.calls} bulletins=${ddotAlerts.calls}` +
       (reuse.reuse
@@ -960,7 +1102,7 @@ async function main() {
   );
 }
 
-export { collectDdotBulletins, ddotBulletinsReusable, gtfsRtFeedShape, pollSmart, pollSmartTripUpdates, mapGtfsRtTripUpdates, main };
+export { collectDdotBulletins, ddotBulletinsReusable, gtfsRtFeedShape, pollSmart, pollSmartTripUpdates, mapGtfsRtTripUpdates, trimSmartTuTrip, buildSmartTuDerivative, writeSmartTuDerivative, main };
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch((e) => {
