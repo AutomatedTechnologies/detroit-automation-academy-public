@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261018-2200';
+  var STAMP = '20261019-1228';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -4750,6 +4750,24 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       note.hidden = false;
     }
   }
+  // Ride Along entry from the stop card's live rows (project 7,
+  // Justin's order 2026-10-19): select the row's vehicle through
+  // showBus — the same funnel a map tap and the Browse list use —
+  // then open Ride Along, which boards the selected bus (or holds
+  // the intent pending until the widget knows it, the standing
+  // ridePendingVid path). No parallel boarding path. The stop card
+  // is covered, not closed, so closing the ride returns through the
+  // bus card to this card, exactly as the two-step flow does. A
+  // stale fix changes nothing here: the ride surface carries the
+  // standing STALE treatment (project 6), and the bus card's fix-age
+  // line states the age (project 6, item 1).
+  function rideFromStopLiveRow(v) {
+    if (!v) return;
+    showBus(v);
+    setRideMode(true);
+    var rcEl = $('ride-card');
+    if (rcEl && rcEl.focus) rcEl.focus();
+  }
   // Live arrivals on the selected stop's routes, refreshed on every poll.
   function renderStopLive() {
     // Project 13: an open card reconciles its chips on every refresh,
@@ -4777,8 +4795,13 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     list.innerHTML = '';
     var now = Date.now();
     rows.slice(0, 5).forEach(function (v) {
-      var row = document.createElement('div');
-      row.className = 'stop-live-row';
+      // Project 7 (2026-10-19): the row is a real button — selecting
+      // it rides THAT vehicle (see rideFromStopLiveRow). The closure
+      // holds the exact vehicle record, so two buses sharing a route
+      // and destination still select the one the row names.
+      var row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'stop-live-row stop-live-btn';
       var dot = document.createElement('i');
       var rc = routeColors[v.route_id];
       dot.style.background = rc ? '#' + rc.getHexString() : '#F5F2EA';
@@ -4800,6 +4823,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var mins = (when && !isNaN(when)) ? Math.max(0, Math.round((now - when.getTime()) / 60000)) : null;
       t.textContent = mins == null ? '' : (mins < 1 ? 'just now' : mins + 'm ago');
       row.appendChild(t);
+      var go = document.createElement('span');
+      go.className = 'stop-live-go';
+      go.setAttribute('aria-hidden', 'true');
+      go.textContent = '›';
+      row.appendChild(go);
+      row.setAttribute('aria-label', 'Ride along — ' + routeLabel(v.route_id) +
+        (slDest ? ' to ' + slDest : '') + (v.vehicle_id ? ', bus ' + v.vehicle_id : ''));
+      row.addEventListener('click', function () { rideFromStopLiveRow(v); });
       list.appendChild(row);
     });
   }
