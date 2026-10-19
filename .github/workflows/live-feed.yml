@@ -35,8 +35,13 @@ name: Live transit feed (static JSON)
 #   archived by the telemetry logger).
 
 on:
-  schedule:
-    - cron: '*/5 * * * *'
+  # Project 30 cutover (2026-10-19): the */5 cron is REMOVED — the
+  # keyless VM publisher chain (feed-collect + feed-publisher) is the
+  # feed's writer now, and a cron-fired run of this workflow would be
+  # a second writer. This workflow remains intact as the FALLBACK:
+  # workflow_dispatch (manual, or the dispatch driver's backstop
+  # target at 20 minutes of served age) runs the full keyed build
+  # exactly as before.
   workflow_dispatch:
 
 permissions:
