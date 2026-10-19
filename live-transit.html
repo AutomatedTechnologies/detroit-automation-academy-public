@@ -43,12 +43,12 @@
 }
 </script>
 <link rel="icon" type="image/webp" href="assets/logo.webp">
-<link rel="stylesheet" href="ride-along.css?v=20261018-2200">
-<link rel="stylesheet" href="styles.css?v=20261018-2200">
+<link rel="stylesheet" href="ride-along.css?v=20261019-1228">
+<link rel="stylesheet" href="styles.css?v=20261019-1228">
 <script type="importmap">
 {
   "imports": {
-    "three": "./assets/three.module.min.js?v=20261018-2200",
+    "three": "./assets/three.module.min.js?v=20261019-1228",
     "three/addons/": "./assets/three-addons/"
   }
 }
@@ -370,6 +370,10 @@
   .stop-live-row b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .stop-live-row span { margin-left: auto; color: #9AA0A6; font-size: .75rem; flex: none; font-variant-numeric: tabular-nums; }
   .stop-live-row .stop-live-bus { margin-left: 0; color: #9AA0A6; }
+  .stop-live-btn { background: none; border: 0; font: inherit; text-align: left; width: 100%; min-height: 44px; cursor: pointer; border-radius: 8px; touch-action: manipulation; }
+  .stop-live-btn:hover { background: rgba(245,242,234,.06); }
+  .stop-live-btn:focus-visible { outline: 2px solid #FFB000; outline-offset: -2px; }
+  .stop-live-row .stop-live-go { margin-left: 0; color: #9AA0A6; font-size: 1.05rem; line-height: 1; }
   .bus-upcoming { margin-top: .6rem; }
   .bus-upcoming[hidden] { display: none; }
   /* Position Integrity (project 6, item 1): the bus card's fix-age line.
@@ -876,7 +880,7 @@
           <div id="stop-alerts-list"></div>
         </div>
       </div>
-      <div class="bus-card" id="ride-card" hidden>
+      <div class="bus-card" id="ride-card" tabindex="-1" hidden>
         <button class="close" id="ride-close" aria-label="Close ride along">×</button>
         <div id="ride-along-mount"></div>
       </div>
@@ -1012,7 +1016,7 @@
   // was quota-paused on 2026-10-15 and is no longer consumed.
   window.FORGE_LIVE_PROXY = "live-data";
 </script>
-<script src="ride-along.js?v=20261018-2200"></script>
-<script type="module" src="live-transit.js?v=20261018-2200"></script>
+<script src="ride-along.js?v=20261019-1228"></script>
+<script type="module" src="live-transit.js?v=20261019-1228"></script>
 </body>
 </html>
