@@ -90,6 +90,13 @@ jobs:
           if [ -e live-data/smart-trip-updates.json ] || git ls-files --error-unmatch live-data/smart-trip-updates.json >/dev/null 2>&1; then
             git add -A -- live-data/smart-trip-updates.json
           fi
+          # smart-tu/ (Project 29 watch derivative): same lifecycle — the
+          # directory exists only while SWIFTLY_KEY is set; stage it when
+          # present on disk or tracked, so creates, updates and deletions
+          # (a key withdrawal removes the whole directory) are committed.
+          if [ -d live-data/smart-tu ] || [ -n "$(git ls-files -- live-data/smart-tu)" ]; then
+            git add -A -- live-data/smart-tu/
+          fi
           if git diff --cached --quiet; then
             echo "No material change; nothing to commit."
             echo "pushed=false" >> "$GITHUB_OUTPUT"
@@ -116,6 +123,13 @@ jobs:
               if [ -e live-data/smart-trip-updates.json ] || git ls-files --error-unmatch live-data/smart-trip-updates.json >/dev/null 2>&1; then
                 git add -A -- live-data/smart-trip-updates.json
               fi
+              # smart-tu/ (Project 29 watch derivative): same lifecycle — the
+              # directory exists only while SWIFTLY_KEY is set; stage it when
+              # present on disk or tracked, so creates, updates and deletions
+              # (a key withdrawal removes the whole directory) are committed.
+              if [ -d live-data/smart-tu ] || [ -n "$(git ls-files -- live-data/smart-tu)" ]; then
+                git add -A -- live-data/smart-tu/
+              fi
               if git diff --cached --quiet; then
                 echo "Rebuild on new tip produced no change."
                 echo "pushed=false" >> "$GITHUB_OUTPUT"
@@ -137,6 +151,13 @@ jobs:
             fi
             if [ -e live-data/smart-trip-updates.json ] || git ls-files --error-unmatch live-data/smart-trip-updates.json >/dev/null 2>&1; then
               git add -A -- live-data/smart-trip-updates.json
+            fi
+            # smart-tu/ (Project 29 watch derivative): same lifecycle — the
+            # directory exists only while SWIFTLY_KEY is set; stage it when
+            # present on disk or tracked, so creates, updates and deletions
+            # (a key withdrawal removes the whole directory) are committed.
+            if [ -d live-data/smart-tu ] || [ -n "$(git ls-files -- live-data/smart-tu)" ]; then
+              git add -A -- live-data/smart-tu/
             fi
             if git diff --cached --quiet; then
               echo "Rebuild on new tip produced no change."
