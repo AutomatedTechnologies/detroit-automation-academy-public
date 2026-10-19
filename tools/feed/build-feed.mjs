@@ -112,6 +112,32 @@
  *      pattern with the trip-updates endpoint — see
  *      pollSmartTripUpdates),
  *      FEED_OUT_DIR (optional; default <repo>/live-data — local testing).
+ *
+ * Keyless split modes (Project 30 Phase 4 revision, 2026-10-19 — the
+ * API keys never leave GitHub Actions; the transform half runs on the
+ * VM with no keys and makes zero source calls):
+ *      FEED_COLLECT_DIR (collect mode): instead of building, perform
+ *      ONLY the source fetches (DDOT BusTime vehicles + bulletins,
+ *      QLINE, Swiftly VP + TU) and write the RAW payloads, with fetch
+ *      outcomes and timestamps, as a versioned bundle in this dir
+ *      (feed-raw-bundle/v1; bundle.json manifest written last). Runs
+ *      in Actions under feed-collect.yml, which commits the bundle to
+ *      the feed-raw orphan branch. FEED_PREV_BUNDLE_DIR points at the
+ *      previous bundle (its manifest drives the bulletin sub-cadence:
+ *      bulletins are fetched fresh at most once per BULLETIN_REUSE_MS,
+ *      exactly as the live build's reuse rule — the draw REPLACES the
+ *      live build's fetches, never adds to them).
+ *      FEED_REPLAY_DIR (replay mode): build from a collected bundle
+ *      instead of the network. Every poll leg reads its payloads from
+ *      the bundle; the run's anchor time (generated_at, source `at`,
+ *      fetched_at) is the bundle's collected_at, so rider-visible
+ *      freshness is anchored to the true fetch instant. Transforms,
+ *      envelopes, source states, write policy and the SMART
+ *      delete-on-key-withdrawal lifecycle are byte-identical to a
+ *      live run over the same payloads (proven by the Project 30
+ *      fixture harness). With neither var set, behavior is the
+ *      original live build, unchanged — live-feed.yml remains the
+ *      manual fallback on exactly this code path.
  */
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
@@ -130,6 +156,37 @@ const SMART_REMOVED_REASON = 'SMART removed from Live Transit Detroit 2026-10-15
 const SWIFTLY_KEY = process.env.SWIFTLY_KEY || '';
 const SMART_VP_URL = process.env.SMART_VP_URL || 'https://api.goswift.ly/real-time/detroit-smartbus/gtfs-rt-vehicle-positions';
 const SMART_TU_URL = process.env.SMART_TU_URL || 'https://api.goswift.ly/real-time/detroit-smartbus/gtfs-rt-trip-updates';
+
+/* ------------- keyless split modes (Project 30, see header) ------------- */
+
+const COLLECT_DIR = process.env.FEED_COLLECT_DIR || '';
+const REPLAY_DIR = process.env.FEED_REPLAY_DIR || '';
+
+/** Replay bundle, loaded once at startup when FEED_REPLAY_DIR is set.
+ *  The publisher verifies every payload's sha256 against the manifest
+ *  before invoking this script; the transform trusts the directory. */
+let REPLAY = null;
+if (REPLAY_DIR) {
+  const manifest = JSON.parse(fs.readFileSync(path.join(REPLAY_DIR, 'bundle.json'), 'utf8'));
+  if (manifest.kind !== 'feed-raw-bundle/v1' || typeof manifest.collected_at !== 'string') {
+    throw new Error(`FEED_REPLAY_DIR: ${REPLAY_DIR}/bundle.json is not a feed-raw-bundle/v1 manifest`);
+  }
+  REPLAY = {
+    dir: REPLAY_DIR,
+    collected_at: manifest.collected_at,
+    ddot: manifest.ddot || { configured: false },
+    qline: manifest.qline || { ok: false, error: 'bundle manifest has no qline entry' },
+    smart: manifest.smart || { active: false },
+  };
+}
+
+function replayPayloadBytes(rel) {
+  return fs.readFileSync(path.join(REPLAY.dir, rel));
+}
+
+function replayPayloadJson(rel) {
+  return JSON.parse(replayPayloadBytes(rel).toString('utf8'));
+}
 
 /* ---------------- fetch helpers (proxy equivalents) ---------------- */
 
@@ -165,6 +222,33 @@ async function fetchBufferSwiftly(url, key, timeoutMs = 15000) {
   });
   if (!res.ok) throw new Error(`HTTP ${res.status} from ${url.split('?')[0]}`);
   return Buffer.from(await res.arrayBuffer());
+}
+
+/* Collect-mode raw fetches: same HTTP-error message shape as the live
+ * helpers above (so a recorded error replays into the identical source
+ * state), but the body is kept as raw bytes for the bundle. The JSON
+ * variant additionally validates that the body parses — a body that
+ * fails to parse is recorded as a fetch failure carrying the parser's
+ * own message, exactly what the live legs see from res.json(). */
+async function fetchRawBuffer(url, timeoutMs = 15000) {
+  const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
+  if (!res.ok) throw new Error(`HTTP ${res.status} from ${url.split('?')[0]}`);
+  return Buffer.from(await res.arrayBuffer());
+}
+
+async function fetchRawBufferSwiftly(url, key, timeoutMs = 15000) {
+  const res = await fetch(url, {
+    headers: { Authorization: key },
+    signal: AbortSignal.timeout(timeoutMs),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status} from ${url.split('?')[0]}`);
+  return Buffer.from(await res.arrayBuffer());
+}
+
+async function fetchRawJson(url, timeoutMs = 15000) {
+  const buf = await fetchRawBuffer(url, timeoutMs);
+  JSON.parse(buf.toString('utf8')); // validate only; raw bytes are stored
+  return buf;
 }
 
 /* ---------------- lib/mappers.js port ---------------- */
@@ -565,6 +649,35 @@ function writeSmartTuDerivative(dir, byRoute, genSec) {
 /* ---------------- vehicle legs (vehicles.js port) ---------------- */
 
 async function pollDdot(nowIso) {
+  if (REPLAY) {
+    // Replay: reproduce the live leg's settled-batch semantics over
+    // the recorded payloads — fulfilled batches map, rejected batches
+    // only count. No network, no key.
+    const d = REPLAY.ddot;
+    if (!d.configured) {
+      return {
+        vehicles: [],
+        calls: 0,
+        state: { ok: false, at: nowIso, reason: 'DDOT_BUSTIME_KEY secret not configured', configured: false },
+      };
+    }
+    const vehicles = [];
+    let batchesOk = 0;
+    for (const b of d.vehicle_batches || []) {
+      if (b.ok) {
+        batchesOk++;
+        vehicles.push(...mapDdotVehicles(replayPayloadJson(b.file)));
+      }
+    }
+    return {
+      vehicles,
+      calls: (d.vehicle_batches || []).length,
+      state: {
+        ok: true, at: nowIso, vehicles: vehicles.length,
+        batches_ok: batchesOk, batches_failed: (d.vehicle_batches || []).length - batchesOk,
+      },
+    };
+  }
   if (!DDOT_KEY) {
     return {
       vehicles: [],
@@ -638,11 +751,21 @@ function gtfsRtFeedShape(buffer) {
   return { header, entities };
 }
 
+/** Replay source for the Swiftly legs: the recorded payload bytes, or
+ *  a throw carrying the recorded fetch error — which lands in the
+ *  caller's catch and reproduces the live error state verbatim. */
+function replaySmartBuffer(which) {
+  const s = REPLAY.smart[which];
+  if (!s || !s.ok) throw new Error((s && s.error) || 'replay bundle missing Swiftly payload');
+  return replayPayloadBytes(s.file);
+}
+
 async function pollSmart(nowIso) {
-  // Called ONLY when SWIFTLY_KEY is non-empty (main gates on key
-  // presence), so the dormant state performs zero network calls.
+  // Called ONLY when the leg is active (live: SWIFTLY_KEY non-empty;
+  // replay: the collect run's key was present — main gates on the
+  // bundle manifest), so the dormant state performs zero network calls.
   try {
-    const buf = await fetchBufferSwiftly(SMART_VP_URL, SWIFTLY_KEY);
+    const buf = REPLAY ? replaySmartBuffer('vp') : await fetchBufferSwiftly(SMART_VP_URL, SWIFTLY_KEY);
     let shape;
     try {
       shape = gtfsRtFeedShape(buf);
@@ -674,10 +797,10 @@ async function pollSmart(nowIso) {
  * payload — never into vehicles.json, the telemetry path, or any
  * computation input. */
 async function pollSmartTripUpdates(nowIso) {
-  // Called ONLY when SWIFTLY_KEY is non-empty (main gates on key
-  // presence), so the dormant state performs zero network calls.
+  // Called ONLY when the leg is active (same gate as pollSmart), so
+  // the dormant state performs zero network calls.
   try {
-    const buf = await fetchBufferSwiftly(SMART_TU_URL, SWIFTLY_KEY);
+    const buf = REPLAY ? replaySmartBuffer('tu') : await fetchBufferSwiftly(SMART_TU_URL, SWIFTLY_KEY);
     let shape;
     try {
       shape = gtfsRtFeedShape(buf);
@@ -698,6 +821,14 @@ async function pollSmartTripUpdates(nowIso) {
 }
 
 async function pollQline(nowIso) {
+  if (REPLAY) {
+    const q = REPLAY.qline;
+    if (!q.ok) {
+      return { vehicles: [], state: { ok: false, at: nowIso, reason: q.error } };
+    }
+    const vehicles = mapGtfsRtVehicles(replayPayloadBytes(q.file), nowIso, 'qline').map((v) => ({ ...v, route_id: 'QLINE' }));
+    return { vehicles, state: { ok: true, at: nowIso, vehicles: vehicles.length } };
+  }
   try {
     const buf = await fetchBuffer(QLINE_VP_URL);
     const vehicles = mapGtfsRtVehicles(buf, nowIso, 'qline').map((v) => ({ ...v, route_id: 'QLINE' }));
@@ -839,6 +970,29 @@ function ddotCollectedState(base, { payloads, failures, total }, nowIso) {
 
 async function pollDdotAlerts(nowIso) {
   const base = { agency: 'ddot', kind: 'realtime', via: 'bustime', fetched_at: nowIso };
+  if (REPLAY) {
+    // Fresh-collection replay (main routes the bundle's reuse mode to
+    // the prior alerts.json instead, exactly like the live reuse
+    // branch). The recorded per-route outcomes run through the SAME
+    // collectDdotBulletins machinery, so BusTime error envelopes,
+    // the no-bulletins filter and failure states reproduce verbatim.
+    const d = REPLAY.ddot;
+    if (!d.configured) {
+      return {
+        alerts: [],
+        calls: 0,
+        state: { ...base, ok: false, status: 'error', alerts: 0, reason: 'DDOT_BUSTIME_KEY secret not configured', configured: false },
+      };
+    }
+    const collected = await collectDdotBulletins((rt) => {
+      const e = (d.bulletins && d.bulletins.routes) || {};
+      const rec = e[rt];
+      if (!rec) throw new Error(`replay bundle missing bulletin payload for route ${rt}`);
+      if (!rec.ok) throw new Error(rec.error);
+      return replayPayloadJson(rec.file);
+    });
+    return { ...ddotCollectedState(base, collected, nowIso), calls: collected.calls };
+  }
   try {
     if (!DDOT_KEY) {
       return {
@@ -969,14 +1123,46 @@ function ddotBulletinsReusable(prior, { keyPresent, nowMs }) {
 /* ---------------- main ---------------- */
 
 async function main() {
-  const nowIso = new Date().toISOString();
+  // Replay anchor: in replay mode the run's "now" is the bundle's
+  // collected_at — the instant the payloads were actually fetched —
+  // so generated_at and every source timestamp stay truthful about
+  // the data's age, never about the publish instant.
+  const nowIso = REPLAY ? REPLAY.collected_at : new Date().toISOString();
   const alertsPath = path.join(OUT_DIR, 'alerts.json');
-  const reuse = ddotBulletinsReusable(readExisting(alertsPath), {
-    keyPresent: Boolean(DDOT_KEY),
-    nowMs: Date.now(),
-  });
+  let reuse;
+  if (REPLAY) {
+    // The collect run already made the sub-cadence decision (it is
+    // the only side that can act on it — it holds the key): a 'fresh'
+    // or 'not-configured' bundle rebuilds alerts from its payloads
+    // via pollDdotAlerts; a 'reuse' bundle carries the previously
+    // published alerts.json forward verbatim, the same body the live
+    // reuse branch would emit.
+    const mode = REPLAY.ddot.configured ? (REPLAY.ddot.bulletins || {}).mode : 'not-configured';
+    if (mode === 'reuse') {
+      const prior = readExisting(alertsPath);
+      if (!prior) {
+        throw new Error('replay bundle requests bulletin reuse but OUT_DIR has no prior alerts.json');
+      }
+      reuse = {
+        reuse: true,
+        body: {
+          generated_at: prior.generated_at,
+          count: prior.count,
+          alerts: prior.alerts,
+          sources: prior.sources,
+        },
+      };
+    } else {
+      reuse = { reuse: false };
+    }
+  } else {
+    reuse = ddotBulletinsReusable(readExisting(alertsPath), {
+      keyPresent: Boolean(DDOT_KEY),
+      nowMs: Date.now(),
+    });
+  }
 
-  const smartActive = Boolean(SWIFTLY_KEY);
+  const smartActive = REPLAY ? Boolean(REPLAY.smart.active) : Boolean(SWIFTLY_KEY);
   const [ddot, qline, ddotAlerts, smart, smartTu] = await Promise.all([
     pollDdot(nowIso),
     pollQline(nowIso),
@@ -1102,11 +1288,138 @@ async function main() {
   );
 }
 
-export { collectDdotBulletins, ddotBulletinsReusable, gtfsRtFeedShape, pollSmart, pollSmartTripUpdates, mapGtfsRtTripUpdates, trimSmartTuTrip, buildSmartTuDerivative, writeSmartTuDerivative, main };
+/* ---------------- collect mode (Project 30) ----------------
+ * Perform ONLY the source fetches and record the raw payloads and
+ * their outcomes as a feed-raw-bundle/v1 in COLLECT_DIR. No
+ * transforms, no feed outputs — the replay side runs the identical
+ * poll legs over these recordings. Source errors are data (recorded
+ * verbatim, including the HTTP-error strings the live helpers
+ * produce), never a failed run, exactly as the live legs treat them.
+ * The fetch cadence here REPLACES the live build's fetches (the
+ * publisher makes zero source calls), including the bulletin
+ * sub-cadence: fresh bulletin collection at most once per
+ * BULLETIN_REUSE_MS, decided against the previous bundle's manifest
+ * (FEED_PREV_BUNDLE_DIR) — the same rule the live reuse branch
+ * applies to the previously published alerts.json, including the
+ * key-presence-transition invalidation. */
+
+function bundleWrite(rel, buf) {
+  const p = path.join(COLLECT_DIR, rel);
+  fs.mkdirSync(path.dirname(p), { recursive: true });
+  fs.writeFileSync(p, buf);
+  return { file: rel, bytes: buf.length, sha256: createHash('sha256').update(buf).digest('hex') };
+}
+
+function readPrevBundle() {
+  const dir = process.env.FEED_PREV_BUNDLE_DIR || '';
+  if (!dir) return null;
+  try {
+    const m = JSON.parse(fs.readFileSync(path.join(dir, 'bundle.json'), 'utf8'));
+    return m && m.kind === 'feed-raw-bundle/v1' ? m : null;
+  } catch {
+    return null;
+  }
+}
+
+async function collectMain() {
+  const collectedAt = new Date().toISOString();
+  fs.mkdirSync(COLLECT_DIR, { recursive: true });
+  const ddotConfigured = Boolean(DDOT_KEY);
+  const smartActive = Boolean(SWIFTLY_KEY);
+
+  // DDOT vehicles — same batching and settled semantics as pollDdot.
+  const vehicleBatches = [];
+  if (ddotConfigured) {
+    const batches = [];
+    for (let i = 0; i < DDOT_ROUTES.length; i += 10) batches.push(DDOT_ROUTES.slice(i, i + 10));
+    const settled = await Promise.allSettled(batches.map((group) => {
+      const url = `https://myddotbus.com/bustime/api/v3/getvehicles?key=${encodeURIComponent(DDOT_KEY)}&rt=${encodeURIComponent(group.join(','))}&format=json`;
+      return fetchRawJson(url);
+    }));
+    settled.forEach((s, i) => {
+      if (s.status === 'fulfilled') {
+        vehicleBatches.push({ routes: batches[i], ok: true, ...bundleWrite(`ddot-vehicles-${i}.json`, s.value) });
+      } else {
+        vehicleBatches.push({ routes: batches[i], ok: false, error: s.reason.message });
+      }
+    });
+  }
+
+  // DDOT bulletins — fresh at most once per BULLETIN_REUSE_MS.
+  let bulletins;
+  if (!ddotConfigured) {
+    bulletins = { mode: 'not-configured', fetched_at: null };
+  } else {
+    const prev = readPrevBundle();
+    const prevFetchedAt = prev && prev.ddot && prev.ddot.bulletins ? prev.ddot.bulletins.fetched_at : null;
+    const prevConfigured = prev && prev.ddot ? prev.ddot.configured : null;
+    const due = !prev || prevConfigured !== true || !prevFetchedAt
+      || (Date.parse(collectedAt) - Date.parse(prevFetchedAt) >= BULLETIN_REUSE_MS);
+    if (!due) {
+      bulletins = { mode: 'reuse', fetched_at: prevFetchedAt };
+    } else {
+      const routes = {};
+      const recordingFetch = async (rt) => {
+        try {
+          const buf = await fetchRawJson(buildDdotBulletinsUrl(DDOT_KEY, rt), DDOT_BULLETIN_TIMEOUT_MS);
+          routes[rt] = { ok: true, ...bundleWrite(`ddot-bulletins/${rt}.json`, buf) };
+          return JSON.parse(buf.toString('utf8'));
+        } catch (e) {
+          routes[rt] = { ok: false, error: e.message };
+          throw e;
+        }
+      };
+      await collectDdotBulletins(recordingFetch);
+      bulletins = { mode: 'fresh', fetched_at: collectedAt, routes };
+    }
+  }
+
+  // QLINE — public GTFS-RT protobuf.
+  let qline;
+  try {
+    const buf = await fetchRawBuffer(QLINE_VP_URL);
+    qline = { ok: true, ...bundleWrite('qline-vp.pb', buf) };
+  } catch (e) {
+    qline = { ok: false, error: e.message };
+  }
+
+  // SMART — gated on the key exactly like the build legs: an absent
+  // key performs zero network calls and records the dormant state.
+  let smart = { active: false };
+  if (smartActive) {
+    const one = async (url, rel) => {
+      try {
+        const buf = await fetchRawBufferSwiftly(url, SWIFTLY_KEY);
+        return { ok: true, ...bundleWrite(rel, buf) };
+      } catch (e) {
+        return { ok: false, error: e.message };
+      }
+    };
+    smart = { active: true, vp: await one(SMART_VP_URL, 'smart-vp.pb'), tu: await one(SMART_TU_URL, 'smart-tu.pb') };
+  }
+
+  const manifest = {
+    kind: 'feed-raw-bundle/v1',
+    collected_at: collectedAt,
+    ddot: { configured: ddotConfigured, vehicle_batches: vehicleBatches, bulletins },
+    qline,
+    smart,
+  };
+  // Manifest LAST: its presence marks a complete bundle.
+  fs.writeFileSync(path.join(COLLECT_DIR, 'bundle.json'), JSON.stringify(manifest, null, 2) + '\n');
+  const okCount = vehicleBatches.filter((b) => b.ok).length;
+  console.log(
+    `collect: ddot_configured=${ddotConfigured} batches_ok=${okCount}/${vehicleBatches.length} ` +
+    `bulletins=${bulletins.mode} qline_ok=${qline.ok} smart_active=${smart.active}`
+  );
+}
+
+export { collectDdotBulletins, ddotBulletinsReusable, gtfsRtFeedShape, pollSmart, pollSmartTripUpdates, mapGtfsRtTripUpdates, trimSmartTuTrip, buildSmartTuDerivative, writeSmartTuDerivative, main, collectMain };
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  main().catch((e) => {
-    console.error('build-feed failed:', e);
+  const run = COLLECT_DIR ? collectMain : main;
+  run().catch((e) => {
+    console.error(COLLECT_DIR ? 'collect-feed failed:' : 'build-feed failed:', e);
     process.exit(1);
   });
 }
