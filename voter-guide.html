@@ -518,21 +518,39 @@ html.js .reveal.visible { opacity: 1; transform: none; }
       <div class="hero-actions">
         <button class="btn btn-primary" id="printBtn">Print my checklist</button>
       </div>
-      <!-- WS-B vote-trip funnel module (added 2026-10-19): additive — delete this whole block to remove without trace. The guide stays ad-free; this is a rider tool, not an ad. -->
+      <!-- WS-B vote-trip funnel module (added 2026-10-19; upgraded 2026-10-19, P0 tranche T1: center links deep-link into the planner with the destination composed): additive — delete this whole block to remove without trace. The guide stays ad-free; this is a rider tool, not an ad. -->
       <style>
         .vote-trip { background: rgba(232,93,26,0.06); border: 1px solid rgba(232,93,26,0.35); border-radius: var(--radius); padding: 20px 22px; margin-top: 24px; }
         .vote-trip h3 { font-family: 'Space Grotesk', sans-serif; font-size: var(--step-1); margin: 0 0 10px; }
         .vote-trip p { margin: 0 0 12px; }
         .vote-trip .fine { margin: 14px 0 0; }
+        .vote-trip .sites-head { margin: 18px 0 0; font-weight: 600; }
+        .vote-trip .vote-sites { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+        .vote-trip .vote-sites a { display: inline-block; padding: 6px 12px; border: 1px solid rgba(232,93,26,0.45); border-radius: 999px; color: inherit; text-decoration: none; }
+        .vote-trip .vote-sites a:hover { background: rgba(232,93,26,0.12); }
       </style>
       <div class="vote-trip" id="plan-your-trip">
         <p class="kicker">Getting there</p>
         <h3>Plan your trip to <span class="accent">vote.</span></h3>
-        <p>Early voting starts Saturday, October 24, and Election Day is Tuesday, November 3. If you ride transit, Live Transit Detroit — the Academy's live map and trip planner for DDOT, QLINE, and SMART — can plan the trip: set where you're starting, set your early-voting site or polling place as the destination, and it works out the ride.</p>
+        <p>Early voting starts Saturday, October 24, and Election Day is Tuesday, November 3. If you ride transit, Live Transit Detroit — the Academy's live map and trip planner for DDOT, QLINE, and SMART — can plan the trip. Pick a Detroit early vote center below and the planner opens with that center set as your destination; add where you're starting and it works out the ride. Any Detroit voter can vote early at any center.</p>
         <div class="hero-actions" style="margin-top:16px;">
-          <a class="btn btn-primary" href="https://www.detroitautomationacademy.com/live-transit.html">Plan your trip to vote</a>
+          <a class="btn btn-primary" href="https://www.detroitautomationacademy.com/live-transit.html?plan">Plan your trip to vote</a>
         </div>
-        <p class="fine">Not sure where you vote? Your polling place and your sample ballot are listed at the Michigan Secretary of State's voter information center — the same official check this guide recommends before you go.</p>
+        <p class="sites-head">Detroit early vote centers — plan your ride there:</p>
+        <ul class="vote-sites">
+          <li><a href="https://www.detroitautomationacademy.com/live-transit.html?plan&to=42.368538,-83.077376&label=Department+of+Elections">Department of Elections</a></li>
+          <li><a href="https://www.detroitautomationacademy.com/live-transit.html?plan&to=42.328935,-83.044505&label=City+Clerk%27s+Office">City Clerk's Office</a></li>
+          <li><a href="https://www.detroitautomationacademy.com/live-transit.html?plan&to=42.419264,-83.221564&label=WCCCD+Northwest+Campus">WCCCD Northwest Campus</a></li>
+          <li><a href="https://www.detroitautomationacademy.com/live-transit.html?plan&to=42.422231,-83.170287&label=Northwest+Activities+Center">Northwest Activities Center</a></li>
+          <li><a href="https://www.detroitautomationacademy.com/live-transit.html?plan">Farwell Recreation Center</a></li>
+          <li><a href="https://www.detroitautomationacademy.com/live-transit.html?plan&to=42.394147,-82.985033&label=WCCCD+Eastern+Campus">WCCCD Eastern Campus</a></li>
+          <li><a href="https://www.detroitautomationacademy.com/live-transit.html?plan&to=42.315627,-83.092430&label=Clark+Park">Clark Park</a></li>
+          <li><a href="https://www.detroitautomationacademy.com/live-transit.html?plan&to=42.395201,-83.163917&label=Adams+Butzel+Recreation+Complex">Adams Butzel Recreation Complex</a></li>
+          <li><a href="https://www.detroitautomationacademy.com/live-transit.html?plan&to=42.357474,-83.002487&label=Butzel+Family+Center">Butzel Family Center</a></li>
+          <li><a href="https://www.detroitautomationacademy.com/live-transit.html?plan&to=42.273491,-83.157999&label=Kemeny+Recreation+Center">Kemeny Recreation Center</a></li>
+          <li><a href="https://www.detroitautomationacademy.com/live-transit.html?plan&to=42.440079,-82.960866&label=Heilmann+Recreation+Center">Heilmann Recreation Center</a></li>
+        </ul>
+        <p class="fine">Early vote centers and addresses: City of Detroit Department of Elections (official list). Not sure where you vote? Your polling place and your sample ballot are listed at the Michigan Secretary of State's voter information center — the same official check this guide recommends before you go.</p>
       </div>
       <!-- /WS-B vote-trip funnel module -->
     </div>
