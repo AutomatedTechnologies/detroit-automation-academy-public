@@ -1,8 +1,14 @@
 /* raptor.js — client-side RAPTOR trip planner for Live Transit.
  *
- * Data: ddot-timetable-<version>.json (built by build-timetable.py from
- * DDOT GTFS S1000182). Lazily imported only when the rider opens trip
- * planning; the map's first load is untouched.
+ * Data: planner-timetable-<ddot>-<smart>.json — the DDOT timetable
+ * (built by build-timetable.py from DDOT GTFS) merged with SMART
+ * scheduled service built from SMART's own published GTFS (U7 Phase B,
+ * 2026-10-20; provenance in the asset's meta.feeds). Lazily imported
+ * only when the rider opens trip planning; the map's first load is
+ * untouched. Services carry a feed tag (0 = DDOT, 1 = SMART) and the
+ * service resolution below is per-feed: a single-feed timetable (the
+ * DDOT-only asset the Departure Board loads) resolves exactly as it
+ * did before the merge — every service is feed 0 there.
  *
  * Honesty: Phase 1 runs on scheduled times only. Phase 2b-i adds the live
  * adjusted timetable: per poll, matched vehicles produce per-trip delays
@@ -87,11 +93,20 @@ function fmtYMD(d) {
   return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate() + '';
 }
 
-function serviceFor(tt, ymd, dow) {
+function serviceFor(tt, ymd, dow, feed) {
   var mi = (dow + 6) % 7; // mask is Mon..Sun
+  // Per-feed resolution (U7 Phase B): services carry a feed tag
+  // (0 = DDOT, 1 = SMART); an untagged service is feed 0, so the
+  // legacy single-feed timetable resolves identically. The default
+  // feed is 0 — the DDOT service — which is what the three-argument
+  // callers (stop cards, the delay matcher, the Departure Board)
+  // have always meant.
+  var effFeed = (feed === undefined || feed === null) ? 0 : feed;
+  function feedOf(s) { return s.feed || 0; }
   var best = -1, i;
   for (i = 0; i < tt.services.length; i++) {
     var s = tt.services[i];
+    if (feedOf(s) !== effFeed) continue;
     if (ymd >= s.start && ymd <= s.end && s.mask[mi]) best = i;
   }
   // GTFS calendar_dates exceptions: the builder stores the raw
@@ -108,7 +123,7 @@ function serviceFor(tt, ymd, dow) {
     if (e.date === ymd) {
       var si = -1;
       for (var j = 0; j < tt.services.length; j++) {
-        if (tt.services[j].id === e.service) { si = j; break; }
+        if (tt.services[j].id === e.service && feedOf(tt.services[j]) === effFeed) { si = j; break; }
       }
       if (si < 0) continue;
       if (e.added === 1) exAdded = si;
@@ -119,6 +134,7 @@ function serviceFor(tt, ymd, dow) {
     best = -1;
     for (i = 0; i < tt.services.length; i++) {
       var s2 = tt.services[i];
+      if (feedOf(s2) !== effFeed) continue;
       if (!exRemoved[i] && ymd >= s2.start && ymd <= s2.end && s2.mask[mi]) best = i;
     }
   }
@@ -203,10 +219,23 @@ function planImpl(tt, fromSeeds, toIdx, when) {
   var nS = tt.nStops;
   var ymd = fmtYMD(when), dow = when.getDay();
   var pd = new Date(when.getTime() - 86400000);
-  var svc = serviceFor(tt, ymd, dow);
-  var prevSvc = serviceFor(tt, fmtYMD(pd), pd.getDay());
+  // Per-feed service resolution (U7 Phase B): each feed's calendar
+  // decides its own services; a trip is judged against its own feed's
+  // pair. On a single-feed timetable this is exactly the legacy pair.
+  var feeds = [];
+  tt.services.forEach(function (s) {
+    var f = s.feed || 0;
+    if (feeds.indexOf(f) < 0) feeds.push(f);
+  });
+  var svcByFeed = {}, prevByFeed = {}, anySvc = false;
+  feeds.forEach(function (f) {
+    svcByFeed[f] = serviceFor(tt, ymd, dow, f);
+    prevByFeed[f] = serviceFor(tt, fmtYMD(pd), pd.getDay(), f);
+    if (svcByFeed[f] >= 0 || prevByFeed[f] >= 0) anySvc = true;
+  });
+  var svc = (svcByFeed[0] === undefined) ? -1 : svcByFeed[0];
   var nowSec = when.getHours() * 3600 + when.getMinutes() * 60 + when.getSeconds();
-  if (svc < 0 && prevSvc < 0) {
+  if (!anySvc) {
     return { journeys: [], meta: { reason: 'no-service', when: when } };
   }
   if (!seeds.length) {
@@ -284,8 +313,9 @@ function planImpl(tt, fromSeeds, toIdx, when) {
           // into yesterday and can never be caught — it does not run
           // today, and must not be planned at face value.
           var shift = 0;
-          if (t.s !== svc) {
-            if (t.s !== prevSvc) continue;
+          var tFeed = (tt.services[t.s] && tt.services[t.s].feed) || 0;
+          if (t.s !== svcByFeed[tFeed]) {
+            if (t.s !== prevByFeed[tFeed]) continue;
             shift = -86400;
           }
           if (depA(t, pos) + shift < prevArr[p]) continue; // cannot catch
@@ -297,6 +327,19 @@ function planImpl(tt, fromSeeds, toIdx, when) {
               arr[s] = aA;
               ali[s] = { trip: t, board: p, boardPos: pos, alightPos: j, shift: shift };
               improved.add(s);
+            } else if (aA === arr[s] && ali[s] && ali[s].trip === t && tFeed !== 0 &&
+                       prevArr[p] < prevArr[ali[s].board]) {
+              // Same bus, same arrival, but this boarding point was
+              // reached with less travel: keep the earlier boarding.
+              // Scoped to non-legacy feeds (U7 Phase B): SMART
+              // itineraries are new in this build and have no legacy
+              // reconstruction to preserve, while feed-0 (DDOT)
+              // reconstruction is byte-frozen by the Phase B control —
+              // its walk-first tie artifact is part of the shipped
+              // behavior the control pins. (Effect here: the 851
+              // boards at Woodward & Warren rather than one stop down
+              // Woodward after a walk to the same bus.)
+              ali[s] = { trip: t, board: p, boardPos: pos, alightPos: j, shift: shift };
             }
           }
         }
@@ -325,10 +368,20 @@ function planImpl(tt, fromSeeds, toIdx, when) {
     journeys.push(summarize(tt, legs, nowSec, arrR[kk][toIdx]));
     if (journeys.length >= 3) break;
   }
+  // meta.service names the day type for the results header: feed 0's
+  // resolved service when it has one, else the first resolved feed's
+  // (both feeds use the same day-type ids — 1 Sunday, 2 Saturday,
+  // 3 Weekday — so the label stays truthful on a SMART-only day).
+  var metaSvc = svc;
+  if (metaSvc < 0) {
+    for (var fi = 0; fi < feeds.length; fi++) {
+      if (svcByFeed[feeds[fi]] >= 0) { metaSvc = svcByFeed[feeds[fi]]; break; }
+    }
+  }
   return {
     journeys: journeys,
     meta: {
-      when: when, service: svc >= 0 ? tt.services[svc].id : null,
+      when: when, service: metaSvc >= 0 ? tt.services[metaSvc].id : null,
       feedVersion: tt.meta.feed_version, nowSec: nowSec
     }
   };
@@ -359,6 +412,7 @@ function buildJourney(tt, k, target, seedOf, alight, walkPar, liveCtx) {
       if (a.shift) { bSec += a.shift; aSec += a.shift; }
       legs.unshift({
         type: 'bus', routeId: r.id, routeName: r.name, color: r.color,
+        agency: (r && r.ag) || null,
         board: a.board, alight: cur,
         boardSec: bSec, alightSec: aSec,
         headsign: t.h || '', interp: interp,
