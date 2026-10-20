@@ -32,6 +32,15 @@ xml-stylesheet processing instruction, and gives every item a
 and its section hub. Feed readers receive the raw RSS XML as before; the
 stylesheet only changes how the feed renders when opened in a browser.
 
+Template repair 2026-10-20 (DAA Estate Uplift U6, R5): render_html's
+head predated the 2026-10-18 fonts self-host deploy — it linked Google
+Fonts and styles.css?v=20261010-2130. The head now matches the served
+estate standard: no Google Fonts references (the self-hosted @font-face
+rules live in styles.css) and styles.css?v=20261018-1404. Note: the
+first post-repair regeneration also refreshes item descriptions in
+feed.xml and the /feed/ cards to the pages' current (U3-conformed)
+meta descriptions; the item set, order, and dates are unchanged.
+
 Source defects found 2026-10-16 and corrected the same day (UAT Pass 1a):
   * sitemap.xml listed /live-transit-detroit/shut-down-by-the-meter/ but no
     such page exists in the repository (the piece lives under /signal/).
@@ -329,10 +338,6 @@ def render_html(items: list[dict]) -> str:
         "note \u2014 as it publishes. Subscribe in your feed reader, or read "
         "the latest below."
     )
-    fonts = (
-        "https://fonts.googleapis.com/css2?family=Space+Grotesk:"
-        "wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
-    )
     feed_title = "Detroit Automation Academy \u2014 RSS feed"
     foot = "every edition and installment, as it publishes."
     legal = (
@@ -347,10 +352,7 @@ def render_html(items: list[dict]) -> str:
 <title>RSS feed — Detroit Automation Academy</title>
 <meta name="description" content="{meta_desc}">
 <link rel="icon" type="image/webp" href="/assets/logo.webp">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="{fonts}" rel="stylesheet">
-<link rel="stylesheet" href="/styles.css?v=20261010-2130">
+<link rel="stylesheet" href="/styles.css?v=20261018-1404">
 <link rel="canonical" href="{BASE}/feed/">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta property="og:type" content="website">
