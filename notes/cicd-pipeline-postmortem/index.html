@@ -11,6 +11,7 @@
 <meta property="og:type" content="article">
 <link rel="icon" type="image/webp" href="../../assets/logo.webp">
 <link rel="stylesheet" href="../../styles.css?v=20261018-1404">
+<style>h1{font-size:var(--step-2);letter-spacing:-0.01em;margin:0.4em 0 0.6em}</style>
 <link rel="canonical" href="https://www.detroitautomationacademy.com/notes/cicd-pipeline-postmortem/">
 <script type="application/ld+json">
 {
@@ -39,7 +40,7 @@
   <article class="section">
     <div class="wrap">
       <p class="kicker"><a href="../">Notes</a> · DevOps · February 2026</p>
-      <h2>Fixing Our CI/CD Pipeline: <span class="accent">Submodules, Empty Commits, and the QA Gate</span></h2>
+      <h1>Fixing Our CI/CD Pipeline: <span class="accent">Submodules, Empty Commits, and the QA Gate</span></h1>
       <p class="fine">Published February 28, 2026 · Detroit Automation Academy · Historical engineering note — migrated from the retired blog.</p>
       <div class="prose">
         <p>Our site pipeline had a recurring problem: deployments that worked locally failed silently in GitHub Actions, or succeeded in Actions but produced a broken site. Here's the root cause analysis and what we changed.</p>
