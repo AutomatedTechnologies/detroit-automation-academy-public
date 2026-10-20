@@ -101,6 +101,11 @@ jobs:
             cp -r find deployment/ || echo "find copy failed"
           fi
 
+          # Copy Departure Board (Project 29 successor — watch-parity board)
+          if [ -d "board" ]; then
+            cp -r board deployment/ || echo "board copy failed"
+          fi
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
