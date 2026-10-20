@@ -5023,6 +5023,80 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     renderTripFields();
     updateTripMarkers();
   }
+
+  // --- Deep-link trip prefill (P0 tranche T1, 2026-10-19) ----------------
+  // Contract (delivery note: t1-planner-prefill-delivery-note-2026-10-19):
+  //   live-transit.html?plan&to=<lat>,<lon>&label=<text>
+  //     Opens the trip planner with the destination composed. Planner
+  //     destinations are stops, so the stop nearest the given coordinates
+  //     becomes the destination; planArgs applies its usual coverage
+  //     mapping at plan time. The label, when given, is what the
+  //     destination field shows (e.g. an early vote center's name).
+  //   &from=<lat>,<lon>  optional origin as a virtual location (the
+  //     "Your location" model: nearest stops within 400 m seed the plan)
+  //   &fromlabel=<text>  optional origin label (default "Your location")
+  // Malformed or unusable params are ignored piece by piece; with no
+  // usable param the load is the normal one. Without ?plan this block
+  // never runs and the page behaves exactly as before.
+  function planParam(name) {
+    var m = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)').exec(location.search);
+    if (!m || m[2] == null) return null;
+    try { return decodeURIComponent(m[2].replace(/\+/g, ' ')); } catch (e) { return null; }
+  }
+  function parsePlanLatLon(v) {
+    if (!v) return null;
+    var p = String(v).split(',');
+    if (p.length !== 2) return null;
+    var lat = parseFloat(p[0]), lon = parseFloat(p[1]);
+    if (!isFinite(lat) || !isFinite(lon)) return null;
+    if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
+    return [lat, lon];
+  }
+  function planLabel(v) {
+    if (!v) return null;
+    var t = String(v).replace(/[\x00-\x1f\x7f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+    return t || null;
+  }
+  function nearestStopIdx(x, z) {
+    var best = -1, bd = Infinity;
+    for (var i = 0; i < stopData.length; i++) {
+      var st = stopData[i];
+      if (!st || st.x == null || st.z == null) continue;
+      var d = Math.hypot(st.x - x, st.z - z);
+      if (d < bd) { bd = d; best = i; }
+    }
+    return best;
+  }
+  function applyPlanDeepLink() {
+    if (!/(^|[?&])plan(&|=|#|$)/.test(location.search)) return;
+    if (!stopData || !proj) return;
+    var toLL = parsePlanLatLon(planParam('to'));
+    var fromLL = parsePlanLatLon(planParam('from'));
+    var dest = null;
+    if (toLL) {
+      var tp = project(toLL[0], toLL[1]);
+      var ti = nearestStopIdx(tp[0], tp[1]);
+      if (ti >= 0) {
+        dest = { kind: 'stop', idx: ti };
+        var lb = planLabel(planParam('label'));
+        if (lb) dest.label = lb;
+      }
+    }
+    var fromObj = null;
+    if (fromLL) {
+      var fp = project(fromLL[0], fromLL[1]);
+      fromObj = { kind: 'loc', x: fp[0], z: fp[1] };
+      var fl = planLabel(planParam('fromlabel'));
+      if (fl) fromObj.label = fl;
+    }
+    if (!dest && !fromObj) return;
+    setTripMode(true);
+    if (fromObj) setTripFrom(fromObj);
+    if (dest) setTripTo(dest);
+    renderTripFields();
+    updateTripMarkers();
+    maybeReplan();
+  }
   function updateTripMarkers() {
     if (tripFrom) {
       var p = tripFrom.kind === 'stop' ? stopData[tripFrom.idx] : tripFrom;
@@ -5037,9 +5111,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
   function renderTripFields() {
     $('trip-from-label').textContent = tripFrom
-      ? (tripFrom.kind === 'loc' ? 'Your location' : tripStopName(tripFrom.idx)) : 'From';
+      ? (tripFrom.kind === 'loc' ? (tripFrom.label || 'Your location') : tripStopName(tripFrom.idx)) : 'From';
     $('trip-from-label').classList.toggle('placeholder', !tripFrom);
-    $('trip-to-label').textContent = tripTo ? tripStopName(tripTo.idx) : 'Where to?';
+    $('trip-to-label').textContent = tripTo ? (tripTo.label || tripStopName(tripTo.idx)) : 'Where to?';
     $('trip-to-label').classList.toggle('placeholder', !tripTo);
     $('trip-now-btn').setAttribute('aria-pressed', tripLeaveMode === 'now' ? 'true' : 'false');
     if (tripLeaveMode === 'now') $('trip-time-input').value = '';
@@ -11544,6 +11618,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       // Stops are rebuilt from stopData by rebuildStops() (per-route colors,
       // paper-white hubs) whenever filters change; see the stops section.
       stopData = data.stops || [];
+      try { applyPlanDeepLink(); } catch (e) { errLog('planner', 'deep-link prefill failed: ' + ((e && e.message) || e)); }
       if (typeof window.__setRideData === 'function') {
         window.__setRideData(data.routes || [], stopData);
       }
