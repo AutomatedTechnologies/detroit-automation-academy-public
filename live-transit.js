@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261019-1228';
+  var STAMP = '20261020-1647';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -4128,7 +4128,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       : import('./raptor.js?v=' + STAMP).then(function (m) { tripRaptor = m.default || m; return tripRaptor; });
     loadR.then(function (R) {
       if (tripTT || !R || !R.loadTimetable) return;
-      return R.loadTimetable('ddot-timetable-S1000182.json?v=' + STAMP).then(function (tt) { tripTT = tt; });
+      return R.loadTimetable('planner-timetable-S1000182-S1000147.json?v=' + STAMP).then(function (tt) { tripTT = tt; });
     }).catch(function () { /* engine unavailable: times degrade to the named notes (S4) */ })
       .then(function () { rideEngineLoading = false; if (rideWidget) rideWidget.refresh(); if (selectedStop) renderStopLive(); });
   }
@@ -4596,9 +4596,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // else scheduled arr — shifted by the vehicle's measured delay, the
   // same formula rideTimesFor uses, so a bus carries one consistent ETA
   // across surfaces); every other trip serving the stop today is a
-  // scheduled row. The timetable covers the DDOT segment only (S4):
-  // SMART, QLINE, and People Mover stops get the named boundary, never
-  // a fabricated time. Exception (deployed 2026-10-17): SMART
+  // scheduled row. Since U7 Phase B the planner timetable also
+  // carries SMART scheduled trips; this card's contract is unchanged
+  // (DDOT departures only), so stops whose patterns are all SMART are
+  // fenced to the same named boundary they had when they sat beyond
+  // the timetable's stop count (S4): SMART, QLINE, and People Mover
+  // stops get the named boundary, never a fabricated time. Exception (deployed 2026-10-17): SMART
   // stops render live times from the Swiftly trip-updates payload when
   // a fresh one covers them — see the 'na' branch in renderStopArrivals
   // and the SMART TRIP UPDATES section. That payload is display-only
@@ -4615,6 +4618,19 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (svc < 0 && prevSvc < 0) { out.state = 'nosvc'; return out; }
     var nowSec = dp.sec;
     var pats = tripTT.stopPat[idx] || [];
+    // U7 Phase B fence: a stop served only by SMART patterns is out
+    // of this function's coverage — return 'na' so the card renders
+    // its SMART live-times rows / boundary note exactly as before the
+    // merge, instead of an empty 'ready'. (Legacy timetables carry no
+    // agency tags; an untagged route counts as DDOT coverage.)
+    if (pats.length && tripTT.routes) {
+      var anyDdot = false;
+      for (var fq = 0; fq < pats.length; fq++) {
+        var frec = tripTT.routes[tripTT.patterns[pats[fq][0]].route];
+        if (!frec || frec.ag !== 'SMART') { anyDdot = true; break; }
+      }
+      if (!anyDdot) { out.state = 'na'; return out; }
+    }
     var rows = [];
     for (var q = 0; q < pats.length; q++) {
       var pat = tripTT.patterns[pats[q][0]];
@@ -4873,7 +4889,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
   // --- trip planning (RAPTOR, scheduled times) -------------------------------
   // Phase 1: client-side RAPTOR over the compact timetable
-  // (ddot-timetable-<feed>.json, built by build-timetable.py from DDOT GTFS).
+  // (planner-timetable-<ddot>-<smart>.json: the DDOT timetable built by
+  // build-timetable.py from DDOT GTFS, merged with SMART scheduled
+  // service from SMART's own published GTFS — U7 Phase B).
   // Lazily imported only when the rider opens the planner; origin and
   // destination never leave the device. Every result is labeled scheduled.
   //
@@ -5281,7 +5299,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     host.innerHTML = '';
     var none = document.createElement('p');
     none.className = 'trip-note';
-    none.textContent = 'One of these stops is not on a DDOT route, and no DDOT stop is within a short walk of it. The scheduled planner covers DDOT routes; SMART and QLINE stops share the map and the stop search.';
+    none.textContent = 'One of these stops is not on a DDOT or SMART route, and no covered stop is within a short walk of it. The scheduled planner covers DDOT and SMART scheduled routes; QLINE stops share the map and the stop search.';
     host.appendChild(none);
     announceSr(none.textContent);
   }
@@ -5351,7 +5369,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var go = function (R) {
       tripRaptor = R;
       var loaded = tripTT ? Promise.resolve(tripTT)
-        : R.loadTimetable('ddot-timetable-S1000182.json?v=' + STAMP).then(function (tt) { tripTT = tt; return tt; });
+        : R.loadTimetable('planner-timetable-S1000182-S1000147.json?v=' + STAMP).then(function (tt) { tripTT = tt; return tt; });
       var when = tripWhen();
       var oF = tripFrom, oT = tripTo; // capture; ignore if the user moved on
       return loaded.then(function (tt) {
@@ -5693,9 +5711,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var none = document.createElement('p');
       none.className = 'trip-note';
       none.textContent = res.meta.reason === 'no-service'
-        ? 'No scheduled DDOT service at this time.'
+        ? 'No scheduled service at this time.'
         : res.meta.reason === 'no-origin'
-          ? 'No DDOT stop is within a short walk of the start point. The scheduled planner covers DDOT routes.'
+          ? 'No DDOT or SMART stop is within a short walk of the start point. The scheduled planner covers DDOT and SMART scheduled routes.'
           : 'No scheduled trip found between these stops right now. Try a different pair or time.';
       host.appendChild(none);
       announceSr(none.textContent);
@@ -5761,7 +5779,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         dot.style.background = l.color || '#F5F2EA';
         chip.appendChild(dot);
         var lbl = document.createElement('b');
-        lbl.textContent = routeLabel(l.routeId);
+        lbl.textContent = l.agency === 'SMART' ? 'SMART ' + l.routeId : routeLabel(l.routeId);
         chip.appendChild(lbl);
       } else {
         var w = document.createElement('b');
@@ -5864,7 +5882,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (l.type === 'bus') {
         dot.style.background = l.color || '#F5F2EA';
         var t = document.createElement('b');
-        t.textContent = routeLabel(l.routeId) + (l.headsign ? ' · ' + l.headsign : '');
+        t.textContent = (l.agency === 'SMART' ? 'SMART ' + l.routeId : routeLabel(l.routeId)) + (l.headsign ? ' · ' + l.headsign : '');
         body.appendChild(t);
         var s = document.createElement('span');
         s.textContent = tripStopName(l.board) + ' → ' + tripStopName(l.alight);
