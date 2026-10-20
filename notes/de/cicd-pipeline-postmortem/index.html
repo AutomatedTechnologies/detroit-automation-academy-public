@@ -7,6 +7,7 @@
 <meta name="description" content="Eine Analyse wiederkehrender Bereitstellungsfehler — Hugo-Builds mit fehlendem Inhalt, nicht initialisierte Theme-Submodule, und das automatisierte QA-Gate, das sie abgefangen hat.">
 <link rel="icon" type="image/webp" href="../../../assets/logo.webp">
 <link rel="stylesheet" href="../../../styles.css?v=20261018-1404">
+<style>h1{font-size:var(--step-2);letter-spacing:-0.01em;margin:0.4em 0 0.6em}</style>
 <link rel="canonical" href="https://www.detroitautomationacademy.com/notes/de/cicd-pipeline-postmortem/">
 </head>
 <body>
@@ -19,7 +20,7 @@
   <article class="section">
     <div class="wrap">
       <p class="kicker"><a href="../">Notizen</a> · DevOps · Februar 2026</p>
-      <h2>Fehlerbehebung in unserer CI/CD-Pipeline: <span class="accent">Submodule, leere Commits und das QA-Gate</span></h2>
+      <h1>Fehlerbehebung in unserer CI/CD-Pipeline: <span class="accent">Submodule, leere Commits und das QA-Gate</span></h1>
       <p class="fine">Veröffentlicht 28. Februar 2026 · Detroit Automation Academy · Historische technische Notiz — aus dem stillgelegten Blog migriert.</p>
       <div class="prose">
         <p>Unsere Website-Pipeline hatte ein wiederkehrendes Problem: Bereitstellungen, die lokal funktionierten, schlugen in GitHub Actions lautlos fehl oder waren in Actions erfolgreich, produzierten aber eine fehlerhafte Website. Hier ist die Ursachenanalyse und was wir geändert haben.</p>
