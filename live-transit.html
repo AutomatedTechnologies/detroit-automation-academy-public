@@ -362,6 +362,9 @@
   .stop-smart-note[hidden] { display: none; }
   .stop-live { margin-top: .6rem; }
   .stop-arrivals-note { color: #9AA0A6; font-size: .78rem; margin: .35rem 0 0; line-height: 1.45; }
+  .stop-board-link { margin: .65rem 0 0; font-size: .85rem; }
+  .stop-board-link a { color: #FFB000; text-decoration: none; }
+  .stop-board-link a:hover { text-decoration: underline; }
   .arr-tag { flex: none; font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .1rem .38rem; border: 1px solid #3A4550; border-radius: 999px; color: #9AA0A6; }
   .arr-tag.live { background: #2ECC71; border-color: transparent; color: #0C1116; }
   .stop-live[hidden] { display: none; }
@@ -860,6 +863,7 @@
           <div id="stop-arrivals-list"></div>
           <p class="stop-arrivals-note" id="stop-arrivals-note" hidden></p>
         </div>
+        <p class="stop-board-link"><a href="board/">Departure board — next buses at a glance &#8594;</a></p>
         <div class="stop-live" id="stop-live" hidden>
           <div class="sel-eyebrow">Live on these routes</div>
           <div id="stop-live-list"></div>
