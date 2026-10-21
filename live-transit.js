@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261020-1647';
+  var STAMP = '20261021-0917';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -4125,7 +4125,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if ((tripTT && tripRaptor) || rideEngineLoading) return;
     rideEngineLoading = true;
     var loadR = tripRaptor ? Promise.resolve(tripRaptor)
-      : import('./raptor.js?v=' + STAMP).then(function (m) { tripRaptor = m.default || m; return tripRaptor; });
+      : import('./raptor-v2.js?v=' + STAMP).then(function (m) { tripRaptor = m.default || m; return tripRaptor; });
     loadR.then(function (R) {
       if (tripTT || !R || !R.loadTimetable) return;
       return R.loadTimetable('planner-timetable-S1000182-S1000147.json?v=' + STAMP).then(function (tt) { tripTT = tt; });
@@ -5404,7 +5404,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     };
     var boot = (tripRaptor && tripFusion) ? Promise.resolve({ R: tripRaptor, F: tripFusion })
       : Promise.all([
-          tripRaptor ? Promise.resolve(tripRaptor) : import('./raptor.js?v=' + STAMP),
+          tripRaptor ? Promise.resolve(tripRaptor) : import('./raptor-v2.js?v=' + STAMP),
           tripFusion ? Promise.resolve(tripFusion) : import('./live-fusion.js?v=' + STAMP)
         ]).then(function (ms) { return { R: ms[0].default || ms[0], F: ms[1].default || ms[1] }; })
         .then(function (m) { tripFusion = m.F; return m; });
