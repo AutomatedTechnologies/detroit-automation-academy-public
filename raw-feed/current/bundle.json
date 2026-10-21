@@ -1,6 +1,6 @@
 {
   "kind": "feed-raw-bundle/v1",
-  "collected_at": "2026-10-21T08:32:17.491Z",
+  "collected_at": "2026-10-21T08:36:20.153Z",
   "ddot": {
     "configured": true,
     "vehicle_batches": [
@@ -19,8 +19,8 @@
         ],
         "ok": true,
         "file": "ddot-vehicles-0.json",
-        "bytes": 12910,
-        "sha256": "a556359414170395d81d2c36a63b164d042e5b7dc20b0b63dd729e9e931f782a"
+        "bytes": 13439,
+        "sha256": "7d3b8d7f5852850761322f86c71e39977ee9dc8831fae24b4e6af69e0df78151"
       },
       {
         "routes": [
@@ -37,8 +37,8 @@
         ],
         "ok": true,
         "file": "ddot-vehicles-1.json",
-        "bytes": 3608,
-        "sha256": "4a4ce1ec14687ab85ac666c454bbbd436bc20fae21a349f22fb85390f8943f8e"
+        "bytes": 4429,
+        "sha256": "1aa67c709aa2172ef94574d1f4eb854fd6644f9a49117e347544183faae38a90"
       },
       {
         "routes": [
@@ -53,8 +53,10 @@
           "42",
           "43"
         ],
-        "ok": false,
-        "error": "fetch failed"
+        "ok": true,
+        "file": "ddot-vehicles-2.json",
+        "bytes": 2295,
+        "sha256": "034b550b6e4e15df9a6bdf2fccd7c0b9751f493470f02a9912ed806cb8ab9274"
       },
       {
         "routes": [
@@ -81,21 +83,21 @@
     "ok": true,
     "file": "qline-vp.pb",
     "bytes": 15,
-    "sha256": "8765bd2526c4b9c8d98de41e62dc16b7e274bde50fdc06fe8ab3aeea8e999d87"
+    "sha256": "22681414a565062035a4d80f607a7138012883fb1012d15246359419a37c98cd"
   },
   "smart": {
     "active": true,
     "vp": {
       "ok": true,
       "file": "smart-vp.pb",
-      "bytes": 4595,
-      "sha256": "a04528f0d4aababc29c6354fcd44b25b417e1cabf404e6ed7186ab05184f3864"
+      "bytes": 4548,
+      "sha256": "7335f7b91e24dda9ea462299f942d7d196b30834d865140e5888b1e89f993a7c"
     },
     "tu": {
       "ok": true,
       "file": "smart-tu.pb",
-      "bytes": 181542,
-      "sha256": "758e331aa0a446c84114b2b91d657fdfbb30322eec2f74a1d3b9852339bea50e"
+      "bytes": 193341,
+      "sha256": "c6c8acfa2cd224bcfe8261fa763e7fff2b2522f5b20bf7657fc9fa36507e5182"
     }
   }
 }
