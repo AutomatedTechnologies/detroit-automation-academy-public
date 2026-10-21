@@ -451,7 +451,17 @@ function decodeTripUpdate(buf) {
 
 const MS_PER_S = 2.23694; // m/s -> mph
 
-function mapGtfsRtVehicles(buffer, nowIso, agency) {
+/* withTrip (stop-card Option A, Justin's decision 2026-10-21): the
+ * SMART display payload additionally carries each vehicle's trip_id
+ * and direction_id, restored from the GTFS-RT TripDescriptor the
+ * decoder already parses. The page joins trip_id to the agency GTFS
+ * headsign map (live-data/smart-headsigns.json) so SMART stop-card
+ * rows can name their direction and group by route + headsign. The
+ * fields ride ONLY on the SMART display payload: the QLINE call sites
+ * below do not pass withTrip, so vehicles.json stays byte-identical,
+ * and nothing here feeds vehicles.json, telemetry, or any computation
+ * path — display-only, exactly like the rest of the SMART leg. */
+function mapGtfsRtVehicles(buffer, nowIso, agency, withTrip) {
   try {
     const out = [];
     for (const [no, val] of protoFields(buffer)) {
@@ -472,6 +482,10 @@ function mapGtfsRtVehicles(buffer, nowIso, agency) {
       out.push({
         agency,
         route_id: String((vp.trip && vp.trip.routeId) || ''),
+        ...(withTrip ? {
+          trip_id: String((vp.trip && vp.trip.tripId) || ''),
+          direction_id: vp.trip && vp.trip.directionId !== undefined ? Number(vp.trip.directionId) : null,
+        } : {}),
         vehicle_id: String((vp.vehicle && vp.vehicle.id) || entityId || ''),
         lat,
         lon,
@@ -778,7 +792,7 @@ async function pollSmart(nowIso) {
         state: { ok: false, at: nowIso, reason: 'Swiftly SMART feed: response was not a GTFS-RT FeedMessage' },
       };
     }
-    const vehicles = mapGtfsRtVehicles(buf, nowIso, 'smart');
+    const vehicles = mapGtfsRtVehicles(buf, nowIso, 'smart', true);
     return { vehicles, state: { ok: true, at: nowIso, vehicles: vehicles.length } };
   } catch (err) {
     return { vehicles: [], state: { ok: false, at: nowIso, reason: `Swiftly SMART feed: ${err.message}` } };
