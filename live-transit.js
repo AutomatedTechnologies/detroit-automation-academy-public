@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261021-1410';
+  var STAMP = '20261021-1623';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -1005,6 +1005,50 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     return s.vehicles.filter(function (v) {
       return v && v.agency === 'smart' && v.lat != null && v.lon != null;
     });
+  }
+  // === SMART HEADSIGN JOIN (stop-card Option A, 2026-10-21) ========
+  // The stop card's live rows group by route + headsign (Justin's
+  // decision, 2026-10-21). DDOT vehicles carry their destination in
+  // vehicles.json; SMART vehicles carry none — the Swiftly positions
+  // payload has no headsign field. The join is static and display-only:
+  // the feed builder restores each SMART vehicle's trip_id and
+  // direction_id to the display payload, and this map — built from
+  // SMART's own published GTFS by tools/build-smart-headsigns.py and
+  // regenerated with the GTFS feed version, the same cadence as the
+  // planner timetable merge — resolves the trip to its headsign.
+  // Exact on trip_id; the route+direction dominant headsign is the
+  // fallback for a trip the map does not know (e.g. an added trip).
+  // Fetched once per session from the live-data base; until it lands,
+  // SMART rows group by route alone (the pre-Option-A label) rather
+  // than wait or fabricate a destination. This map is never read by
+  // the planner, the delay matcher, or any computation path.
+  var smartHeadsigns = null;   // {by_trip: {}, by_route_dir: {}}
+  var smartHeadsignsRequested = false;
+  function ensureSmartHeadsigns(proxy) {
+    if (smartHeadsigns || smartHeadsignsRequested) return;
+    smartHeadsignsRequested = true;
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, 8000);
+    fetch(proxy + '/smart-headsigns.json', { cache: 'no-store', signal: ctrl.signal })
+      .then(function (r) { clearTimeout(timer); return r.ok ? r.json() : null; },
+            function () { clearTimeout(timer); return null; })
+      .then(function (d) {
+        if (d && d.by_trip && d.by_route_dir) {
+          smartHeadsigns = d;
+          // Upgrade an open card in place: rows regroup with their
+          // headsigns on the same render path the poll uses.
+          if (selectedStop) renderStopLive();
+        }
+      });
+  }
+  function smartHeadSignFor(v) {
+    if (!v || v.agency !== 'smart' || !smartHeadsigns) return '';
+    if (v.trip_id && smartHeadsigns.by_trip[v.trip_id]) return smartHeadsigns.by_trip[v.trip_id];
+    if (v.route_id) {
+      var key = v.route_id + '|' + (v.direction_id == null ? '' : v.direction_id);
+      if (smartHeadsigns.by_route_dir[key]) return smartHeadsigns.by_route_dir[key];
+    }
+    return '';
   }
   // === SMART TRIP UPDATES (deployed 2026-10-17) ===
   // Swiftly's 2026-10-15 issuance enabled trip updates alongside vehicle
@@ -4951,6 +4995,22 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var rcEl = $('ride-card');
     if (rcEl && rcEl.focus) rcEl.focus();
   }
+  // Stop-card Option A (Justin's decision, 2026-10-21): distance from
+  // the selected stop to a vehicle, in the map's projected meters —
+  // the same projection the bus slots are placed with. Presentation
+  // only: it orders the grouped live rows and names the nearest bus;
+  // it is never an ETA and never leaves this card.
+  function stopVehicleDistM(st, v) {
+    if (!st || !v || v.lat == null || v.lon == null || !proj) return null;
+    var p = project(v.lat, v.lon);
+    var dx = p[0] - st.x, dz = p[1] - st.z;
+    return Math.sqrt(dx * dx + dz * dz);
+  }
+  function formatStopDistM(d) {
+    if (d == null || isNaN(d)) return '';
+    if (d < 1000) return Math.max(10, Math.round(d / 10) * 10) + ' m';
+    return (d / 1609.344).toFixed(1) + ' mi';
+  }
   // Live arrivals on the selected stop's routes, refreshed on every poll.
   function renderStopLive() {
     // Project 13: an open card reconciles its chips on every refresh,
@@ -4977,11 +5037,40 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     host.hidden = false;
     list.innerHTML = '';
     var now = Date.now();
-    rows.slice(0, 5).forEach(function (v) {
-      // Project 7 (2026-10-19): the row is a real button — selecting
-      // it rides THAT vehicle (see rideFromStopLiveRow). The closure
-      // holds the exact vehicle record, so two buses sharing a route
-      // and destination still select the one the row names.
+    // Stop-card Option A (Justin's decision, 2026-10-21): the live
+    // rows group by route + headsign — one row per direction instead
+    // of one row per vehicle. DDOT destinations come from the vehicle
+    // record (via displayDest, as before); SMART destinations resolve
+    // through the GTFS headsign join (smartHeadSignFor) and are empty
+    // until the map lands, grouping those rows by route alone. The
+    // row label is the settled name - number style with the headsign
+    // as the name ("Mack / Moross - 730"); a group whose headsign is
+    // unresolved falls back to routeLabel (itself name - number).
+    // Groups order by their nearest bus; a group's row carries its
+    // bus count and the nearest bus's distance from this stop.
+    var groups = [], groupByKey = {};
+    rows.forEach(function (v) {
+      var dest = v.agency === 'smart' ? smartHeadSignFor(v) : displayDest(v);
+      if (dest && dest === String(v.route_id)) dest = '';
+      var key = v.route_id + '|' + dest;
+      var g = groupByKey[key];
+      if (!g) { g = groupByKey[key] = { route_id: v.route_id, dest: dest, vehicles: [], nearest: null, nearestD: null }; groups.push(g); }
+      g.vehicles.push(v);
+      var d = stopVehicleDistM(selectedStop, v);
+      if (d != null && (g.nearestD == null || d < g.nearestD)) { g.nearestD = d; g.nearest = v; }
+    });
+    groups.forEach(function (g) { if (!g.nearest) g.nearest = g.vehicles[0]; });
+    groups.sort(function (a, b) {
+      var da = a.nearestD == null ? Infinity : a.nearestD;
+      var db = b.nearestD == null ? Infinity : b.nearestD;
+      if (da !== db) return da - db;
+      return String(a.route_id).localeCompare(String(b.route_id), undefined, { numeric: true });
+    });
+    groups.slice(0, 5).forEach(function (g) {
+      // Project 7 (2026-10-19), as amended by Option A: the row is a
+      // real button — selecting it rides the group's NEAREST vehicle
+      // through the same showBus funnel (see rideFromStopLiveRow).
+      var v = g.nearest;
       var row = document.createElement('button');
       row.type = 'button';
       row.className = 'stop-live-row stop-live-btn';
@@ -4990,8 +5079,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       dot.style.background = rc ? '#' + rc.getHexString() : '#F5F2EA';
       row.appendChild(dot);
       var b = document.createElement('b');
-      var slDest = displayDest(v);
-      b.textContent = routeLabel(v.route_id) + (slDest ? ' · ' + slDest : '');
+      var slDest = g.dest;
+      b.textContent = slDest ? (slDest + ' - ' + g.route_id) : routeLabel(g.route_id);
       row.appendChild(b);
       // Stop tiles: the serving vehicle's number, so a rider can match
       // the row to the bus they can see. Gate: stopTilesOn.
@@ -5004,15 +5093,23 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var t = document.createElement('span');
       var when = v.updated_at ? new Date(v.updated_at) : null;
       var mins = (when && !isNaN(when)) ? Math.max(0, Math.round((now - when.getTime()) / 60000)) : null;
-      t.textContent = mins == null ? '' : (mins < 1 ? 'just now' : mins + 'm ago');
+      var dTxt = formatStopDistM(g.nearestD);
+      var parts = [];
+      if (g.vehicles.length > 1) parts.push(g.vehicles.length + ' buses');
+      if (dTxt) parts.push(dTxt);
+      if (!parts.length) parts.push(mins == null ? '' : (mins < 1 ? 'just now' : mins + 'm ago'));
+      t.textContent = parts.join(' · ');
+      t.title = 'Nearest bus ' + (v.vehicle_id || '') +
+        (mins == null ? '' : ' — ping ' + (mins < 1 ? 'just now' : mins + 'm ago'));
       row.appendChild(t);
       var go = document.createElement('span');
       go.className = 'stop-live-go';
       go.setAttribute('aria-hidden', 'true');
       go.textContent = '›';
       row.appendChild(go);
-      row.setAttribute('aria-label', 'Ride along — ' + routeLabel(v.route_id) +
-        (slDest ? ' to ' + slDest : '') + (v.vehicle_id ? ', bus ' + v.vehicle_id : ''));
+      row.setAttribute('aria-label', 'Ride along — ' + b.textContent +
+        ', ' + g.vehicles.length + (g.vehicles.length === 1 ? ' bus' : ' buses') +
+        (v.vehicle_id ? ', nearest bus ' + v.vehicle_id : '') + (dTxt ? ', ' + dTxt + ' away' : ''));
       row.addEventListener('click', function () { rideFromStopLiveRow(v); });
       list.appendChild(row);
     });
@@ -9378,6 +9475,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         // reads it exactly as before and never reads sources.smart.
         return fetchSmartDisplay(proxy).then(function (s) {
           smartAge = computeSmartAge(s, Date.now());
+          ensureSmartHeadsigns(proxy);
           var sv = smartDisplayVehicles(s, Date.now());
           if (sv.length) d.vehicles = d.vehicles.concat(sv);
           // SMART trip updates ride the same cycle (deployed
