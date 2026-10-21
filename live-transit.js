@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261021-0917';
+  var STAMP = '20261021-1345';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -3939,6 +3939,173 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       }
     };
   })();
+  // --- Logo fade (2026-10-15; Option 3 build 2026-10-21) -----------------------
+  // Justin's directive: "fade all artifacts behind logo". The you-are-here
+  // badge above is the DAA logo disc (assets/logo.webp painted into a
+  // 256 px canvas: dark disc, orange ring). It is a world-space sprite
+  // with depthTest:false at renderOrder 0, and every label/badge sprite
+  // layer is drawn AFTER it -- street labels (35), stop labels (36),
+  // the Belle Isle and People Mover labels (36), places badges (35)
+  // and glows (34), MoGo badges (35), alert glyphs (6), bus badges
+  // (40), the bus info label (41), route labels (0, depth-sorted
+  // after) -- so those artifacts paint at full strength straight
+  // across the disc's face (Justin's 2026-10-15 iPad screenshot:
+  // "Lysander St" and "Lincoln St" at full opacity on the disc).
+  // Scene geometry needs no treatment: streets, route lines, pylons
+  // and bus models render before the badge and the painted disc is
+  // opaque, so the badge already occludes them.
+  //
+  // The pass runs once per frame, immediately before render, after
+  // every owner update for the frame. For each visible treated sprite
+  // it computes the screen-space distance from the badge centre and
+  // multiplies the sprite's OWN base opacity by a fade factor:
+  // LOGO_FADE_MIN deep inside the disc, rising smoothly (smoothstep)
+  // back to 1 across a soft band straddling the rim -- a fade, not a
+  // clip. The logo itself is never touched, and artifacts outside the
+  // footprint keep their exact base opacity. A sprite's own half-width
+  // counts toward the distance, so a label whose centre sits just
+  // outside the rim but whose pill crosses it still fades. Base
+  // opacities are owner-written (bus badges dim to 0.2 off-itinerary,
+  // places glows sit at 0.5): the pass adopts any value it did not
+  // write itself as the sprite's new base and never compounds its own
+  // writes. When the badge is hidden, behind the camera, or
+  // negligible on screen, every treated sprite is restored to its
+  // base; when it is closer than LOGO_FADE_NEAR it fills the frame
+  // and every visible treated sprite fades uniformly. DOM overlays
+  // (cards, panels, the bar) are outside this pass by design.
+  //
+  // Option 3 (2026-10-21): the badge is clamped at close zoom (see
+  // the animation loop), so its scale is no longer a constant 760.
+  // The disc radius below is therefore derived from the badge's LIVE
+  // scale every frame: LOGO_DISC_R is the radius at scale 760, and
+  // logoDiscR() scales it -- the footprint this pass fades is the
+  // painted disc's real one at every badge size.
+  var LOGO_FADE_MIN = 0.15;
+  var LOGO_DISC_R = 368; // world units at badge scale 760: painted disc radius is 124/128 of the half-size
+  // (The 2026-10-15 build's LOGO_FADE_NEAR depth constant is retired:
+  // the uniform regime is size-measured under Option 3; see applyLogoFade.)
+  var logoFadeGlyphs = []; // alert glyph sprites register here (they live in per-route overlay groups)
+  var logoFadeActive = false; // a restore sweep is owed only after a fade ran
+  var _lfC = new THREE.Vector3(), _lfV = new THREE.Vector3(), _lfD = new THREE.Vector3();
+  var _badgeClampV = new THREE.Vector3(); // Option 3 clamp temp (animation loop)
+  function logoDiscR() { return LOGO_DISC_R * (youMarker.badge.scale.x / 760); }
+  function logoFadeBase(sp) {
+    // Adopt owner writes: any opacity the pass did not write is the base.
+    var ud = sp.userData;
+    if (ud._lfWrote === undefined || sp.material.opacity !== ud._lfWrote) ud._lfBase = sp.material.opacity;
+    return ud._lfBase;
+  }
+  function logoFadeWrite(sp, f) {
+    var target = logoFadeBase(sp) * f;
+    sp.material.opacity = target;
+    sp.userData._lfWrote = target;
+  }
+  function logoFadeOne(sp, cx, cy, rPx, rw, rh, discR) {
+    if (!sp || !sp.visible || !sp.material) return;
+    sp.getWorldPosition(_lfV).project(camera);
+    if (_lfV.z > 1 || _lfV.z < -1) return;
+    var dx = (_lfV.x * 0.5 + 0.5) * rw - cx;
+    var dy = (-_lfV.y * 0.5 + 0.5) * rh - cy;
+    // Distance from the sprite's nearest edge to the badge centre: the
+    // sprite's own half-width (at the badge's pixel scale) counts, so a
+    // pill that merely crosses the rim still fades.
+    var d = Math.sqrt(dx * dx + dy * dy) - sp.scale.x * 0.5 * (rPx / discR);
+    var rIn = rPx * 0.8, rOut = rPx * 1.2, f;
+    if (d <= rIn) f = LOGO_FADE_MIN;
+    else if (d >= rOut) f = 1;
+    else { var t = (d - rIn) / (rOut - rIn); f = LOGO_FADE_MIN + (1 - LOGO_FADE_MIN) * (t * t * (3 - 2 * t)); }
+    logoFadeWrite(sp, f);
+  }
+  function logoFadeRestoreOne(sp) {
+    if (!sp || !sp.material) return;
+    var ud = sp.userData;
+    if (ud._lfWrote !== undefined && sp.material.opacity === ud._lfWrote) {
+      sp.material.opacity = ud._lfBase;
+      ud._lfWrote = ud._lfBase;
+    }
+  }
+  function logoFadeEach(fn) {
+    var i;
+    for (i = 0; i < badgePool.length; i++) fn(badgePool[i]);
+    for (i = 0; i < streetLabelPool.length; i++) fn(streetLabelPool[i]);
+    for (i = 0; i < stopLabelPool.length; i++) fn(stopLabelPool[i]);
+    for (i = 0; i < labelSprites.length; i++) fn(labelSprites[i].sprite);
+    for (i = 0; i < placesBadges.length; i++) fn(placesBadges[i]);
+    for (i = 0; i < placesGlows.length; i++) fn(placesGlows[i]);
+    for (i = 0; i < mogoBadges.length; i++) fn(mogoBadges[i]);
+    fn(busInfoSprite);
+    if (belleIsleLabel) fn(belleIsleLabel);
+    if (pmLabel) fn(pmLabel);
+    // Alert glyphs: prune sprites whose overlay group left the scene
+    // (alert overlays are rebuilt on refresh), fade the live ones.
+    for (i = logoFadeGlyphs.length - 1; i >= 0; i--) {
+      var g = logoFadeGlyphs[i], live = false, n = g;
+      while (n) { if (n === scene) { live = true; break; } n = n.parent; }
+      if (!live) { logoFadeGlyphs.splice(i, 1); continue; }
+      fn(g);
+    }
+  }
+  function applyLogoFade() {
+    if (!youMarker.group.visible) {
+      if (logoFadeActive) { logoFadeEach(logoFadeRestoreOne); logoFadeActive = false; }
+      return;
+    }
+    youMarker.badge.getWorldPosition(_lfC);
+    // Badge depth along the view axis, before any projection is
+    // trusted. project() is only meaningful for a badge genuinely in
+    // front of the camera: beside or behind the camera plane --
+    // routine at street-view distances, where the badge floats ~1250
+    // units over the rider and the camera works ~1250 units away --
+    // it returns a mirrored, exploded screen position with an
+    // in-range z, and any footprint built from it is fiction. A badge
+    // behind the camera is not on screen at all: nothing sits behind
+    // it, so the restore path applies.
+    _lfD.copy(_lfC).sub(camera.position);
+    _lfV.setFromMatrixColumn(camera.matrixWorld, 2); // camera backward axis
+    var badgeDepth = -_lfV.dot(_lfD);
+    if (badgeDepth <= 0) {
+      if (logoFadeActive) { logoFadeEach(logoFadeRestoreOne); logoFadeActive = false; }
+      return;
+    }
+    _lfV.copy(_lfC).project(camera);
+    if (_lfV.z > 1 || _lfV.z < -1) {
+      if (logoFadeActive) { logoFadeEach(logoFadeRestoreOne); logoFadeActive = false; }
+      return;
+    }
+    var rw = renderer.domElement.clientWidth, rh = renderer.domElement.clientHeight;
+    if (!(rw > 0) || !(rh > 0)) return;
+    var cx = (_lfV.x * 0.5 + 0.5) * rw, cy = (-_lfV.y * 0.5 + 0.5) * rh;
+    // Disc radius in px: project a point one (live) disc radius along camera-right.
+    var discR = logoDiscR();
+    _lfV.setFromMatrixColumn(camera.matrixWorld, 0).multiplyScalar(discR).add(_lfC).project(camera);
+    var rPx = Math.abs((_lfV.x * 0.5 + 0.5) * rw - cx);
+    if (!(rPx > 4)) {
+      if (logoFadeActive) { logoFadeEach(logoFadeRestoreOne); logoFadeActive = false; }
+      return;
+    }
+    // Uniform regime, measured rather than assumed (Option 3,
+    // 2026-10-21): the 2026-10-15 candidate fired this branch on
+    // view-axis depth < 400 because at the fixed 760 scale a badge
+    // that close spans more than the viewport height, so everything
+    // visible is behind the logo. Under the Option 3 clamp the disc
+    // is capped at 25% of viewport height and NEVER spans the frame,
+    // however close the badge gets -- a depth-only trigger would wash
+    // every label on screen to 15% during ordinary street-view use
+    // near the rider's own position, fading artifacts that are not
+    // behind the logo at all. The branch therefore fires on the
+    // measured disc size (diameter >= viewport height), which is the
+    // original premise stated in pixels: it reproduces the 2026-10-15
+    // behavior at the unclamped scale and stays inert under the clamp,
+    // where the footprint regime below is the correct treatment at
+    // every distance.
+    if (rPx * 2 >= rh) {
+      logoFadeActive = true;
+      logoFadeEach(function (sp) { if (sp && sp.visible && sp.material) logoFadeWrite(sp, LOGO_FADE_MIN); });
+      return;
+    }
+    logoFadeActive = true;
+    logoFadeEach(function (sp) { logoFadeOne(sp, cx, cy, rPx, rw, rh, discR); });
+  }
   var toastTimer = null;
   function hideToast() { $('map-toast').hidden = true; clearTimeout(toastTimer); }
   function showToast(msg, sticky) {
@@ -9761,6 +9928,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
     sp.scale.set(scale, scale, 1);
     sp.renderOrder = 6;
+    logoFadeGlyphs.push(sp);
     return sp;
   }
   function addAlertPulseRing(parent, st) {
@@ -11768,6 +11936,19 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           youMarker.badge.position.y = YOU_BADGE_Y +
             (((typeof reducedMotion !== 'undefined') && reducedMotion)
               ? 0 : YOU_BADGE_BOB * Math.sin(t / 650));
+          // Logo gate Option 3 (2026-10-21): close-zoom badge clamp.
+          // World-true 760 beyond ~3,800 units; nearer than that the
+          // badge's apparent size is capped at 25% of viewport height
+          // (0.19819 = 0.25 x 2 x tan(21 deg) x 760/736 -- the painted
+          // disc is 736 of the 760 sprite, the camera's vertical FOV
+          // is 42 deg). The fade pass reads the badge's live scale,
+          // so the footprint it fades stays the disc's real one.
+          youMarker.badge.getWorldPosition(_badgeClampV);
+          var badgeScale = Math.min(760,
+            0.19819 * camera.position.distanceTo(_badgeClampV));
+          if (Math.abs(youMarker.badge.scale.x - badgeScale) > 0.5) {
+            youMarker.badge.scale.set(badgeScale, badgeScale, 1);
+          }
         }
         // Selected bus pulses at the same rate as the user-location ring.
         // Trip-journey highlight breathes at the same shared rate.
@@ -11874,6 +12055,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         easeStopScale(camDist);
         easeGuideFade();
         smoothBadges();
+        applyLogoFade();
         renderer.render(scene, camera);
         lastFrameAt = performance.now();
         flFrameAt = lastFrameAt; // step 1/4: snapshot mirror + supervisors
