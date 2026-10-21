@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261021-1345';
+  var STAMP = '20261021-1410';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -11941,11 +11941,21 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           // badge's apparent size is capped at 25% of viewport height
           // (0.19819 = 0.25 x 2 x tan(21 deg) x 760/736 -- the painted
           // disc is 736 of the 760 sprite, the camera's vertical FOV
-          // is 42 deg). The fade pass reads the badge's live scale,
+          // is 42 deg). The clamp keys on the badge's view-axis DEPTH,
+          // not its euclidean distance: apparent size follows depth,
+          // so a euclidean key under-caps an off-axis badge by
+          // 1/cos(angle off axis) -- the Option 3 harness's S8 case
+          // measured the disc at 36-39% of viewport height in strongly
+          // off-axis close framings under the euclidean key. On-axis
+          // the two keys are identical, so the gate's vantage table
+          // is unchanged. The fade pass reads the badge's live scale,
           // so the footprint it fades stays the disc's real one.
           youMarker.badge.getWorldPosition(_badgeClampV);
-          var badgeScale = Math.min(760,
-            0.19819 * camera.position.distanceTo(_badgeClampV));
+          _badgeClampV.sub(camera.position);
+          _lfD.setFromMatrixColumn(camera.matrixWorld, 2);
+          var badgeDepthNow = -_lfD.dot(_badgeClampV);
+          var badgeScale = badgeDepthNow > 0
+            ? Math.min(760, 0.19819 * badgeDepthNow) : 760;
           if (Math.abs(youMarker.badge.scale.x - badgeScale) > 0.5) {
             youMarker.badge.scale.set(badgeScale, badgeScale, 1);
           }
