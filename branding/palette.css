@@ -1,93 +1,14 @@
-/* 
-File Location: C:\Users\dbkr\workspace\daa-public-staging\branding\palette.css
-Purpose: Agentic Design Corp (ADC) color palette and theme variables for DAA
-Last Modified: March 31, 2026
+/*
+Purpose: Detroit Automation Academy — Forge brand palette and theme variables.
+Governing standard: BRAND_GUIDELINES.md in this repo; implemented in styles.css.
+Last Modified: October 22, 2026
 */
 
-/* ── Agentic Design Corp (ADC) — DAA Redesign ────────────────────────────────
-   Epoch IV: Zero-Human Operations.
-   Visual Synthesis: Dark Mode, High Contrast, Monospace Precision.
-   ─────────────────────────────────────────────────────────────────────────── */
-
 :root {
-  /* ADC Aesthetic - Agentic Theme V1.0.0 (Epoch VI) */
-  --daa-bg: #050507; /* Deep Charcoal/Black */
-  --daa-bg-card: rgba(22, 22, 26, 0.65); /* Panel Background */
-  --daa-bg-raised: #0a0a0c;
-  --daa-fg: #f8fafc; /* Text Color */
-  --daa-fg-muted: #94a3b8;
-  --daa-primary: #00f0ff; /* Neon Blue */
-  --daa-primary-glow: rgba(0, 240, 255, 0.35);
-  --daa-secondary: #39ff14; /* Cyber Green */
-  --daa-accent: #00f0ff; /* Unified with primary for consistency */
-  --daa-accent-glow: rgba(0, 240, 255, 0.2);
-  --daa-student: #BB6EE7; /* Purple/Lavender for Student-facing */
-  --daa-student-glow: rgba(187, 110, 231, 0.3);
-  --daa-card: rgba(22, 22, 26, 0.65);
-  --daa-border: rgba(0, 240, 255, 0.2);
-  --daa-border-green: rgba(57, 255, 20, 0.3);
-  --daa-link: #00f0ff;
-  --daa-shadow: rgba(0, 0, 0, 0.8);
-  --daa-shadow-blue: 0 0 15px rgba(0, 240, 255, 0.15);
-  
-  --danger-red: #ff3333;
-}
-
-/* Force dark mode across all preferences */
-@media (prefers-color-scheme: light) {
-  :root {
-    --daa-bg: #0b0e14;
-    --daa-bg-card: #161b22;
-    --daa-bg-raised: #161b22;
-    --daa-fg: #c9d1d9;
-    --daa-fg-muted: rgba(201, 209, 217, 0.7);
-    --daa-primary: #39ff14;
-    --daa-primary-glow: rgba(57, 255, 20, 0.25);
-    --daa-secondary: #ffcc00;
-    --daa-accent: #00ffff;
-    --daa-accent-glow: rgba(0, 255, 255, 0.2);
-    --daa-card: #161b22;
-    --daa-border: #30363d;
-    --daa-border-green: rgba(57, 255, 20, 0.4);
-    --daa-link: #00ffff;
-    --daa-shadow: rgba(0, 0, 0, 0.8);
-    --daa-shadow-blue: 0 0 15px rgba(0, 255, 255, 0.15);
-    
-    --danger-red: #ff3333;
-  }
-}
-
-/* Overriding global html/body fonts if they rely on palette.css */
-html, body, button, input, select, textarea, .font-sans, h1, h2, h3, h4, h5, h6 {
-  font-family: 'Courier New', Courier, monospace !important;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  color: var(--daa-accent) !important;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-a {
-  color: var(--daa-link) !important;
-  transition: all 0.2s ease;
-}
-
-a:hover {
-  color: var(--daa-primary) !important;
-  text-shadow: 0 0 5px var(--daa-primary-glow);
-}
-
-.btn, button, .cyber-button {
-  background: transparent !important;
-  color: var(--daa-primary) !important;
-  border: 1px solid var(--daa-primary) !important;
-  border-radius: 4px;
-  font-family: 'Courier New', Courier, monospace !important;
-  transition: all 0.2s ease;
-}
-
-.btn:hover, button:hover, .cyber-button:hover {
-  background: rgba(57, 255, 20, 0.1) !important;
-  box-shadow: 0 0 10px rgba(57, 255, 20, 0.2) !important;
+  /* Forge palette (BRAND_GUIDELINES.md / styles.css) */
+  --daa-bg: #0C1116;        /* Midnight */
+  --daa-fg: #F5F2EA;        /* Paper */
+  --daa-primary: #E85D1A;   /* Forge */
+  --daa-accent: #FFB000;    /* Amber */
+  --daa-muted: #9AA0A6;     /* Concrete */
 }
