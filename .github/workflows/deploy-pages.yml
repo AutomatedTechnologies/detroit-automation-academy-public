@@ -50,6 +50,7 @@ jobs:
           # Copy system metadata
           cp CNAME deployment/               || echo "CNAME not found"
           cp .nojekyll deployment/           || echo ".nojekyll not found"
+          cp -r .well-known deployment/     || echo ".well-known not found"
           cp robots.txt deployment/          || echo "robots.txt not found"
           cp sitemap.xml deployment/         || echo "sitemap.xml not found"
           cp feed.xml deployment/            || echo "feed.xml not found"
