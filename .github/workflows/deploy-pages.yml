@@ -111,6 +111,12 @@ jobs:
             cp -r releases deployment/ || echo "releases copy failed"
           fi
 
+          # Copy Live Transit cities (hub + per-city pages/assets;
+          # Philadelphia MVP, 2026-10-23)
+          if [ -d "live-transit" ]; then
+            cp -r live-transit deployment/ || echo "live-transit copy failed"
+          fi
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
