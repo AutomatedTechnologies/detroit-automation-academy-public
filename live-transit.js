@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261023-0253';
+  var STAMP = '20261023-0419';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -7603,10 +7603,23 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       label.className = 'f-label';
       label.setAttribute('aria-expanded', 'false');
       label.setAttribute('aria-label', 'Expand ' + gLabel + ' routes');
-      label.innerHTML = '<b>' + gLabel + '</b>' +
-        (g.id === 'smart' ? '<span class="f-count" id="smart-age-label"></span>' : '') +
-        '<span class="f-count" id="fgc-' + g.id + '">–</span>' +
-        '<span class="f-chev">▾</span>';
+      // Built with DOM nodes, not innerHTML (security remediation R7,
+      // 2026-10-23): gLabel and the group id are data-file values, and
+      // feed-derived strings never enter innerHTML in this app.
+      var lb = document.createElement('b');
+      lb.textContent = gLabel;
+      label.appendChild(lb);
+      if (g.id === 'smart') {
+        var sa = document.createElement('span');
+        sa.className = 'f-count'; sa.id = 'smart-age-label';
+        label.appendChild(sa);
+      }
+      var fc = document.createElement('span');
+      fc.className = 'f-count'; fc.id = 'fgc-' + g.id; fc.textContent = '–';
+      label.appendChild(fc);
+      var chv = document.createElement('span');
+      chv.className = 'f-chev'; chv.textContent = '▾';
+      label.appendChild(chv);
       label.addEventListener('click', function () {
         var open = sec.classList.toggle('open');
         label.setAttribute('aria-expanded', String(open));
@@ -7629,9 +7642,21 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         b.dataset.route = rid;
         // Route display name: "name - number" unless they're identical (QLINE).
         var chipName = routeLabel(rid);
-        b.innerHTML = '<i style="background:' + route.color + '"></i><b>' +
-          chipName + '</b><span class="cnt" id="cnt-' + rid + '">–</span>' +
-          '<span class="idle-tag" id="idle-' + rid + '" hidden>not running</span>';
+        // DOM nodes, not innerHTML (R7, as above): route.color and
+        // chipName are feed-derived values.
+        var dot = document.createElement('i');
+        dot.style.background = route.color;
+        b.appendChild(dot);
+        var bn = document.createElement('b');
+        bn.textContent = chipName;
+        b.appendChild(bn);
+        var cnt = document.createElement('span');
+        cnt.className = 'cnt'; cnt.id = 'cnt-' + rid; cnt.textContent = '–';
+        b.appendChild(cnt);
+        var idle = document.createElement('span');
+        idle.className = 'idle-tag'; idle.id = 'idle-' + rid; idle.hidden = true;
+        idle.textContent = 'not running';
+        b.appendChild(idle);
         b.addEventListener('click', function () {
           filterState.routes[rid] = !filterState.routes[rid];
           delete nearMeAdded[rid]; // user's explicit choice now owns this route
