@@ -781,11 +781,7 @@
         </div>
         <div class="svc-details" id="svc-details" hidden></div>
       </div>
-      <!-- First-view use-case launcher sheet (Concept 3, Justin's pick
-           2026-10-23). Non-modal: the map stays live and interactive
-           above it. Behavior + persistence live in live-transit.js
-           (fvInitFirstView); the boot location prompt it replaces is
-           deleted there — Near me below is the only location offer. -->
+      
       <section class="fv-sheet" id="fv-sheet" aria-labelledby="fv-title" hidden>
         <div class="fv-head" id="fv-head">
           <button class="fv-grab" id="fv-collapse" type="button" aria-label="Collapse the Explore sheet" aria-expanded="true" aria-controls="fv-sheet"><span aria-hidden="true"></span></button>
@@ -892,10 +888,7 @@
             <input type="search" id="browse-stop-search" placeholder="Search stops…" aria-label="Search stops" autocomplete="off">
             <ul id="browse-stop-list" class="browse-list"></ul>
           </div>
-          <!-- Passes (project 24 deep-link floor): a hand-off, not a store.
-               Dart passes are sold by DDOT and SMART; this section only
-               links to the channels that sell them today. Spec:
-               files/pass-distribution/deep-link-floor-spec-2026-10-18.md -->
+          
           <div id="browse-passes-pane" role="tabpanel" aria-labelledby="browse-tab-passes" tabindex="0" hidden>
             <p class="passes-note">Dart passes are sold by DDOT and SMART through their apps and stores. Live Transit does not sell passes.</p>
             <ul class="passes-list">
