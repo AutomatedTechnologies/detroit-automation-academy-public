@@ -13,6 +13,13 @@
   var STOPS = "septa-stops.json";
   var VEHICLES = "data/vehicles.json";
   var POLL_MS = 60000;
+  // One pick tolerance for vehicles AND stops (RC9): the stop branch
+  // originally allowed only 10 px against a 3x3 px drawn square, so a
+  // tap landing 10-16 px from a stop's center -- routine when tapping
+  // a 3 px target -- opened nothing, while a vehicle forgave the same
+  // error at 16 px. Exact-center picks always worked; the failure
+  // lived entirely in that band.
+  var PICK_TOL_PX = 16;
 
   var state = {
     streets: null, routes: null, stops: null, veh: null,
@@ -354,7 +361,14 @@
     }, { passive: false });
     document.querySelectorAll("[data-group]").forEach(function (cb) {
       cb.addEventListener("change", function () {
-        state.groups[cb.getAttribute("data-group")] = cb.checked; render();
+        state.groups[cb.getAttribute("data-group")] = cb.checked;
+        render();
+        // RC10: the status counts must follow the toggles NOW. This
+        // handler previously called render() only, and updateStatus()
+        // ran solely on boot and on the 60 s vehicle poll -- so after
+        // a toggle the map cleared instantly while the status line
+        // kept quoting the feed totals until the next republish.
+        updateStatus();
       });
     });
     var zIn = document.getElementById("zin"), zOut = document.getElementById("zout");
@@ -376,7 +390,7 @@
   function pick(cx, cy) {
     var v = view();
     var markers = buildMarkers(state.veh);
-    var best = null, bd = 16;
+    var best = null, bd = PICK_TOL_PX;
     markers.forEach(function (m) {
       if (!inExtent(m.x, m.z)) return;
       var d = Math.hypot(v.px(m.x) - cx, v.pz(m.z) - cy);
@@ -390,7 +404,7 @@
       return;
     }
     if (state.showStops && v.s >= 0.22) {
-      var bs = null; bd = 10;
+      var bs = null; bd = PICK_TOL_PX; // RC9: was 10 -- see PICK_TOL_PX
       state.stopList.forEach(function (st) {
         var d = Math.hypot(v.px(st.x) - cx, v.pz(st.z) - cy);
         if (d < bd) { bd = d; bs = st; }
