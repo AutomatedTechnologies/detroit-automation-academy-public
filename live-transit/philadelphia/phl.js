@@ -56,6 +56,21 @@
         if (v.lat == null || v.lon == null) return;
         var p = project(v.lat, v.lon);
         var r = resolveRoute(v.route);
+        // RC8: a record whose route does not resolve to a known route
+        // gets NO marker -- it is not drawn, not counted in the status
+        // line, and not pickable. In the served snapshot that is 274
+        // septa-bus records (24% of the feed) carrying no TripDescriptor
+        // at all (route and trip both null): unassigned positions,
+        // depot-clustered (73% in ~250 m cells of 5+ at depot sites)
+        // and 82% bearing-less, i.e. parked/yard fleet, not service a
+        // rider can board. The pre-fix code emitted them with
+        // group:null, which every consumer's "if (m.group && ...)"
+        // test waved through -- so they rendered gray under every
+        // toggle state and inflated the headline count. Detroit's
+        // reference build applies the same rule (updateBuses:
+        // gateHidden = !grp || !grp.visible -> skip; "unknown or
+        // filtered route: skip").
+        if (!r) return;
         out.push({
           feed: feedId, x: p[0], z: p[1], route: v.route || null,
           routeObj: r, label: v.label || v.entity || "",
@@ -138,6 +153,15 @@
     }
     return cvEl;
   }
+  // Pointer events report viewport (client) coordinates; the view math
+  // works in canvas coordinates. Convert at the event boundary. (The
+  // pre-fix code compared clientX/clientY directly against canvas
+  // pixels, offsetting every tap by the canvas's page position --
+  // several hundred px against a 16 px pick tolerance.)
+  function evtPos(e) {
+    var r = canvas().getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
   function view() {
     var cv = canvas();
     var w = cv.clientWidth || cv.width, h = cv.clientHeight || cv.height;
@@ -160,7 +184,10 @@
     var n = 0;
     tiers.forEach(function (t) {
       var name = t[0];
-      if (name === "local" && v.s < 0.07) return;
+      // Fit-view scale is ~0.0084 (desktop) / ~0.0040 (phone); the old
+      // 0.07 cutoff hid the local tier -- 87% of the basemap -- until an
+      // 8x zoom, leaving a street-less skeleton at city view.
+      if (name === "local" && v.s < 0.0035) return;
       var arr = state.streets[name];
       ctx.strokeStyle = t[1]; ctx.lineWidth = t[2];
       ctx.beginPath();
@@ -185,9 +212,13 @@
       ctx.lineWidth = (r.group === "bus") ? 1.6 : 2.6;
       r.paths.forEach(function (path) {
         ctx.beginPath();
+        var prevIn = false;
         for (var i = 0; i < path.length; i++) {
           var X = v.px(path[i][0]), Y = v.pz(path[i][1]);
-          if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y);
+          var inE = inExtent(path[i][0], path[i][1]);
+          if (i === 0 || (!inE && !prevIn)) ctx.moveTo(X, Y);
+          else ctx.lineTo(X, Y);
+          prevIn = inE;
         }
         ctx.stroke(); n++;
       });
@@ -200,6 +231,7 @@
     if (!state.showStops || v.s < 0.22) return;
     ctx.fillStyle = "#9fb4c8";
     state.stopList.forEach(function (st) {
+      if (!inExtent(st.x, st.z)) return;
       if (st.x < v.x0 || st.x > v.x1 || st.z < v.z0 || st.z > v.z1) return;
       ctx.fillRect(v.px(st.x) - 1.5, v.pz(st.z) - 1.5, 3, 3);
     });
@@ -240,6 +272,7 @@
     drawStreets(v); drawRoutes(v); drawStops(v); drawVehicles(v);
   }
   window.PHL.render = render;
+  window.PHL.pick = pick;
 
   // ---- status + info -------------------------------------------------------
   function fmtET(tsSec) {
@@ -257,11 +290,23 @@
       var f = state.veh.feeds[fid];
       var name = fid === "septa-bus" ? "Bus feed" : "Rail feed";
       var drawn = buildMarkers({ feeds: (function () { var o = {}; o[fid] = f; return o; })() })
-        .filter(function (m) { return inExtent(m.x, m.z); }).length;
+        .filter(function (m) {
+          return inExtent(m.x, m.z) && (!m.group || state.groups[m.group]);
+        }).length;
       parts.push(name + " " + fmtET(Date.parse(f.feed_header_at) / 1000) +
         " ET · " + drawn + " vehicles on the map");
     });
-    el.textContent = parts.join("  ·  ") + (note ? "  ·  " + note : "");
+    var staleNote = "";
+    if (state.veh.fetched_at) {
+      var ageSec = (Date.now() - Date.parse(state.veh.fetched_at)) / 1000;
+      if (ageSec > 600) {
+        staleNote = "Live updates are delayed \u2014 this data is from " +
+          fmtET(Date.parse(state.veh.fetched_at) / 1000) + " ET (" +
+          Math.round(ageSec / 60) + " min old)";
+      }
+    }
+    el.textContent = parts.join("  ·  ") +
+      (staleNote ? "  ·  " + staleNote : "") + (note ? "  ·  " + note : "");
   }
 
   function esc(s) {
@@ -281,28 +326,31 @@
     var cv = canvas();
     var drag = null;
     cv.addEventListener("pointerdown", function (e) {
-      drag = { x: e.clientX, y: e.clientY, moved: false };
+      var p0 = evtPos(e);
+      drag = { x: p0.x, y: p0.y, moved: false };
       cv.setPointerCapture(e.pointerId);
     });
     cv.addEventListener("pointermove", function (e) {
       if (!drag) return;
-      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      var p1 = evtPos(e);
+      var dx = p1.x - drag.x, dy = p1.y - drag.y;
       if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
       if (drag.moved) {
         state.cam.x -= dx / state.cam.scale;
         state.cam.z -= dy / state.cam.scale;
-        drag.x = e.clientX; drag.y = e.clientY;
+        drag.x = p1.x; drag.y = p1.y;
         render();
       }
     });
     cv.addEventListener("pointerup", function (e) {
-      if (drag && !drag.moved) pick(e.clientX, e.clientY);
+      if (drag && !drag.moved) { var pu = evtPos(e); pick(pu.x, pu.y); }
       drag = null;
     });
     cv.addEventListener("wheel", function (e) {
       e.preventDefault();
       var f = e.deltaY < 0 ? 1.15 : 1 / 1.15;
-      zoomAt(e.clientX, e.clientY, f);
+      var pw = evtPos(e);
+      zoomAt(pw.x, pw.y, f);
     }, { passive: false });
     document.querySelectorAll("[data-group]").forEach(function (cb) {
       cb.addEventListener("change", function () {
