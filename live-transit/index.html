@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live Transit — Cities · Detroit Automation Academy</title>
+<meta name="description" content="Live Transit is one platform, many cities: Detroit and Philadelphia live, six more cities staged on published data behind public license reviews.">
+<link rel="canonical" href="https://www.detroitautomationacademy.com/live-transit/">
+<link rel="stylesheet" href="/styles.css?v=20261018-1404">
+<style>
+  .lt-wrap{max-width:1000px;margin:0 auto;padding:0 16px}
+  .lt-head{padding:28px 0 6px}
+  .lt-head h1{margin:0 0 6px;font-size:30px}
+  .lt-head p{color:#444;max-width:78ch;line-height:1.55}
+  .city{border:1px solid #ddd;border-radius:10px;padding:16px 18px;margin:14px 0;background:#fff}
+  .city h2{margin:0 0 4px;font-size:21px}
+  .city .facts{color:#17365d;font-weight:600;margin:2px 0}
+  .city p{color:#333;line-height:1.55;margin:6px 0}
+  .city .state{color:#555}
+  .badge{display:inline-block;padding:1px 9px;border-radius:20px;font-size:12.5px;font-weight:700;letter-spacing:.02em}
+  .badge.live{background:#e2f2e4;color:#14541c}
+  .badge.stage{background:#fdf0d5;color:#6b4e00}
+  .lt-how{padding:8px 0 34px;max-width:85ch}
+  .lt-how p,.lt-how li{color:#333;line-height:1.55}
+</style>
+</head>
+<body>
+<header class="nav"><a class="brand" href="/" aria-label="Detroit Automation Academy — home"><img src="/assets/logo.webp" alt="" class="brand-mark"><span class="brand-word">Detroit Automation <em>Academy</em></span></a><nav class="nav-links" id="daaNavLinks" aria-label="Primary"><a class="lane" data-audience="viewer" href="/watch/">Watch</a><a class="lane" data-audience="reader" href="/signal/">Read</a><a class="lane" data-audience="reader" href="/notes/">Notes</a><a class="lane" data-audience="reader" href="/press/">Press</a><a class="lane" data-audience="user" href="/live-transit.html">Do</a><a class="lane" data-audience="visitor" href="/programs.html">Programs</a><a class="lane" data-audience="user" href="/api.html">API</a><a class="lane" data-audience="visitor" href="/partners.html">Partners</a><a class="lane" data-audience="visitor" href="/#mission">About</a><a class="lane" data-audience="visitor" href="/apple-learning-coach/">Bio</a><a class="lane" data-audience="visitor" href="/find.html">Find</a><a class="lane" data-audience="subscriber" href="https://www.linkedin.com/newsletters/7508391258638311424/" target="_blank" rel="noopener" aria-label="Subscribe, opens in new tab">Subscribe</a></nav><button class="nav-toggle" id="daaNavToggle" aria-label="Toggle navigation" aria-expanded="false"><span></span><span></span><span></span></button></header>
+<script src="/nav.js?v=20261023-0221"></script>
+
+<main class="lt-wrap">
+  <div class="lt-head">
+    <h1>Live Transit — Cities</h1>
+    <p>One platform, many cities. Every city here runs on its own agency's
+    published data, behind a license review that has to permit computation —
+    not just display — before a single line of city code is written. Detroit
+    is the reference build. Philadelphia joins it live today. Six more cities
+    have cleared the license review and are in measured staging; their state
+    is stated plainly, including what is blocking each one.</p>
+  </div>
+
+  <section class="city">
+    <h2>Detroit <span class="badge live">LIVE</span></h2>
+    <p class="facts">DDOT · SMART · QLINE — 83 routes — live map and trip planner</p>
+    <p>The reference instance: every DDOT bus live in 3D, SMART buses shown
+    live under license (display only), QLINE streetcar, and a native trip
+    planner that computes from the agencies' published timetables.</p>
+    <p><a href="/live-transit.html">Open Detroit →</a></p>
+  </section>
+
+  <section class="city">
+    <h2>Philadelphia <span class="badge live">LIVE</span></h2>
+    <p class="facts">SEPTA — 178 operating routes · 13,665 stops — live map</p>
+    <p>Buses, trolleys, the subway and Regional Rail on one map of the
+    five-county Pennsylvania region, from SEPTA's agency-direct feeds.
+    Trip planning is in calibration and ships only when it meets Detroit's
+    correctness standard.</p>
+    <p><a href="/live-transit/philadelphia/">Open Philadelphia →</a></p>
+  </section>
+
+  <h2 style="margin-top:26px">In staging — license permits computation (A1 PASS)</h2>
+
+  <section class="city">
+    <h2>San Diego <span class="badge stage">STAGING</span></h2>
+    <p class="facts">San Diego MTS — 104 routes · 4,359 stops</p>
+    <p class="state">State: static feed validated; the realtime feed is
+    key-gated and the key was requested from MTS on Oct 22 (the agency
+    states 5–7 business days). The live page waits on that key — nothing
+    else blocks it.</p>
+  </section>
+
+  <section class="city">
+    <h2>Columbus <span class="badge stage">STAGING</span></h2>
+    <p class="facts">COTA — 43 routes · 2,977 stops</p>
+    <p class="state">State: static feed validated and the realtime feed
+    answers on schedule, but its vehicle envelopes have arrived empty in
+    every sample so far (evening and overnight; a peak-hours sample is
+    scheduled). A live map with no vehicles on it would mislead, so the
+    page waits on a populated feed.</p>
+  </section>
+
+  <section class="city">
+    <h2>Austin <span class="badge stage">STAGING</span></h2>
+    <p class="facts">CapMetro — 70 routes · 2,346 stops</p>
+    <p class="state">State: technical validation complete — keyless feeds,
+    measured cadence. One build note on file: service alerts arrive as a
+    non-standard export and need an adapter before any alerts surface.</p>
+  </section>
+
+  <section class="city">
+    <h2>Denver + Aurora <span class="badge stage">STAGING</span></h2>
+    <p class="facts">RTD — 130 routes · 8,161 stops</p>
+    <p class="state">State: technical validation complete — keyless feeds.
+    Both cities ride one RTD feed and one license, so they ship as one
+    build. Recorded gap: the feed carries no fare data (the agency posts
+    fares separately).</p>
+  </section>
+
+  <section class="city">
+    <h2>Sacramento <span class="badge stage">STAGING</span></h2>
+    <p class="facts">SacRT — 64 routes · 2,822 stops</p>
+    <p class="state">State: technical validation complete — keyless feeds,
+    via the agency portal's current static feed. (The catalog's older
+    static link serves an expired feed; it is recorded as stale and is
+    not used.)</p>
+  </section>
+
+  <section class="city">
+    <h2>Cincinnati <span class="badge stage">STAGING</span></h2>
+    <p class="facts">Metro (SORTA) — 53 routes · 3,513 stops</p>
+    <p class="state">State: technical validation complete — every realtime
+    endpoint keyless, and the best-measured feed in the program: 100% of
+    vehicle records carry a trip assignment.</p>
+  </section>
+
+  <section class="lt-how">
+    <h2>How a city gets here</h2>
+    <p>Each municipality passes the same staging pipeline, in public:
+    <strong>A0</strong> catalog discovery → <strong>A1</strong> license review
+    (the terms must permit display <em>and</em> computation; display-only or
+    non-commercial terms fail) → <strong>A2</strong> technical validation,
+    with cadence and coverage measured, never taken from documentation →
+    <strong>A3</strong> key custody → <strong>A4</strong> basemap from
+    authoritative geometry. Fifty municipalities were reviewed: 8 passed the
+    license review outright, 20 are conditional, and 22 remain unresolved —
+    none of those 42 is listed as a candidate until its license permits the
+    work.</p>
+    <p>Live Transit is published by AutomatedTechnologies. Riders never pay,
+    in any city. There are no ads on any Live Transit map, ever.</p>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <img src="/assets/logo.webp" alt="" class="brand-mark">
+      <span>Detroit Automation Academy</span>
+    </div>
+    <p class="footer-line">Built without funding. Finished on principle.</p>
+    <p class="footer-line">Justin Spencer Smith — Lead Technologist, AutomatedTechnologies; builder of Live Transit Detroit and the Detroit Automation Academy.</p>
+    <p class="footer-line"><a href="/feed/">RSS feed</a> — every edition and installment, as it publishes.</p>
+    <p class="footer-line"><a href="/terms.html">Terms of Service</a> · <a href="/privacy.html">Privacy Policy</a></p>
+    <p class="footer-fine">© 2026 AutomatedTechnologies d/b/a Detroit Automation Academy</p>
+  </div>
+</footer>
+<script src="/script.js?v=20261003-1330"></script>
+</body>
+</html>
