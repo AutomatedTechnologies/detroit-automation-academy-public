@@ -1,0 +1,47 @@
+name: PHL feed collect
+
+# Philadelphia live-vehicle republication (Live Transit — Philadelphia MVP,
+# 2026-10-23). Fetches SEPTA's agency-direct GTFS-RT vehicle positions
+# (bus + rail, kept as separate feed sections by the collector) and commits
+# the decoded JSON to live-transit/philadelphia/data/vehicles.json.
+# This workflow is the ONLY writer of that path; the Detroit live-data
+# chain (feed-publisher) writes only live-data/* and is untouched.
+# Cadence: every 5 minutes (the Actions scheduling floor). Page copy
+# states this republication cadence; the SEPTA source feeds regenerate
+# every ~30-60 seconds (measured at A2, 2026-10-22).
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: phl-feed
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Collect SEPTA vehicle positions
+        run: python3 live-transit/philadelphia/collect_phl.py live-transit/philadelphia/data/vehicles.json
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add live-transit/philadelphia/data/vehicles.json
+          if git diff --cached --quiet; then
+            echo "no change"
+          else
+            git commit -m "phl-data: vehicle positions update"
+            git push
+          fi
