@@ -15,23 +15,36 @@ Source endpoints (no key, agency-direct; Swiftly mirrors excluded):
 
 Usage: collect_phl.py <output.json>
 """
-import json, struct, sys, time, urllib.request
+
+import json
+import struct
+import sys
+import time
+import urllib.request
 from datetime import datetime, timezone
 
 ENDPOINTS = {
-    "septa-bus": "https://www3.septa.org/gtfsrt/septa-pa-us/Vehicle/rtVehiclePosition.pb",
-    "septa-rail": "https://www3.septa.org/gtfsrt/septarail-pa-us/Vehicle/rtVehiclePosition.pb",
+    "septa-bus": (
+        "https://www3.septa.org/gtfsrt/septa-pa-us/" "Vehicle/rtVehiclePosition.pb"
+    ),
+    "septa-rail": (
+        "https://www3.septa.org/gtfsrt/septarail-pa-us/" "Vehicle/rtVehiclePosition.pb"
+    ),
 }
+
 
 # ------------------------------------------------------------ protobuf wire
 def _varint(buf, i):
-    shift = 0; result = 0
+    shift = 0
+    result = 0
     while True:
-        b = buf[i]; i += 1
+        b = buf[i]
+        i += 1
         result |= (b & 0x7F) << shift
         if not (b & 0x80):
             return result, i
         shift += 7
+
 
 def fields(buf):
     """Yield (field_no, wire_type, value) — value is int, bytes, or raw slice."""
@@ -42,18 +55,23 @@ def fields(buf):
         if wt == 0:
             v, i = _varint(buf, i)
         elif wt == 1:
-            v = buf[i:i + 8]; i += 8
+            v = buf[i : i + 8]
+            i += 8
         elif wt == 2:
             ln, i = _varint(buf, i)
-            v = buf[i:i + ln]; i += ln
+            v = buf[i : i + ln]
+            i += ln
         elif wt == 5:
-            v = buf[i:i + 4]; i += 4
+            v = buf[i : i + 4]
+            i += 4
         else:
             raise ValueError(f"unsupported wire type {wt}")
         yield fno, wt, v
 
+
 def _f32(b):
     return struct.unpack("<f", b)[0]
+
 
 def decode_feed(buf):
     """GTFS-RT FeedMessage -> (header_timestamp, [vehicle dicts])."""
@@ -73,9 +91,16 @@ def decode_feed(buf):
                     veh = ev
             if veh is None:
                 continue
-            rec = {"entity": ent_id, "route": None, "trip": None,
-                   "label": None, "lat": None, "lon": None,
-                   "bearing": None, "ts": None}
+            rec = {
+                "entity": ent_id,
+                "route": None,
+                "trip": None,
+                "label": None,
+                "lat": None,
+                "lon": None,
+                "bearing": None,
+                "ts": None,
+            }
             # SEPTA's vendor serializes VehiclePosition NONSTANDARDLY
             # (measured 2026-10-23 against the live feed + TransitView
             # ground truth): position at field 2 (fixed32 subfields),
@@ -95,8 +120,12 @@ def decode_feed(buf):
                         lon = _f32(pv)
                     elif pwt == 5 and pf == 3:
                         bearing = round(_f32(pv), 1)
-                if lat is not None and lon is not None \
-                        and 38.0 < lat < 42.0 and -77.0 < lon < -73.0:
+                if (
+                    lat is not None
+                    and lon is not None
+                    and 38.0 < lat < 42.0
+                    and -77.0 < lon < -73.0
+                ):
                     return lat, lon, bearing
                 return None
 
@@ -131,15 +160,21 @@ def decode_feed(buf):
                     lab = parse_descriptor(vv)
                     if lab:
                         rec["label"] = lab
-                elif vf in (5, 7) and wt == 0 and isinstance(vv, int) \
-                        and vv > 1_500_000_000:
+                elif (
+                    vf in (5, 7)
+                    and wt == 0
+                    and isinstance(vv, int)
+                    and vv > 1_500_000_000
+                ):
                     rec["ts"] = vv
             if rec["lat"] is not None and rec["lon"] is not None:
                 vehicles.append(rec)
     return header_ts, vehicles
 
+
 def iso(ts):
     return datetime.fromtimestamp(ts, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
 
 def main():
     out_path = sys.argv[1] if len(sys.argv) > 1 else "vehicles.json"
@@ -147,19 +182,22 @@ def main():
     doc = {"city": "philadelphia", "fetched_at": iso(fetched), "feeds": {}}
     for feed_id, url in ENDPOINTS.items():
         req = urllib.request.Request(url, headers={"User-Agent": "lt-phl-collect/1.0"})
-        with urllib.request.urlopen(req, timeout=60) as r:
+        # URLs are the hard-coded https ENDPOINTS above; no external input.
+        with urllib.request.urlopen(req, timeout=60) as r:  # nosec B310
             buf = r.read()
         header_ts, vehicles = decode_feed(buf)
         # SEPTA rail emits one entity per trip assignment for
         # through-routed trains (same vehicle, same position, several
         # trip/route pairs). For a position display, collapse exact
         # (label, position) duplicates, keeping the first assignment.
-        seen = set(); deduped = []
+        seen = set()
+        deduped = []
         for v in vehicles:
             k = (v["label"], round(v["lat"], 5), round(v["lon"], 5))
             if k in seen:
                 continue
-            seen.add(k); deduped.append(v)
+            seen.add(k)
+            deduped.append(v)
         vehicles = deduped
         with_route = sum(1 for v in vehicles if v["route"])
         doc["feeds"][feed_id] = {
@@ -169,11 +207,14 @@ def main():
             "count": len(vehicles),
             "with_route": with_route,
         }
-        print(f"{feed_id}: {len(vehicles)} vehicles, {with_route} with route, "
-              f"header {doc['feeds'][feed_id]['feed_header_at']}")
+        print(
+            f"{feed_id}: {len(vehicles)} vehicles, {with_route} with route, "
+            f"header {doc['feeds'][feed_id]['feed_header_at']}"
+        )
     with open(out_path, "w") as f:
         json.dump(doc, f, separators=(",", ":"))
     print("wrote", out_path)
+
 
 if __name__ == "__main__":
     main()
