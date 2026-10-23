@@ -243,7 +243,7 @@
       <h2>Rate-limit etiquette</h2>
       <div class="prose">
         <ul>
-          <li>Poll at most <strong>once per minute</strong>. The academy&rsquo;s own map polls the vehicles file every 60 seconds — matching that is plenty.</li>
+          <li>Poll at most <strong>once per minute</strong>. Positions poll continuously and publish about every five minutes; the map dead-reckons between updates — matching that cadence is plenty.</li>
           <li>The files are rebuilt about every 5 minutes, so faster polling returns the same file; use <code>generated_at</code> to detect genuinely new data instead of re-polling.</li>
           <li>Cache responses client-side. Don&rsquo;t fan out one page view into many parallel requests.</li>
           <li>The published files are the whole interface — there is no key to ask for and nothing upstream to bypass; the agency key exists only inside the collection workflow.</li>
