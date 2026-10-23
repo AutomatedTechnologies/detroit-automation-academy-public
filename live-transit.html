@@ -336,6 +336,58 @@
   .toast-btn { background: #E85D1A; border: none; color: #0C1116; font-weight: 700; font-size: .78rem; border-radius: 999px; padding: .35rem .8rem; cursor: pointer; font-family: "Inter", sans-serif; flex: none; }
   .toast-btn-quiet { background: transparent; color: #9AA0A6; font-weight: 500; }
   .map-toast[hidden] { display: none; }
+  /* First-view use-case launcher sheet (Concept 3, Justin's pick
+     2026-10-23): a bottom sheet over the live map — the map stays the
+     hero and fully interactive above it. The sheet owns only its own
+     touch region: its content scrolls with pan-y, its header is the
+     drag surface (touch-action none), and map gestures outside the
+     sheet are untouched. State (open / collapsed to the Explore
+     handle) persists in localStorage 'lt-fv-sheet'. */
+  .fv-sheet { position: absolute; left: 50%; bottom: max(.75rem, env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(27rem, calc(100% - 1rem)); max-height: min(46dvh, 30rem); display: flex; flex-direction: column; background: rgba(12,17,22,.96); border: 1px solid rgba(245,242,234,.18); border-radius: 20px 20px 16px 16px; box-shadow: 0 12px 32px rgba(0,0,0,.45); backdrop-filter: blur(10px); z-index: 6; font-family: "Inter", sans-serif; color: #F5F2EA; touch-action: pan-y; overscroll-behavior: contain; transition: transform .22s ease, opacity .22s ease; }
+  .fv-sheet[hidden] { display: none; }
+  .fv-sheet.fv-dragging { transition: none; }
+  .fv-head { flex: none; display: flex; align-items: flex-start; gap: .6rem; padding: .55rem .8rem .6rem; cursor: grab; touch-action: none; border-bottom: 1px solid rgba(245,242,234,.1); }
+  .fv-head:active { cursor: grabbing; }
+  .fv-grab { flex: none; width: 2.75rem; height: 2.75rem; margin: -.35rem 0 -.35rem -.45rem; background: none; border: none; cursor: pointer; display: flex; align-items: flex-start; justify-content: center; padding-top: .5rem; touch-action: none; }
+  .fv-grab span { display: block; width: 2.25rem; height: .3rem; border-radius: 999px; background: rgba(245,242,234,.45); }
+  .fv-grab:focus-visible { outline: 2px solid #E85D1A; outline-offset: 2px; border-radius: 10px; }
+  .fv-heading { flex: 1; min-width: 0; }
+  .fv-greeting { margin: 0; font-family: "Space Grotesk", sans-serif; font-size: .78rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #E85D1A; }
+  .fv-heading h2 { margin: .15rem 0 0; font-family: "Space Grotesk", sans-serif; font-size: 1.02rem; line-height: 1.2; color: #F5F2EA; }
+  .fv-just-map { flex: none; min-height: 44px; background: none; border: 1px solid rgba(232,93,26,.6); color: #E85D1A; border-radius: 999px; padding: .35rem .8rem; font-size: .78rem; font-weight: 600; cursor: pointer; font-family: "Inter", sans-serif; touch-action: manipulation; }
+  .fv-just-map:hover { background: rgba(232,93,26,.12); }
+  .fv-just-map:focus-visible { outline: 2px solid #E85D1A; outline-offset: 2px; }
+  .fv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; padding: .7rem .8rem .85rem; overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; }
+  .fv-grid[hidden] { display: none; }
+  .fv-tile { min-height: 64px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: .18rem; text-align: left; background: rgba(245,242,234,.05); border: 1px solid rgba(245,242,234,.14); border-radius: 12px; color: #F5F2EA; padding: .6rem .75rem; cursor: pointer; font-family: "Inter", sans-serif; touch-action: manipulation; }
+  .fv-tile:hover { border-color: #E85D1A; }
+  .fv-tile:focus-visible { outline: 2px solid #E85D1A; outline-offset: 2px; }
+  .fv-tile-name { font-size: .92rem; font-weight: 700; line-height: 1.15; }
+  .fv-tile-proof { font-size: .74rem; line-height: 1.3; color: #9AA0A6; }
+  .fv-near { padding: .75rem .8rem .9rem; overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; }
+  .fv-near[hidden] { display: none; }
+  .fv-near h3 { margin: 0 0 .3rem; font-family: "Space Grotesk", sans-serif; font-size: .95rem; color: #F5F2EA; }
+  .fv-near p { margin: 0 0 .7rem; color: #9AA0A6; font-size: .8rem; line-height: 1.45; }
+  .fv-near-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .fv-near-actions button { min-height: 44px; border-radius: 999px; padding: .45rem .95rem; font-size: .82rem; font-weight: 600; cursor: pointer; font-family: "Inter", sans-serif; touch-action: manipulation; }
+  .fv-near-actions button:focus-visible { outline: 2px solid #E85D1A; outline-offset: 2px; }
+  .fv-near-primary { background: #E85D1A; border: 1px solid #E85D1A; color: #0C1116; }
+  .fv-near-secondary { background: none; border: 1px solid rgba(245,242,234,.35); color: #F5F2EA; }
+  .fv-near-back { background: none; border: none; color: #9AA0A6; font-weight: 500; }
+  .fv-handle { position: absolute; left: 50%; bottom: max(.75rem, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 6; min-width: 10rem; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: .5rem; background: rgba(12,17,22,.94); border: 1px solid rgba(232,93,26,.6); color: #F5F2EA; border-radius: 999px; padding: .55rem 1.1rem; font-size: .88rem; font-weight: 700; cursor: pointer; font-family: "Inter", sans-serif; box-shadow: 0 8px 24px rgba(0,0,0,.4); backdrop-filter: blur(8px); touch-action: manipulation; transition: transform .22s ease, opacity .22s ease; }
+  .fv-handle[hidden] { display: none; }
+  .fv-handle:hover { border-color: #E85D1A; }
+  .fv-handle:focus-visible { outline: 2px solid #E85D1A; outline-offset: 2px; }
+  .fv-handle .fv-handle-chev { color: #E85D1A; font-size: 1rem; line-height: 1; }
+  body.fs-lock .fv-sheet { touch-action: pan-y; overscroll-behavior: contain; }
+  body.fs-lock .fv-head, body.fs-lock .fv-grab { touch-action: none; }
+  @media (max-height: 560px) {
+    .fv-sheet { max-height: calc(100dvh - 5rem); }
+    .fv-tile { min-height: 56px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fv-sheet, .fv-handle { transition: none; }
+  }
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   .map-toast button { background: none; border: none; color: #9AA0A6; font-size: 1.2rem; cursor: pointer; line-height: 1; padding: .2rem .3rem; touch-action: manipulation; }
   .map-toast button:hover { color: #F5F2EA; }
@@ -728,6 +780,57 @@
         </div>
         <div class="svc-details" id="svc-details" hidden></div>
       </div>
+      <!-- First-view use-case launcher sheet (Concept 3, Justin's pick
+           2026-10-23). Non-modal: the map stays live and interactive
+           above it. Behavior + persistence live in live-transit.js
+           (fvInitFirstView); the boot location prompt it replaces is
+           deleted there — Near me below is the only location offer. -->
+      <section class="fv-sheet" id="fv-sheet" aria-labelledby="fv-title" hidden>
+        <div class="fv-head" id="fv-head">
+          <button class="fv-grab" id="fv-collapse" type="button" aria-label="Collapse the Explore sheet" aria-expanded="true" aria-controls="fv-sheet"><span aria-hidden="true"></span></button>
+          <div class="fv-heading">
+            <p class="fv-greeting">Detroit, live.</p>
+            <h2 id="fv-title">What do you want to do?</h2>
+          </div>
+          <button class="fv-just-map" id="fv-just-map" type="button">Just the map</button>
+        </div>
+        <div class="fv-grid" id="fv-grid" role="group" aria-label="Live Transit use cases">
+          <button class="fv-tile" type="button" data-fv-action="live">
+            <span class="fv-tile-name">Live map</span>
+            <span class="fv-tile-proof" id="fv-proof-live">Connecting…</span>
+          </button>
+          <button class="fv-tile" type="button" data-fv-action="plan">
+            <span class="fv-tile-name">Plan a trip</span>
+            <span class="fv-tile-proof" id="fv-proof-plan">Door to door, scheduled + live times</span>
+          </button>
+          <button class="fv-tile" type="button" data-fv-action="ride">
+            <span class="fv-tile-name">Ride along</span>
+            <span class="fv-tile-proof" id="fv-proof-ride">Follow a live bus</span>
+          </button>
+          <button class="fv-tile" type="button" data-fv-action="routes">
+            <span class="fv-tile-name">All routes</span>
+            <span class="fv-tile-proof" id="fv-proof-routes">83 routes · DDOT · SMART · QLINE</span>
+          </button>
+          <button class="fv-tile" type="button" data-fv-action="near">
+            <span class="fv-tile-name">Near me</span>
+            <span class="fv-tile-proof" id="fv-proof-near">Stops around you</span>
+          </button>
+          <button class="fv-tile" type="button" data-fv-action="alerts">
+            <span class="fv-tile-name">Alerts</span>
+            <span class="fv-tile-proof" id="fv-proof-alerts">Checking…</span>
+          </button>
+        </div>
+        <div class="fv-near" id="fv-near" hidden>
+          <h3>Stops near you</h3>
+          <p>Use your location, or use the center of the map — no permission needed.</p>
+          <div class="fv-near-actions">
+            <button class="fv-near-primary" id="fv-near-location" type="button">Use my location</button>
+            <button class="fv-near-secondary" id="fv-near-center" type="button">Use map center</button>
+            <button class="fv-near-back" id="fv-near-back" type="button">Back</button>
+          </div>
+        </div>
+      </section>
+      <button class="fv-handle" id="fv-explore" type="button" aria-expanded="false" aria-controls="fv-sheet" hidden><span>Explore</span><span class="fv-handle-chev" aria-hidden="true">↑</span></button>
       <div class="filter-panel" id="filter-panel" hidden>
         <div class="filter-panel-head">
           <strong>Routes</strong>
@@ -1021,6 +1124,6 @@
   window.FORGE_LIVE_PROXY = "live-data";
 </script>
 <script src="ride-along.js?v=20261019-1228"></script>
-<script type="module" src="live-transit.js?v=20261021-1623"></script>
+<script type="module" src="live-transit.js?v=20261023-0134"></script>
 </body>
 </html>
