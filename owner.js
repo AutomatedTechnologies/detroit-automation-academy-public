@@ -1,21 +1,16 @@
-/* DAA owner layer — visitor-safe by default.
-   - Loads live.json (announcement bar + hero stats). Fails silent.
-   - Telemetry beacon: dormant unless TELEMETRY_ENDPOINT is set. Respects DNT.
-   - Commentary mode: owner-only, enabled from the console (sessionStorage). */
+/* DAA live content renderer — a public feature.
+   Loads live.json (announcement bar + hero stats). Fails silent.
+
+   History: this file formerly also carried an "owner layer" — a
+   dormant telemetry beacon and a "director's commentary" mode gated
+   by the sessionStorage flag 'daa_owner', a relic of the retired
+   owner console. That machinery was removed on 2026-10-23 (security
+   remediation R6): a client-side flag named like an authorization
+   boundary is not one, and nothing on the public estate may present
+   itself as an owner gate. What remains is the renderer, which was
+   always a public feature over public data. */
 (function () {
   'use strict';
-
-  var TELEMETRY_ENDPOINT = null; /* set to the worker /collect URL when deployed */
-
-  function isOwner() {
-    try { return sessionStorage.getItem('daa_owner') === '1'; } catch (e) { return false; }
-  }
-
-  function escapeHtml(s) {
-    return String(s == null ? '' : s)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
 
   /* Only http(s) links out of the announcement bar — never javascript:/data:. */
   function safeUrl(u) {
@@ -67,92 +62,4 @@
       .then(applyLive)
       .catch(function () { /* static defaults stand */ });
   }
-
-  /* ---------------- telemetry beacon ---------------- */
-  function beacon(type, detail) {
-    if (!TELEMETRY_ENDPOINT) return;
-    try { if (navigator.doNotTrack === '1') return; } catch (e) {}
-    var payload = {
-      type: type,
-      page: location.pathname,
-      ref: document.referrer || null,
-      vw: window.innerWidth,
-      ts: Date.now(),
-      detail: detail == null ? null : String(detail).slice(0, 80)
-    };
-    try {
-      var body = JSON.stringify(payload);
-      if (navigator.sendBeacon) navigator.sendBeacon(TELEMETRY_ENDPOINT, body);
-      else fetch(TELEMETRY_ENDPOINT, { method: 'POST', body: body, keepalive: true });
-      window.__daaBeaconSent = true;
-    } catch (e) {}
-  }
-
-  if (document.readyState === 'complete') beacon('pageview');
-  else window.addEventListener('load', function () { beacon('pageview'); });
-
-  document.addEventListener('submit', function (e) {
-    if (e.target && e.target.id === 'demoForm') {
-      var input = document.getElementById('demoInput');
-      beacon('demo-cmd', input ? input.value : null);
-    }
-  });
-
-  /* ---------------- director's commentary (owner only) ---------------- */
-  function commentaryOn() {
-    if (!isOwner()) return false;
-    try {
-      if (sessionStorage.getItem('daa_commentary') === '1') return true;
-      return new URLSearchParams(location.search).has('commentary');
-    } catch (e) { return false; }
-  }
-
-  function renderCommentary(notes) {
-    if (!Array.isArray(notes) || !notes.length) return;
-    var panel = document.createElement('aside');
-    panel.id = 'daa-commentary';
-    panel.setAttribute('aria-label', "Director's commentary");
-    var html = '<div class="daac-head"><strong>Director&rsquo;s commentary</strong>' +
-      '<button type="button" id="daac-close" aria-label="Close commentary">&times;</button></div><ol>';
-    notes.forEach(function (n, i) {
-      html += '<li><button type="button" data-i="' + i + '"><strong>' +
-        escapeHtml(n.title) + '</strong><span>' + escapeHtml(n.note) + '</span></button></li>';
-    });
-    panel.innerHTML = html + '</ol>';
-    document.body.appendChild(panel);
-    panel.addEventListener('click', function (e) {
-      if (e.target && e.target.id === 'daac-close') {
-        try { sessionStorage.removeItem('daa_commentary'); } catch (err) {}
-        panel.remove();
-        return;
-      }
-      var btn = e.target.closest ? e.target.closest('button[data-i]') : null;
-      if (btn) {
-        var n = notes[+btn.getAttribute('data-i')];
-        var el = n && document.querySelector(n.selector);
-        if (el) {
-          el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-          el.classList.add('daac-flash');
-          setTimeout(function () { el.classList.remove('daac-flash'); }, 1600);
-        }
-      }
-    });
-  }
-
-  function startCommentary() {
-    if (!commentaryOn()) return;
-    var run = function () {
-      fetch('commentary.json', { cache: 'no-store' })
-        .then(function (r) { return r.ok ? r.json() : []; })
-        .then(renderCommentary)
-        .catch(function () {});
-    };
-    if (document.body) run();
-    else document.addEventListener('DOMContentLoaded', run);
-  }
-  startCommentary();
-
-  /* test hook */
-  window.DAA_OWNER = { applyLive: applyLive, beacon: beacon, isOwner: isOwner,
-                       renderCommentary: renderCommentary, commentaryOn: commentaryOn };
 })();
