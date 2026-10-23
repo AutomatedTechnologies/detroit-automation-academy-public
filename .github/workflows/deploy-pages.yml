@@ -35,10 +35,17 @@ jobs:
 
           # Copy all root HTML, CSS, JS, and shell scripts (dynamic collection)
           cp *.html deployment/ || echo "No HTML files found"
-          cp *.sh deployment/   || echo "No shell scripts found"
           cp *.css deployment/ || echo "No CSS files found"
           cp *.js deployment/ || echo "No JS files found"
-          cp *.json deployment/ || echo "No JSON files found"
+          # Root JSON is an explicit allowlist (security remediation R2,
+          # 2026-10-23): the previous `cp *.json` / `cp *.sh` globs
+          # published any root data/script file by default — that is how
+          # an internal pre-launch shell script shipped publicly. A new
+          # root .json data file must be added here deliberately; root
+          # shell scripts are never site content and are not copied.
+          for f in commentary.json ddot-fleet.json ddot-routes-3d.json ddot-timetable-S1000182.json geometry-manifest.json landmarks.json live.json peoplemover-3d.json places.json planner-timetable-S1000182-S1000147.json qline-3d.json search-index.json smart-routes-3d.json; do
+            cp "$f" deployment/ || echo "allowlisted JSON missing: $f"
+          done
           
           # Copy system metadata
           cp CNAME deployment/               || echo "CNAME not found"
