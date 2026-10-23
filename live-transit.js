@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261021-1623';
+  var STAMP = '20261023-0134';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -2897,6 +2897,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // unhides itself). Closes panels outright, hard-closes the other mode
   // when a mode opens, and covers any card with its state intact.
   function exclCover(name) {
+    // First-view sheet: any exclusion surface opening occludes the
+    // launcher (transiently — the rider's persisted open/collapsed
+    // preference is untouched; exclRestore un-occludes).
+    fvSetOccluded(true);
     _coveredStack = _coveredStack.filter(function (n) { return n !== name; });
     var cur = visibleSurface();
     if (!cur || cur === name) return;
@@ -2936,6 +2940,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (name === 'stop' && typeof renderStopLive === 'function') renderStopLive();
       return;
     }
+    fvSetOccluded(false);
     camMemOnSettled();
   }
 
@@ -4284,38 +4289,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     );
   });
 
-  // Soft location prompt at load: one quiet toast offering the locate flow,
-  // never the raw system dialog uninvited. Silent when already located,
-  // unsupported, or previously denied.
-  var locPrompted = false;
-  function maybePromptLocation() {
-    if (locPrompted || userXZ || !('geolocation' in navigator)) return;
-    locPrompted = true;
-    var show = function () {
-      var t = $('map-toast');
-      t.innerHTML = '';
-      var s = document.createElement('span');
-      s.textContent = 'See routes near you?';
-      var go = document.createElement('button');
-      go.textContent = 'Enable location';
-      go.className = 'toast-btn';
-      go.addEventListener('click', function (e) { e.stopPropagation(); hideToast(); locateBtn.click(); });
-      var no = document.createElement('button');
-      no.textContent = 'Not now';
-      no.className = 'toast-btn toast-btn-quiet';
-      no.addEventListener('click', function (e) { e.stopPropagation(); hideToast(); });
-      t.appendChild(s); t.appendChild(go); t.appendChild(no);
-      t.hidden = false;
-    };
-    try {
-      if (navigator.permissions && navigator.permissions.query) {
-        navigator.permissions.query({ name: 'geolocation' }).then(function (res) {
-          if (res.state === 'granted') locateBtn.click();
-          else if (res.state === 'prompt') show();
-        }, function () { show(); });
-      } else { show(); }
-    } catch (e) { show(); }
-  }
+  // Boot location prompt DELETED (first-view launcher, Concept 3 —
+  // Justin's pick 2026-10-23): nothing asks for location at load, in
+  // any form. The only location offer is the launcher sheet's Near me
+  // tile (fvShowNearChoice, in the first-view section below), which is
+  // inline, optional, and carries a no-permission map-center fallback.
+  // The map-tools locate button's own behavior above is unchanged.
 
   // --- Ride-along stop times (2026-10-15) ---------------------------------
   // Supplies Ride Along's upcoming-stops list with per-stop times from
@@ -8163,6 +8142,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     el.textContent = text;
     el.title = text || '';
     el.className = warn ? 'feed-warn' : '';
+    fvRefreshProofs();
   }
   // The header count must follow filters immediately — a toggle that
   // empties the map while the header still claims "13 buses" is a lie.
@@ -10165,6 +10145,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     });
   }
   function refreshAlertSurfaces() {
+    fvAlertsChecked = true;
     renderAlertSr();
     renderChipBadges();
     try { renderAlertMap(); } catch (e) { /* overlay failure must never mark the feed down */ }
@@ -10181,6 +10162,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       if (typeof buildBrowseStops === 'function') buildBrowseStops();
       if (typeof refreshBrowseBuses === 'function') refreshBrowseBuses(true);
     }
+    fvRefreshProofs();
   }
   function pollAlerts() {
     var proxy = (window.FORGE_LIVE_PROXY || '').replace(/\/$/, '');
@@ -10212,6 +10194,276 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   function startAlertsPoll() {
     pollAlerts();
     setInterval(function () { if (!document.hidden) pollAlerts(); }, 120000);
+  }
+
+  // --- first-view use-case launcher sheet (Concept 3) ----------------------
+  // Justin's pick at the first-view decision gate, 2026-10-23 (the gate
+  // recommended Concept 1; the pick stands as decided). A bottom sheet
+  // over the live map: greeting + six use-case tiles, each carrying a
+  // live fragment refreshed from the same state the header and the
+  // alerts module already maintain (fvRefreshProofs is called from
+  // setHeader and refreshAlertSurfaces — no second data path). Tiles
+  // call the EXISTING entry functions only (setTripMode / setRideMode /
+  // togglePanel / setNearMe / showStop / the alerts text path) — there
+  // is no parallel navigation system. The sheet collapses to the
+  // persistent "Explore" handle; open/collapsed is the rider's own
+  // persisted preference in localStorage 'lt-fv-sheet' (alongside, never
+  // replacing, the existing lt-* keys), defaulting to open only when
+  // the key is absent. Opening any exclusion surface occludes the
+  // launcher transiently (exclCover / exclRestore above) without
+  // touching that preference. Location is offered ONLY here, inline:
+  // the boot prompt is deleted, and Near me always offers the
+  // no-permission map-center fallback beside the location request.
+  var FV_SHEET_KEY = 'lt-fv-sheet';
+  var fvSheetInit = false;
+  var fvSheetOpen = false;     // the rider's persisted preference, rendered
+  var fvSheetOccluded = false; // transient: an exclusion surface is up
+  var fvAlertsChecked = false; // set by refreshAlertSurfaces on first run
+  var fvCenterRoutes = null;   // route count from a map-center Near me use
+  var fvDrag = null;           // header drag state { y0, dy, moved }
+
+  function fvRenderSheet() {
+    var sheet = $('fv-sheet'), handle = $('fv-explore');
+    if (!sheet || !handle) return;
+    var showSheet = fvSheetOpen && !fvSheetOccluded;
+    sheet.hidden = !showSheet;
+    handle.hidden = !(!fvSheetOpen && !fvSheetOccluded);
+    sheet.style.transform = '';
+    sheet.classList.remove('fv-dragging');
+    var grab = $('fv-collapse');
+    if (grab) grab.setAttribute('aria-expanded', String(fvSheetOpen));
+    handle.setAttribute('aria-expanded', String(fvSheetOpen));
+  }
+  function fvSetOccluded(occluded) {
+    occluded = !!occluded;
+    if (fvSheetOccluded === occluded) return;
+    fvSheetOccluded = occluded;
+    fvRenderSheet();
+  }
+  function fvSetSheet(open, opts) {
+    opts = opts || {};
+    fvSheetOpen = !!open;
+    if (opts.persist) {
+      try { localStorage.setItem(FV_SHEET_KEY, fvSheetOpen ? 'open' : 'collapsed'); } catch (e) {}
+    }
+    fvRenderSheet();
+    if (!fvSheetOpen && opts.focusHandle !== false) {
+      var active = document.activeElement;
+      var sheet = $('fv-sheet');
+      if (active && sheet && sheet.contains(active)) $('fv-explore').focus();
+    }
+    if (fvSheetOpen && opts.focusFirst) {
+      var first = document.querySelector('#fv-grid .fv-tile');
+      if (first) first.focus();
+    }
+  }
+  function fvRefreshProofs() {
+    var live = $('fv-proof-live');
+    if (!live) return;
+    var totalText = $('bus-total') ? String($('bus-total').textContent || '').trim() : '';
+    var total = /^\d+$/.test(totalText) ? parseInt(totalText, 10) : null;
+    var ride = $('fv-proof-ride');
+    if (total === null) {
+      live.textContent = 'Connecting…';
+      if (ride) ride.textContent = 'Follow a live bus';
+    } else if (total === 0) {
+      // Overnight / degenerate state: say so plainly, never a stale count.
+      live.textContent = 'No vehicles live right now';
+      if (ride) ride.textContent = 'No live buses to follow right now';
+    } else {
+      live.textContent = total + (total === 1 ? ' vehicle live now' : ' vehicles live now');
+      if (ride) ride.textContent = 'Follow a live bus';
+    }
+    var routes = $('fv-proof-routes');
+    if (routes && typeof routeOrder !== 'undefined' && routeOrder && routeOrder.length) {
+      routes.textContent = routeOrder.length + ' routes on the map';
+    }
+    var near = $('fv-proof-near');
+    if (near) {
+      if (typeof filterState !== 'undefined' && filterState.nearMe) {
+        var n = (typeof nearMeSet !== 'undefined' && nearMeSet) ? Object.keys(nearMeSet).length : 0;
+        near.textContent = n ? n + (n === 1 ? ' route' : ' routes') + ' near you' : 'Near me is on';
+      } else if (fvCenterRoutes !== null) {
+        near.textContent = fvCenterRoutes + (fvCenterRoutes === 1 ? ' route' : ' routes') + ' around the map center';
+      } else if (typeof userXZ !== 'undefined' && userXZ) {
+        near.textContent = 'Location is on';
+      } else {
+        near.textContent = 'Stops around you';
+      }
+    }
+    var alerts = $('fv-proof-alerts');
+    if (alerts) {
+      if (!fvAlertsChecked) alerts.textContent = 'Checking…';
+      else if (!alertsState.ok) alerts.textContent = 'Alert feed unavailable';
+      else {
+        var count = activeAlerts().length;
+        alerts.textContent = count === 0 ? 'No active alerts'
+          : count + (count === 1 ? ' active alert' : ' active alerts');
+      }
+    }
+  }
+  function fvShowNearChoice() {
+    $('fv-grid').hidden = true;
+    $('fv-near').hidden = false;
+    var b = $('fv-near-location');
+    if (b) b.focus();
+  }
+  function fvShowTiles() {
+    $('fv-near').hidden = true;
+    $('fv-grid').hidden = false;
+    var tile = document.querySelector('#fv-grid [data-fv-action="near"]');
+    if (tile) tile.focus();
+  }
+  function fvNearLocation() {
+    if (filterState.nearMe) {
+      fvSetSheet(false, { persist: true });
+      showToast('Routes near you are on.', false);
+      return;
+    }
+    fvCenterRoutes = null;
+    if (userXZ) {
+      setNearMe(true);
+      fvSetSheet(false, { persist: true });
+      return;
+    }
+    // No fix yet: the existing locate flow enables near-me on success
+    // (pendingNearMe is consumed by onLocated). Permission is requested
+    // only here, in context, from this tap — never at boot.
+    pendingNearMe = true;
+    fvSetSheet(false, { persist: true });
+    locateBtn.click();
+  }
+  function fvNearCenter() {
+    // No-permission fallback: the governed stop nearest the map center,
+    // through the existing nearest-stop computation and stop card.
+    if (!controls || typeof nearestStopTo !== 'function') return;
+    var cx = controls.target.x, cz = controls.target.z;
+    if (stopData) {
+      var seen = {}, count = 0, r2 = NEAR_ME_M * NEAR_ME_M;
+      for (var i = 0; i < stopData.length; i++) {
+        var s = stopData[i];
+        var dx = s.x - cx, dz = s.z - cz;
+        if (dx * dx + dz * dz > r2) continue;
+        for (var j = 0; j < (s.r || []).length; j++) {
+          if (!seen[s.r[j]]) { seen[s.r[j]] = true; count++; }
+        }
+      }
+      fvCenterRoutes = count;
+    }
+    var st = nearestStopTo(cx, cz, NEAR_ME_M);
+    if (!st) {
+      showToast('No stops within 1,250 m of the map center.', true);
+      return;
+    }
+    fvSetSheet(false, { persist: true, focusHandle: false });
+    fvRefreshProofs();
+    showStop(st);
+  }
+  function fvShowAlerts() {
+    // The alerts surfaces are the existing ones: the alert text path
+    // (alertWhatChanged, the same words the planner and stop cards use)
+    // announced through the shared toast + screen-reader channel.
+    if (!fvAlertsChecked || !alertsState.ok) {
+      showToast('Service alerts are unavailable right now.', false);
+      announceSr('Service alerts are unavailable right now.');
+      return;
+    }
+    var act = activeAlerts();
+    if (!act.length) {
+      showToast('No active service alerts.', false);
+      announceSr('No active service alerts.');
+      return;
+    }
+    var msg = alertWhatChanged(act[0]);
+    if (act.length > 1) msg += ' (+' + (act.length - 1) + ' more active ' + (act.length === 2 ? 'alert' : 'alerts') + ')';
+    showToast(msg, true);
+    announceSr(msg);
+  }
+  function fvTileAction(action) {
+    tapBuzz();
+    if (action === 'live') {
+      fvSetSheet(false, { persist: true });
+      try { container.focus({ preventScroll: true }); } catch (e) { try { container.focus(); } catch (e2) {} }
+      return;
+    }
+    if (action === 'near') { fvShowNearChoice(); return; }
+    fvSetSheet(false, { persist: true, focusHandle: false });
+    if (action === 'plan') { if (!tripMode) setTripMode(true); }
+    else if (action === 'ride') { if (!rideMode) setRideMode(true); }
+    else if (action === 'routes') { setBrowse(false); togglePanel(true); }
+    else if (action === 'alerts') { fvShowAlerts(); }
+  }
+  function fvInitFirstView() {
+    if (fvSheetInit) return;
+    var sheet = $('fv-sheet'), handle = $('fv-explore'), head = $('fv-head');
+    if (!sheet || !handle || !head) return;
+    fvSheetInit = true;
+    var stored = null;
+    try { stored = localStorage.getItem(FV_SHEET_KEY); } catch (e) {}
+    // Absent key = first view = open. Only an explicit 'collapsed'
+    // starts a returning rider at the handle.
+    fvSheetOpen = stored !== 'collapsed';
+    fvRenderSheet();
+    fvRefreshProofs();
+    handle.addEventListener('click', function () {
+      fvShowTilesReset();
+      fvSetSheet(true, { persist: true, focusFirst: true });
+    });
+    function fvShowTilesReset() {
+      var near = $('fv-near'), grid = $('fv-grid');
+      if (near) near.hidden = true;
+      if (grid) grid.hidden = false;
+    }
+    $('fv-collapse').addEventListener('click', function () {
+      fvSetSheet(false, { persist: true });
+    });
+    $('fv-just-map').addEventListener('click', function () {
+      fvSetSheet(false, { persist: true });
+    });
+    Array.prototype.forEach.call(sheet.querySelectorAll('[data-fv-action]'), function (tile) {
+      tile.addEventListener('click', function () { fvTileAction(tile.getAttribute('data-fv-action')); });
+    });
+    $('fv-near-location').addEventListener('click', fvNearLocation);
+    $('fv-near-center').addEventListener('click', fvNearCenter);
+    $('fv-near-back').addEventListener('click', fvShowTiles);
+    sheet.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        fvSetSheet(false, { persist: true });
+      }
+    });
+    // Header drag: a downward drag past the threshold collapses the
+    // sheet; a tap on the header (not on its buttons) collapses too.
+    // The header owns this gesture (touch-action: none in CSS); the
+    // sheet body keeps pan-y for its own scrolling, and nothing here
+    // touches gestures that start on the map.
+    head.addEventListener('pointerdown', function (e) {
+      fvDrag = { y0: e.clientY, dy: 0, moved: false };
+      try { head.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    head.addEventListener('pointermove', function (e) {
+      if (!fvDrag) return;
+      fvDrag.dy = Math.max(0, e.clientY - fvDrag.y0);
+      if (fvDrag.dy > 8) {
+        fvDrag.moved = true;
+        sheet.classList.add('fv-dragging');
+        sheet.style.transform = 'translateX(-50%) translateY(' + fvDrag.dy + 'px)';
+      }
+    });
+    function fvDragEnd() {
+      if (!fvDrag) return;
+      var moved = fvDrag.moved, dy = fvDrag.dy;
+      fvDrag = null;
+      sheet.classList.remove('fv-dragging');
+      sheet.style.transform = '';
+      if (moved && dy > 64) fvSetSheet(false, { persist: true });
+    }
+    head.addEventListener('pointerup', fvDragEnd);
+    head.addEventListener('pointercancel', fvDragEnd);
+    head.addEventListener('click', function (e) {
+      if (e.target.closest && e.target.closest('#fv-collapse, #fv-just-map')) return;
+      fvSetSheet(false, { persist: true });
+    });
   }
 
   // --- beta tiles (filed 2026-10-09; approved 2026-10-14) ------------------
@@ -11955,9 +12207,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       applyFilters();
       syncFilterUI();
       rebuildStops();
-      // Soft location ask, once the map has settled. The old first-time
-      // popup is gone — "?" is the help hub now.
-      setTimeout(maybePromptLocation, 4000);
+      // First-view launcher sheet (Concept 3): shown once the map's
+      // data has landed, in its persisted open/collapsed state. There
+      // is no boot location prompt in any form (deleted above).
+      fvInitFirstView();
       $('filter-btn').addEventListener('click', function () { togglePanel(); setBrowse(false); });
       document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') togglePanel(false);
