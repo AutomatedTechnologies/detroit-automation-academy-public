@@ -76,3 +76,6 @@ themes/*/worktrees/
 
 # Hugo local build output (built by CI from blog-source)
 /blog/
+
+# Security remediation R2 (2026-10-23): gcloud config never belongs in a repo
+**/.gcloud_config/
