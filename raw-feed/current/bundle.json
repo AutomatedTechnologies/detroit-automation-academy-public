@@ -1,6 +1,6 @@
 {
   "kind": "feed-raw-bundle/v1",
-  "collected_at": "2026-10-23T20:32:14.254Z",
+  "collected_at": "2026-10-23T20:36:14.532Z",
   "ddot": {
     "configured": true,
     "vehicle_batches": [
@@ -17,10 +17,8 @@
           "9",
           "10"
         ],
-        "ok": true,
-        "file": "ddot-vehicles-0.json",
-        "bytes": 33185,
-        "sha256": "f5ef6b3d0c47d2f01817e7456c12782d49fb995bf8641b45cb52f9a3a04abaef"
+        "ok": false,
+        "error": "fetch failed"
       },
       {
         "routes": [
@@ -35,10 +33,8 @@
           "23",
           "27"
         ],
-        "ok": true,
-        "file": "ddot-vehicles-1.json",
-        "bytes": 19244,
-        "sha256": "f8e221f2e3ee0035328739fd03dc1dce128c783aab3a1c22e957c63f1146abf7"
+        "ok": false,
+        "error": "fetch failed"
       },
       {
         "routes": [
@@ -53,10 +49,8 @@
           "42",
           "43"
         ],
-        "ok": true,
-        "file": "ddot-vehicles-2.json",
-        "bytes": 13696,
-        "sha256": "4f1e3ffb55e193afa1f83a380ba1df46b5e6a07670867b8cda077efe22ebe9cb"
+        "ok": false,
+        "error": "fetch failed"
       },
       {
         "routes": [
@@ -68,10 +62,8 @@
           "67",
           "68"
         ],
-        "ok": true,
-        "file": "ddot-vehicles-3.json",
-        "bytes": 6110,
-        "sha256": "0831f96dbf529f72f6bf30d32d87424e2ec66b1dd2fb6c566df4446eb506edd0"
+        "ok": false,
+        "error": "fetch failed"
       }
     ],
     "bulletins": {
@@ -83,21 +75,21 @@
     "ok": true,
     "file": "qline-vp.pb",
     "bytes": 263,
-    "sha256": "520c48f0c017ef93dbed9d05eb9cd71cb86b77460e2a549ea1196226ced30759"
+    "sha256": "3dba23a93814d002685cb5c86366ec393b013092bd5e63545b68e418a8abf9c3"
   },
   "smart": {
     "active": true,
     "vp": {
       "ok": true,
       "file": "smart-vp.pb",
-      "bytes": 14884,
-      "sha256": "c4b552d0f3d316fc1ac2cd0ea6efbf6884fac74ef180d97b113e4c5320b19f4e"
+      "bytes": 14793,
+      "sha256": "64d75ec6857051a859abb360c2175fe4c04e52eb035f665a1618d42666c0aab7"
     },
     "tu": {
       "ok": true,
       "file": "smart-tu.pb",
-      "bytes": 291191,
-      "sha256": "23c210117cf83365331710c10faf1c4e2b245b193dd1e7480bacf04f3d5dc4b8"
+      "bytes": 292636,
+      "sha256": "de34f329193f5871832fa78f2ee8eec9f16d03a0fd794486608094ffb17e9e51"
     }
   }
 }
