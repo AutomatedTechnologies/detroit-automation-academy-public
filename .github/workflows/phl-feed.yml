@@ -6,7 +6,13 @@ name: PHL feed collect
 # the decoded JSON to live-transit/philadelphia/data/vehicles.json.
 # This workflow is the ONLY writer of that path; the Detroit live-data
 # chain (feed-publisher) writes only live-data/* and is untouched.
-# Cadence: every 5 minutes (the Actions scheduling floor). Page copy
+# Cadence: every 5 minutes (the Actions scheduling floor).
+# Cadence backstop (2026-10-23): the VM-side phl-feed-watchdog
+# (systemd timer, 2-min tick; live-transit-philadelphia goal,
+# files/systemd/) dispatches this workflow whenever the repo data
+# age exceeds 420 s — the Detroit feed-driver pattern. The schedule
+# above stays as the native route; the watchdog only dispatches,
+# this workflow remains the sole writer of the data path. Page copy
 # states this republication cadence; the SEPTA source feeds regenerate
 # every ~30-60 seconds (measured at A2, 2026-10-22).
 
