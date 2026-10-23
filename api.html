@@ -75,7 +75,7 @@
       <p class="kicker">Developer documentation</p>
       <h1>The transit <span class="accent">API.</span></h1>
       <div class="prose">
-        <p>This is the live data feed behind the academy&rsquo;s <a href="live-transit.html">Live Transit map</a> and the bus count on the <a href="live-transit.html">Live Transit page</a>: Detroit Department of Transportation (DDOT) bus positions, QLINE streetcar positions, and DDOT service alerts, published as static JSON files on this site. A GitHub Actions workflow in the academy&rsquo;s site repository rebuilds the files from the agency feeds about every 5 minutes. No key required.</p>
+        <p>This is the live data feed behind the academy&rsquo;s <a href="live-transit.html">Live Transit map</a> and the bus count on the <a href="live-transit.html">Live Transit page</a>: Detroit Department of Transportation (DDOT) bus positions, QLINE streetcar positions, and DDOT service alerts, published as static JSON files on this site. A GitHub Actions workflow collects the agency feeds — the keys never leave Actions — and the academy&rsquo;s publisher turns the collected feeds into the finished files on this site. Positions poll continuously and publish about every five minutes; the map dead-reckons between updates. No key required.</p>
         <p>Base URL: <code>https://detroitautomationacademy.com</code></p>
       </div>
     </div>
@@ -91,9 +91,9 @@
         </div>
         <dl class="kv">
           <dt>Parameters</dt><dd>None.</dd>
-          <dt>Refresh</dt><dd>The build workflow runs about every 5 minutes and republishes the file when the underlying data has changed (and at least every 30 minutes as a liveness heartbeat). GitHub Pages may serve a cached copy for up to 10 minutes. Judge freshness by <code>generated_at</code>, never by fetch time.</dd>
+          <dt>Refresh</dt><dd>The publisher runs about every 5 minutes and republishes the file when the underlying data has changed (and at least every 30 minutes as a liveness heartbeat). GitHub Pages may serve a cached copy for up to 10 minutes. Judge freshness by <code>generated_at</code>, never by fetch time.</dd>
           <dt>CORS</dt><dd>Served by GitHub Pages with <code>Access-Control-Allow-Origin: *</code> — call it directly from browser JavaScript.</dd>
-          <dt>Auth</dt><dd>None to read. The upstream DDOT key is a secret of the build workflow and never appears in the published files.</dd>
+          <dt>Auth</dt><dd>None to read. The upstream DDOT key is a secret of the collection workflow and never appears in the published files.</dd>
         </dl>
       </div>
 
@@ -124,10 +124,10 @@
       <table class="fields">
         <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td>generated_at</td><td>string</td><td>ISO 8601 UTC timestamp of when the build workflow generated this file. The file is only republished when the data changes (30-minute heartbeat aside), so this is the freshness clock for everything in it.</td></tr>
+          <tr><td>generated_at</td><td>string</td><td>ISO 8601 UTC timestamp of when the publisher generated this file. The file is only republished when the data changes (30-minute heartbeat aside), so this is the freshness clock for everything in it.</td></tr>
           <tr><td>count</td><td>integer</td><td>Number of vehicle objects in <code>vehicles</code>.</td></tr>
           <tr><td>vehicles</td><td>array</td><td>Live vehicle snapshots (fields below).</td></tr>
-          <tr><td>sources</td><td>object</td><td>Per-agency feed status, keyed <code>ddot</code>, <code>smart</code>, <code>qline</code>: <code>ok</code>, <code>at</code>, and either <code>vehicles</code> (a count) or a <code>reason</code>. Two states are named explicitly: <code>sources.ddot</code> carries <code>"configured": false</code> with a reason when the build workflow lacks the upstream DDOT key — DDOT vehicles are then absent while other agencies still publish; <code>sources.smart</code> reports the status of the SMART display leg built from the Swiftly GTFS-Realtime feed: SMART vehicle positions are displayed in the Live Transit Detroit application only and are never part of this file's <code>vehicles</code> array or of the public JSON contract — the <code>vehicles</code> count under <code>sources.smart</code> counts positions published to the application's display payload, not records in this file.</td></tr>
+          <tr><td>sources</td><td>object</td><td>Per-agency feed status, keyed <code>ddot</code>, <code>smart</code>, <code>qline</code>: <code>ok</code>, <code>at</code>, and either <code>vehicles</code> (a count) or a <code>reason</code>. Two states are named explicitly: <code>sources.ddot</code> carries <code>"configured": false</code> with a reason when the collection workflow lacks the upstream DDOT key — DDOT vehicles are then absent while other agencies still publish; <code>sources.smart</code> reports the status of the SMART display leg built from the Swiftly GTFS-Realtime feed: SMART vehicle positions are displayed in the Live Transit Detroit application only and are never part of this file's <code>vehicles</code> array or of the public JSON contract — the <code>vehicles</code> count under <code>sources.smart</code> counts positions published to the application's display payload, not records in this file.</td></tr>
         </tbody>
       </table>
 
@@ -136,7 +136,7 @@
         <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
         <tbody>
           <tr><td>agency</td><td>string</td><td><code>ddot</code> or <code>qline</code>.</td></tr>
-          <tr><td>route_id</td><td>string</td><td>GTFS route id: the route number for DDOT vehicles (the build covers all 37 DDOT routes), or <code>QLINE</code> for the streetcar.</td></tr>
+          <tr><td>route_id</td><td>string</td><td>GTFS route id: the route number for DDOT vehicles (the feed covers all 37 DDOT routes), or <code>QLINE</code> for the streetcar.</td></tr>
           <tr><td>vehicle_id</td><td>string</td><td>Agency vehicle number.</td></tr>
           <tr><td>lat / lon</td><td>number</td><td>WGS84 position in decimal degrees.</td></tr>
           <tr><td>bearing</td><td>number</td><td>Compass heading in degrees, or <code>null</code> when the feed does not report it.</td></tr>
@@ -182,7 +182,7 @@
       <table class="fields">
         <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td>generated_at</td><td>string</td><td>ISO 8601 UTC timestamp of when the build workflow generated this file.</td></tr>
+          <tr><td>generated_at</td><td>string</td><td>ISO 8601 UTC timestamp of when the publisher generated this file.</td></tr>
           <tr><td>count</td><td>integer</td><td>Number of alert objects in <code>alerts</code>.</td></tr>
           <tr><td>alerts</td><td>array</td><td>Active DDOT service bulletins (fields below).</td></tr>
           <tr><td>sources</td><td>array</td><td>Per-agency feed status as an array (in <code>vehicles.json</code> it is an object). Each entry carries <code>agency</code>, <code>kind</code>, <code>via</code>, <code>fetched_at</code>, <code>ok</code>, <code>status</code> (<code>ok</code> or <code>error</code>), and <code>alerts</code> (a count); a failed or unconfigured source adds a <code>reason</code>, and the not-configured state adds <code>"configured": false</code>.</td></tr>
@@ -202,7 +202,7 @@
           <tr><td>routes / stops</td><td>array</td><td>Route ids and stop ids the bulletin applies to.</td></tr>
           <tr><td>url</td><td>string</td><td>Currently always <code>null</code>.</td></tr>
           <tr><td>source</td><td>string</td><td><code>bustime</code>.</td></tr>
-          <tr><td>fetched_at</td><td>string</td><td>When the build fetched this bulletin (the file&rsquo;s <code>generated_at</code>).</td></tr>
+          <tr><td>fetched_at</td><td>string</td><td>When the publisher fetched this bulletin (the file&rsquo;s <code>generated_at</code>).</td></tr>
           <tr><td>kind</td><td>string</td><td><code>realtime</code>.</td></tr>
         </tbody>
       </table>
@@ -246,7 +246,7 @@
           <li>Poll at most <strong>once per minute</strong>. The academy&rsquo;s own map polls the vehicles file every 60 seconds — matching that is plenty.</li>
           <li>The files are rebuilt about every 5 minutes, so faster polling returns the same file; use <code>generated_at</code> to detect genuinely new data instead of re-polling.</li>
           <li>Cache responses client-side. Don&rsquo;t fan out one page view into many parallel requests.</li>
-          <li>The published files are the whole interface — there is no key to ask for and nothing upstream to bypass; the agency key exists only inside the build workflow.</li>
+          <li>The published files are the whole interface — there is no key to ask for and nothing upstream to bypass; the agency key exists only inside the collection workflow.</li>
         </ul>
       </div>
       <div class="callout">
@@ -254,6 +254,15 @@
       </div>
       <div class="prose">
         <p>Use of these files — and of the logged history dataset below — is governed by &sect;6 of the <a href="/terms.html">Terms of Service</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="api-section">
+    <div class="wrap">
+      <h2>Commercial use</h2>
+      <div class="prose">
+        <p>Personal, student, and community use is free with attribution: <em>Live transit data: Detroit Automation Academy (detroitautomationacademy.com)</em>. Building something commercial on this data — a product, a service, a paid integration? Talk to us first: <a href="mailto:justin@detroitautomationacademy.com?subject=API%20commercial%20use%20inquiry">justin@detroitautomationacademy.com</a>. Commercial use is licensed by AUTOMATEDTECHNOLOGIES; one conversation sets the terms.</p>
       </div>
     </div>
   </section>
@@ -279,7 +288,7 @@
       <h2>Error behavior</h2>
       <div class="prose">
         <ul>
-          <li><strong>Old <code>generated_at</code></strong> — the files are static, so a failed or delayed build leaves the previous file in place rather than returning an error. If <code>generated_at</code> is well past the ~5-minute build cadence, treat the contents as of that timestamp and keep retrying on your normal cadence.</li>
+          <li><strong>Old <code>generated_at</code></strong> — the files are static, so a failed or delayed build leaves the previous file in place rather than returning an error. If <code>generated_at</code> is well past the ~5-minute publish cadence, treat the contents as of that timestamp and keep retrying on your normal cadence.</li>
           <li><strong>A source reports <code>"ok": false</code></strong> — that agency&rsquo;s leg failed or is not configured (its <code>reason</code> says which); the other agencies&rsquo; data still publishes. Check <code>sources</code> before concluding the whole feed is down.</li>
           <li><strong>Non-200 or network failure</strong> — back off and retry after 60 seconds. Don&rsquo;t hammer the files; they only change every few minutes anyway.</li>
           <li><strong>Empty <code>vehicles</code> array</strong> — valid response, no vehicles currently reporting on the covered routes (common late at night).</li>
