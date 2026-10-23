@@ -264,6 +264,12 @@
     el.textContent = parts.join("  ·  ") + (note ? "  ·  " + note : "");
   }
 
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
   function showInfo(html) {
     var el = document.getElementById("info");
     if (el) { el.innerHTML = html; el.style.display = html ? "block" : "none"; }
@@ -329,8 +335,8 @@
       if (d < bd) { bd = d; best = m; }
     });
     if (best) {
-      showInfo("<strong>" + (best.routeObj ? best.routeObj.short + " — " + best.routeObj.name : "Vehicle " + best.label) + "</strong><br>" +
-        "Vehicle " + best.label + (best.route ? " · feed route " + best.route : " · no route assignment on this record") +
+      showInfo("<strong>" + (best.routeObj ? esc(best.routeObj.short) + " — " + esc(best.routeObj.name) : "Vehicle " + esc(best.label)) + "</strong><br>" +
+        "Vehicle " + esc(best.label) + (best.route ? " · feed route " + esc(best.route) : " · no route assignment on this record") +
         "<br>" + (best.feed === "septa-bus" ? "SEPTA bus feed" : "SEPTA rail feed") +
         (best.ts ? " · position as of " + fmtET(best.ts) + " ET" : ""));
       return;
@@ -342,7 +348,7 @@
         if (d < bd) { bd = d; bs = st; }
       });
       if (bs) {
-        showInfo("<strong>" + bs.n + "</strong><br>Routes: " + (bs.r.join(", ") || "—"));
+        showInfo("<strong>" + esc(bs.n) + "</strong><br>Routes: " + (bs.r.map(esc).join(", ") || "—"));
         return;
       }
     }
