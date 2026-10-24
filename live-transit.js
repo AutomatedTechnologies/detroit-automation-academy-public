@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261024-1642';
+  var STAMP = '20261024-1948';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -543,6 +543,111 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     out.push(pts[n - 1]);
     return out;
   }
+  // Angle-aware resampling (ribbon splintering repair, queue step 3):
+  // the compiled paths bound POSITIONAL deviation (DP eps = 2 m) but
+  // not angle, so curves digitized as a few long chords keep hard
+  // joints after smoothing (diagnosis class 3): a smoothed edge over
+  // 20 m beside a turn over 3 deg is a visible plank joint, and there
+  // were 21,678 of them. A raw edge only produces a > 20 m smoothed
+  // edge when it runs longer than ~80 m, and the Chaikin pass reaches
+  // only the two segments beside a vertex, so the rule is narrow:
+  // beside any turn of 3-150 deg, an adjacent edge longer than 80 m
+  // gets a point 40 m from the turn vertex (and a second at 120 m
+  // when the edge runs longer), making the two segments the
+  // redistribution touches <= 40 and <= 80 m. Everything else --
+  // short edges, gentle vertices, the far middle of a long edge --
+  // is emitted untouched. Inserted points lie ON the path's chords --
+  // the centerline as a point set is unchanged; only its sampling
+  // density beside turns changes. Turns >= 150 deg are folds, not
+  // curves, and vertices beside short edges are already dense: both
+  // are emitted untouched, as is every vertex the rule does not reach.
+  // (An arc-insertion variant aimed at class 1's tight-radius family
+  // was built and measured during this repair and rejected: at
+  // digitization density, circumradius < 48 m describes most vertices
+  // on the SMART layer, and the insertions multiplied the strip
+  // without reducing its dark census. Class 1 is repaired in the
+  // sweep and the normals instead -- foldLift below and
+  // windingSplitNormals at the deck merge.) Only the guideway build
+  // opts in (see the route loop); other ribbonGeometry callers keep
+  // the exact pre-patch point stream.
+  function resamplePath(pts) {
+    var n = pts.length;
+    if (n < 3) return pts.slice();
+    function elen(a, b) { return Math.hypot(b[0] - a[0], b[1] - a[1]); }
+    function turnDeg(a, b, c) {
+      var d0x = b[0] - a[0], d0z = b[1] - a[1];
+      var d1x = c[0] - b[0], d1z = c[1] - b[1];
+      var l0 = Math.hypot(d0x, d0z), l1 = Math.hypot(d1x, d1z);
+      if (l0 < 1e-9 || l1 < 1e-9) return 0;
+      var cs = (d0x * d1x + d0z * d1z) / (l0 * l1);
+      return Math.acos(Math.max(-1, Math.min(1, cs))) * 180 / Math.PI;
+    }
+    // Insertion fractions per edge (edge i runs pts[i] -> pts[i+1]),
+    // demanded by the turn at either endpoint.
+    var cuts = [];
+    for (var e = 0; e < n - 1; e++) cuts.push([]);
+    function demand(e2, fromStart) {
+      var L = elen(pts[e2], pts[e2 + 1]);
+      if (L <= 80) return;
+      cuts[e2].push(fromStart ? 40 / L : 1 - 40 / L);
+      if (L > 120) cuts[e2].push(fromStart ? 120 / L : 1 - 120 / L);
+    }
+    for (var i = 1; i < n - 1; i++) {
+      var t = turnDeg(pts[i - 1], pts[i], pts[i + 1]);
+      if (t <= 3 || t >= 150) continue;
+      demand(i - 1, false);
+      demand(i, true);
+    }
+    var out = [pts[0]];
+    for (var v = 1; v < n; v++) {
+      var a0 = pts[v - 1], b0 = pts[v], fr = cuts[v - 1].sort(function (x, y) { return x - y; });
+      for (var s2 = 0; s2 < fr.length; s2++) {
+        if (s2 > 0 && fr[s2] - fr[s2 - 1] < 1e-9) continue;
+        var f = fr[s2];
+        out.push([a0[0] + (b0[0] - a0[0]) * f, a0[1] + (b0[1] - a0[1]) * f]);
+      }
+      out.push(pts[v]);
+    }
+    return out;
+  }
+  // Fold lift (ribbon splintering repair, class 1): where the smoothed
+  // strip folds back on itself or pinches (local circumradius under
+  // the layer half-width), the strip's return leg rides up to 2.4 m
+  // above the outgoing leg across a 45 m window past the fold vertex.
+  // Separated in height, the two legs stop sharing a plane; combined
+  // with the deck's explicit up normals (route build, below) the fold
+  // fan shades as lit surface instead of near-black shards. The window
+  // mirrors the diagnosis (93.7% of fold detections had a dark fan
+  // within 45 m) and the peak is two of the existing 1.2 m inter-route
+  // steps -- the largest separation the layer cake already uses, so no
+  // new visual scale is introduced. Points outside every window get
+  // lift 0 and keep their exact pre-patch height.
+  function foldLift(pts, hw) {
+    var n = pts.length;
+    var lift = new Float32Array(n);
+    var PEAK = 2.4, WIN = 45;
+    for (var j = 1; j < n - 1; j++) {
+      var a = pts[j - 1], b = pts[j], c = pts[j + 1];
+      var cr = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+      if (Math.abs(cr) < 1e-9) continue;
+      var la = Math.hypot(c[0] - b[0], c[1] - b[1]);
+      var lb = Math.hypot(c[0] - a[0], c[1] - a[1]);
+      var lc = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      if (la * lb * lc / (2 * Math.abs(cr)) >= hw) continue;
+      var acc = 0;
+      for (var i = j; i < n; i++) {
+        if (i > j) {
+          acc += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+          if (acc > WIN) break;
+        }
+        var w = 1 - acc / WIN;
+        var prof = (i === j) ? 0.5 : w * w * (3 - 2 * w);
+        var val = PEAK * prof;
+        if (val > lift[i]) lift[i] = val;
+      }
+    }
+    return lift;
+  }
   // True miter offset for point i: offset along the angle bisector, scaled
   // by 1/cos(half-angle) so the ribbon holds constant width through turns
   // instead of pinching. Clamped to 2x to avoid spikes on hairpins.
@@ -571,16 +676,26 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   }
 
   // --- geometry helpers ---------------------------------------------------
-  function ribbonGeometry(pts, width, y) {
+  function ribbonGeometry(pts, width, y, opts) {
+    // opts (guideway build only): { repair, slot, lift } -- resample
+    // the raw path, ride the strip on this path's height slot plus the
+    // fold lift. Callers without opts (trip highlight, People Mover,
+    // alert ribbons) get the exact pre-patch geometry: same point
+    // stream, same heights.
+    var repair = !!(opts && opts.repair);
+    if (repair) pts = resamplePath(pts);
     pts = chaikin(chaikin(pts));
     var n = pts.length;
     var pos = new Float32Array(n * 2 * 3);
     var idx = [];
     var hw = width / 2;
+    var slot = repair ? (opts.slot || 0) : 0;
+    var lift = (repair && opts.lift !== false) ? foldLift(pts, hw) : null;
     for (var i = 0; i < n; i++) {
       var p = pts[i], o = miterOffset(pts, i, hw);
-      pos.set([p[0] + o[0], y, p[1] + o[1]], i * 6);
-      pos.set([p[0] - o[0], y, p[1] - o[1]], i * 6 + 3);
+      var yy = y + slot + (lift ? lift[i] : 0);
+      pos.set([p[0] + o[0], yy, p[1] + o[1]], i * 6);
+      pos.set([p[0] - o[0], yy, p[1] - o[1]], i * 6 + 3);
       if (i < n - 1) {
         var k = i * 2;
         idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2);
@@ -640,14 +755,78 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     return out;
   }
 
+  // Winding-split normals (ribbon splintering repair, class 1): returns
+  // a copy of an indexed ribbon geometry in which no vertex is shared
+  // between faces of opposite plan-view winding, with vertex normals
+  // computed on the split. A swept strip reverses its winding where it
+  // folds back on itself; with shared vertices, computeVertexNormals
+  // averages the two legs' opposite face normals at the fold and the
+  // fan triangles between the populations shade near-black under the
+  // scene's light rig. After the split, each face's normals come only
+  // from its own winding population, so both legs of a fold shade as
+  // the lit surface they are. Vertices away from winding boundaries
+  // are shared exactly as before (the split costs duplicates only at
+  // fold seams), positions and attributes are copied verbatim, and
+  // face order is preserved.
+  function windingSplitNormals(g) {
+    var pos = g.attributes.position.array;
+    var idx = g.index.array;
+    var names = [];
+    ['aRoute', 'color'].forEach(function (nm) { if (g.attributes[nm]) names.push(nm); });
+    var srcAttrs = names.map(function (nm) { return g.attributes[nm]; });
+    var outAttrs = names.map(function () { return []; });
+    var map = {};
+    var newPos = [];
+    var newIdx = new Uint32Array(idx.length);
+    var next = 0;
+    function emit(v, sign) {
+      var key = v * 2 + (sign > 0 ? 1 : 0);
+      var ni = map[key];
+      if (ni === undefined) {
+        ni = next++; map[key] = ni;
+        newPos.push(pos[v * 3], pos[v * 3 + 1], pos[v * 3 + 2]);
+        for (var a = 0; a < names.length; a++) {
+          var sa = srcAttrs[a], isz = sa.itemSize;
+          for (var c = 0; c < isz; c++) outAttrs[a].push(sa.array[v * isz + c]);
+        }
+      }
+      return ni;
+    }
+    for (var f = 0; f < idx.length; f += 3) {
+      var a3 = idx[f], b3 = idx[f + 1], c3 = idx[f + 2];
+      var cy = (pos[b3 * 3 + 2] - pos[a3 * 3 + 2]) * (pos[c3 * 3] - pos[a3 * 3]) -
+               (pos[b3 * 3] - pos[a3 * 3]) * (pos[c3 * 3 + 2] - pos[a3 * 3 + 2]);
+      var sign = cy >= 0 ? 1 : -1;
+      newIdx[f] = emit(a3, sign);
+      newIdx[f + 1] = emit(b3, sign);
+      newIdx[f + 2] = emit(c3, sign);
+    }
+    var out = new THREE.BufferGeometry();
+    out.setAttribute('position', new THREE.BufferAttribute(new Float32Array(newPos), 3));
+    for (var a2 = 0; a2 < names.length; a2++) {
+      out.setAttribute(names[a2], new THREE.BufferAttribute(new Float32Array(outAttrs[a2]), srcAttrs[a2].itemSize));
+    }
+    out.setIndex(new THREE.BufferAttribute(newIdx, 1));
+    out.computeVertexNormals();
+    return out;
+  }
+
   // Vertical skirts under an elevated ribbon: turns a flat strip into a solid
   // 3D guideway. One skirt per edge, from y=0 up to yTop.
-  function skirtGeometry(pts, width, yTop) {
+  function skirtGeometry(pts, width, yTop, opts) {
+    // Same guideway opts contract as ribbonGeometry: the skirt top
+    // follows the deck's slot + fold lift exactly, so the wall still
+    // meets the deck edge at fold sites (no slot of daylight under a
+    // lifted return leg). The ground edge stays at y = 0.
+    var repair = !!(opts && opts.repair);
+    if (repair) pts = resamplePath(pts);
     pts = chaikin(chaikin(pts));
     var n = pts.length;
     var pos = [];
     var idx = [];
     var hw = width / 2;
+    var slot = repair ? (opts.slot || 0) : 0;
+    var lift = repair ? foldLift(pts, hw) : null;
     function edgePt(i, side, y) {
       var p = pts[i], o = miterOffset(pts, i, hw);
       return [p[0] + o[0] * side, y, p[1] + o[1] * side];
@@ -655,7 +834,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     [1, -1].forEach(function (side) {
       var base = pos.length / 3;
       for (var i = 0; i < n; i++) {
-        var b = edgePt(i, side, 0), t = edgePt(i, side, yTop);
+        var b = edgePt(i, side, 0), t = edgePt(i, side, yTop + slot + (lift ? lift[i] : 0));
         pos.push(b[0], b[1], b[2], t[0], t[1], t[2]);
         if (i < n - 1) {
           var k = base + i * 2;
@@ -12135,7 +12314,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         color: 0xffffff, vertexColors: true, side: THREE.DoubleSide, transparent: true }), true);
       var glowMatAll = routeShader(new THREE.MeshBasicMaterial({
         color: 0xffffff, vertexColors: true, transparent: true, opacity: 0.20,
-        blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }), false);
+        depthWrite: false, side: THREE.DoubleSide }), false);
+      // Ribbon splintering repair, class 2(c): the glow used to blend
+      // additively, so corridor stacks summed past full white (six
+      // covering routes at Woodward & Warren summed to 1.20 -- the
+      // blown white/pink streaks). Normal blending caps any stack at
+      // the material opacity no matter how many routes cover a point:
+      // a lone route's halo is unchanged (Normal vs Additive differ
+      // only where fragments overlap), and stacked corridors now
+      // saturate at one halo's strength instead of blowing out.
       streetGlowMats.push(glowMatAll);
       var mergedGlow = [], mergedCase = [], mergedDeck = [], mergedSkirt = [];
       data.routes.forEach(function (route, ri) {
@@ -12166,12 +12353,26 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         var skirtColor = color.clone().multiplyScalar(0.38);
         var longest = null;
         var glowGeos = [], caseGeos = [], deckGeos = [], skirtGeos = [];
-        route.paths.forEach(function (path) {
+        route.paths.forEach(function (path, pi) {
           if (path.length < 2) return;
-          glowGeos.push(ribbonGeometry(path, 230, yGlow));
-          caseGeos.push(ribbonGeometry(path, 95, yCase));
-          deckGeos.push(ribbonGeometry(path, 72, yDeck));
-          skirtGeos.push(skirtGeometry(path, 72, yDeck));
+          // Ribbon splintering repair, class 2(a): sibling paths of a
+          // route shared the route's one deck level exactly, so
+          // direction pairs and branch variants drew coplanar over
+          // ~80% of path-km -- a depth-equal patchwork that no
+          // between-route height step could fix. Each path now takes
+          // a sub-meter slot inside its route's 1.2 m band (a
+          // golden-ratio spread of the path index: distinct slots at
+          // any path count, max 1.19 m), so no two guideway surfaces
+          // in the corpus share a height, while route order at
+          // crossings -- and the overpass read -- is unchanged. The
+          // glow takes the slot too (its stack is capped separately,
+          // at the material below) but not the fold lift: a 230 m
+          // additive haze has no fan to separate.
+          var slot = (pi * 0.6180339887 % 1) * 1.19;
+          glowGeos.push(ribbonGeometry(path, 230, yGlow, { repair: true, lift: false, slot: slot }));
+          caseGeos.push(ribbonGeometry(path, 95, yCase, { repair: true, slot: slot }));
+          deckGeos.push(ribbonGeometry(path, 72, yDeck, { repair: true, slot: slot }));
+          skirtGeos.push(skirtGeometry(path, 72, yDeck, { repair: true, slot: slot }));
           if (!longest || path.length > longest.length) longest = path;
         });
         if (glowGeos.length) mergedGlow.push(tagRouteGeom(mergeGeoms(glowGeos), routeIdx, color));
@@ -12211,8 +12412,18 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         scene.add(caseMesh);
       }
       if (mergedDeck.length) {
-        var deckGeoAll = mergeGeoms(mergedDeck);
-        deckGeoAll.computeVertexNormals();
+        var deckGeoAll = windingSplitNormals(mergeGeoms(mergedDeck));
+        // (Ribbon splintering repair, class 1 -- normal discipline.
+        // Plain computeVertexNormals on the merged deck averages face
+        // normals across every fold, splitting vertices into +Y/-Y
+        // populations; triangles whose winding and dominant normal
+        // population disagree shade at ~0.06 luminance against ~1.42
+        // lit -- the near-black starburst shards. windingSplitNormals
+        // duplicates vertices at winding boundaries so each leg keeps
+        // its own population. Uniform up normals were built, measured
+        // and rejected during this repair: under the deck's DoubleSide
+        // material they flip to down on the downward-winding runs and
+        // blacken the whole deck, straight paths included.)
         var deckMesh = new THREE.Mesh(deckGeoAll, deckMatAll);
         deckMesh.frustumCulled = false;
         scene.add(deckMesh);
