@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261023-0419';
+  var STAMP = '20261024-1642';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -1790,7 +1790,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       { sel: 'header.nav', edge: { mobile: 'top', desktop: 'top' }, visible: isShown },
       { id: 'bus-card', edge: { mobile: 'bottom', desktop: 'left' }, visible: isShown },
       { id: 'stop-card', edge: { mobile: 'bottom', desktop: 'left' }, visible: isShown },
-      { id: 'trip-card', edge: { mobile: 'bottom', desktop: 'right' }, visible: isShown },
+      { id: 'trip-card', edge: { mobile: 'bottom', desktop: 'left' }, visible: isShown },
       { id: 'trip-planner', edge: { mobile: 'bottom', desktop: 'right' }, visible: isShown },
       { id: 'filter-panel', edge: { mobile: 'right', desktop: 'right' }, visible: isShown },
       { id: 'browse-panel', edge: { mobile: 'modal', desktop: 'modal' }, visible: isShown },
@@ -2057,7 +2057,26 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         else refreshFollowBtn();
       });
     }
-    return { go: go, vantageForBus: vantageForBus, vantageForStop: vantageForStop };
+    // Frame a ground point at a given camera distance: 40-degree
+    // elevation (the home framing's angle) along the rider's current
+    // azimuth, shifted into the DisplayBounds safe frame, moved with
+    // the same interruptible glide as every other intent.
+    function frameBounds(cx, cz, dist) {
+      if (typeof tripFly !== 'undefined' && tripFly) return; // D4a: cinematic owns the camera
+      _svDir.copy(camera.position).sub(controls.target); _svDir.y = 0;
+      if (_svDir.lengthSq() < 1e-6) _svDir.set(0, 0, 1);
+      _svDir.normalize();
+      var el = 40 * Math.PI / 180;
+      var pos = new THREE.Vector3(
+        cx + _svDir.x * dist * Math.cos(el),
+        dist * Math.sin(el),
+        cz + _svDir.z * dist * Math.cos(el));
+      var tgt = new THREE.Vector3(cx, 0, cz);
+      var framed = applySafeFrameOffset(pos, tgt);
+      var d = camera.position.distanceTo(framed.pos);
+      glideTo(framed.pos, framed.tgt, Math.min(1600, Math.max(600, d * 0.35)));
+    }
+    return { go: go, vantageForBus: vantageForBus, vantageForStop: vantageForStop, frameBounds: frameBounds };
   })();
   // Vantage for a stop anchor: keep the user's current azimuth, pull back to
   // an oblique street-level framing. Works for DDOT stops (ground) and
@@ -5641,7 +5660,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         tripLastRes = res;
         unpausePlanner(); // a successful user plan lifts the step-2 pause
         scrollTripDetailIntoView();
-        if (tripSel >= 0) { highlightJourney(tripJourneys[0]); }
+        if (tripSel >= 0) { highlightJourney(tripJourneys[0]); frameJourney(tripJourneys[0]); }
         else clearTripHighlight();
       });
     };
@@ -6272,6 +6291,34 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       }
     });
     tripGroup.visible = true;
+  }
+  // Frame the whole selected journey: bounds over the same leg points
+  // the highlight draws (legPoints3D), distance from the spans against
+  // the camera's fov, moved through the TransitionEngine's owned path.
+  // Plan completion is the one moment the planner itself owns the
+  // framing; background re-plans never call this — by then the camera
+  // is the rider's.
+  function frameJourney(j) {
+    if (!j || (typeof tripFly !== 'undefined' && tripFly)) return;
+    var minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity, n = 0;
+    mergeWalkLegs(j.legs).forEach(function (leg) {
+      legPoints3D(leg).forEach(function (p) {
+        if (p.x < minX) minX = p.x;
+        if (p.x > maxX) maxX = p.x;
+        if (p.z < minZ) minZ = p.z;
+        if (p.z > maxZ) maxZ = p.z;
+        n++;
+      });
+    });
+    if (!n) return;
+    var cx = (minX + maxX) / 2, cz = (minZ + maxZ) / 2;
+    var vFov = THREE.MathUtils.degToRad(camera.fov) / 2;
+    var hFov = Math.atan(Math.tan(vFov) * camera.aspect);
+    var dist = 1.12 * Math.max(
+      ((maxX - minX) / 2 + 250) / Math.tan(hFov),
+      ((maxZ - minZ) / 2 + 250) / Math.tan(vFov));
+    dist = Math.max(1400, Math.min(48000, dist));
+    TransitionEngine.frameBounds(cx, cz, dist);
   }
   // Cinematic fly-through of the selected journey: the perspective is the
   // interface. Chase-cam along the journey path; any pointerdown hands
