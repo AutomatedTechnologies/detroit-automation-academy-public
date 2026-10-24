@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self'; object-src 'none'; base-uri 'self'">
+<title>Plan a trip — Philadelphia · Live Transit · Detroit Automation Academy</title>
+<meta name="description" content="Plan a trip on SEPTA buses, trolleys, the subway and Regional Rail from SEPTA's published timetable — scheduled times, published by AutomatedTechnologies.">
+<link rel="canonical" href="https://www.detroitautomationacademy.com/live-transit/philadelphia/planner.html">
+<link rel="stylesheet" href="/styles.css?v=20261018-1404">
+<style>
+  .pl-wrap{max-width:900px;margin:0 auto;padding:0 16px}
+  .pl-head{padding:28px 0 10px}
+  .pl-head h1{margin:0 0 6px;font-size:30px}
+  .pl-head p{margin:4px 0;color:#444;max-width:75ch}
+  #status{font-weight:600;color:#17365d;margin:8px 0}
+  .pl-fields{display:grid;gap:10px;margin:14px 0}
+  .pl-field label{font-weight:600;display:block;margin-bottom:4px}
+  .pl-field input[type="search"]{width:100%;padding:10px;font-size:16px}
+  .pl-results-list{margin:6px 0}
+  .pl-group{margin:6px 0}
+  .pl-gname{font-weight:600;margin:4px 0}
+  .pl-stop{display:block;width:100%;text-align:left;padding:8px 10px;margin:3px 0;cursor:pointer}
+  .pl-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}
+  .pl-row input{padding:8px;font-size:16px}
+  #planBtn{padding:10px 18px;font-size:16px;font-weight:700;cursor:pointer}
+  .pl-card{border:1px solid #ccc;border-radius:8px;padding:12px 14px;margin:12px 0;background:#f7f9fb}
+  .pl-card h3{margin:0 0 4px;font-size:18px}
+  .pl-sum{font-weight:600;margin:4px 0}
+  .pl-legs{margin:6px 0 2px;padding-left:22px;line-height:1.55}
+  .pl-msg{color:#333;line-height:1.55}
+  .pl-note{color:#555;font-size:14px;line-height:1.5;max-width:75ch}
+  .pl-about{padding:18px 0 34px;max-width:85ch}
+  .pl-about p,.pl-about li{color:#333;line-height:1.55}
+</style>
+</head>
+<body>
+<header class="nav"><a class="brand" href="/" aria-label="Detroit Automation Academy — home"><img src="/assets/logo.webp" alt="" class="brand-mark"><span class="brand-word">Detroit Automation <em>Academy</em></span></a><nav class="nav-links" id="daaNavLinks" aria-label="Primary"><a class="lane" data-audience="viewer" href="/watch/">Watch</a><a class="lane" data-audience="reader" href="/signal/">Read</a><a class="lane" data-audience="reader" href="/notes/">Notes</a><a class="lane" data-audience="reader" href="/press/">Press</a><a class="lane" data-audience="user" href="/live-transit.html">Do</a><a class="lane" data-audience="user" href="/live-transit/">Cities</a><a class="lane" data-audience="visitor" href="/programs.html">Programs</a><a class="lane" data-audience="user" href="/api.html">API</a><a class="lane" data-audience="visitor" href="/partners.html">Partners</a><a class="lane" data-audience="visitor" href="/#mission">About</a><a class="lane" data-audience="visitor" href="/apple-learning-coach/">Bio</a><a class="lane" data-audience="visitor" href="/find.html">Find</a><a class="lane" data-audience="subscriber" href="https://www.linkedin.com/newsletters/7508391258638311424/" target="_blank" rel="noopener" aria-label="Subscribe, opens in new tab">Subscribe</a></nav><button class="nav-toggle" id="daaNavToggle" aria-label="Toggle navigation" aria-expanded="false"><span></span><span></span><span></span></button></header>
+<script src="/nav.js?v=20261023-0221"></script>
+
+<main class="pl-wrap">
+  <div class="pl-head">
+    <p><a href="/live-transit/philadelphia/">← Philadelphia live map</a></p>
+    <h1>Plan a trip — Philadelphia</h1>
+    <p>Scheduled journeys on SEPTA buses, trolleys, the subway and Regional
+    Rail, computed on this device from SEPTA's published timetable
+    (feed v202609271+v202609271). Times are scheduled, not live.</p>
+    <p id="status">Loading…</p>
+  </div>
+
+  <div class="pl-fields">
+    <div class="pl-field">
+      <label for="fromSearch">From — <span id="fromLabel">pick a stop</span></label>
+      <input type="search" id="fromSearch" placeholder="Search stops…" autocomplete="off" enterkeyhint="search">
+      <div class="pl-results-list" id="fromResults"></div>
+    </div>
+    <div class="pl-row">
+      <button type="button" id="swap" aria-label="Swap origin and destination">⇅ Swap</button>
+    </div>
+    <div class="pl-field">
+      <label for="toSearch">To — <span id="toLabel">pick a stop</span></label>
+      <input type="search" id="toSearch" placeholder="Search stops…" autocomplete="off" enterkeyhint="search">
+      <div class="pl-results-list" id="toResults"></div>
+    </div>
+  </div>
+
+  <div class="pl-row">
+    <button type="button" id="nowBtn" aria-pressed="true">Leave now</button>
+    <input type="date" id="date" aria-label="Departure date">
+    <input type="time" id="time" aria-label="Departure time">
+    <button type="button" id="planBtn">Plan journey</button>
+  </div>
+
+  <div id="results" role="status"></div>
+
+  <section class="pl-about">
+    <h2>How to read these results</h2>
+    <ul>
+      <li>Each card is a distinct way to make the trip — fastest, fewest
+      transfers, least walking, direct, or the journey that best survives a
+      missed connection on the published schedule. A card can be several of
+      those at once.</li>
+      <li>“Most reliable (scheduled)” is about the timetable: how much room
+      the schedule leaves to recover. It is not measured on-time
+      performance, and this planner does not use live vehicle positions.</li>
+      <li>The timetable covers SEPTA's bus feed to February 20, 2027 and
+      Regional Rail to November 21, 2026. Trips are computed from stops —
+      pick the exact stop you will board at; stops that share a name are
+      listed separately.</li>
+    </ul>
+    <p>Live Transit Philadelphia is published by AutomatedTechnologies
+    d/b/a Detroit Automation Academy, from SEPTA's public data under SEPTA's
+    developer license. This page makes no use of SEPTA branding and implies
+    no endorsement. Riders never pay for Live Transit. There are no ads on
+    the map, and none here either.</p>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <img src="/assets/logo.webp" alt="" class="brand-mark">
+      <span>Detroit Automation Academy</span>
+    </div>
+    <p class="footer-fine">Southfield, Michigan · <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a></p>
+    <p class="footer-fine"><a href="/live-transit.html">Live Transit Detroit</a> · <a href="/live-transit/">Cities</a> · <a href="/programs.html">Programs</a> · <a href="/signal/">The Signal</a> · <a href="/voter-guide.html">Voter Guide</a> · <a href="/press/">Press</a> · <a href="/board/">Board</a> · <a href="/find.html">Find</a> · <a href="/api.html">API</a></p>
+    <p class="footer-fine"><a href="/terms.html">Terms of Service</a> · <a href="/privacy.html">Privacy Policy</a> · <a href="/dashboard.html">Platform status</a></p>
+    <p class="footer-fine">© 2026 AutomatedTechnologies d/b/a Detroit Automation Academy</p>
+  </div>
+</footer>
+<script src="/script.js?v=20261003-1330"></script>
+<script type="module" src="/live-transit/philadelphia/phl-planner.js?v=20261023-2339"></script>
+<script src="/assets/measure.js?v=20261023-o2" defer></script>
+</body>
+</html>
