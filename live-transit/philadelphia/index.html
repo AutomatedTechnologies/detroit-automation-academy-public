@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self'; object-src 'none'; base-uri 'self'">
+<title>Philadelphia — Live Transit · Detroit Automation Academy</title>
+<meta name="description" content="SEPTA bus, trolley, subway and Regional Rail vehicles live on one map of Philadelphia — agency-direct data, published by AutomatedTechnologies.">
+<link rel="canonical" href="https://www.detroitautomationacademy.com/live-transit/philadelphia/">
+<!-- Estate stylesheet at the CURRENT shared stamp (LT-KAES-03).
+     City build stamp (LT-KAES-04) governs the local assets below. -->
+<link rel="stylesheet" href="/styles.css?v=20261019-1228">
+<style>
+  .phl-wrap{max-width:1200px;margin:0 auto;padding:0 16px}
+  .phl-head{padding:28px 0 10px}
+  .phl-head h1{margin:0 0 6px;font-size:30px}
+  .phl-head p{margin:4px 0;color:#444;max-width:75ch}
+  #lt-status{font-weight:600;color:#17365d;margin:8px 0}
+  #lt-map{width:100%;height:68vh;display:block;background:#0b0e13;border:1px solid #222;border-radius:8px;touch-action:none}
+  .lt-region{margin:12px 0}
+  #lt-load-error{display:none;border:1px solid #a33;border-radius:8px;padding:12px 14px;background:#fdf3f3}
+  #lt-degraded{display:none;border:1px solid #b8860b;border-radius:8px;padding:12px 14px;background:#fffaf0}
+  #lt-info{display:none;border:1px solid #ccc;border-radius:8px;padding:12px 14px;background:#f7f9fb;max-width:75ch}
+</style>
+<!-- Vendored rendering library, declared once (LT-KAES-05).
+     R3 vendors three.module.min.js at this path; the importmap is
+     the single declaration of the library for the whole page. -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.min.js?v=20261025-1449",
+    "three/addons/": "./vendor/three-addons/"
+  }
+}
+</script>
+</head>
+<body>
+<header class="nav"><a class="brand" href="/" aria-label="Detroit Automation Academy — home"><img src="/assets/logo.webp" alt="" class="brand-mark"><span class="brand-word">Detroit Automation <em>Academy</em></span></a><nav class="nav-links" id="daaNavLinks" aria-label="Primary"><a class="lane" data-audience="viewer" href="/watch/">Watch</a><a class="lane" data-audience="reader" href="/signal/">Read</a><a class="lane" data-audience="reader" href="/notes/">Notes</a><a class="lane" data-audience="reader" href="/press/">Press</a><a class="lane" data-audience="user" href="/live-transit.html">Do</a><a class="lane" data-audience="user" href="/live-transit/">Cities</a><a class="lane" data-audience="visitor" href="/programs.html">Programs</a><a class="lane" data-audience="user" href="/api.html">API</a><a class="lane" data-audience="visitor" href="/partners.html">Partners</a><a class="lane" data-audience="visitor" href="/#mission">About</a><a class="lane" data-audience="visitor" href="/apple-learning-coach/">Bio</a><a class="lane" data-audience="visitor" href="/find.html">Find</a><a class="lane" data-audience="subscriber" href="https://www.linkedin.com/newsletters/7508391258638311424/" target="_blank" rel="noopener" aria-label="Subscribe, opens in new tab">Subscribe</a></nav><button class="nav-toggle" id="daaNavToggle" aria-label="Toggle navigation" aria-expanded="false"><span></span><span></span><span></span></button></header>
+<script src="/nav.js?v=20261023-0221"></script>
+
+<main class="phl-wrap">
+  <div class="phl-head">
+    <p><a href="/live-transit/">← All cities</a></p>
+    <h1>Philadelphia — Live Transit</h1>
+    <p>SEPTA buses, trolleys, the subway and Regional Rail, live on one map.
+    Data comes from SEPTA's own published feeds. There are no ads on this map. Ever.</p>
+    <p id="lt-status" role="status">Loading live vehicles…</p>
+    <p><a href="#lt-planner"><strong>Plan a trip →</strong></a> — scheduled journeys across SEPTA from the published timetable.</p>
+  </div>
+
+  <!-- First-view launcher sheet mount (LT-KAES-36 / LT-S1.2). -->
+  <section id="lt-launcher" class="lt-region" aria-label="Start"></section>
+
+  <!-- Load-error overlay + degradation notice (LT-KAES-40 / LT-S8.2). -->
+  <div id="lt-load-error" role="alert"></div>
+  <div id="lt-degraded" role="status"></div>
+
+  <!-- Filter panel: groups mirror config.layerGroups (LT-S4.1);
+       R5 renders these from configuration — the checked state here
+       mirrors the configured defaults so the shell is honest
+       before scripts run. Toggling recomputes every derived
+       display immediately (LT-S4.2 / RC10). -->
+  <div id="lt-filter-panel" class="lt-region" role="group" aria-label="Map layers">
+    <label><input type="checkbox" data-group="bus" checked> Bus</label>
+    <label><input type="checkbox" data-group="trolley" checked> Trolley</label>
+    <label><input type="checkbox" data-group="metro" checked> Subway</label>
+    <label><input type="checkbox" data-group="rail" checked> Regional Rail</label>
+  </div>
+
+  <!-- Browse + search mount (LT-KAES-33 / LT-S4). -->
+  <section id="lt-browse-panel" class="lt-region" aria-label="Browse routes and stops"></section>
+
+  <canvas id="lt-map" aria-label="Map of Philadelphia with live SEPTA vehicle positions"></canvas>
+
+  <!-- Stop / vehicle card region (LT-KAES-30 / LT-KAES-31). -->
+  <div id="lt-info" role="status"></div>
+
+  <!-- Alerts region (LT-KAES-34 surface half / LT-S8). -->
+  <section id="lt-alerts" class="lt-region" aria-label="Service alerts"></section>
+
+  <!-- Planner surface mount — R4 host renders here (LT-KAES-29). -->
+  <section id="lt-planner" class="lt-region" aria-label="Plan a trip"></section>
+
+  <!-- Ride Along mount (LT-KAES-32 / LT-S6). -->
+  <section id="lt-ride-along" class="lt-region" aria-label="Ride along"></section>
+
+  <!-- Places layer controls (LT-KAES-35 / LT-S9): labeled
+       "Sponsored", default OFF, session-only — rendered by R5. -->
+  <section id="lt-places" class="lt-region" aria-label="Places"></section>
+
+  <section class="phl-about">
+    <h2>What you are looking at</h2>
+    <p>The map covers the five-county Pennsylvania SEPTA region (Philadelphia,
+    Bucks, Chester, Delaware and Montgomery counties), drawn from U.S. Census
+    TIGER/Line 2025 roads. Route lines and stops come from SEPTA's published
+    GTFS. Vehicle positions come from SEPTA's agency-direct GTFS-Realtime
+    feeds, fetched and republished by AutomatedTechnologies.</p>
+    <h2>About this service</h2>
+    <p>Live Transit Philadelphia is published by AutomatedTechnologies
+    d/b/a Detroit Automation Academy, from SEPTA's public data under SEPTA's
+    developer license. This page makes no use of SEPTA branding and implies
+    no endorsement. Riders never pay for Live Transit.</p>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <img src="/assets/logo.webp" alt="" class="brand-mark">
+      <span>Detroit Automation Academy</span>
+    </div>
+    <p class="footer-fine">Southfield, Michigan · <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a></p>
+    <p class="footer-fine"><a href="/live-transit.html">Live Transit Detroit</a> · <a href="/live-transit/">Cities</a> · <a href="/programs.html">Programs</a> · <a href="/signal/">The Signal</a> · <a href="/voter-guide.html">Voter Guide</a> · <a href="/press/">Press</a> · <a href="/board/">Board</a> · <a href="/find.html">Find</a> · <a href="/api.html">API</a></p>
+    <p class="footer-fine"><a href="/terms.html">Terms of Service</a> · <a href="/privacy.html">Privacy Policy</a> · <a href="/dashboard.html">Platform status</a></p>
+    <p class="footer-fine">© 2026 AutomatedTechnologies d/b/a Detroit Automation Academy</p>
+  </div>
+</footer>
+<!-- The one application module (LT-KAES-06). Feature engines load
+     lazily through it (LT-KAES-05) — no classic-script sprawl, and
+     no estate script the reference application does not load. -->
+<script type="module" src="./modules/app.mjs?v=20261025-1449"></script>
+<script src="/assets/measure.js?v=20261023-o2" defer></script>
+</body>
+</html>
