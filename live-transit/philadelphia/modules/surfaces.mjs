@@ -1283,9 +1283,19 @@ export function createSurfaces(deps = {}) {
         const groups = host ? host.searchStops(text) : [];
         const box = el(which === 'from' ? 'lt-plan-from-results' : 'lt-plan-to-results');
         if (box) {
-          box.innerHTML = groups.map((g) => `
+          // Repair 2026-10-25 (duplicated suggestions): the
+          // group header printed the stop name and every button
+          // repeated it, so each stop appeared twice — and
+          // same-name stops were indistinguishable buttons. A
+          // one-stop group is just its button; a multi-stop
+          // group keeps the header once and each button carries
+          // its stop number, so the distinct stops the search
+          // retains (LT-S4.4) are actually distinguishable.
+          box.innerHTML = groups.map((g) => g.stops.length === 1
+            ? `<p class="lt-stop-group"><button type="button" data-action="plan-pick" data-which="${which}" data-idx="${g.stops[0].idx}">${esc(g.stops[0].name)}</button></p>`
+            : `
             <p class="lt-stop-group"><strong>${esc(g.name)}</strong><br>${g.stops.map((s) =>
-              `<button type="button" data-action="plan-pick" data-which="${which}" data-idx="${s.idx}">${esc(s.name)}</button>`).join(' ')}</p>`).join('');
+              `<button type="button" data-action="plan-pick" data-which="${which}" data-idx="${s.idx}">${esc(s.name)} · stop ${esc(s.stop_id)}</button>`).join(' ')}</p>`).join('');
         }
       });
     };
