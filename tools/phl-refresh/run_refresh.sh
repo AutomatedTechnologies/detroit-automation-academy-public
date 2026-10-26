@@ -81,20 +81,34 @@ PHL_TOOLS_DIR="$TOOLS" PHL_WORK_DIR="$WORK" \
 python3 - "$TOOLS/manifest.json" "$WORK/compiled" "$ASSET_NAME" <<'PY'
 import hashlib
 import json
+import re
 import sys
 
 man = json.load(open(sys.argv[1]))
 out = sys.argv[2]
 asset = sys.argv[3]
+# The compiler stamps meta.generated_at with the build clock (its one
+# nondeterministic field), so the asset gate is byte-identity with
+# that single field masked; the sidecars carry no timestamps and
+# gate on their raw MD5s.
+data = open(f"{out}/{asset}", "rb").read()
+assert len(data) == man["asset"]["bytes"], ("asset bytes", len(data))
+hits = re.findall(rb'"generated_at":"[^"]*"', data)
+assert len(hits) == 1, hits
+print("compiled asset raw md5:", hashlib.md5(data).hexdigest())
+print("compiled asset", hits[0].decode())
+masked = re.sub(
+    rb'"generated_at":"[^"]*"', b'"generated_at":"MASKED"', data
+)
+mmd5 = hashlib.md5(masked).hexdigest()
+assert mmd5 == man["asset"]["md5_masked_generated_at"], ("asset masked", mmd5)
+print("compiled OK asset (generated_at masked)", len(data), mmd5)
 for key, fn in [
-    ("asset", asset),
     ("stops_sidecar", "stops-sidecar.json"),
     ("trip_map", "trip-map.json"),
 ]:
     data = open(f"{out}/{fn}", "rb").read()
     md5 = hashlib.md5(data).hexdigest()
-    if "bytes" in man[key]:
-        assert len(data) == man[key]["bytes"], (key, len(data))
     assert md5 == man[key]["md5"], (key, md5)
     print("compiled OK", key, len(data), md5)
 PY
@@ -187,6 +201,7 @@ if [ "$MODE" != "ship" ]; then
   exit 0
 fi
 say "commit ship set"
+echo "SHIPPED_ASSET_MD5 $(md5sum "$CITY/planner/assets/$ASSET_NAME" | cut -d' ' -f1)"
 cd "$WS"
 git add -- \
   "live-transit/philadelphia/planner/assets/$ASSET_NAME" \
