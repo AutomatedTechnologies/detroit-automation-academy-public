@@ -162,7 +162,7 @@ mkdir -p "$AUDRUN/inputs" "$AUDRUN/inputs-set"
 cp "$TOOLS/battery/audit/audit-services-set-union.mjs" \
   "$TOOLS/battery/audit/audit-truth-union.py" "$AUDRUN/"
 cp "$TOOLS/battery/audit/inputs/raptor-v2-set.js" "$AUDRUN/inputs/"
-cp "$WORK/compiled/$ASSET_NAME" "$AUDRUN/inputs-set/asset.json"
+cp "$WORK/compiled/$ASSET_NAME" "$AUDRUN/inputs-set/$ASSET_NAME"
 cp "$WORK/compiled/trip-map.json" "$AUDRUN/inputs-set/trip-map.json"
 
 say "battery: truth + full audit (294 cells)"
