@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """classify.py — trip-matching classification (LT-KAES-25 / §5).
 
-CINCINNATI BUILD (Board 51) — platform stage, adapted from PHL REBUILD R2. Label: UNVERIFIED / legacy-unsigned.
+CINCINNATI BUILD (Board 51) — platform stage, adapted from
+PHL REBUILD R2. Label: UNVERIFIED / legacy-unsigned.
 
 Every live vehicle record classifies BEFORE any surface consumes
 it, against the city's compiled static trip/route sets:
