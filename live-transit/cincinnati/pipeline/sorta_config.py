@@ -22,13 +22,15 @@ LEGS = [
         "sorta-vp",
         "sorta",
         "vehicle-positions",
-        "https://tmgtfsprd.sorttrpcloud.com/TMGTFSRealTimeWebService/vehicle/vehiclepositions.pb",
+        "https://tmgtfsprd.sorttrpcloud.com"
+        "/TMGTFSRealTimeWebService/vehicle/vehiclepositions.pb",
     ),
     (
         "sorta-tu",
         "sorta",
         "trip-updates",
-        "https://tmgtfsprd.sorttrpcloud.com/TMGTFSRealTimeWebService/tripupdate/tripupdates.pb",
+        "https://tmgtfsprd.sorttrpcloud.com"
+        "/TMGTFSRealTimeWebService/tripupdate/tripupdates.pb",
     ),
     (
         "sorta-sa",
