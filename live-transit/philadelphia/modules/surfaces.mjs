@@ -1298,8 +1298,25 @@ export function createSurfaces(deps = {}) {
 
   // ---------- delegated actions (ONE handler path) -------------------
 
+  /* Repair 2026-10-25 (inert tiles): a real browser reports the
+   * INNERMOST element as the click target — for launcher tiles
+   * that is the label/proof <span> inside the button, which
+   * carries no dataset, so the delegated handler swallowed the
+   * click and the tile read as inert. Resolve the action holder
+   * by walking up from the target (closest() where the DOM
+   * offers it, the parent chain where it does not). */
+  function actionHolder(t) {
+    let cur = t;
+    while (cur) {
+      if (cur.dataset && cur.dataset.action) return cur;
+      if (typeof cur.closest === 'function') return cur.closest('[data-action]');
+      cur = cur.parentElement || cur.parent || null;
+    }
+    return null;
+  }
+
   function onAction(e) {
-    const t = e && e.target;
+    const t = actionHolder(e && e.target);
     const d = (t && t.dataset) || {};
     const action = d.action;
     if (!action) return;
