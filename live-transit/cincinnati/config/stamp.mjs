@@ -22,7 +22,14 @@
 // ritual). The pre-launch local scaffold stamp was 20261026-1512
 // and was never served.
 
-export const BUILD_STAMP = '20261026-1651';
+// Repair bump to 20261026-1831 the same day: modules/data-layer.mjs envelope validators
+// (validateVehicleEnvelope + validateTripUpdatesEnvelope) now enumerate this city's
+// own feed family ['sorta'] — the shipped copy carried the PHL reference families
+// ['bus','rail'] and rejected this city's own published envelopes, whose sources
+// carry only this city's family. Record: envelope-validator-repair-2026-10-26.md
+// in the Denver goal workspace files/; a Cincinnati addendum sits in this city's
+// build record. Label: UNVERIFIED / legacy-unsigned.
+export const BUILD_STAMP = '20261026-1831';
 
 /** Append the governing stamp to a same-origin asset/data URL. */
 export function withStamp(url) {
