@@ -1,0 +1,707 @@
+{
+ "stage": "publish",
+ "generated_at": "2026-10-26T22:32:21Z",
+ "file_count": 175,
+ "files": {
+  "data/alerts.json": {
+   "bytes": 100314,
+   "sha256": "a372924428eaa02056ec13f37fe04ab94542fe4d20a833079dde8786c8136a1e"
+  },
+  "data/trip-updates.json": {
+   "bytes": 3139992,
+   "sha256": "c90f3237df11e813b4344469636b5d33766dd01de841001cb2dfa1b684a3974a"
+  },
+  "data/tu/capmetro/1.2.json": {
+   "bytes": 21179,
+   "sha256": "598eee6a15f9c6a388c9b57bc496b72e5e99c54b8e00fbd794908b200d0b94b6"
+  },
+  "data/tu/capmetro/1.3.json": {
+   "bytes": 24479,
+   "sha256": "320662fb1058377bd77890adcec3b49a92364e6ae47280fc808151a2613d2131"
+  },
+  "data/tu/capmetro/1.4.json": {
+   "bytes": 24954,
+   "sha256": "f2cb924a2587848f4eccd63aa66856418a9b5673cc2e08a8132f2b4987ec93d6"
+  },
+  "data/tu/capmetro/1.5.json": {
+   "bytes": 5049,
+   "sha256": "4185b387ea6bea85220a6aa604b6f955655e8ac36f1414afcf3d4586a4ecf3ee"
+  },
+  "data/tu/capmetro/1.json": {
+   "bytes": 22987,
+   "sha256": "f41ab3d73052b6e3e06e3c508e088487f26829d44189e5a2ded2dabe4d70e1ee"
+  },
+  "data/tu/capmetro/10.2.json": {
+   "bytes": 18979,
+   "sha256": "d3d96943faa38db7d025c52dc403e23bd23432d877fb7998019fe63993c09782"
+  },
+  "data/tu/capmetro/10.3.json": {
+   "bytes": 22186,
+   "sha256": "3f7bce4e96507de3b1dd7cdef76f8dd92298250d1c7ccf819c199e882ff422d6"
+  },
+  "data/tu/capmetro/10.4.json": {
+   "bytes": 23003,
+   "sha256": "5ecd710a0a38b36873e50ee0ff74c43d5116a4c2c4e1160e2c5fd0dc17c2ec9e"
+  },
+  "data/tu/capmetro/10.5.json": {
+   "bytes": 22460,
+   "sha256": "b01ba92dbfa35ce2ee1723dabfe6279a3d7775341de45e2304603ca8e7494b32"
+  },
+  "data/tu/capmetro/10.6.json": {
+   "bytes": 7431,
+   "sha256": "54dc082d2d8da8609294b4f5d02e9e2283fab9920f01ff0eb671844637bea288"
+  },
+  "data/tu/capmetro/10.json": {
+   "bytes": 18742,
+   "sha256": "d2623eb66f1483929d820976575471d28b87221f646928b00a668880e71073d7"
+  },
+  "data/tu/capmetro/103.json": {
+   "bytes": 3620,
+   "sha256": "9dff73dfc9548928d31effb96b041658a2bd2f8e0ff6f597ccb356f67cd77100"
+  },
+  "data/tu/capmetro/105.json": {
+   "bytes": 6204,
+   "sha256": "e50ca0c81f537de2da059a249c06607e3c4483027b452aae8a14938a2bf981b2"
+  },
+  "data/tu/capmetro/111.json": {
+   "bytes": 4612,
+   "sha256": "8662c3423c8fa0513888fb204a4b0c0592c3c950e1c267c6c757f2f87e7f8e22"
+  },
+  "data/tu/capmetro/135.json": {
+   "bytes": 2424,
+   "sha256": "c8ac731903756c408e1be4a25319603f280a7a3af47a80dc1cce63583ad35f87"
+  },
+  "data/tu/capmetro/142.json": {
+   "bytes": 6556,
+   "sha256": "0df3a83453a932edf5cb39ea9dd6fb14f9cb6be2a02e58caca0cc00dd4435f5e"
+  },
+  "data/tu/capmetro/152.json": {
+   "bytes": 2946,
+   "sha256": "76487cf84f5cb5371686ddda101bf0977d8eb4d029e7510293650b2b12b6fb25"
+  },
+  "data/tu/capmetro/171.json": {
+   "bytes": 3228,
+   "sha256": "d754fe157877879f6ebd3ab055439ec1c0b1bb3671084f5add283faf7f90336f"
+  },
+  "data/tu/capmetro/18.2.json": {
+   "bytes": 19472,
+   "sha256": "f50459e1de381b10e807c320e63dd99a2606c35d2f7442d51c26ac4b201d0ddd"
+  },
+  "data/tu/capmetro/18.3.json": {
+   "bytes": 24996,
+   "sha256": "ad29caf330dc0130b7ed9d7faaa118dd3ce11172652b4b385f8b74e4a06ec2e9"
+  },
+  "data/tu/capmetro/18.4.json": {
+   "bytes": 12663,
+   "sha256": "d444c2cfc6dd8b82023d030603bb2d3a9002ca2533690cdf8206b90850fb9266"
+  },
+  "data/tu/capmetro/18.json": {
+   "bytes": 19356,
+   "sha256": "db108d8e0dda4ee97388b24246f0cf66e3aec876c3468fa72f4a98eaa5015315"
+  },
+  "data/tu/capmetro/2.2.json": {
+   "bytes": 21725,
+   "sha256": "153d590b1b779d83e03e997f7d89173258ba1d9e2ab90a36b0f8151b5930a429"
+  },
+  "data/tu/capmetro/2.3.json": {
+   "bytes": 24660,
+   "sha256": "45e5c5a4563da364884e03dcdd56e6f4576f63ba25285c92067d91cd40e8c474"
+  },
+  "data/tu/capmetro/2.4.json": {
+   "bytes": 24608,
+   "sha256": "f1425cdd69dfbcbe838387a66dd1c5e279aadfc1720d5ab033e5544ff4496cac"
+  },
+  "data/tu/capmetro/2.5.json": {
+   "bytes": 5393,
+   "sha256": "e3d84f76bbab89c713c16371226dfe3a140a6abd0f4ce610d11b9701218e49ee"
+  },
+  "data/tu/capmetro/2.json": {
+   "bytes": 21306,
+   "sha256": "b5d85f318cc86ea4680a5004a3a6f14625cea7a6c0dfca7f438b65219b7c5937"
+  },
+  "data/tu/capmetro/20.2.json": {
+   "bytes": 24994,
+   "sha256": "40e5deacfedad4a8e8b726bbb6833d71a8398822475146a75640def34f7f7b33"
+  },
+  "data/tu/capmetro/20.3.json": {
+   "bytes": 20539,
+   "sha256": "3932e9e30f9664c6add4e347da181cc5c02d51bfdb4436ca6000973b53c6c393"
+  },
+  "data/tu/capmetro/20.4.json": {
+   "bytes": 24588,
+   "sha256": "1420705328c498129bc1c86df90d32c20ab389af029e2589d9c7c69554c1e0ac"
+  },
+  "data/tu/capmetro/20.5.json": {
+   "bytes": 24518,
+   "sha256": "15155c690462402c7bac92db5157f837baba6caf3c35218ff07edf4f71a5ee55"
+  },
+  "data/tu/capmetro/20.6.json": {
+   "bytes": 18669,
+   "sha256": "67c920f36e1b187032765184b35508610bba0bc37f9ea61a0628b465ac7f88f0"
+  },
+  "data/tu/capmetro/20.json": {
+   "bytes": 24541,
+   "sha256": "72510630a3b3b58d313f9f134d96e662b1549af5f1d555227bb775dae917b088"
+  },
+  "data/tu/capmetro/201.2.json": {
+   "bytes": 16234,
+   "sha256": "09bee29563adbd913673bcbd539e6b138a0142dac7e10366aa45597444d10060"
+  },
+  "data/tu/capmetro/201.json": {
+   "bytes": 24259,
+   "sha256": "9105e6d18df07d095f1af9258ffa194cd4ed5bec0c0d34aed85559c887b254a8"
+  },
+  "data/tu/capmetro/217.json": {
+   "bytes": 8975,
+   "sha256": "c676033c8164f2ef1d996564b2e8924a6d76b9056944a612c35b0ad2ca182b32"
+  },
+  "data/tu/capmetro/228.json": {
+   "bytes": 23840,
+   "sha256": "596e246031bc370906c382da6eddb2f78b87ffa702e88e10204318a4d25a39bb"
+  },
+  "data/tu/capmetro/233.json": {
+   "bytes": 8557,
+   "sha256": "f5d10ef6305fe455a385776c1a16dcf5aa19ca740f0e9a70a1e69e3ef8d606de"
+  },
+  "data/tu/capmetro/243.json": {
+   "bytes": 10477,
+   "sha256": "358d21894e8006685fc9780d3abd3c09cc8e21c165730510971bc8c35f898960"
+  },
+  "data/tu/capmetro/271.2.json": {
+   "bytes": 10101,
+   "sha256": "1c29bb5ccee8c9d1c464f1be1966d47be20d382d803ad055fb0b659decdd5c7c"
+  },
+  "data/tu/capmetro/271.json": {
+   "bytes": 24809,
+   "sha256": "608f5a156d5901f7fa6bf4e0d0f0756e0bc349f00a0e6706a352cb86fa3995d4"
+  },
+  "data/tu/capmetro/3.2.json": {
+   "bytes": 13354,
+   "sha256": "44bf9fdf21f0aeff0fa71b76cc7e7f56e9770c23158d55b1ed0fc6f8bd3ecd50"
+  },
+  "data/tu/capmetro/3.3.json": {
+   "bytes": 13201,
+   "sha256": "448a977aec86102bbe355ad92584f3352d2422f42a06ba8b5b3ccfbfd991b4c8"
+  },
+  "data/tu/capmetro/3.4.json": {
+   "bytes": 14981,
+   "sha256": "aed1c1e134835a721574f8a5be4cb9d3701cd4b44779a7f257deab11d2cd51d6"
+  },
+  "data/tu/capmetro/3.5.json": {
+   "bytes": 15028,
+   "sha256": "0af696da201250541d769294098691702007012dda1ea3f09058687ba75a312a"
+  },
+  "data/tu/capmetro/3.6.json": {
+   "bytes": 22844,
+   "sha256": "8dab4e7e9a37a9892179354a559e25ed3ac014746311ad46f63663b24f9cda75"
+  },
+  "data/tu/capmetro/3.7.json": {
+   "bytes": 24788,
+   "sha256": "52b95d4ae128be1ced765a6451abb419cd62f48c816f563f3f6966340816309a"
+  },
+  "data/tu/capmetro/3.8.json": {
+   "bytes": 6962,
+   "sha256": "1c0716253693b2fbd3af8bda94cb82d54c2821d432f3ac4f6fa9960107d7d8dc"
+  },
+  "data/tu/capmetro/3.json": {
+   "bytes": 21316,
+   "sha256": "9e9098843b2dc42bf49502b315daade84113e8b0f62a81c3af6f57d1338dfb02"
+  },
+  "data/tu/capmetro/30.2.json": {
+   "bytes": 23926,
+   "sha256": "558a5dbb4285512faf5bce6003ae56ba699539c15fa2351e349d03ea409bd642"
+  },
+  "data/tu/capmetro/30.3.json": {
+   "bytes": 20064,
+   "sha256": "628a267940eef50f6fde32aa22ae32b097a70fbf8551e17b32d40d7a8e2cabdf"
+  },
+  "data/tu/capmetro/30.4.json": {
+   "bytes": 24913,
+   "sha256": "1eac93ffc8c77f8955a121e8689d868a06716a60d961900a53520fb024a4cd9a"
+  },
+  "data/tu/capmetro/30.5.json": {
+   "bytes": 1577,
+   "sha256": "3a6f32ce9ce29b6877bbd35e86c83570403aabe5e65a8988e0dd0812dd1cb5b9"
+  },
+  "data/tu/capmetro/30.json": {
+   "bytes": 22389,
+   "sha256": "f5868f8713bbdf8d0217f375f9616a5ebdf501bec8eecbdddbe789395a566794"
+  },
+  "data/tu/capmetro/300.2.json": {
+   "bytes": 16323,
+   "sha256": "4cd0cd738427a0c323d9acde6220dde4e1fc16792c130441f12beab98c259fd2"
+  },
+  "data/tu/capmetro/300.3.json": {
+   "bytes": 20517,
+   "sha256": "8f2e09cc02ebfc8b8c7502419e0a95e5c4e7f7c46264ec319057dc3c91c95b57"
+  },
+  "data/tu/capmetro/300.4.json": {
+   "bytes": 22015,
+   "sha256": "dcf3699a59a82215c4af5a3e50cc21ebc60a9160a2a7eb57dd5c6bb616ac0b52"
+  },
+  "data/tu/capmetro/300.5.json": {
+   "bytes": 21502,
+   "sha256": "7c830f89f5b418c618825d997fbc1df6d0d6d3dcf71ee057f40d9d6e2f76547e"
+  },
+  "data/tu/capmetro/300.6.json": {
+   "bytes": 24388,
+   "sha256": "032bc2ec929e619416bf1b13fc6b7bd278bc0ba3b1ea8a7cb12884f24cd8999f"
+  },
+  "data/tu/capmetro/300.7.json": {
+   "bytes": 24626,
+   "sha256": "7228bcb1ff8a801c6a51fbd7a7cf28d1ced3d044f9baef3b8497477e9f26e335"
+  },
+  "data/tu/capmetro/300.8.json": {
+   "bytes": 24914,
+   "sha256": "5e693d73575f52f8d1a4583730161cca0ab73750d5b22c4c82a265db2c8a9654"
+  },
+  "data/tu/capmetro/300.9.json": {
+   "bytes": 14394,
+   "sha256": "6b834230920d4ea5243817ca618c47cc9bf5e9ddce2cd2bf2abd2dcd68a5a633"
+  },
+  "data/tu/capmetro/300.json": {
+   "bytes": 24182,
+   "sha256": "1b63353220ace0bdd3615e6465faeb8f05cd7542f92af193ffda6283ba9418f6"
+  },
+  "data/tu/capmetro/310.2.json": {
+   "bytes": 24714,
+   "sha256": "faac2ac69c9b9962a5adad6834a795d3c37891f341ae5938315d647be7e1b8b3"
+  },
+  "data/tu/capmetro/310.3.json": {
+   "bytes": 4423,
+   "sha256": "2a5a7697f6031abd8532d8596f16d9c21bdec452861878c23a03239d1f1f4e4d"
+  },
+  "data/tu/capmetro/310.json": {
+   "bytes": 24860,
+   "sha256": "dcc325c0879c2427028084e880c41ad351b9447fe959be3a11982b372dc72a97"
+  },
+  "data/tu/capmetro/311.2.json": {
+   "bytes": 24642,
+   "sha256": "a1f7389c0b8a79d7976eebf774717ec0ed33ba8c74adf1b6ac43cdd8c6b157ff"
+  },
+  "data/tu/capmetro/311.3.json": {
+   "bytes": 16126,
+   "sha256": "3e9e47297b6d9aa4a08cec04287d018d50b32714b1b5b57eea29eef9e54e3dc6"
+  },
+  "data/tu/capmetro/311.json": {
+   "bytes": 23030,
+   "sha256": "7847269a4bd60dfa00a58af17613b003dac71eec8c26e0ec5d95a866215fa5db"
+  },
+  "data/tu/capmetro/315.2.json": {
+   "bytes": 3152,
+   "sha256": "40be282e61a8928985503a8f7fea8ca2536b11a1c25e3c49ee491e0c13c61f57"
+  },
+  "data/tu/capmetro/315.json": {
+   "bytes": 24908,
+   "sha256": "df1e78998b96d0ad46bd29382fa4568c40d7a0733aed53eb62d42d5a9ae1c8fb"
+  },
+  "data/tu/capmetro/318.2.json": {
+   "bytes": 20572,
+   "sha256": "9780e9da441288c4af161e93865d62db0d2f1ac14062bbb1814935cf708eefe5"
+  },
+  "data/tu/capmetro/318.3.json": {
+   "bytes": 24922,
+   "sha256": "1202f5967d9507161a82c8f43d3779fc7126caf36abdce7f8016a6c7caad9657"
+  },
+  "data/tu/capmetro/318.4.json": {
+   "bytes": 4326,
+   "sha256": "c7e58c39ea362679a71b449a59d9a965e0d1f27fe87b1a5727874989479d07cb"
+  },
+  "data/tu/capmetro/318.json": {
+   "bytes": 20657,
+   "sha256": "bd967b7d6f5edfc6a3181c301c0126bd2546975b66ee9a901fcf7389e6143d90"
+  },
+  "data/tu/capmetro/320.2.json": {
+   "bytes": 13929,
+   "sha256": "7aed5bf17f0581cccd371b957f9ae3f1515e1d09771d15fb933b32c6cd3925f4"
+  },
+  "data/tu/capmetro/320.json": {
+   "bytes": 22669,
+   "sha256": "bf2c37c0e3242109bf247cd1c8efd95319e3b3ea325dfb21ecfcf345bf85e41f"
+  },
+  "data/tu/capmetro/322.2.json": {
+   "bytes": 24400,
+   "sha256": "000245a11afd9d0250b562a92598050f0d3e3f39221ad851d5a90fde6dde4343"
+  },
+  "data/tu/capmetro/322.3.json": {
+   "bytes": 15451,
+   "sha256": "cc33729a8f971ecee3c6e5d1af7b15a22b4d49d9578db9c8e3c605ea0a3efc7a"
+  },
+  "data/tu/capmetro/322.json": {
+   "bytes": 24446,
+   "sha256": "9ed19af5689f4c9bcad6c7b00c734992b90ab7f8351a5528b2d65dc750dd6417"
+  },
+  "data/tu/capmetro/324.2.json": {
+   "bytes": 24100,
+   "sha256": "7317b7415d1e4eca0f9cba0f8788c7a3aa27d1f361ae2deb12ba964ac9aa8abf"
+  },
+  "data/tu/capmetro/324.3.json": {
+   "bytes": 12801,
+   "sha256": "bfc805064503cb7e4c7bbb314195f6aacfc56de2cf995e61a9dae5bc17af4ffd"
+  },
+  "data/tu/capmetro/324.json": {
+   "bytes": 20260,
+   "sha256": "20a2d15cf4456661b946962dd18b35c246f8bce952901418afae9cd312af954e"
+  },
+  "data/tu/capmetro/325.2.json": {
+   "bytes": 20236,
+   "sha256": "f28c7f98bb4ec271bae1b039ed9e3d73b5172b11013f5bbac1c58c2cd3ec602b"
+  },
+  "data/tu/capmetro/325.3.json": {
+   "bytes": 23900,
+   "sha256": "54ab9311d50b11abe82d20505854b16ae51f07c5114f7eba6674e70e55f5bec3"
+  },
+  "data/tu/capmetro/325.json": {
+   "bytes": 21298,
+   "sha256": "ccd57daaed3fc70b7101423c3c50736b75c4cd9f6f7f03cc2a918ac8c42691c2"
+  },
+  "data/tu/capmetro/333.2.json": {
+   "bytes": 21516,
+   "sha256": "345f6de8ffa628c1788e36fa996677e8342f526d280f6a559d2ddbec112f36b3"
+  },
+  "data/tu/capmetro/333.3.json": {
+   "bytes": 19796,
+   "sha256": "67e3610e19251faab4335adb561336bbd6ed06e2a349b16361a93a59c67ac7c3"
+  },
+  "data/tu/capmetro/333.4.json": {
+   "bytes": 21358,
+   "sha256": "dfd816a59e9fadf921ee585da4ffedbc58a919a4b232555c249cf21ab7d7e1e3"
+  },
+  "data/tu/capmetro/333.5.json": {
+   "bytes": 24788,
+   "sha256": "411de0110c6ccd24fc59ca0e65f660230e0b5da31e25ff872cdab6513c204d4f"
+  },
+  "data/tu/capmetro/333.6.json": {
+   "bytes": 17279,
+   "sha256": "2df04ee462d7aae5e1518bbdd135ec13264687b8e78e9753b15e30ba90f2d382"
+  },
+  "data/tu/capmetro/333.json": {
+   "bytes": 24856,
+   "sha256": "8f686908de0a6ab626c04d552ead9e9f92b4c86754138d0cd6b54e7091daa700"
+  },
+  "data/tu/capmetro/335.2.json": {
+   "bytes": 23684,
+   "sha256": "9c6525b20ae22e4f9f6c3f0f630f7931cf7a64cc73a9b1af733873bc435b6b9d"
+  },
+  "data/tu/capmetro/335.json": {
+   "bytes": 22950,
+   "sha256": "f594d547dc2345636870eeb2568078415d25efd23934edeefb6590249b3fbb42"
+  },
+  "data/tu/capmetro/337.2.json": {
+   "bytes": 21976,
+   "sha256": "d270aad2ded0f4ce233cc7f68b46b89353314db37f84ee865abd4a4b18a5d4dd"
+  },
+  "data/tu/capmetro/337.3.json": {
+   "bytes": 23221,
+   "sha256": "8c164ffe7224a47482f1a31546b99ba511c64c548306ae3f33a98db108f94198"
+  },
+  "data/tu/capmetro/337.4.json": {
+   "bytes": 24660,
+   "sha256": "324eb095829fdcafe0d5ba10c4414eecd7412dba380f9371d72616577cc64209"
+  },
+  "data/tu/capmetro/337.5.json": {
+   "bytes": 24700,
+   "sha256": "a4f44653bc2551720bd768d34affc54b9b56eff10091e04f8411f7a5c868b203"
+  },
+  "data/tu/capmetro/337.6.json": {
+   "bytes": 12028,
+   "sha256": "018434570c41fe307e768a5cdc276ad307f63ceec2104b42cccd53227980f908"
+  },
+  "data/tu/capmetro/337.json": {
+   "bytes": 18789,
+   "sha256": "455232d65f49fb5b200542da49cf89ab13da6287b3eca13b1f8161eb154f2eab"
+  },
+  "data/tu/capmetro/339.2.json": {
+   "bytes": 4659,
+   "sha256": "7199bcc87e5d1b27b067e42497ffe20679650944393447032032d1341a4c9a9d"
+  },
+  "data/tu/capmetro/339.json": {
+   "bytes": 24390,
+   "sha256": "cd183148ab7586d7f72c9ca93f1fd8ec8fc5c7fb0c82e91f5c0ec6017e5e624f"
+  },
+  "data/tu/capmetro/345.json": {
+   "bytes": 18576,
+   "sha256": "dafe1d7aec3c870cf35d8d6401c2015d54aeef17b68de5030db12895a900460d"
+  },
+  "data/tu/capmetro/350.2.json": {
+   "bytes": 22074,
+   "sha256": "477128b9bf420442cb0d0305f881c79c67a2f7c31b0735fc1d0bbdace6a46443"
+  },
+  "data/tu/capmetro/350.json": {
+   "bytes": 23661,
+   "sha256": "158338213889d6c5ef8b69ec9ab0fb1f9652cc8506247d007cc7b5875793cb98"
+  },
+  "data/tu/capmetro/383.2.json": {
+   "bytes": 22177,
+   "sha256": "865587f130a048dd716a5d2d2d025dfc8ba950d5b759570de440f78a044b3645"
+  },
+  "data/tu/capmetro/383.3.json": {
+   "bytes": 17017,
+   "sha256": "0d88b8575e257c4ef0dfa3c9799e04b5aaafafab88c05320eb2ae17b8e969106"
+  },
+  "data/tu/capmetro/383.json": {
+   "bytes": 17496,
+   "sha256": "4594ea77f2ae2ab7f26967a08c8d91dde1b580b5a0c42a083592a3827f1c7659"
+  },
+  "data/tu/capmetro/392.2.json": {
+   "bytes": 14443,
+   "sha256": "e98e27d542fbf7cc6365617eb5932c06148b4aa9a5d68fd3e7c9492f5b98f9e4"
+  },
+  "data/tu/capmetro/392.json": {
+   "bytes": 24932,
+   "sha256": "a4dc6a0f5426f544525f02fc8c767507ac48d39880869ce7300d923b8c4ebb22"
+  },
+  "data/tu/capmetro/4.2.json": {
+   "bytes": 22835,
+   "sha256": "6ba438aadd5e53e3a91ab5071470747d64f98e3b3c9320b1255b38cb1053dadc"
+  },
+  "data/tu/capmetro/4.3.json": {
+   "bytes": 24515,
+   "sha256": "f4e5b9780ba8b6fde915204d78525613cfd5e19070054276ebb0bf3e623ce8e9"
+  },
+  "data/tu/capmetro/4.4.json": {
+   "bytes": 15674,
+   "sha256": "21791f7dee8d8fb0c3c0064b64bbbe7e80dcb8f2225530c8be119a6e0f8866c6"
+  },
+  "data/tu/capmetro/4.json": {
+   "bytes": 22469,
+   "sha256": "4ca60ae37a2477d6f45fab22c4de37b72075dcdd0ebc25a0e9f0c91adb5db5d9"
+  },
+  "data/tu/capmetro/465.json": {
+   "bytes": 7635,
+   "sha256": "87c5fd9f868912088f8cad07aa4397bd214dcdd85f199782018a8550450a6f13"
+  },
+  "data/tu/capmetro/466.json": {
+   "bytes": 16041,
+   "sha256": "4d59756d81c4c3023bdfb3da7dfc868752613b749c5383d65315a4821c68b53c"
+  },
+  "data/tu/capmetro/483.json": {
+   "bytes": 6744,
+   "sha256": "4085ed786b2a05bd9ec4064a1da4af04582a965ffcd9af6d198a66137889fe48"
+  },
+  "data/tu/capmetro/485.json": {
+   "bytes": 2783,
+   "sha256": "07c3005b4b9a03b314212d3cb6cb4913b8293e7fe63d682c1adff74ca5f95742"
+  },
+  "data/tu/capmetro/486.json": {
+   "bytes": 2797,
+   "sha256": "6fed21644de90be6ac40016f8575eaffeb216aa607e5e6af2fd62c0e73cb9bd7"
+  },
+  "data/tu/capmetro/5.2.json": {
+   "bytes": 19674,
+   "sha256": "8add0f76b4803e7bbb73b00d3a48591d9c68a6a85d68a5fd4631454f89a0b7f2"
+  },
+  "data/tu/capmetro/5.3.json": {
+   "bytes": 24907,
+   "sha256": "5c96878391c177990f8c478db4e2203700ff0d81f4d21c0a196f5424ba27ac19"
+  },
+  "data/tu/capmetro/5.4.json": {
+   "bytes": 9966,
+   "sha256": "7d1b1e9ec8bcea6ae773a768aa677c66404a225d8c8a446b3aef6db861ea6b4b"
+  },
+  "data/tu/capmetro/5.json": {
+   "bytes": 21155,
+   "sha256": "e85d74eb318be13e72890524f1ed517208082cadec8f9833ffaf50fa8c6d0b4e"
+  },
+  "data/tu/capmetro/50.json": {
+   "bytes": 15176,
+   "sha256": "92c6a853b4309d1788e752bbefd553396cb1718ba409a6c7ef6d8e208fc3ec84"
+  },
+  "data/tu/capmetro/550.json": {
+   "bytes": 10091,
+   "sha256": "8f1d365c8f4d1451055b4a1d67c9702f72d3d87b263f6cdaa9d77fe7fae86f43"
+  },
+  "data/tu/capmetro/640.2.json": {
+   "bytes": 17428,
+   "sha256": "e2c1b34eca6445a3cf5a9dde3b00750b14dcf37b75bfb423953cd85d59f9fdbd"
+  },
+  "data/tu/capmetro/640.json": {
+   "bytes": 24039,
+   "sha256": "76b65cfc20e3bbfe800c5bacc6f46a287603ece96efa5b15333a4c3f2994071c"
+  },
+  "data/tu/capmetro/642.json": {
+   "bytes": 22991,
+   "sha256": "ca808e7890f03fd1e7f8b56df563e6ebbaf45dc2603aee395ee6397768e23a09"
+  },
+  "data/tu/capmetro/656.2.json": {
+   "bytes": 16278,
+   "sha256": "8660603e0e3860082e2a5ca678834af8935b9989b37105d209add19e175e4086"
+  },
+  "data/tu/capmetro/656.json": {
+   "bytes": 23683,
+   "sha256": "f06ea6d901e1fa44257683736a7549eae6c18d19213134d4695da4b8cc68a247"
+  },
+  "data/tu/capmetro/661.json": {
+   "bytes": 12271,
+   "sha256": "291f76fac9b2fcc37a280c2d554cbdfe13512c048f835d54fbf429be65f1fc90"
+  },
+  "data/tu/capmetro/663.2.json": {
+   "bytes": 24717,
+   "sha256": "3ece9f3d32583062fe93a8327764a1e31e3ff7e2db89f91354df4b54973ab551"
+  },
+  "data/tu/capmetro/663.3.json": {
+   "bytes": 18778,
+   "sha256": "781a8c67e521c6fd89b3d070235ef11bbfd67f57dcc78077dd97fb12c9485f57"
+  },
+  "data/tu/capmetro/663.json": {
+   "bytes": 24829,
+   "sha256": "d8a2867abc46c01aa174ee581eadf1217c49d84f37d6675352ddc44a0a4b7079"
+  },
+  "data/tu/capmetro/670.2.json": {
+   "bytes": 18592,
+   "sha256": "cfae23550a74407cf4174e90e0803adbf439ae308d49f208fda4692b99197d78"
+  },
+  "data/tu/capmetro/670.json": {
+   "bytes": 24742,
+   "sha256": "5dd08e2e5faf893ef0cad8bb577aa226ddb777dce18508875fc2317e9988e846"
+  },
+  "data/tu/capmetro/672.json": {
+   "bytes": 13351,
+   "sha256": "2f9803b595039c8575d8ab9405911c0f7060b73839f9a8fde3a27da2ed59ed61"
+  },
+  "data/tu/capmetro/7.10.json": {
+   "bytes": 24792,
+   "sha256": "325b89363f7733c9bafe8c2399e297f1dd0500c386d9e516fb6d01f74b477767"
+  },
+  "data/tu/capmetro/7.11.json": {
+   "bytes": 10358,
+   "sha256": "a96f632bade0a904fbc8ca93b05323eaf15d82c59d05d13297a8244f1be2734f"
+  },
+  "data/tu/capmetro/7.2.json": {
+   "bytes": 20444,
+   "sha256": "21877509189ebe60d9110417a35ef6acd178161b138dc5b7b4209abfa7f947fd"
+  },
+  "data/tu/capmetro/7.3.json": {
+   "bytes": 17999,
+   "sha256": "c294b96efc1dcc0047d063fe9deb0f853a4bd0a9db25f362f6f7a688c7e4d56d"
+  },
+  "data/tu/capmetro/7.4.json": {
+   "bytes": 20111,
+   "sha256": "d4badf390e1b48295228fb9ded56d5e09c07be64ccee39a4fbbc46b6729c3464"
+  },
+  "data/tu/capmetro/7.5.json": {
+   "bytes": 20697,
+   "sha256": "dd7beb7db0e9d928719daf6c96b87a2fc00ad2eeaadc6d420657e66b96ce4ea7"
+  },
+  "data/tu/capmetro/7.6.json": {
+   "bytes": 19015,
+   "sha256": "4830d9488d9574032d58fe80d63f89deadab318cea9d92db9cf4e1b12aef93a1"
+  },
+  "data/tu/capmetro/7.7.json": {
+   "bytes": 24012,
+   "sha256": "3dd290c7e3d77f52e6ac973041ba1a9f3ea8c6da864124cd2e6d952b06a174c3"
+  },
+  "data/tu/capmetro/7.8.json": {
+   "bytes": 24638,
+   "sha256": "88e866451f156bdb662f7e5bd69ac1a31d00bd897f4d5fd7cf9ae59f44554b7a"
+  },
+  "data/tu/capmetro/7.9.json": {
+   "bytes": 24827,
+   "sha256": "5aecf5a8f2af6c489e97cff422f5476b353cce237e8eb13442174988eb0e0caa"
+  },
+  "data/tu/capmetro/7.json": {
+   "bytes": 23046,
+   "sha256": "09834ee4c242e8c7047d3f262393a9397c8698ec7ef5716bedc342409d55bfe5"
+  },
+  "data/tu/capmetro/800.2.json": {
+   "bytes": 23491,
+   "sha256": "42b7de2c8f8415e464bdcdfcc59df255191b6f04b2d7c20b8d78210099e1d7dd"
+  },
+  "data/tu/capmetro/800.3.json": {
+   "bytes": 24974,
+   "sha256": "6da45b9eba133204841bc071e8b6987a034b5a594ce31a46f26a8cd2e042c40a"
+  },
+  "data/tu/capmetro/800.4.json": {
+   "bytes": 24979,
+   "sha256": "475710c136afb9b5b24183a2b378eb091708385cd5a8be0e140c9df2b306117f"
+  },
+  "data/tu/capmetro/800.5.json": {
+   "bytes": 24962,
+   "sha256": "48f47a7ea261ce2904d178347fd2041042c032021b155518f7079344508407be"
+  },
+  "data/tu/capmetro/800.6.json": {
+   "bytes": 19116,
+   "sha256": "3e7743507544f070bfe8e1fda8010986dcf11bf4b9cfd0d654dc6c5f3ee932cd"
+  },
+  "data/tu/capmetro/800.json": {
+   "bytes": 24839,
+   "sha256": "4ea404c9d6ed54d23a17f28cfef73559f4f8f235482a6edb61169995db13274d"
+  },
+  "data/tu/capmetro/801.2.json": {
+   "bytes": 20397,
+   "sha256": "83bb147664cb0a2d21e885868f673e5db33f273c38bc74b40ef0eaccbe33f7f6"
+  },
+  "data/tu/capmetro/801.3.json": {
+   "bytes": 23888,
+   "sha256": "0f5aae9e539130427d87a0fa16c47dc93e7145b6908200df2385614f08cf4928"
+  },
+  "data/tu/capmetro/801.4.json": {
+   "bytes": 24670,
+   "sha256": "f3656a05f2edc51d10022b5ba81ddc4fdb8acf2ec3d4f3074dfb63b6586dfca2"
+  },
+  "data/tu/capmetro/801.5.json": {
+   "bytes": 21572,
+   "sha256": "3db8dd923918f37be705f34f0131437de2555f1ce46e42a1cf127f2c1e087bbb"
+  },
+  "data/tu/capmetro/801.json": {
+   "bytes": 23096,
+   "sha256": "5b31512d172e201f7324d50b49434aaf156ad7b0680be301383625a85a3edab7"
+  },
+  "data/tu/capmetro/803.2.json": {
+   "bytes": 22910,
+   "sha256": "0339db23a1d0fdb5f4618f19d886ab4450f6399b737afc020950fab26f9c3f1d"
+  },
+  "data/tu/capmetro/803.3.json": {
+   "bytes": 23633,
+   "sha256": "3f80407e4ceab36b55c76a10417e9607a0444a791947cbedfcbb1337d9fb9da3"
+  },
+  "data/tu/capmetro/803.4.json": {
+   "bytes": 15804,
+   "sha256": "80ec6b4cd7af389aaaf20c8cf7abdba1bbd997de89c7042321a435448ab81b5d"
+  },
+  "data/tu/capmetro/803.json": {
+   "bytes": 23269,
+   "sha256": "a605e585066f919516e865880f578257396194bbbdfa81617617920bd826f00f"
+  },
+  "data/tu/capmetro/837.2.json": {
+   "bytes": 23958,
+   "sha256": "740d01166549a66718ea0133b6c73bc8ce13bf7597a765c603e6954616c4f517"
+  },
+  "data/tu/capmetro/837.3.json": {
+   "bytes": 24215,
+   "sha256": "b66e68f87f752bfe8a4d1a72f15d6bb68bf71eb831cb73c70713f204a7b7f67a"
+  },
+  "data/tu/capmetro/837.4.json": {
+   "bytes": 8472,
+   "sha256": "aff4c4b75e4a1c518eab65b5ffbd5965be99c4c4161ea73e40002564ad878693"
+  },
+  "data/tu/capmetro/837.json": {
+   "bytes": 24530,
+   "sha256": "d28aca1a47ff1073c5a7b00c46479ab7ad2bca8aa16a601a97101c1821d1dfeb"
+  },
+  "data/tu/capmetro/935.json": {
+   "bytes": 1972,
+   "sha256": "384d30667b7f62730ccd2316e53dbf57c0fc3d44fa3b189f841575bbec1aba1c"
+  },
+  "data/tu/capmetro/980.json": {
+   "bytes": 1726,
+   "sha256": "38b3678491e645f49dfcda60268005097ebdf4f785e9d0431829ebc53949cb36"
+  },
+  "data/tu/capmetro/982.json": {
+   "bytes": 5863,
+   "sha256": "669e9768f8c8b19eb20b8c73e2307e9a033c7ef58095423d0a9145b4cdb8f1ef"
+  },
+  "data/tu/capmetro/985.json": {
+   "bytes": 5026,
+   "sha256": "0fab19e08e713859a43e351521b10841781cee311625b3184c87afafddc7cf10"
+  },
+  "data/tu/index.json": {
+   "bytes": 11502,
+   "sha256": "32aed20b0a59c86140dcca51915dad3ae2df3e80dbb844be2fc68ea73856df14"
+  },
+  "data/vehicles.json": {
+   "bytes": 99393,
+   "sha256": "e929244546130396d2bf2c3a0e37468d3bc59a944becbad863457235874a6b97"
+  }
+ }
+}
