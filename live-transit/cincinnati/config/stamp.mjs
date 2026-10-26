@@ -1,5 +1,5 @@
 // stamp.mjs — Unified build stamp governance (LT-KAES-04).
-// CINCINNATI BUILD (Board 51) — platform file. PRODUCTION stamp assigned at the launch gate, 2026-10-26 (Justin's "Deploy all and continue," Board 51 item 7): 20261026-1624, replacing the local staging stamp 20261026-1512. Label: UNVERIFIED / legacy-unsigned.
+// CINCINNATI BUILD (Board 51) — platform file. PRODUCTION stamp assigned at the launch gate, 2026-10-26 (Justin's "Deploy all and continue," Board 51 item 7): 20261026-1651 (launch-fix bump of 20261026-1624, same gate), replacing the local staging stamp 20261026-1512. Label: UNVERIFIED / legacy-unsigned.
 //
 // KAES-04 normative position: ONE build stamp governs a city
 // application — it appears as a constant in the app, is echoed in
@@ -22,7 +22,7 @@
 // ritual). The pre-launch local scaffold stamp was 20261026-1512
 // and was never served.
 
-export const BUILD_STAMP = '20261026-1624';
+export const BUILD_STAMP = '20261026-1651';
 
 /** Append the governing stamp to a same-origin asset/data URL. */
 export function withStamp(url) {
