@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261024-1948';
+  var STAMP = '20261025-2031';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -4494,6 +4494,23 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // inline, optional, and carries a no-permission map-center fallback.
   // The map-tools locate button's own behavior above is unchanged.
 
+  // --- Engine/asset pairing guard (Board 47 item 7, G5 step 1) --------
+  // A service_model: "set" timetable under an engine without set
+  // resolution (no servicesFor) would be planned silently as a subset:
+  // the legacy resolver keeps one service per feed per date and drops
+  // every concurrent service. Refuse loudly instead — never plan a
+  // subset. On the legacy pairing (no marker) this is a no-op.
+  function ltAssertPairing(R, tt) {
+    var model = (tt && tt.meta && tt.meta.service_model) || null;
+    if (model === 'set' && (!R || typeof R.servicesFor !== 'function')) {
+      var msg = 'PAIRING FAILURE: service_model "set" timetable under a legacy engine \u2014 ' +
+        'the legacy resolver would keep one service per feed per date and silently drop ' +
+        'every concurrent service. Refusing to load.';
+      if (typeof console !== 'undefined' && console.error) console.error(msg);
+      throw new Error(msg);
+    }
+  }
+
   // --- Ride-along stop times (2026-10-15) ---------------------------------
   // Supplies Ride Along's upcoming-stops list with per-stop times from
   // the best source the data supports, per agency (ARCHITECTURE.md):
@@ -4516,7 +4533,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       : import('./raptor-v2.js?v=' + STAMP).then(function (m) { tripRaptor = m.default || m; return tripRaptor; });
     loadR.then(function (R) {
       if (tripTT || !R || !R.loadTimetable) return;
-      return R.loadTimetable('planner-timetable-S1000182-S1000147.json?v=' + STAMP).then(function (tt) { tripTT = tt; });
+      return R.loadTimetable('planner-timetable-S1000182-S1000147.json?v=' + STAMP).then(function (tt) { ltAssertPairing(R, tt); tripTT = tt; });
     }).catch(function () { /* engine unavailable: times degrade to the named notes (S4) */ })
       .then(function () { rideEngineLoading = false; if (rideWidget) rideWidget.refresh(); if (selectedStop) renderStopLive(); });
   }
@@ -5810,7 +5827,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var go = function (R) {
       tripRaptor = R;
       var loaded = tripTT ? Promise.resolve(tripTT)
-        : R.loadTimetable('planner-timetable-S1000182-S1000147.json?v=' + STAMP).then(function (tt) { tripTT = tt; return tt; });
+        : R.loadTimetable('planner-timetable-S1000182-S1000147.json?v=' + STAMP).then(function (tt) { ltAssertPairing(R, tt); tripTT = tt; return tt; });
       var when = tripWhen();
       var oF = tripFrom, oT = tripTo; // capture; ignore if the user moved on
       return loaded.then(function (tt) {
