@@ -56,6 +56,43 @@ export function esc(s) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+/* Repair 2026-10-25 (literal entities): SEPTA's GTFS-RT alert
+ * text arrives entity-encoded at the source ("Washington Ave
+ * &amp; Moyamensing Ave", "&ldquo;...&rdquo;") and the pipeline
+ * stores it verbatim — provenance-correct. Rendering it through
+ * esc() alone double-encodes it, so riders saw the literal
+ * "&amp;". Decode first, then esc(): the visible text is the
+ * agency's text, and the pipeline bytes stay untouched. */
+const NAMED_ENTITIES = {
+  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'",
+  ldquo: '“', rdquo: '”', lsquo: '‘', rsquo: '’',
+  hellip: '…', mdash: '—', ndash: '–', nbsp: ' ',
+};
+export function decodeEntities(s) {
+  return String(s == null ? '' : s).replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, body) => {
+    if (body[0] === '#') {
+      const hex = body[1] === 'x' || body[1] === 'X';
+      const code = parseInt(body.slice(hex ? 2 : 1), hex ? 16 : 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
+    }
+    return NAMED_ENTITIES[body] != null ? NAMED_ENTITIES[body] : m;
+  });
+}
+
+/* Repair 2026-10-25 (empty heading): an alert whose header the
+ * agency left blank still needs a rider-visible title — derive
+ * it from the alert's effect rather than printing an empty <h3>. */
+const EFFECT_TITLES = {
+  DETOUR: 'Detour', NO_SERVICE: 'No service',
+  REDUCED_SERVICE: 'Reduced service', MODIFIED_SERVICE: 'Modified service',
+  STOP_MOVED: 'Stop moved', ADDITIONAL_SERVICE: 'Additional service',
+};
+export function alertHeader(a) {
+  const h = decodeEntities(String((a && a.header) || '').trim());
+  if (h) return h;
+  return EFFECT_TITLES[a && a.effect] || 'Service alert';
+}
+
 /** Standard S2 route label: name alone when name == id or the id
  *  is non-numeric, else "Name - Number". */
 export function routeLabel(route) {
@@ -364,7 +401,7 @@ export function createSurfaces(deps = {}) {
         }
       }
       return {
-        id: a.id, header: a.header || '', description: a.description || '',
+        id: a.id, header: alertHeader(a), description: decodeEntities(a.description || ''),
         severity: a.severity || null, routes: [...new Set(routes)],
         url: a.url || null,
       };
