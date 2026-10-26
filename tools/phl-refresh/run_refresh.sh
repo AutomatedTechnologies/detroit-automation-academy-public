@@ -174,8 +174,10 @@ import json
 import sys
 
 r = json.load(open(sys.argv[1]))
-assert r["cellsChecked"] == 294, r["cellsChecked"]
-assert r["mismatchCells"] == 0, r["mismatchCells"]
+cells = r["cells"]
+assert len(cells) == 294, len(cells)
+assert all(c["ok"] for c in cells)
+assert all(c["missing"] == 0 and c["extra"] == 0 for c in cells)
 assert r["verdict"].startswith("PASS"), r["verdict"]
 assert r["subsetVerdict"].startswith("PASS"), r["subsetVerdict"]
 print("audit gate PASS:", r["verdict"], "|", r["subsetVerdict"])
