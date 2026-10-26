@@ -23,7 +23,7 @@
 // tranche assigns the production stamp in the city's sequence at
 // that time (LT-KAES-46 / LT-P1 ritual).
 
-export const BUILD_STAMP = '20261025-1449';
+export const BUILD_STAMP = '20261025-2101';
 
 /** Append the governing stamp to a same-origin asset/data URL. */
 export function withStamp(url) {
