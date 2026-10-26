@@ -238,19 +238,48 @@ fi
 git -c user.name="github-actions[bot]" \
   -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
   commit -m "PHL planner static refresh (Board 65 item 3): SEPTA wave v202611010 union-compiled with the v202609271 book through 2026-10-31; rail service validity extended past 2026-11-21 to 2027-02-20 (calendar-measured)"
-for i in 1 2 3 4 5; do
-  git fetch origin main
-  if ! git rebase origin/main; then
-    git rebase --abort || true
-    echo "rebase conflict; refusing to force anything"
-    exit 1
+# Patient race-proof push: main advances every ~3 minutes under the
+# estate's own feed publishers, so a short burst of retries loses the
+# race by construction (ship runs 40393512291 / 40395612104, tranche
+# record section 9: 5 attempts inside ~45 s, all non-fast-forward).
+# Loop for up to 12 attempts inside a ~12-minute budget: fetch the
+# fresh tip, rebase the ship commit onto it (repo-local identity is
+# configured above), push immediately; on a non-fast-forward
+# rejection wait a jittered 10-25 s and repeat from the fetch. Every
+# attempt is logged with its timestamp and the tip SHA it raced. A
+# rebase conflict is not a race and still aborts the ship.
+PUSH_START=$(date +%s)
+PUSH_BUDGET=720
+for i in $(seq 1 12); do
+  NOW=$(date +%s)
+  ELAPSED=$((NOW - PUSH_START))
+  if [ "$i" -gt 1 ] && [ "$ELAPSED" -ge "$PUSH_BUDGET" ]; then
+    echo "push loop: budget ${PUSH_BUDGET}s exhausted after $((i - 1)) attempts"
+    break
   fi
-  if git push origin HEAD:main; then
-    say "SHIPPED commit $(git rev-parse HEAD)"
-    exit 0
+  echo "push attempt $i at $(date -u +%Y-%m-%dT%H:%M:%SZ) (elapsed ${ELAPSED}s)"
+  if ! git fetch origin main; then
+    echo "push attempt $i: fetch failed; treating as a raced attempt"
+  else
+    TIP=$(git rev-parse origin/main)
+    echo "push attempt $i: racing tip $TIP"
+    if ! git rebase origin/main; then
+      git rebase --abort || true
+      echo "rebase conflict; refusing to force anything"
+      exit 1
+    fi
+    echo "push attempt $i: rebased ship commit $(git rev-parse HEAD) onto $TIP"
+    if git push origin HEAD:main; then
+      say "SHIPPED commit $(git rev-parse HEAD) (attempt $i, raced tip $TIP)"
+      exit 0
+    fi
+    echo "push attempt $i raced (tip $TIP moved before the push landed)"
   fi
-  echo "push attempt $i raced; retrying"
-  sleep 5
+  if [ "$i" -lt 12 ]; then
+    WAIT=$((10 + RANDOM % 16))
+    echo "push attempt $i: waiting ${WAIT}s before the next attempt"
+    sleep "$WAIT"
+  fi
 done
-echo "push failed after 5 attempts"
+echo "push failed after the patient loop (12 attempts / ${PUSH_BUDGET}s budget)"
 exit 1
