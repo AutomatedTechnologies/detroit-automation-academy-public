@@ -1,0 +1,1245 @@
+{
+  "harness": "navigation-model evaluation harness — frequency-aware selection bound (Addendum 3 ruling)",
+  "runDate": "2026-10-22",
+  "timezone": "America/New_York",
+  "inputs": {
+    "engine": "inputs/raptor-v2-set.js (set-resolution copy of the served engine, md5 6746dfbc3aae7c531e42206478d572da)",
+    "timetable": "inputs-set/planner-timetable-v202609271-v202609271.json (generalized-compiler service-set build 2026-10-22 from the same SEPTA zips, md5 c27c0d1326b4cbbd5718b5a78d1a423b; feed_version v202609271+v202609271; FULL published windows bus 2026-09-27..2027-02-20, rail 2026-09-27..2026-11-21; meta.service_model=set)",
+    "odPairs": "od-pairs.json (Philadelphia golden OD set, Board 48 item 6 first pass, defined 2026-10-22; provenance in the od file and files/navigation-first-pass-2026-10-22.md)",
+    "archetypeLib": "lib/archetypes-v2.mjs (reliability v2 — design §3 corridor merged-stream median-gap pricing; md5 79d5d6b9383ff4840f5b90281522a851)"
+  },
+  "candidateGeneration": "plan() at depart_after UNION planRange(depart_after, +120 min), deduplicated on legs+arrival; engine unmodified (identical to run-harness.mjs / run-harness-bounded.mjs)",
+  "calibration": {
+    "status": "DETROIT CALIBRATION CONSTANTS (design-addendum Addendum 2) — asserted equal to the lib values by the constants gate in this runner before any selection ran",
+    "distanceWeights": {
+      "corridor": 0.35,
+      "walkBurden": 0.2,
+      "transferDelta": 0.2,
+      "modeMix": 0.15,
+      "transferStopDisplacement": 0.1
+    },
+    "nearDuplicateThreshold": 0.35,
+    "reliabilityTransferPenaltyMin": 15,
+    "reliabilityHeadwayCapMin": 60
+  },
+  "selectionBound": {
+    "ruling": "design-addendum Addendum 3 (2026-10-22)",
+    "mode": "frequency-aware",
+    "rule": "window = max(+30 min, departure offset of the earliest out-of-bound candidate whose individual addition to the +30 pool increases the representative count); hard cap +120 min (enumeration edge); flat +30 min remains the floor",
+    "operationalization": "out-of-bound candidates tested in departure order (departSecNorm asc, index asc), one at a time against the flat pool; trigger = first candidate with selectArchetypes(pool + {c}).representatives.length > selectArchetypes(pool).representatives.length; frequency pool = all candidates with 0 <= departOffset <= trigger offset; at most one extension step",
+    "flatFloorSec": 1800,
+    "capSec": 7200,
+    "departureField": "plan() journeys: journey.departSec; planRange entries: (leaveMs - frameMid)/1000"
+  },
+  "sweepTolerance": {
+    "ruling": "addendum 2026-10-22 ruling 5",
+    "toleranceSec": 0,
+    "structural": true,
+    "appliesTo": "both modes; any nonzero fastest-vs-baseline delta in the frequency-aware mode fails this run"
+  },
+  "queries": [
+    {
+      "id": "PHL1-CC-TRUNK-RAIL",
+      "kind": "trunk-rail",
+      "expect": "nonempty",
+      "origin": "Temple University (rail 90007)",
+      "destination": "Suburban Station (rail 90005)",
+      "departAfter": "2026-10-14T08:00:00",
+      "candidates": 27,
+      "baselineJourneys": 1,
+      "baselineBestArriveSec": 29460,
+      "rangeMeta": {
+        "calls": 28,
+        "truncated": false
+      },
+      "departureAnomalies": 0,
+      "flatPool": 9,
+      "freqPool": 9,
+      "selectionWindowSec": 1800,
+      "windowExtendedPastFlat": false,
+      "windowExtensionSec": 0,
+      "trigger": null,
+      "flat": {
+        "archetypeCount": 1,
+        "archetypes": [
+          {
+            "labels": [
+              "fastest",
+              "fewest-transfers",
+              "least-walking",
+              "direct",
+              "highest-reliability"
+            ],
+            "arriveSec": 29460,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 0,
+            "routes": [
+              "LAN|Center City Philadelphia"
+            ]
+          }
+        ],
+        "suppressed": 1,
+        "suppressedRateOfPool": 0.1111111111111111,
+        "unselectedDistinct": 7,
+        "arrivalCostPerArchetypeSec": [],
+        "arrivalCostBestSuppressedVsRetainedSec": 1800,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": false
+      },
+      "freq": {
+        "archetypeCount": 1,
+        "archetypes": [
+          {
+            "labels": [
+              "fastest",
+              "fewest-transfers",
+              "least-walking",
+              "direct",
+              "highest-reliability"
+            ],
+            "arriveSec": 29460,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 0,
+            "routes": [
+              "LAN|Center City Philadelphia"
+            ]
+          }
+        ],
+        "suppressed": 1,
+        "suppressedRateOfPool": 0.1111111111111111,
+        "unselectedDistinct": 7,
+        "arrivalCostPerArchetypeSec": [],
+        "arrivalCostBestSuppressedVsRetainedSec": 1800,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": false
+      }
+    },
+    {
+      "id": "PHL2-CC-TRUNK-SURFACE",
+      "kind": "trunk-surface",
+      "expect": "nonempty",
+      "origin": "Frankford Transit Center - Main Dropoff (bus 21204)",
+      "destination": "13th St (bus 283)",
+      "departAfter": "2026-10-14T08:15:00",
+      "candidates": 20,
+      "baselineJourneys": 1,
+      "baselineBestArriveSec": 31403,
+      "rangeMeta": {
+        "calls": 21,
+        "truncated": false
+      },
+      "departureAnomalies": 0,
+      "flatPool": 5,
+      "freqPool": 5,
+      "selectionWindowSec": 1800,
+      "windowExtendedPastFlat": false,
+      "windowExtensionSec": 0,
+      "trigger": null,
+      "flat": {
+        "archetypeCount": 1,
+        "archetypes": [
+          {
+            "labels": [
+              "fastest",
+              "fewest-transfers",
+              "least-walking",
+              "direct",
+              "highest-reliability"
+            ],
+            "arriveSec": 31403,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 134,
+            "routes": [
+              "L1|69th St Transit Center"
+            ]
+          }
+        ],
+        "suppressed": 4,
+        "suppressedRateOfPool": 0.8,
+        "unselectedDistinct": 0,
+        "arrivalCostPerArchetypeSec": [],
+        "arrivalCostBestSuppressedVsRetainedSec": 360,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": false
+      },
+      "freq": {
+        "archetypeCount": 1,
+        "archetypes": [
+          {
+            "labels": [
+              "fastest",
+              "fewest-transfers",
+              "least-walking",
+              "direct",
+              "highest-reliability"
+            ],
+            "arriveSec": 31403,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 134,
+            "routes": [
+              "L1|69th St Transit Center"
+            ]
+          }
+        ],
+        "suppressed": 4,
+        "suppressedRateOfPool": 0.8,
+        "unselectedDistinct": 0,
+        "arrivalCostPerArchetypeSec": [],
+        "arrivalCostBestSuppressedVsRetainedSec": 360,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": false
+      }
+    },
+    {
+      "id": "PHL3-SURFACE-NEIGHBORHOOD",
+      "kind": "surface-neighborhood",
+      "expect": "nonempty",
+      "origin": "Broad St & Snyder Av (bus 17238)",
+      "destination": "Girard Av & Front St (bus 20978)",
+      "departAfter": "2026-10-14T10:00:00",
+      "candidates": 34,
+      "baselineJourneys": 2,
+      "baselineBestArriveSec": 37800,
+      "rangeMeta": {
+        "calls": 18,
+        "truncated": false
+      },
+      "departureAnomalies": 0,
+      "flatPool": 8,
+      "freqPool": 8,
+      "selectionWindowSec": 1800,
+      "windowExtendedPastFlat": false,
+      "windowExtensionSec": 0,
+      "trigger": null,
+      "flat": {
+        "archetypeCount": 2,
+        "archetypes": [
+          {
+            "labels": [
+              "fewest-transfers",
+              "direct",
+              "highest-reliability"
+            ],
+            "arriveSec": 38588,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 1478,
+            "routes": [
+              "B1|Fern Rock Transit Center"
+            ]
+          },
+          {
+            "labels": [
+              "fastest",
+              "least-walking"
+            ],
+            "arriveSec": 37800,
+            "departOffsetSec": 0,
+            "transfers": 1,
+            "walkSecTotal": 196,
+            "routes": [
+              "B1|Fern Rock Transit Center",
+              "L1|Frankford Transit Center"
+            ]
+          }
+        ],
+        "suppressed": 6,
+        "suppressedRateOfPool": 0.75,
+        "unselectedDistinct": 0,
+        "arrivalCostPerArchetypeSec": [
+          788
+        ],
+        "arrivalCostBestSuppressedVsRetainedSec": 360,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": true
+      },
+      "freq": {
+        "archetypeCount": 2,
+        "archetypes": [
+          {
+            "labels": [
+              "fewest-transfers",
+              "direct",
+              "highest-reliability"
+            ],
+            "arriveSec": 38588,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 1478,
+            "routes": [
+              "B1|Fern Rock Transit Center"
+            ]
+          },
+          {
+            "labels": [
+              "fastest",
+              "least-walking"
+            ],
+            "arriveSec": 37800,
+            "departOffsetSec": 0,
+            "transfers": 1,
+            "walkSecTotal": 196,
+            "routes": [
+              "B1|Fern Rock Transit Center",
+              "L1|Frankford Transit Center"
+            ]
+          }
+        ],
+        "suppressed": 6,
+        "suppressedRateOfPool": 0.75,
+        "unselectedDistinct": 0,
+        "arrivalCostPerArchetypeSec": [
+          788
+        ],
+        "arrivalCostBestSuppressedVsRetainedSec": 360,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": true
+      }
+    },
+    {
+      "id": "PHL4-RAIL-INCLUSIVE-SUBURB",
+      "kind": "rail-inclusive",
+      "expect": "nonempty",
+      "origin": "Lansdale (rail 90531)",
+      "destination": "13th St (bus 283)",
+      "departAfter": "2026-10-14T07:45:00",
+      "candidates": 4,
+      "baselineJourneys": 2,
+      "baselineBestArriveSec": 33002,
+      "rangeMeta": {
+        "calls": 4,
+        "truncated": false
+      },
+      "departureAnomalies": 0,
+      "flatPool": 2,
+      "freqPool": 2,
+      "selectionWindowSec": 1800,
+      "windowExtendedPastFlat": false,
+      "windowExtensionSec": 0,
+      "trigger": null,
+      "flat": {
+        "archetypeCount": 2,
+        "archetypes": [
+          {
+            "labels": [
+              "fewest-transfers",
+              "direct",
+              "highest-reliability"
+            ],
+            "arriveSec": 33034,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 274,
+            "routes": [
+              "LAN|Center City Philadelphia"
+            ]
+          },
+          {
+            "labels": [
+              "fastest",
+              "least-walking"
+            ],
+            "arriveSec": 33002,
+            "departOffsetSec": 0,
+            "transfers": 1,
+            "walkSecTotal": 144,
+            "routes": [
+              "LAN|Center City Philadelphia",
+              "17|20th-Johnston"
+            ]
+          }
+        ],
+        "suppressed": 0,
+        "suppressedRateOfPool": 0,
+        "unselectedDistinct": 0,
+        "arrivalCostPerArchetypeSec": [
+          32
+        ],
+        "arrivalCostBestSuppressedVsRetainedSec": null,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": true
+      },
+      "freq": {
+        "archetypeCount": 2,
+        "archetypes": [
+          {
+            "labels": [
+              "fewest-transfers",
+              "direct",
+              "highest-reliability"
+            ],
+            "arriveSec": 33034,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 274,
+            "routes": [
+              "LAN|Center City Philadelphia"
+            ]
+          },
+          {
+            "labels": [
+              "fastest",
+              "least-walking"
+            ],
+            "arriveSec": 33002,
+            "departOffsetSec": 0,
+            "transfers": 1,
+            "walkSecTotal": 144,
+            "routes": [
+              "LAN|Center City Philadelphia",
+              "17|20th-Johnston"
+            ]
+          }
+        ],
+        "suppressed": 0,
+        "suppressedRateOfPool": 0,
+        "unselectedDistinct": 0,
+        "arrivalCostPerArchetypeSec": [
+          32
+        ],
+        "arrivalCostBestSuppressedVsRetainedSec": null,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": true
+      }
+    },
+    {
+      "id": "PHL5-CROSS-FAMILY-TRANSFER",
+      "kind": "cross-family-transfer",
+      "expect": "nonempty",
+      "origin": "Norristown Transit Center (bus 1649)",
+      "destination": "Temple University (rail 90007)",
+      "departAfter": "2026-10-14T09:00:00",
+      "candidates": 6,
+      "baselineJourneys": 1,
+      "baselineBestArriveSec": 35880,
+      "rangeMeta": {
+        "calls": 5,
+        "truncated": false
+      },
+      "departureAnomalies": 0,
+      "flatPool": 1,
+      "freqPool": 1,
+      "selectionWindowSec": 1800,
+      "windowExtendedPastFlat": false,
+      "windowExtensionSec": 0,
+      "trigger": null,
+      "flat": {
+        "archetypeCount": 1,
+        "archetypes": [
+          {
+            "labels": [
+              "fastest",
+              "fewest-transfers",
+              "least-walking",
+              "direct",
+              "highest-reliability"
+            ],
+            "arriveSec": 35880,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 66,
+            "routes": [
+              "NOR|Penn Medicine Station"
+            ]
+          }
+        ],
+        "suppressed": 0,
+        "suppressedRateOfPool": 0,
+        "unselectedDistinct": 0,
+        "arrivalCostPerArchetypeSec": [],
+        "arrivalCostBestSuppressedVsRetainedSec": null,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": false
+      },
+      "freq": {
+        "archetypeCount": 1,
+        "archetypes": [
+          {
+            "labels": [
+              "fastest",
+              "fewest-transfers",
+              "least-walking",
+              "direct",
+              "highest-reliability"
+            ],
+            "arriveSec": 35880,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 66,
+            "routes": [
+              "NOR|Penn Medicine Station"
+            ]
+          }
+        ],
+        "suppressed": 0,
+        "suppressedRateOfPool": 0,
+        "unselectedDistinct": 0,
+        "arrivalCostPerArchetypeSec": [],
+        "arrivalCostBestSuppressedVsRetainedSec": null,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": false
+      }
+    },
+    {
+      "id": "PHL6-AIRPORT",
+      "kind": "rail-inclusive",
+      "expect": "nonempty",
+      "origin": "Airport Terminal B (rail 90403)",
+      "destination": "Suburban Station (rail 90005)",
+      "departAfter": "2026-10-14T08:30:00",
+      "candidates": 5,
+      "baselineJourneys": 1,
+      "baselineBestArriveSec": 32700,
+      "rangeMeta": {
+        "calls": 6,
+        "truncated": false
+      },
+      "departureAnomalies": 0,
+      "flatPool": 1,
+      "freqPool": 1,
+      "selectionWindowSec": 1800,
+      "windowExtendedPastFlat": false,
+      "windowExtensionSec": 0,
+      "trigger": null,
+      "flat": {
+        "archetypeCount": 1,
+        "archetypes": [
+          {
+            "labels": [
+              "fastest",
+              "fewest-transfers",
+              "least-walking",
+              "direct",
+              "highest-reliability"
+            ],
+            "arriveSec": 32700,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 0,
+            "routes": [
+              "AIR|Center City Philadelphia"
+            ]
+          }
+        ],
+        "suppressed": 0,
+        "suppressedRateOfPool": 0,
+        "unselectedDistinct": 0,
+        "arrivalCostPerArchetypeSec": [],
+        "arrivalCostBestSuppressedVsRetainedSec": null,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": false
+      },
+      "freq": {
+        "archetypeCount": 1,
+        "archetypes": [
+          {
+            "labels": [
+              "fastest",
+              "fewest-transfers",
+              "least-walking",
+              "direct",
+              "highest-reliability"
+            ],
+            "arriveSec": 32700,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 0,
+            "routes": [
+              "AIR|Center City Philadelphia"
+            ]
+          }
+        ],
+        "suppressed": 0,
+        "suppressedRateOfPool": 0,
+        "unselectedDistinct": 0,
+        "arrivalCostPerArchetypeSec": [],
+        "arrivalCostBestSuppressedVsRetainedSec": null,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": false
+      }
+    },
+    {
+      "id": "PHL7-SATURDAY-CROSS",
+      "kind": "saturday-cross-family",
+      "expect": "nonempty",
+      "origin": "Frankford Transit Center - Main Dropoff (bus 21204)",
+      "destination": "Suburban Station (rail 90005)",
+      "departAfter": "2026-10-17T11:00:00",
+      "candidates": 14,
+      "baselineJourneys": 1,
+      "baselineBestArriveSec": 41401,
+      "rangeMeta": {
+        "calls": 15,
+        "truncated": false
+      },
+      "departureAnomalies": 0,
+      "flatPool": 5,
+      "freqPool": 5,
+      "selectionWindowSec": 1800,
+      "windowExtendedPastFlat": false,
+      "windowExtensionSec": 0,
+      "trigger": null,
+      "flat": {
+        "archetypeCount": 1,
+        "archetypes": [
+          {
+            "labels": [
+              "fastest",
+              "fewest-transfers",
+              "least-walking",
+              "direct",
+              "highest-reliability"
+            ],
+            "arriveSec": 41401,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 241,
+            "routes": [
+              "L1|69th St Transit Center"
+            ]
+          }
+        ],
+        "suppressed": 3,
+        "suppressedRateOfPool": 0.6,
+        "unselectedDistinct": 1,
+        "arrivalCostPerArchetypeSec": [],
+        "arrivalCostBestSuppressedVsRetainedSec": 600,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": false
+      },
+      "freq": {
+        "archetypeCount": 1,
+        "archetypes": [
+          {
+            "labels": [
+              "fastest",
+              "fewest-transfers",
+              "least-walking",
+              "direct",
+              "highest-reliability"
+            ],
+            "arriveSec": 41401,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 241,
+            "routes": [
+              "L1|69th St Transit Center"
+            ]
+          }
+        ],
+        "suppressed": 3,
+        "suppressedRateOfPool": 0.6,
+        "unselectedDistinct": 1,
+        "arrivalCostPerArchetypeSec": [],
+        "arrivalCostBestSuppressedVsRetainedSec": 600,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": false
+      }
+    },
+    {
+      "id": "PHL8-EVENING-THIN-RAIL",
+      "kind": "evening-thin-service",
+      "expect": "nonempty",
+      "origin": "Suburban Station (rail 90005)",
+      "destination": "Lansdale (rail 90531)",
+      "departAfter": "2026-10-14T21:30:00",
+      "candidates": 2,
+      "baselineJourneys": 1,
+      "baselineBestArriveSec": 84000,
+      "rangeMeta": {
+        "calls": 3,
+        "truncated": false
+      },
+      "departureAnomalies": 0,
+      "flatPool": 1,
+      "freqPool": 1,
+      "selectionWindowSec": 1800,
+      "windowExtendedPastFlat": false,
+      "windowExtensionSec": 0,
+      "trigger": null,
+      "flat": {
+        "archetypeCount": 1,
+        "archetypes": [
+          {
+            "labels": [
+              "fastest",
+              "fewest-transfers",
+              "least-walking",
+              "direct",
+              "highest-reliability"
+            ],
+            "arriveSec": 84000,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 0,
+            "routes": [
+              "LAN|Doylestown"
+            ]
+          }
+        ],
+        "suppressed": 0,
+        "suppressedRateOfPool": 0,
+        "unselectedDistinct": 0,
+        "arrivalCostPerArchetypeSec": [],
+        "arrivalCostBestSuppressedVsRetainedSec": null,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": false
+      },
+      "freq": {
+        "archetypeCount": 1,
+        "archetypes": [
+          {
+            "labels": [
+              "fastest",
+              "fewest-transfers",
+              "least-walking",
+              "direct",
+              "highest-reliability"
+            ],
+            "arriveSec": 84000,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 0,
+            "routes": [
+              "LAN|Doylestown"
+            ]
+          }
+        ],
+        "suppressed": 0,
+        "suppressedRateOfPool": 0,
+        "unselectedDistinct": 0,
+        "arrivalCostPerArchetypeSec": [],
+        "arrivalCostBestSuppressedVsRetainedSec": null,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": false
+      }
+    },
+    {
+      "id": "PHL9-TROLLEY-WEST",
+      "kind": "surface-trolley",
+      "expect": "nonempty",
+      "origin": "Baltimore Av & 42nd St (bus 20876)",
+      "destination": "13th St (bus 283)",
+      "departAfter": "2026-10-14T12:00:00",
+      "candidates": 30,
+      "baselineJourneys": 1,
+      "baselineBestArriveSec": 44220,
+      "rangeMeta": {
+        "calls": 25,
+        "truncated": false
+      },
+      "departureAnomalies": 0,
+      "flatPool": 7,
+      "freqPool": 7,
+      "selectionWindowSec": 1800,
+      "windowExtendedPastFlat": false,
+      "windowExtensionSec": 0,
+      "trigger": null,
+      "flat": {
+        "archetypeCount": 2,
+        "archetypes": [
+          {
+            "labels": [
+              "fastest",
+              "fewest-transfers",
+              "direct"
+            ],
+            "arriveSec": 44220,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 242,
+            "routes": [
+              "T5|13th-Market"
+            ]
+          },
+          {
+            "labels": [
+              "least-walking",
+              "highest-reliability"
+            ],
+            "arriveSec": 44520,
+            "departOffsetSec": 360,
+            "transfers": 0,
+            "walkSecTotal": 240,
+            "routes": [
+              "T4|13th-Market"
+            ]
+          }
+        ],
+        "suppressed": 4,
+        "suppressedRateOfPool": 0.5714285714285714,
+        "unselectedDistinct": 1,
+        "arrivalCostPerArchetypeSec": [
+          300
+        ],
+        "arrivalCostBestSuppressedVsRetainedSec": 600,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": true
+      },
+      "freq": {
+        "archetypeCount": 2,
+        "archetypes": [
+          {
+            "labels": [
+              "fastest",
+              "fewest-transfers",
+              "direct"
+            ],
+            "arriveSec": 44220,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 242,
+            "routes": [
+              "T5|13th-Market"
+            ]
+          },
+          {
+            "labels": [
+              "least-walking",
+              "highest-reliability"
+            ],
+            "arriveSec": 44520,
+            "departOffsetSec": 360,
+            "transfers": 0,
+            "walkSecTotal": 240,
+            "routes": [
+              "T4|13th-Market"
+            ]
+          }
+        ],
+        "suppressed": 4,
+        "suppressedRateOfPool": 0.5714285714285714,
+        "unselectedDistinct": 1,
+        "arrivalCostPerArchetypeSec": [
+          300
+        ],
+        "arrivalCostBestSuppressedVsRetainedSec": 600,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": true
+      }
+    },
+    {
+      "id": "PHL10-SURFACE-CROSSTOWN",
+      "kind": "surface-crosstown",
+      "expect": "nonempty",
+      "origin": "Girard Av & Front St (bus 20978)",
+      "destination": "Baltimore Av & 42nd St (bus 20876)",
+      "departAfter": "2026-10-14T13:00:00",
+      "candidates": 38,
+      "baselineJourneys": 2,
+      "baselineBestArriveSec": 48415,
+      "rangeMeta": {
+        "calls": 21,
+        "truncated": false
+      },
+      "departureAnomalies": 0,
+      "flatPool": 10,
+      "freqPool": 10,
+      "selectionWindowSec": 1800,
+      "windowExtendedPastFlat": false,
+      "windowExtensionSec": 0,
+      "trigger": null,
+      "flat": {
+        "archetypeCount": 3,
+        "archetypes": [
+          {
+            "labels": [
+              "fewest-transfers",
+              "direct",
+              "highest-reliability"
+            ],
+            "arriveSec": 48520,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 746,
+            "routes": [
+              "L1|69th St Transit Center"
+            ]
+          },
+          {
+            "labels": [
+              "fastest"
+            ],
+            "arriveSec": 48415,
+            "departOffsetSec": 0,
+            "transfers": 1,
+            "walkSecTotal": 217,
+            "routes": [
+              "L1|69th St Transit Center",
+              "T3|Yeadon"
+            ]
+          },
+          {
+            "labels": [
+              "least-walking"
+            ],
+            "arriveSec": 49353,
+            "departOffsetSec": 1200,
+            "transfers": 1,
+            "walkSecTotal": 180,
+            "routes": [
+              "L1|69th St Transit Center",
+              "T2|61st-Baltimore"
+            ]
+          }
+        ],
+        "suppressed": 7,
+        "suppressedRateOfPool": 0.7,
+        "unselectedDistinct": 0,
+        "arrivalCostPerArchetypeSec": [
+          105,
+          938
+        ],
+        "arrivalCostBestSuppressedVsRetainedSec": 305,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": true
+      },
+      "freq": {
+        "archetypeCount": 3,
+        "archetypes": [
+          {
+            "labels": [
+              "fewest-transfers",
+              "direct",
+              "highest-reliability"
+            ],
+            "arriveSec": 48520,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 746,
+            "routes": [
+              "L1|69th St Transit Center"
+            ]
+          },
+          {
+            "labels": [
+              "fastest"
+            ],
+            "arriveSec": 48415,
+            "departOffsetSec": 0,
+            "transfers": 1,
+            "walkSecTotal": 217,
+            "routes": [
+              "L1|69th St Transit Center",
+              "T3|Yeadon"
+            ]
+          },
+          {
+            "labels": [
+              "least-walking"
+            ],
+            "arriveSec": 49353,
+            "departOffsetSec": 1200,
+            "transfers": 1,
+            "walkSecTotal": 180,
+            "routes": [
+              "L1|69th St Transit Center",
+              "T2|61st-Baltimore"
+            ]
+          }
+        ],
+        "suppressed": 7,
+        "suppressedRateOfPool": 0.7,
+        "unselectedDistinct": 0,
+        "arrivalCostPerArchetypeSec": [
+          105,
+          938
+        ],
+        "arrivalCostBestSuppressedVsRetainedSec": 305,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": true
+      }
+    },
+    {
+      "id": "PHL11-WALK-CHAIN",
+      "kind": "walk-chain-stress",
+      "expect": "nonempty",
+      "origin": "Gray 30th St Station (rail 90004)",
+      "destination": "Chestnut St & 23rd St (bus 6067)",
+      "departAfter": "2026-10-14T09:30:00",
+      "candidates": 13,
+      "baselineJourneys": 1,
+      "baselineBestArriveSec": 34583,
+      "rangeMeta": {
+        "calls": 240,
+        "truncated": true
+      },
+      "departureAnomalies": 0,
+      "flatPool": 7,
+      "freqPool": 9,
+      "selectionWindowSec": 2284,
+      "windowExtendedPastFlat": true,
+      "windowExtensionSec": 484,
+      "trigger": {
+        "candidateIndex": 8,
+        "departOffsetSec": 2284,
+        "routes": [
+          "9|4th-Walnut"
+        ],
+        "arriveSec": 36758,
+        "representativesBefore": 2,
+        "representativesWithTriggerAlone": 3,
+        "labelsAddedInTriggerTest": []
+      },
+      "flat": {
+        "archetypeCount": 2,
+        "archetypes": [
+          {
+            "labels": [
+              "fastest",
+              "fewest-transfers",
+              "highest-reliability"
+            ],
+            "arriveSec": 34583,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 383,
+            "routes": []
+          },
+          {
+            "labels": [
+              "least-walking",
+              "direct"
+            ],
+            "arriveSec": 34680,
+            "departOffsetSec": 101,
+            "transfers": 0,
+            "walkSecTotal": 285,
+            "routes": [
+              "42|2nd-Spruce"
+            ]
+          }
+        ],
+        "suppressed": 2,
+        "suppressedRateOfPool": 0.2857142857142857,
+        "unselectedDistinct": 3,
+        "arrivalCostPerArchetypeSec": [
+          97
+        ],
+        "arrivalCostBestSuppressedVsRetainedSec": 697,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": true
+      },
+      "freq": {
+        "archetypeCount": 3,
+        "archetypes": [
+          {
+            "labels": [
+              "fastest",
+              "fewest-transfers",
+              "highest-reliability"
+            ],
+            "arriveSec": 34583,
+            "departOffsetSec": 0,
+            "transfers": 0,
+            "walkSecTotal": 383,
+            "routes": []
+          },
+          {
+            "labels": [
+              "direct"
+            ],
+            "arriveSec": 34680,
+            "departOffsetSec": 101,
+            "transfers": 0,
+            "walkSecTotal": 285,
+            "routes": [
+              "42|2nd-Spruce"
+            ]
+          },
+          {
+            "labels": [
+              "least-walking"
+            ],
+            "arriveSec": 36758,
+            "departOffsetSec": 2284,
+            "transfers": 0,
+            "walkSecTotal": 126,
+            "routes": [
+              "9|4th-Walnut"
+            ]
+          }
+        ],
+        "suppressed": 3,
+        "suppressedRateOfPool": 0.3333333333333333,
+        "unselectedDistinct": 3,
+        "arrivalCostPerArchetypeSec": [
+          97,
+          2175
+        ],
+        "arrivalCostBestSuppressedVsRetainedSec": 697,
+        "fastestVsBaselineDeltaSec": 0,
+        "ruling5Violation": false,
+        "has2PlusArchetypes": true
+      }
+    }
+  ],
+  "crossCheck": {
+    "against": "results-phl-set-v2-2026-10-22-bounded.json bounded mode (run-phl-set-v2-bounded.mjs)",
+    "flatDrift": [],
+    "verdict": "flat mode reproduces the saved bounded run field-for-field on all checked fields"
+  },
+  "aggregate": {
+    "flat": {
+      "odPairs": 11,
+      "poolTotal": 56,
+      "totalSuppressed": 27,
+      "nearDuplicateSuppressionRate": 0.48214285714285715,
+      "archetypeCountDistribution": {
+        "1": 6,
+        "2": 4,
+        "3": 1
+      },
+      "archetypeCountMean": 1.5454545454545454,
+      "arrivalCostPerArchetypeSec": {
+        "n": 6,
+        "min": 32,
+        "median": 202.5,
+        "max": 938
+      },
+      "sharePairsWith2PlusArchetypes": 0.45454545454545453,
+      "shareNonEmptyPairsWith2PlusArchetypes": 0.45454545454545453,
+      "pairsBelow2ArchetypesAmongNonEmpty": [
+        "PHL1-CC-TRUNK-RAIL",
+        "PHL2-CC-TRUNK-SURFACE",
+        "PHL5-CROSS-FAMILY-TRANSFER",
+        "PHL6-AIRPORT",
+        "PHL7-SATURDAY-CROSS",
+        "PHL8-EVENING-THIN-RAIL"
+      ],
+      "fastestVsBaselineDeltasSec": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "ruling5Violations": []
+    },
+    "freq": {
+      "odPairs": 11,
+      "poolTotal": 58,
+      "totalSuppressed": 28,
+      "nearDuplicateSuppressionRate": 0.4827586206896552,
+      "archetypeCountDistribution": {
+        "1": 6,
+        "2": 3,
+        "3": 2
+      },
+      "archetypeCountMean": 1.6363636363636365,
+      "arrivalCostPerArchetypeSec": {
+        "n": 7,
+        "min": 32,
+        "median": 300,
+        "max": 2175
+      },
+      "sharePairsWith2PlusArchetypes": 0.45454545454545453,
+      "shareNonEmptyPairsWith2PlusArchetypes": 0.45454545454545453,
+      "pairsBelow2ArchetypesAmongNonEmpty": [
+        "PHL1-CC-TRUNK-RAIL",
+        "PHL2-CC-TRUNK-SURFACE",
+        "PHL5-CROSS-FAMILY-TRANSFER",
+        "PHL6-AIRPORT",
+        "PHL7-SATURDAY-CROSS",
+        "PHL8-EVENING-THIN-RAIL"
+      ],
+      "fastestVsBaselineDeltasSec": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "ruling5Violations": []
+    }
+  },
+  "ruling5": {
+    "flatViolations": [],
+    "freqViolations": [],
+    "freqDeltasSec": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "verdict": "HELD — fastest-vs-baseline delta 0 s on every pair with a baseline, in both modes"
+  },
+  "runVerdict": "PASS",
+  "comparison": {
+    "coverage2PlusNonEmpty": {
+      "flat": "0.45454545454545453 (6 non-empty pairs below 2)",
+      "freq": "0.45454545454545453 (6 non-empty pairs below 2)",
+      "flatBelow2": [
+        "PHL1-CC-TRUNK-RAIL",
+        "PHL2-CC-TRUNK-SURFACE",
+        "PHL5-CROSS-FAMILY-TRANSFER",
+        "PHL6-AIRPORT",
+        "PHL7-SATURDAY-CROSS",
+        "PHL8-EVENING-THIN-RAIL"
+      ],
+      "freqBelow2": [
+        "PHL1-CC-TRUNK-RAIL",
+        "PHL2-CC-TRUNK-SURFACE",
+        "PHL5-CROSS-FAMILY-TRANSFER",
+        "PHL6-AIRPORT",
+        "PHL7-SATURDAY-CROSS",
+        "PHL8-EVENING-THIN-RAIL"
+      ]
+    },
+    "medianDistinctnessCostSec": {
+      "flat": 202.5,
+      "freq": 300
+    },
+    "windowExtensions": [
+      {
+        "id": "PHL11-WALK-CHAIN",
+        "windowSec": 2284,
+        "extensionSec": 484
+      }
+    ]
+  }
+}

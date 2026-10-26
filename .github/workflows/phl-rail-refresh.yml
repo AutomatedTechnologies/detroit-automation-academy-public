@@ -1,0 +1,62 @@
+name: PHL rail refresh ship (Board 65 item 3)
+
+# One-time ship vehicle for the Board 65 item 3 SEPTA rail static
+# refresh. The compiled planner asset (93.5 MB) exceeds the Git Data
+# API blob ceiling, so it is rebuilt inside Actions from the
+# tranche-verified inputs and committed with this workflow's own
+# token (the estate's keyless split: no git-transport credential
+# exists on the build VM). Manual dispatch only; the script gates
+# on byte-identity with the locally verified asset and replays the
+# full acceptance battery before any commit. Mode "verify" runs
+# everything except the commit/push.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "verify = compile + battery only; ship = also commit + push"
+        type: choice
+        options:
+          - verify
+          - ship
+        default: verify
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: phl-rail-refresh-ship
+  cancel-in-progress: false
+
+jobs:
+  ship:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - name: Check out main
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 50
+
+      - name: Check out baked-wave inputs branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: phl-refresh-inputs
+          path: phl-inputs
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+
+      - name: Build, verify, and (in ship mode) commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PHL_REFRESH_MODE: ${{ inputs.mode }}
+        run: bash tools/phl-refresh/run_refresh.sh
