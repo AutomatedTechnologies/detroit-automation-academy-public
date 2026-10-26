@@ -72,7 +72,7 @@ export function validateVehicleEnvelope(doc) {
   if (!doc.sources || typeof doc.sources !== 'object') {
     problems.push('missing sources{} per-source state (KAES-20)');
   } else {
-    for (const family of ['bus', 'rail']) {
+    for (const family of ['sorta']) {
       const s = doc.sources[family];
       if (!s || typeof s.ok !== 'boolean') problems.push(`sources.${family}.ok missing/not boolean`);
     }
@@ -111,7 +111,7 @@ export function validateTripUpdatesEnvelope(doc) {
   if (!doc.sources || typeof doc.sources !== 'object') {
     problems.push('missing sources{} per-source state (KAES-20)');
   } else {
-    for (const family of ['bus', 'rail']) {
+    for (const family of ['sorta']) {
       const s = doc.sources[family];
       if (!s || typeof s.ok !== 'boolean') problems.push(`sources.${family}.ok missing/not boolean`);
     }
