@@ -65,6 +65,39 @@ export function cityProjector() {
   return createProjector(CITY_CONFIG.assets.projection);
 }
 
+/**
+ * Frame loop (repair 2026-10-25, blank map): drives the draw on
+ * the browser's animation clock. The scheduler and the draw are
+ * injected so the wiring is harness-testable headlessly — the
+ * defect this repairs was exactly that render() existed with no
+ * caller, which no headless harness could see.
+ */
+export function createFrameLoop({ requestFrame, cancelFrame, draw }) {
+  let handle = null;
+  let stopped = true;
+  let frames = 0;
+  const tick = () => {
+    if (stopped) { handle = null; return; }
+    frames += 1;
+    draw();
+    handle = requestFrame(tick);
+  };
+  return {
+    start() {
+      if (!stopped) return;
+      stopped = false;
+      handle = requestFrame(tick);
+    },
+    stop() {
+      stopped = true;
+      if (handle != null && cancelFrame) cancelFrame(handle);
+      handle = null;
+    },
+    frames: () => frames,
+    running: () => !stopped,
+  };
+}
+
 function bufferGeometry(THREE, geo) {
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(geo.positions, 3));
@@ -93,6 +126,7 @@ export async function createRenderer(canvas = null, opts = {}) {
   const model = createSceneModel({ width, height });
   let THREE = null;
   let gl = null; // {renderer, scene, camera3, controls, groups...}
+  let frameLoop = null;
 
   async function materialize() {
     if (!canvas || typeof document === 'undefined') return false;
@@ -125,6 +159,37 @@ export async function createRenderer(canvas = null, opts = {}) {
     scene.add(gl.dynamic);
     buildStaticLayers();
     syncThreeFromModel();
+    // Repair 2026-10-25 (blank map): the scene was fully built
+    // but never drawn — render() had no caller anywhere in the
+    // client, so the canvas kept its clear color while picking
+    // (model-space) worked. Start the frame loop: each animation
+    // frame syncs the drawing buffer to the canvas size, syncs
+    // the camera from the model, and issues the draw.
+    frameLoop = createFrameLoop({
+      requestFrame: (cb) => requestAnimationFrame(cb),
+      cancelFrame: (id) => cancelAnimationFrame(id),
+      draw: () => { syncCanvasSize(); drawFrame(); },
+    });
+    frameLoop.start();
+    return true;
+  }
+
+  function syncCanvasSize() {
+    if (!gl || !canvas) return;
+    const w = canvas.clientWidth || 0, h = canvas.clientHeight || 0;
+    if (!w || !h) return;
+    if (model.camera.width !== w || model.camera.height !== h) {
+      model.camera.setViewport(w, h);
+      gl.renderer.setSize(w, h, false);
+      gl.camera3.aspect = w / h;
+      gl.camera3.updateProjectionMatrix();
+    }
+  }
+
+  function drawFrame() {
+    if (!gl) return false;
+    syncThreeFromModel();
+    gl.renderer.render(gl.scene, gl.camera3);
     return true;
   }
 
@@ -347,15 +412,17 @@ export async function createRenderer(canvas = null, opts = {}) {
     fitToExtent() { model.fitToExtent(); syncThreeFromModel(); },
     render() {
       if (!gl) return false; // headless: no GPU frame exists to draw
-      syncThreeFromModel();
-      gl.renderer.render(gl.scene, gl.camera3);
-      return true;
+      return drawFrame();
     },
     dispose() {
+      if (frameLoop) { frameLoop.stop(); frameLoop = null; }
       if (gl && gl.renderer) gl.renderer.dispose();
       gl = null;
     },
-    stats() { return model.stats(); },
+    stats() {
+      const s = model.stats();
+      return s ? { ...s, renderFrames: frameLoop ? frameLoop.frames() : 0 } : s;
+    },
   };
   if (canvas) await materialize();
   return api;
