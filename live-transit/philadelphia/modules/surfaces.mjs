@@ -1314,7 +1314,23 @@ export function createSurfaces(deps = {}) {
     if (!out.presented.length) return '<p>No journey found in the window.</p>';
     return out.presented.map(({ arch, journey }) => {
       const walkOnly = !(arch.routes || []).length;
-      const legs = (journey.legs || []).map((leg) => {
+      // Repair 2026-10-25 ("direct" over walk legs): the walk
+      // chain emits one leg per intermediate stop, so a journey
+      // could present three consecutive "Walk …" legs after its
+      // ride and still headline itself "direct". Coalesce runs of
+      // consecutive walk legs into the single walk the rider
+      // actually makes (summed time, final destination) — the
+      // presented itinerary is then the journey the headline
+      // describes.
+      const mergedLegs = [];
+      for (const leg of journey.legs || []) {
+        const prev = mergedLegs[mergedLegs.length - 1];
+        if (leg.type === 'walk' && prev && prev.type === 'walk') {
+          prev.secs = (prev.secs || 0) + (leg.secs || 0);
+          prev.to = leg.to;
+        } else mergedLegs.push({ ...leg });
+      }
+      const legs = mergedLegs.map((leg) => {
         if (leg.type === 'walk') {
           return `<li>Walk ${Math.max(1, Math.round((leg.secs || 0) / 60))} min to ${esc(stopName(leg.to))}</li>`;
         }
@@ -1471,6 +1487,10 @@ export function createSurfaces(deps = {}) {
       vehicleCard: buildVehicleCardModel, routeCard: buildRouteCardModel,
       alerts: alertsModel, launcher: launcherModel, browse: browseModel,
       stopSearchGroups, scheduledDeparturesAt,
+      // Pure renderer, exposed on the models pattern so the
+      // harness can assert journey presentation directly
+      // (repair tranche 2026-10-25, walk-leg coalescing).
+      renderPlannerResult,
     },
     rideAlong,
     state,
