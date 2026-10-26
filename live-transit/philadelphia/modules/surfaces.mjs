@@ -420,12 +420,16 @@ export function createSurfaces(deps = {}) {
       n.innerHTML = '<h2>Service alerts</h2><p>No active service alerts.</p>';
       return;
     }
+    // Repair 2026-10-25: no "Details" exit link. Every record's
+    // url is the agency's generic alerts index — the link exited
+    // the product to a page that does not carry the specific
+    // alert — while the full alert text already renders here, in
+    // product, directly under the header.
     n.innerHTML = `<h2>Service alerts (${list.length})</h2>` + list.map((a) => `
       <article class="lt-alert">
         <h3>${esc(a.header)}</h3>
         ${a.routes.length ? `<p class="lt-alert-routes">Affects: ${esc(a.routes.join(', '))}</p>` : '<p class="lt-alert-routes">System-wide</p>'}
         <p>${esc(a.description)}</p>
-        ${a.url ? `<p><a href="${esc(a.url)}" rel="noopener">Details</a></p>` : ''}
       </article>`).join('');
   }
 
