@@ -1650,17 +1650,26 @@ export async function bootBrowser(deps = {}) {
   installAppLock(docObj, deps.window || (typeof window !== 'undefined' ? window : null));
   try {
     const paths = geometryAssetPaths();
-    const [streets, bus, rail, stops, water, landmarks, names] = await Promise.all([
+    // Feed set is config-driven (LT-S4/LT-KAES-12): iterate the
+    // city's declared routesByFeed entries, never a hardcoded feed
+    // pair. (Launch fix 2026-10-26: this fan-out previously named
+    // the PHL build's two feeds — bus/rail — so a single-feed city
+    // (Cincinnati: {sorta}) fetched `undefined` and the boot failed
+    // into the load-error overlay on the production URL. The scene
+    // model already consumes routesByFeed generically by feed id.)
+    const feedEntries = Object.entries(paths.routesByFeed);
+    const [streets, stops, water, landmarks, names, ...feedDocs] = await Promise.all([
       stampedJson(paths.streets, deps.fetchImpl),
-      stampedJson(paths.routesByFeed.bus, deps.fetchImpl),
-      stampedJson(paths.routesByFeed.rail, deps.fetchImpl),
       stampedJson(paths.stops, deps.fetchImpl),
       stampedJson(paths.water, deps.fetchImpl),
       stampedJson(paths.landmarks, deps.fetchImpl),
       stampedJson(paths.streetNames, deps.fetchImpl),
+      ...feedEntries.map(([, p]) => stampedJson(p, deps.fetchImpl)),
     ]);
+    const routesByFeed = Object.fromEntries(
+      feedEntries.map(([feedId], i) => [feedId, feedDocs[i]]));
     await renderer.loadGeometry({
-      streets, routesByFeed: { bus, rail }, stops, water, landmarks, names,
+      streets, routesByFeed, stops, water, landmarks, names,
     });
   } catch (e) {
     api.showLoadError(e);
