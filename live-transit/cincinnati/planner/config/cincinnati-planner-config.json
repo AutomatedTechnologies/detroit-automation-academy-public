@@ -1,0 +1,38 @@
+{
+ "asset": {
+  "bytes": 12608573,
+  "feedVersion": "gtfs_20261004-20261205_20260929",
+  "file": "assets/planner-timetable-gtfs_20261004-20261205_20260929.json",
+  "gzipBytes": 1153771,
+  "md5": "d7e2da4cbd4f7ca0890d97f930e5071e",
+  "service_model": "set",
+  "sidecars": {
+   "stops": "assets/stops-sidecar.json (md5 4df643604a85a0c9155ef35a65a9af50; 3,513 stops, single feed)",
+   "tripMap": "assets/trip-map.json (md5 cbed287119612f6903dd06faaecd9c18; compiler trip-copy map)"
+  },
+  "validity": {
+   "sorta": "20261004..20261205"
+  }
+ },
+ "bundle": "cincinnati-build-planner (platform bundle hosted byte-identically; selection lib carries Cincinnati's adopted constants)",
+ "city": "cincinnati",
+ "engine": {
+  "file": "engine/raptor-v2-set.js",
+  "md5": "6746dfbc3aae7c531e42206478d572da",
+  "pairingRule": "An asset whose meta.service_model is 'set' MUST be loaded only by an engine exposing servicesFor(). The loader (lib/loader.mjs) refuses the pairing loudly otherwise.",
+  "requiredExport": "servicesFor",
+  "serviceModel": "set"
+ },
+ "prd": "PRD-039",
+ "selection": {
+  "capSec": 7200,
+  "constants": {
+   "adopted": "W0-default-T35-P10 — Cincinnati calibration 2026-10-26 (harness/results-cincinnati-calibration-2026-10-26.json); measured on Cincinnati data; penalty 10 adopted over the platform default 15 on median distinctness cost (258 s vs 451 s) at equal coverage",
+   "distanceWeights": { "corridor": 0.35, "walkBurden": 0.2, "transferDelta": 0.2, "modeMix": 0.15, "transferStopDisplacement": 0.1 },
+   "nearDuplicateThreshold": 0.35,
+   "reliabilityTransferPenaltyMin": 10,
+   "reliabilityHeadwayCapMin": 60
+  },
+  "mode": "frequency-aware"
+ }
+}
