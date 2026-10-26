@@ -205,6 +205,8 @@ fi
 say "commit ship set"
 echo "SHIPPED_ASSET_MD5 $(md5sum "$CITY/planner/assets/$ASSET_NAME" | cut -d' ' -f1)"
 cd "$WS"
+git config user.name "github-actions[bot]"
+git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 git add -- \
   "live-transit/philadelphia/planner/assets/$ASSET_NAME" \
   "live-transit/philadelphia/planner/assets/$OLD_ASSET_NAME" \
