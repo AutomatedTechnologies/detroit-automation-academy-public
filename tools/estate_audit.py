@@ -27,8 +27,10 @@ Rules (the baseline file carries the data; this list is the index):
                    (styles.css, nav.js; per-page overrides recorded)
   ad-allowlist     the ad mount appears on exactly the allowlisted
                    pages and ad-slot.js still ships ADS_ENABLED false
-  console-hardened /console.html serves its noindex,nofollow meta
-                   and robots.txt keeps its Disallow
+  console-hardened the console path matches its recorded state:
+                   live (200 + noindex,nofollow meta + robots.txt
+                   Disallow) or retired (404, and robots.txt does
+                   not advertise the path)
   feed-twin-clean  /feed/ serves with zero Google Fonts references
                    and /feed.xml serves (U6 R5 invariant)
 
@@ -400,23 +402,35 @@ def run(base_url, baseline, fetcher, deadline):
 
     # --- console hardening ---
     defects = []
-    cpath = baseline["console"]["path"]
+    cbase = baseline["console"]
+    cpath = cbase["path"]
     st, body = fetcher.fetch(host + cpath)
-    if st != 200 or not body:
+    if cbase.get("retired"):
+        # Retired-state expectation (baseline v2, 2026-10-25): the
+        # console was retired in the 2026-10-23 security remediation;
+        # the hardened state is that the path serves 404 and is not
+        # advertised anywhere, robots.txt included.
+        want_status = cbase.get("expect_status", 404)
+        if st != want_status:
+            defects.append(f"{cpath} serves status {st}, want {want_status}")
+    elif st != 200 or not body:
         defects.append(f"{cpath} serves status {st}, want 200")
     else:
         robots = parse_page(body)["robots"] or ""
         tokens = {t.strip() for t in robots.lower().split(",")}
-        for need in baseline["console"]["robots_meta_required"]:
+        for need in cbase["robots_meta_required"]:
             if need not in tokens:
                 defects.append(f"{cpath} robots meta lacks {need}")
     st, body = fetcher.fetch(host + "/robots.txt")
     if st != 200 or not body:
         defects.append(f"robots.txt serves status {st}, want 200")
-    elif f"Disallow: {baseline['console']['robots_txt_disallow']}" not in (
-        body.decode("utf-8", errors="replace")
-    ):
-        defects.append("robots.txt lost its console.html Disallow")
+    else:
+        robots_txt = body.decode("utf-8", errors="replace")
+        if cbase.get("retired"):
+            if f"Disallow: {cpath}" in robots_txt:
+                defects.append("robots.txt advertises the retired console path")
+        elif f"Disallow: {cbase['robots_txt_disallow']}" not in robots_txt:
+            defects.append("robots.txt lost its console.html Disallow")
     rep.add("console-hardened", defects)
 
     # --- feed twin ---
