@@ -1,0 +1,5396 @@
+{
+ "city": "Cincinnati",
+ "feed": "sorta",
+ "feed_version": "gtfs_20261004-20261205_20260929",
+ "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+ "compiled_at": "2026-10-26",
+ "compiler": "tools/compile-geometry-cincinnati.py (Geometry Pipeline v2 semantics)",
+ "projection": {
+  "lat0": 39.162447,
+  "lon0": -84.498704
+ },
+ "paths": [
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "1",
+   "direction_id": "1",
+   "shape_id": "10013",
+   "path_index": 0,
+   "trips_on_pattern": 34,
+   "span": {
+    "source_points": 328,
+    "first": 0,
+    "last": 327
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.745,
+   "points_compiled": 93
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "1",
+   "direction_id": "0",
+   "shape_id": "10012",
+   "path_index": 1,
+   "trips_on_pattern": 34,
+   "span": {
+    "source_points": 385,
+    "first": 0,
+    "last": 384
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.976,
+   "points_compiled": 96
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "10",
+   "direction_id": "0",
+   "shape_id": "100026",
+   "path_index": 0,
+   "trips_on_pattern": 79,
+   "span": {
+    "source_points": 937,
+    "first": 0,
+    "last": 936
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.997,
+   "points_compiled": 159
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "10",
+   "direction_id": "1",
+   "shape_id": "100019",
+   "path_index": 1,
+   "trips_on_pattern": 77,
+   "span": {
+    "source_points": 905,
+    "first": 0,
+    "last": 904
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.967,
+   "points_compiled": 144
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "10",
+   "direction_id": "1",
+   "shape_id": "100022",
+   "path_index": 2,
+   "trips_on_pattern": 1,
+   "span": {
+    "source_points": 939,
+    "first": 0,
+    "last": 938
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.967,
+   "points_compiled": 148
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "10",
+   "direction_id": "0",
+   "shape_id": "100027",
+   "path_index": 3,
+   "trips_on_pattern": 1,
+   "span": {
+    "source_points": 1029,
+    "first": 0,
+    "last": 1028
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.997,
+   "points_compiled": 170
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "100",
+   "direction_id": "0",
+   "shape_id": "1000001",
+   "path_index": 0,
+   "trips_on_pattern": 312,
+   "span": {
+    "source_points": 323,
+    "first": 0,
+    "last": 322
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.96,
+   "points_compiled": 11
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "100",
+   "direction_id": "0",
+   "shape_id": "1000006",
+   "path_index": 1,
+   "trips_on_pattern": 143,
+   "span": {
+    "source_points": 323,
+    "first": 0,
+    "last": 322
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.96,
+   "points_compiled": 11
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "100",
+   "direction_id": "0",
+   "shape_id": "1000002",
+   "path_index": 2,
+   "trips_on_pattern": 16,
+   "span": {
+    "source_points": 299,
+    "first": 0,
+    "last": 298
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.618,
+   "points_compiled": 8
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "100",
+   "direction_id": "0",
+   "shape_id": "1000007",
+   "path_index": 3,
+   "trips_on_pattern": 7,
+   "span": {
+    "source_points": 299,
+    "first": 0,
+    "last": 298
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.618,
+   "points_compiled": 8
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "11",
+   "direction_id": "1",
+   "shape_id": "110031",
+   "path_index": 0,
+   "trips_on_pattern": 82,
+   "span": {
+    "source_points": 710,
+    "first": 0,
+    "last": 709
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.967,
+   "points_compiled": 100
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "11",
+   "direction_id": "0",
+   "shape_id": "110039",
+   "path_index": 1,
+   "trips_on_pattern": 82,
+   "span": {
+    "source_points": 750,
+    "first": 0,
+    "last": 749
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.997,
+   "points_compiled": 116
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "11",
+   "direction_id": "0",
+   "shape_id": "110040",
+   "path_index": 2,
+   "trips_on_pattern": 7,
+   "span": {
+    "source_points": 819,
+    "first": 0,
+    "last": 818
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.997,
+   "points_compiled": 131
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "11",
+   "direction_id": "1",
+   "shape_id": "110033",
+   "path_index": 3,
+   "trips_on_pattern": 6,
+   "span": {
+    "source_points": 799,
+    "first": 0,
+    "last": 798
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.974,
+   "points_compiled": 121
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "11",
+   "direction_id": "1",
+   "shape_id": "110034",
+   "path_index": 4,
+   "trips_on_pattern": 3,
+   "span": {
+    "source_points": 755,
+    "first": 0,
+    "last": 754
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.967,
+   "points_compiled": 117
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "11",
+   "direction_id": "0",
+   "shape_id": "110041",
+   "path_index": 5,
+   "trips_on_pattern": 3,
+   "span": {
+    "source_points": 791,
+    "first": 0,
+    "last": 790
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.997,
+   "points_compiled": 128
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "12",
+   "direction_id": "1",
+   "shape_id": "120014",
+   "path_index": 0,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 819,
+    "first": 0,
+    "last": 818
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.975,
+   "points_compiled": 146
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "12",
+   "direction_id": "0",
+   "shape_id": "120011",
+   "path_index": 1,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 776,
+    "first": 0,
+    "last": 775
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.938,
+   "points_compiled": 157
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "16",
+   "direction_id": "1",
+   "shape_id": "160019",
+   "path_index": 0,
+   "trips_on_pattern": 176,
+   "span": {
+    "source_points": 1248,
+    "first": 0,
+    "last": 1247
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.991,
+   "points_compiled": 196
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "16",
+   "direction_id": "0",
+   "shape_id": "160016",
+   "path_index": 1,
+   "trips_on_pattern": 176,
+   "span": {
+    "source_points": 1278,
+    "first": 0,
+    "last": 1277
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.991,
+   "points_compiled": 191
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "17",
+   "direction_id": "1",
+   "shape_id": "170066",
+   "path_index": 0,
+   "trips_on_pattern": 242,
+   "span": {
+    "source_points": 953,
+    "first": 0,
+    "last": 952
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.939,
+   "points_compiled": 128
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "17",
+   "direction_id": "0",
+   "shape_id": "170062",
+   "path_index": 1,
+   "trips_on_pattern": 240,
+   "span": {
+    "source_points": 956,
+    "first": 0,
+    "last": 955
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.939,
+   "points_compiled": 134
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "17",
+   "direction_id": "1",
+   "shape_id": "170063",
+   "path_index": 2,
+   "trips_on_pattern": 196,
+   "span": {
+    "source_points": 1044,
+    "first": 0,
+    "last": 1043
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.969,
+   "points_compiled": 150
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "17",
+   "direction_id": "0",
+   "shape_id": "170061",
+   "path_index": 3,
+   "trips_on_pattern": 196,
+   "span": {
+    "source_points": 998,
+    "first": 0,
+    "last": 997
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.969,
+   "points_compiled": 148
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "17",
+   "direction_id": "1",
+   "shape_id": "170043",
+   "path_index": 4,
+   "trips_on_pattern": 6,
+   "span": {
+    "source_points": 806,
+    "first": 0,
+    "last": 805
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.996,
+   "points_compiled": 130
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "17",
+   "direction_id": "0",
+   "shape_id": "170058",
+   "path_index": 5,
+   "trips_on_pattern": 6,
+   "span": {
+    "source_points": 779,
+    "first": 0,
+    "last": 778
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.996,
+   "points_compiled": 128
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "17",
+   "direction_id": "0",
+   "shape_id": "170065",
+   "path_index": 6,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 1014,
+    "first": 0,
+    "last": 1013
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.969,
+   "points_compiled": 155
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "19",
+   "direction_id": "0",
+   "shape_id": "190038",
+   "path_index": 0,
+   "trips_on_pattern": 240,
+   "span": {
+    "source_points": 1092,
+    "first": 0,
+    "last": 1091
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.944,
+   "points_compiled": 188
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "19",
+   "direction_id": "1",
+   "shape_id": "190024",
+   "path_index": 1,
+   "trips_on_pattern": 234,
+   "span": {
+    "source_points": 1123,
+    "first": 0,
+    "last": 1122
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.944,
+   "points_compiled": 184
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "19",
+   "direction_id": "1",
+   "shape_id": "190028",
+   "path_index": 2,
+   "trips_on_pattern": 32,
+   "span": {
+    "source_points": 765,
+    "first": 0,
+    "last": 764
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.944,
+   "points_compiled": 150
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "19",
+   "direction_id": "0",
+   "shape_id": "190037",
+   "path_index": 3,
+   "trips_on_pattern": 26,
+   "span": {
+    "source_points": 760,
+    "first": 0,
+    "last": 759
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.944,
+   "points_compiled": 157
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "2",
+   "direction_id": "1",
+   "shape_id": "20018",
+   "path_index": 0,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 675,
+    "first": 0,
+    "last": 674
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.98,
+   "points_compiled": 205
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "2",
+   "direction_id": "0",
+   "shape_id": "20015",
+   "path_index": 1,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 625,
+    "first": 0,
+    "last": 624
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.994,
+   "points_compiled": 190
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "2",
+   "direction_id": "1",
+   "shape_id": "20016",
+   "path_index": 2,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 623,
+    "first": 0,
+    "last": 622
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.98,
+   "points_compiled": 196
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "2",
+   "direction_id": "0",
+   "shape_id": "20017",
+   "path_index": 3,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 567,
+    "first": 0,
+    "last": 566
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.994,
+   "points_compiled": 177
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "20",
+   "direction_id": "1",
+   "shape_id": "200020",
+   "path_index": 0,
+   "trips_on_pattern": 220,
+   "span": {
+    "source_points": 1121,
+    "first": 0,
+    "last": 1120
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.956,
+   "points_compiled": 210
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "20",
+   "direction_id": "0",
+   "shape_id": "200021",
+   "path_index": 1,
+   "trips_on_pattern": 220,
+   "span": {
+    "source_points": 1092,
+    "first": 0,
+    "last": 1091
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.98,
+   "points_compiled": 211
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "20",
+   "direction_id": "1",
+   "shape_id": "200019",
+   "path_index": 2,
+   "trips_on_pattern": 14,
+   "span": {
+    "source_points": 1165,
+    "first": 0,
+    "last": 1164
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.956,
+   "points_compiled": 222
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "20",
+   "direction_id": "0",
+   "shape_id": "200022",
+   "path_index": 3,
+   "trips_on_pattern": 14,
+   "span": {
+    "source_points": 1138,
+    "first": 0,
+    "last": 1137
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.98,
+   "points_compiled": 223
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "21",
+   "direction_id": "1",
+   "shape_id": "210016",
+   "path_index": 0,
+   "trips_on_pattern": 276,
+   "span": {
+    "source_points": 819,
+    "first": 0,
+    "last": 818
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.961,
+   "points_compiled": 129
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "21",
+   "direction_id": "0",
+   "shape_id": "210014",
+   "path_index": 1,
+   "trips_on_pattern": 276,
+   "span": {
+    "source_points": 745,
+    "first": 0,
+    "last": 744
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.961,
+   "points_compiled": 123
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "22",
+   "direction_id": "1",
+   "shape_id": "220010",
+   "path_index": 0,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 1262,
+    "first": 0,
+    "last": 1261
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.941,
+   "points_compiled": 252
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "22",
+   "direction_id": "0",
+   "shape_id": "220011",
+   "path_index": 1,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 1308,
+    "first": 0,
+    "last": 1307
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.973,
+   "points_compiled": 277
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "23",
+   "direction_id": "1",
+   "shape_id": "230024",
+   "path_index": 0,
+   "trips_on_pattern": 10,
+   "span": {
+    "source_points": 868,
+    "first": 0,
+    "last": 867
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.991,
+   "points_compiled": 230
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "23",
+   "direction_id": "0",
+   "shape_id": "230023",
+   "path_index": 1,
+   "trips_on_pattern": 8,
+   "span": {
+    "source_points": 879,
+    "first": 0,
+    "last": 878
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.99,
+   "points_compiled": 223
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "23",
+   "direction_id": "0",
+   "shape_id": "230022",
+   "path_index": 2,
+   "trips_on_pattern": 8,
+   "span": {
+    "source_points": 789,
+    "first": 0,
+    "last": 788
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.982,
+   "points_compiled": 219
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "23",
+   "direction_id": "1",
+   "shape_id": "230025",
+   "path_index": 3,
+   "trips_on_pattern": 6,
+   "span": {
+    "source_points": 939,
+    "first": 0,
+    "last": 938
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.991,
+   "points_compiled": 235
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "24",
+   "direction_id": "0",
+   "shape_id": "240035",
+   "path_index": 0,
+   "trips_on_pattern": 75,
+   "span": {
+    "source_points": 1346,
+    "first": 0,
+    "last": 1345
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.969,
+   "points_compiled": 225
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "24",
+   "direction_id": "1",
+   "shape_id": "240032",
+   "path_index": 1,
+   "trips_on_pattern": 74,
+   "span": {
+    "source_points": 1247,
+    "first": 0,
+    "last": 1246
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.969,
+   "points_compiled": 211
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "24",
+   "direction_id": "0",
+   "shape_id": "240029",
+   "path_index": 2,
+   "trips_on_pattern": 7,
+   "span": {
+    "source_points": 721,
+    "first": 0,
+    "last": 720
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 2.0,
+   "points_compiled": 142
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "24",
+   "direction_id": "1",
+   "shape_id": "240033",
+   "path_index": 3,
+   "trips_on_pattern": 6,
+   "span": {
+    "source_points": 641,
+    "first": 0,
+    "last": 640
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 2.0,
+   "points_compiled": 126
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "24",
+   "direction_id": "1",
+   "shape_id": "240043",
+   "path_index": 4,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 1264,
+    "first": 0,
+    "last": 1263
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.969,
+   "points_compiled": 220
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "24",
+   "direction_id": "0",
+   "shape_id": "240044",
+   "path_index": 5,
+   "trips_on_pattern": 3,
+   "span": {
+    "source_points": 1420,
+    "first": 0,
+    "last": 1419
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.972,
+   "points_compiled": 246
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "24",
+   "direction_id": "0",
+   "shape_id": "240045",
+   "path_index": 6,
+   "trips_on_pattern": 1,
+   "span": {
+    "source_points": 1406,
+    "first": 0,
+    "last": 1405
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.972,
+   "points_compiled": 246
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "25",
+   "direction_id": "1",
+   "shape_id": "250010",
+   "path_index": 0,
+   "trips_on_pattern": 3,
+   "span": {
+    "source_points": 679,
+    "first": 0,
+    "last": 678
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.943,
+   "points_compiled": 108
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "25",
+   "direction_id": "0",
+   "shape_id": "250009",
+   "path_index": 1,
+   "trips_on_pattern": 3,
+   "span": {
+    "source_points": 704,
+    "first": 0,
+    "last": 703
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.972,
+   "points_compiled": 124
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "27",
+   "direction_id": "1",
+   "shape_id": "270048",
+   "path_index": 0,
+   "trips_on_pattern": 200,
+   "span": {
+    "source_points": 823,
+    "first": 0,
+    "last": 822
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.993,
+   "points_compiled": 152
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "27",
+   "direction_id": "0",
+   "shape_id": "270053",
+   "path_index": 1,
+   "trips_on_pattern": 200,
+   "span": {
+    "source_points": 816,
+    "first": 0,
+    "last": 815
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.993,
+   "points_compiled": 149
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "27",
+   "direction_id": "1",
+   "shape_id": "270052",
+   "path_index": 2,
+   "trips_on_pattern": 16,
+   "span": {
+    "source_points": 574,
+    "first": 0,
+    "last": 573
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.993,
+   "points_compiled": 129
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "27",
+   "direction_id": "0",
+   "shape_id": "270054",
+   "path_index": 3,
+   "trips_on_pattern": 16,
+   "span": {
+    "source_points": 594,
+    "first": 0,
+    "last": 593
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.993,
+   "points_compiled": 130
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "27",
+   "direction_id": "1",
+   "shape_id": "270041",
+   "path_index": 4,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 465,
+    "first": 0,
+    "last": 464
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.993,
+   "points_compiled": 83
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "27",
+   "direction_id": "0",
+   "shape_id": "270047",
+   "path_index": 5,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 449,
+    "first": 0,
+    "last": 448
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.999,
+   "points_compiled": 80
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "28",
+   "direction_id": "0",
+   "shape_id": "280032",
+   "path_index": 0,
+   "trips_on_pattern": 90,
+   "span": {
+    "source_points": 710,
+    "first": 0,
+    "last": 709
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.987,
+   "points_compiled": 145
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "28",
+   "direction_id": "1",
+   "shape_id": "280026",
+   "path_index": 1,
+   "trips_on_pattern": 88,
+   "span": {
+    "source_points": 682,
+    "first": 0,
+    "last": 681
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.987,
+   "points_compiled": 138
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "28",
+   "direction_id": "1",
+   "shape_id": "280031",
+   "path_index": 2,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 748,
+    "first": 0,
+    "last": 747
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.957,
+   "points_compiled": 145
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "29",
+   "direction_id": "1",
+   "shape_id": "290016",
+   "path_index": 0,
+   "trips_on_pattern": 10,
+   "span": {
+    "source_points": 976,
+    "first": 0,
+    "last": 975
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.972,
+   "points_compiled": 231
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "29",
+   "direction_id": "1",
+   "shape_id": "290018",
+   "path_index": 1,
+   "trips_on_pattern": 6,
+   "span": {
+    "source_points": 910,
+    "first": 0,
+    "last": 909
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.972,
+   "points_compiled": 225
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "29",
+   "direction_id": "0",
+   "shape_id": "290021",
+   "path_index": 2,
+   "trips_on_pattern": 6,
+   "span": {
+    "source_points": 814,
+    "first": 0,
+    "last": 813
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.983,
+   "points_compiled": 218
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "29",
+   "direction_id": "0",
+   "shape_id": "290020",
+   "path_index": 3,
+   "trips_on_pattern": 6,
+   "span": {
+    "source_points": 988,
+    "first": 0,
+    "last": 987
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.983,
+   "points_compiled": 250
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "29",
+   "direction_id": "0",
+   "shape_id": "290022",
+   "path_index": 4,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 748,
+    "first": 0,
+    "last": 747
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.983,
+   "points_compiled": 216
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "30",
+   "direction_id": "1",
+   "shape_id": "300018",
+   "path_index": 0,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 989,
+    "first": 0,
+    "last": 988
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 2.0,
+   "points_compiled": 180
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "30",
+   "direction_id": "0",
+   "shape_id": "300020",
+   "path_index": 1,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 1033,
+    "first": 0,
+    "last": 1032
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 2.0,
+   "points_compiled": 189
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "30",
+   "direction_id": "0",
+   "shape_id": "300021",
+   "path_index": 2,
+   "trips_on_pattern": 3,
+   "span": {
+    "source_points": 678,
+    "first": 0,
+    "last": 677
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 2.0,
+   "points_compiled": 169
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "30",
+   "direction_id": "1",
+   "shape_id": "300019",
+   "path_index": 3,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 328,
+    "first": 0,
+    "last": 327
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 2.0,
+   "points_compiled": 66
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "30",
+   "direction_id": "1",
+   "shape_id": "300017",
+   "path_index": 4,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 723,
+    "first": 0,
+    "last": 722
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 2.0,
+   "points_compiled": 162
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "30",
+   "direction_id": "0",
+   "shape_id": "300022",
+   "path_index": 5,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 264,
+    "first": 0,
+    "last": 263
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 2.0,
+   "points_compiled": 49
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "31",
+   "direction_id": "1",
+   "shape_id": "310019",
+   "path_index": 0,
+   "trips_on_pattern": 240,
+   "span": {
+    "source_points": 683,
+    "first": 0,
+    "last": 682
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.964,
+   "points_compiled": 126
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "31",
+   "direction_id": "0",
+   "shape_id": "310015",
+   "path_index": 1,
+   "trips_on_pattern": 238,
+   "span": {
+    "source_points": 683,
+    "first": 0,
+    "last": 682
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.972,
+   "points_compiled": 96
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "31",
+   "direction_id": "1",
+   "shape_id": "310004",
+   "path_index": 2,
+   "trips_on_pattern": 14,
+   "span": {
+    "source_points": 113,
+    "first": 0,
+    "last": 112
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.295,
+   "points_compiled": 17
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "31",
+   "direction_id": "0",
+   "shape_id": "310003",
+   "path_index": 3,
+   "trips_on_pattern": 14,
+   "span": {
+    "source_points": 121,
+    "first": 0,
+    "last": 120
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.295,
+   "points_compiled": 20
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "31",
+   "direction_id": "1",
+   "shape_id": "310020",
+   "path_index": 4,
+   "trips_on_pattern": 6,
+   "span": {
+    "source_points": 781,
+    "first": 0,
+    "last": 780
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.972,
+   "points_compiled": 156
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "31",
+   "direction_id": "0",
+   "shape_id": "310018",
+   "path_index": 5,
+   "trips_on_pattern": 6,
+   "span": {
+    "source_points": 781,
+    "first": 0,
+    "last": 780
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.972,
+   "points_compiled": 126
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "32",
+   "direction_id": "1",
+   "shape_id": "320009",
+   "path_index": 0,
+   "trips_on_pattern": 184,
+   "span": {
+    "source_points": 598,
+    "first": 0,
+    "last": 597
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.944,
+   "points_compiled": 89
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "32",
+   "direction_id": "0",
+   "shape_id": "320010",
+   "path_index": 1,
+   "trips_on_pattern": 184,
+   "span": {
+    "source_points": 621,
+    "first": 0,
+    "last": 620
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.999,
+   "points_compiled": 103
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "33",
+   "direction_id": "0",
+   "shape_id": "330015",
+   "path_index": 0,
+   "trips_on_pattern": 368,
+   "span": {
+    "source_points": 744,
+    "first": 0,
+    "last": 743
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.999,
+   "points_compiled": 131
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "33",
+   "direction_id": "1",
+   "shape_id": "330016",
+   "path_index": 1,
+   "trips_on_pattern": 362,
+   "span": {
+    "source_points": 832,
+    "first": 0,
+    "last": 831
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.954,
+   "points_compiled": 138
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "33",
+   "direction_id": "0",
+   "shape_id": "330018",
+   "path_index": 2,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 721,
+    "first": 0,
+    "last": 720
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.999,
+   "points_compiled": 124
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "36",
+   "direction_id": "1",
+   "shape_id": "360014",
+   "path_index": 0,
+   "trips_on_pattern": 68,
+   "span": {
+    "source_points": 1246,
+    "first": 0,
+    "last": 1245
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.99,
+   "points_compiled": 225
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "36",
+   "direction_id": "0",
+   "shape_id": "360013",
+   "path_index": 1,
+   "trips_on_pattern": 68,
+   "span": {
+    "source_points": 1220,
+    "first": 0,
+    "last": 1219
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.995,
+   "points_compiled": 204
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "37",
+   "direction_id": "0",
+   "shape_id": "370037",
+   "path_index": 0,
+   "trips_on_pattern": 98,
+   "span": {
+    "source_points": 1181,
+    "first": 0,
+    "last": 1180
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.98,
+   "points_compiled": 231
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "37",
+   "direction_id": "1",
+   "shape_id": "370034",
+   "path_index": 1,
+   "trips_on_pattern": 56,
+   "span": {
+    "source_points": 1183,
+    "first": 0,
+    "last": 1182
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.991,
+   "points_compiled": 235
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "37",
+   "direction_id": "1",
+   "shape_id": "370036",
+   "path_index": 2,
+   "trips_on_pattern": 52,
+   "span": {
+    "source_points": 1183,
+    "first": 0,
+    "last": 1182
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.991,
+   "points_compiled": 235
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "37",
+   "direction_id": "0",
+   "shape_id": "370039",
+   "path_index": 3,
+   "trips_on_pattern": 8,
+   "span": {
+    "source_points": 1184,
+    "first": 0,
+    "last": 1183
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.98,
+   "points_compiled": 237
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "37",
+   "direction_id": "1",
+   "shape_id": "370035",
+   "path_index": 4,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 794,
+    "first": 0,
+    "last": 793
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.991,
+   "points_compiled": 158
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "37",
+   "direction_id": "0",
+   "shape_id": "370041",
+   "path_index": 5,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 378,
+    "first": 0,
+    "last": 377
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.975,
+   "points_compiled": 75
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "37",
+   "direction_id": "0",
+   "shape_id": "370042",
+   "path_index": 6,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 265,
+    "first": 0,
+    "last": 264
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.954,
+   "points_compiled": 47
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "37",
+   "direction_id": "0",
+   "shape_id": "370040",
+   "path_index": 7,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 1224,
+    "first": 0,
+    "last": 1223
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.98,
+   "points_compiled": 236
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "38",
+   "direction_id": "1",
+   "shape_id": "380013",
+   "path_index": 0,
+   "trips_on_pattern": 8,
+   "span": {
+    "source_points": 891,
+    "first": 0,
+    "last": 890
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.991,
+   "points_compiled": 171
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "38",
+   "direction_id": "0",
+   "shape_id": "380014",
+   "path_index": 1,
+   "trips_on_pattern": 8,
+   "span": {
+    "source_points": 874,
+    "first": 0,
+    "last": 873
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.991,
+   "points_compiled": 164
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "3",
+   "direction_id": "1",
+   "shape_id": "30022",
+   "path_index": 0,
+   "trips_on_pattern": 3,
+   "span": {
+    "source_points": 926,
+    "first": 0,
+    "last": 925
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.99,
+   "points_compiled": 258
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "3",
+   "direction_id": "0",
+   "shape_id": "30024",
+   "path_index": 1,
+   "trips_on_pattern": 3,
+   "span": {
+    "source_points": 1042,
+    "first": 0,
+    "last": 1041
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 2.0,
+   "points_compiled": 279
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "3",
+   "direction_id": "0",
+   "shape_id": "30021",
+   "path_index": 2,
+   "trips_on_pattern": 3,
+   "span": {
+    "source_points": 886,
+    "first": 0,
+    "last": 885
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 2.0,
+   "points_compiled": 262
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "3",
+   "direction_id": "1",
+   "shape_id": "30023",
+   "path_index": 3,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 847,
+    "first": 0,
+    "last": 846
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.99,
+   "points_compiled": 257
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "3",
+   "direction_id": "0",
+   "shape_id": "30025",
+   "path_index": 4,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 983,
+    "first": 0,
+    "last": 982
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 2.0,
+   "points_compiled": 276
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "3",
+   "direction_id": "1",
+   "shape_id": "30027",
+   "path_index": 5,
+   "trips_on_pattern": 1,
+   "span": {
+    "source_points": 994,
+    "first": 0,
+    "last": 993
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.99,
+   "points_compiled": 266
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "3",
+   "direction_id": "1",
+   "shape_id": "30026",
+   "path_index": 6,
+   "trips_on_pattern": 1,
+   "span": {
+    "source_points": 915,
+    "first": 0,
+    "last": 914
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.99,
+   "points_compiled": 265
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "4",
+   "direction_id": "1",
+   "shape_id": "40035",
+   "path_index": 0,
+   "trips_on_pattern": 160,
+   "span": {
+    "source_points": 1125,
+    "first": 0,
+    "last": 1124
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.995,
+   "points_compiled": 147
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "4",
+   "direction_id": "0",
+   "shape_id": "40034",
+   "path_index": 1,
+   "trips_on_pattern": 156,
+   "span": {
+    "source_points": 1158,
+    "first": 0,
+    "last": 1157
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.964,
+   "points_compiled": 156
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "4",
+   "direction_id": "0",
+   "shape_id": "40043",
+   "path_index": 2,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 1158,
+    "first": 0,
+    "last": 1157
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.964,
+   "points_compiled": 156
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "4",
+   "direction_id": "1",
+   "shape_id": "40047",
+   "path_index": 3,
+   "trips_on_pattern": 3,
+   "span": {
+    "source_points": 1124,
+    "first": 0,
+    "last": 1123
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.995,
+   "points_compiled": 151
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "4",
+   "direction_id": "0",
+   "shape_id": "40033",
+   "path_index": 4,
+   "trips_on_pattern": 3,
+   "span": {
+    "source_points": 828,
+    "first": 0,
+    "last": 827
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.964,
+   "points_compiled": 100
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "4",
+   "direction_id": "1",
+   "shape_id": "40046",
+   "path_index": 5,
+   "trips_on_pattern": 1,
+   "span": {
+    "source_points": 1017,
+    "first": 0,
+    "last": 1016
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.995,
+   "points_compiled": 168
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "4",
+   "direction_id": "1",
+   "shape_id": "40044",
+   "path_index": 6,
+   "trips_on_pattern": 1,
+   "span": {
+    "source_points": 1213,
+    "first": 0,
+    "last": 1212
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.995,
+   "points_compiled": 165
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "4",
+   "direction_id": "0",
+   "shape_id": "40048",
+   "path_index": 7,
+   "trips_on_pattern": 1,
+   "span": {
+    "source_points": 1050,
+    "first": 0,
+    "last": 1049
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.964,
+   "points_compiled": 174
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "4",
+   "direction_id": "0",
+   "shape_id": "40045",
+   "path_index": 8,
+   "trips_on_pattern": 1,
+   "span": {
+    "source_points": 1200,
+    "first": 0,
+    "last": 1199
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.971,
+   "points_compiled": 165
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "40",
+   "direction_id": "0",
+   "shape_id": "400019",
+   "path_index": 0,
+   "trips_on_pattern": 10,
+   "span": {
+    "source_points": 759,
+    "first": 0,
+    "last": 758
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.889,
+   "points_compiled": 165
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "40",
+   "direction_id": "1",
+   "shape_id": "400018",
+   "path_index": 1,
+   "trips_on_pattern": 8,
+   "span": {
+    "source_points": 832,
+    "first": 0,
+    "last": 831
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.989,
+   "points_compiled": 167
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "41",
+   "direction_id": "0",
+   "shape_id": "410036",
+   "path_index": 0,
+   "trips_on_pattern": 100,
+   "span": {
+    "source_points": 1415,
+    "first": 0,
+    "last": 1414
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.995,
+   "points_compiled": 252
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "41",
+   "direction_id": "1",
+   "shape_id": "410040",
+   "path_index": 1,
+   "trips_on_pattern": 96,
+   "span": {
+    "source_points": 1445,
+    "first": 0,
+    "last": 1444
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.995,
+   "points_compiled": 251
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "41",
+   "direction_id": "1",
+   "shape_id": "410041",
+   "path_index": 2,
+   "trips_on_pattern": 22,
+   "span": {
+    "source_points": 1560,
+    "first": 0,
+    "last": 1559
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.987,
+   "points_compiled": 254
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "41",
+   "direction_id": "0",
+   "shape_id": "410038",
+   "path_index": 3,
+   "trips_on_pattern": 18,
+   "span": {
+    "source_points": 1530,
+    "first": 0,
+    "last": 1529
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.987,
+   "points_compiled": 246
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "41",
+   "direction_id": "1",
+   "shape_id": "410043",
+   "path_index": 4,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 716,
+    "first": 0,
+    "last": 715
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.959,
+   "points_compiled": 125
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "41",
+   "direction_id": "1",
+   "shape_id": "410042",
+   "path_index": 5,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 758,
+    "first": 0,
+    "last": 757
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.987,
+   "points_compiled": 126
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "43",
+   "direction_id": "1",
+   "shape_id": "430009",
+   "path_index": 0,
+   "trips_on_pattern": 112,
+   "span": {
+    "source_points": 1006,
+    "first": 0,
+    "last": 1005
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.981,
+   "points_compiled": 130
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "43",
+   "direction_id": "0",
+   "shape_id": "430026",
+   "path_index": 1,
+   "trips_on_pattern": 106,
+   "span": {
+    "source_points": 995,
+    "first": 0,
+    "last": 994
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.981,
+   "points_compiled": 131
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "43",
+   "direction_id": "1",
+   "shape_id": "430010",
+   "path_index": 2,
+   "trips_on_pattern": 92,
+   "span": {
+    "source_points": 1245,
+    "first": 0,
+    "last": 1244
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.957,
+   "points_compiled": 169
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "43",
+   "direction_id": "0",
+   "shape_id": "430027",
+   "path_index": 3,
+   "trips_on_pattern": 92,
+   "span": {
+    "source_points": 1239,
+    "first": 0,
+    "last": 1238
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.933,
+   "points_compiled": 163
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "43",
+   "direction_id": "0",
+   "shape_id": "430028",
+   "path_index": 4,
+   "trips_on_pattern": 16,
+   "span": {
+    "source_points": 669,
+    "first": 0,
+    "last": 668
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.928,
+   "points_compiled": 91
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "43",
+   "direction_id": "1",
+   "shape_id": "430013",
+   "path_index": 5,
+   "trips_on_pattern": 10,
+   "span": {
+    "source_points": 675,
+    "first": 0,
+    "last": 674
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.957,
+   "points_compiled": 96
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "43",
+   "direction_id": "0",
+   "shape_id": "430029",
+   "path_index": 6,
+   "trips_on_pattern": 1,
+   "span": {
+    "source_points": 1008,
+    "first": 0,
+    "last": 1007
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.981,
+   "points_compiled": 139
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "46",
+   "direction_id": "0",
+   "shape_id": "460022",
+   "path_index": 0,
+   "trips_on_pattern": 98,
+   "span": {
+    "source_points": 740,
+    "first": 0,
+    "last": 739
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.981,
+   "points_compiled": 128
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "46",
+   "direction_id": "1",
+   "shape_id": "460021",
+   "path_index": 1,
+   "trips_on_pattern": 97,
+   "span": {
+    "source_points": 735,
+    "first": 0,
+    "last": 734
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.981,
+   "points_compiled": 118
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "47",
+   "direction_id": "1",
+   "shape_id": "470014",
+   "path_index": 0,
+   "trips_on_pattern": 140,
+   "span": {
+    "source_points": 1004,
+    "first": 0,
+    "last": 1003
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.977,
+   "points_compiled": 179
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "47",
+   "direction_id": "0",
+   "shape_id": "470013",
+   "path_index": 1,
+   "trips_on_pattern": 140,
+   "span": {
+    "source_points": 987,
+    "first": 0,
+    "last": 986
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.995,
+   "points_compiled": 170
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "49",
+   "direction_id": "1",
+   "shape_id": "490016",
+   "path_index": 0,
+   "trips_on_pattern": 84,
+   "span": {
+    "source_points": 570,
+    "first": 0,
+    "last": 569
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.976,
+   "points_compiled": 124
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "49",
+   "direction_id": "0",
+   "shape_id": "490015",
+   "path_index": 1,
+   "trips_on_pattern": 76,
+   "span": {
+    "source_points": 465,
+    "first": 0,
+    "last": 464
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.935,
+   "points_compiled": 98
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "49",
+   "direction_id": "0",
+   "shape_id": "490014",
+   "path_index": 2,
+   "trips_on_pattern": 48,
+   "span": {
+    "source_points": 512,
+    "first": 0,
+    "last": 511
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.935,
+   "points_compiled": 116
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "49",
+   "direction_id": "1",
+   "shape_id": "490017",
+   "path_index": 3,
+   "trips_on_pattern": 38,
+   "span": {
+    "source_points": 527,
+    "first": 0,
+    "last": 526
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.976,
+   "points_compiled": 107
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "49",
+   "direction_id": "1",
+   "shape_id": "490011",
+   "path_index": 4,
+   "trips_on_pattern": 8,
+   "span": {
+    "source_points": 209,
+    "first": 0,
+    "last": 208
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.976,
+   "points_compiled": 57
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "49",
+   "direction_id": "0",
+   "shape_id": "490005",
+   "path_index": 5,
+   "trips_on_pattern": 8,
+   "span": {
+    "source_points": 213,
+    "first": 0,
+    "last": 212
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.935,
+   "points_compiled": 57
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "49",
+   "direction_id": "1",
+   "shape_id": "490018",
+   "path_index": 6,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 570,
+    "first": 0,
+    "last": 569
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.976,
+   "points_compiled": 117
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "5",
+   "direction_id": "1",
+   "shape_id": "50020",
+   "path_index": 0,
+   "trips_on_pattern": 49,
+   "span": {
+    "source_points": 1020,
+    "first": 0,
+    "last": 1019
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.996,
+   "points_compiled": 200
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "5",
+   "direction_id": "0",
+   "shape_id": "50021",
+   "path_index": 1,
+   "trips_on_pattern": 49,
+   "span": {
+    "source_points": 1030,
+    "first": 0,
+    "last": 1029
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.996,
+   "points_compiled": 198
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "5",
+   "direction_id": "1",
+   "shape_id": "50022",
+   "path_index": 2,
+   "trips_on_pattern": 24,
+   "span": {
+    "source_points": 476,
+    "first": 0,
+    "last": 475
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.995,
+   "points_compiled": 95
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "5",
+   "direction_id": "0",
+   "shape_id": "50026",
+   "path_index": 3,
+   "trips_on_pattern": 24,
+   "span": {
+    "source_points": 464,
+    "first": 0,
+    "last": 463
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.995,
+   "points_compiled": 86
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "50",
+   "direction_id": "1",
+   "shape_id": "500038",
+   "path_index": 0,
+   "trips_on_pattern": 8,
+   "span": {
+    "source_points": 708,
+    "first": 0,
+    "last": 707
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.985,
+   "points_compiled": 154
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "50",
+   "direction_id": "0",
+   "shape_id": "500033",
+   "path_index": 1,
+   "trips_on_pattern": 8,
+   "span": {
+    "source_points": 690,
+    "first": 0,
+    "last": 689
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.999,
+   "points_compiled": 162
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "50",
+   "direction_id": "1",
+   "shape_id": "500039",
+   "path_index": 2,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 740,
+    "first": 0,
+    "last": 739
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.985,
+   "points_compiled": 158
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "50",
+   "direction_id": "0",
+   "shape_id": "500035",
+   "path_index": 3,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 773,
+    "first": 0,
+    "last": 772
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.999,
+   "points_compiled": 170
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "51",
+   "direction_id": "1",
+   "shape_id": "510026",
+   "path_index": 0,
+   "trips_on_pattern": 97,
+   "span": {
+    "source_points": 887,
+    "first": 0,
+    "last": 886
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.98,
+   "points_compiled": 157
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "51",
+   "direction_id": "0",
+   "shape_id": "510038",
+   "path_index": 1,
+   "trips_on_pattern": 97,
+   "span": {
+    "source_points": 938,
+    "first": 0,
+    "last": 937
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.98,
+   "points_compiled": 152
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "51",
+   "direction_id": "1",
+   "shape_id": "510036",
+   "path_index": 2,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 1096,
+    "first": 0,
+    "last": 1095
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.984,
+   "points_compiled": 207
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "51",
+   "direction_id": "0",
+   "shape_id": "510039",
+   "path_index": 3,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 1099,
+    "first": 0,
+    "last": 1098
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.98,
+   "points_compiled": 196
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "52",
+   "direction_id": "1",
+   "shape_id": "520024",
+   "path_index": 0,
+   "trips_on_pattern": 6,
+   "span": {
+    "source_points": 771,
+    "first": 0,
+    "last": 770
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.995,
+   "points_compiled": 235
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "52",
+   "direction_id": "0",
+   "shape_id": "520023",
+   "path_index": 1,
+   "trips_on_pattern": 6,
+   "span": {
+    "source_points": 739,
+    "first": 0,
+    "last": 738
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.997,
+   "points_compiled": 242
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "52",
+   "direction_id": "1",
+   "shape_id": "520017",
+   "path_index": 2,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 607,
+    "first": 0,
+    "last": 606
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.995,
+   "points_compiled": 214
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "52",
+   "direction_id": "0",
+   "shape_id": "520025",
+   "path_index": 3,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 575,
+    "first": 0,
+    "last": 574
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.997,
+   "points_compiled": 220
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "53",
+   "direction_id": "1",
+   "shape_id": "530008",
+   "path_index": 0,
+   "trips_on_pattern": 48,
+   "span": {
+    "source_points": 602,
+    "first": 0,
+    "last": 601
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.99,
+   "points_compiled": 97
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "53",
+   "direction_id": "0",
+   "shape_id": "530009",
+   "path_index": 1,
+   "trips_on_pattern": 48,
+   "span": {
+    "source_points": 585,
+    "first": 0,
+    "last": 584
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.99,
+   "points_compiled": 103
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "6",
+   "direction_id": "1",
+   "shape_id": "60002",
+   "path_index": 0,
+   "trips_on_pattern": 208,
+   "span": {
+    "source_points": 627,
+    "first": 0,
+    "last": 626
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.985,
+   "points_compiled": 125
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "6",
+   "direction_id": "0",
+   "shape_id": "60001",
+   "path_index": 1,
+   "trips_on_pattern": 208,
+   "span": {
+    "source_points": 590,
+    "first": 0,
+    "last": 589
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.912,
+   "points_compiled": 122
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "61",
+   "direction_id": "0",
+   "shape_id": "610020",
+   "path_index": 0,
+   "trips_on_pattern": 59,
+   "span": {
+    "source_points": 950,
+    "first": 0,
+    "last": 949
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.905,
+   "points_compiled": 101
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "61",
+   "direction_id": "1",
+   "shape_id": "610019",
+   "path_index": 1,
+   "trips_on_pattern": 58,
+   "span": {
+    "source_points": 983,
+    "first": 0,
+    "last": 982
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.994,
+   "points_compiled": 105
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "61",
+   "direction_id": "1",
+   "shape_id": "610017",
+   "path_index": 2,
+   "trips_on_pattern": 17,
+   "span": {
+    "source_points": 683,
+    "first": 0,
+    "last": 682
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.891,
+   "points_compiled": 80
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "61",
+   "direction_id": "0",
+   "shape_id": "610013",
+   "path_index": 3,
+   "trips_on_pattern": 16,
+   "span": {
+    "source_points": 673,
+    "first": 0,
+    "last": 672
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.891,
+   "points_compiled": 71
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "64",
+   "direction_id": "0",
+   "shape_id": "640015",
+   "path_index": 0,
+   "trips_on_pattern": 170,
+   "span": {
+    "source_points": 927,
+    "first": 0,
+    "last": 926
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.96,
+   "points_compiled": 174
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "64",
+   "direction_id": "1",
+   "shape_id": "640016",
+   "path_index": 1,
+   "trips_on_pattern": 168,
+   "span": {
+    "source_points": 908,
+    "first": 0,
+    "last": 907
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.933,
+   "points_compiled": 171
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "65",
+   "direction_id": "1",
+   "shape_id": "650031",
+   "path_index": 0,
+   "trips_on_pattern": 22,
+   "span": {
+    "source_points": 833,
+    "first": 0,
+    "last": 832
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.98,
+   "points_compiled": 208
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "65",
+   "direction_id": "0",
+   "shape_id": "650030",
+   "path_index": 1,
+   "trips_on_pattern": 20,
+   "span": {
+    "source_points": 823,
+    "first": 0,
+    "last": 822
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.98,
+   "points_compiled": 196
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "65",
+   "direction_id": "1",
+   "shape_id": "650033",
+   "path_index": 2,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 871,
+    "first": 0,
+    "last": 870
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.976,
+   "points_compiled": 199
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "65",
+   "direction_id": "0",
+   "shape_id": "650032",
+   "path_index": 3,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 878,
+    "first": 0,
+    "last": 877
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.992,
+   "points_compiled": 200
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "67",
+   "direction_id": "1",
+   "shape_id": "670017",
+   "path_index": 0,
+   "trips_on_pattern": 88,
+   "span": {
+    "source_points": 1071,
+    "first": 0,
+    "last": 1070
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.991,
+   "points_compiled": 157
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "67",
+   "direction_id": "0",
+   "shape_id": "670016",
+   "path_index": 1,
+   "trips_on_pattern": 88,
+   "span": {
+    "source_points": 1058,
+    "first": 0,
+    "last": 1057
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.977,
+   "points_compiled": 167
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "70",
+   "direction_id": "1",
+   "shape_id": "700008",
+   "path_index": 0,
+   "trips_on_pattern": 36,
+   "span": {
+    "source_points": 495,
+    "first": 0,
+    "last": 494
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.992,
+   "points_compiled": 179
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "70",
+   "direction_id": "0",
+   "shape_id": "700001",
+   "path_index": 1,
+   "trips_on_pattern": 36,
+   "span": {
+    "source_points": 474,
+    "first": 0,
+    "last": 473
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.997,
+   "points_compiled": 185
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "71",
+   "direction_id": "1",
+   "shape_id": "710015",
+   "path_index": 0,
+   "trips_on_pattern": 32,
+   "span": {
+    "source_points": 631,
+    "first": 0,
+    "last": 630
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.99,
+   "points_compiled": 252
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "71",
+   "direction_id": "0",
+   "shape_id": "710014",
+   "path_index": 1,
+   "trips_on_pattern": 31,
+   "span": {
+    "source_points": 815,
+    "first": 0,
+    "last": 814
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.971,
+   "points_compiled": 269
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "71",
+   "direction_id": "1",
+   "shape_id": "710020",
+   "path_index": 2,
+   "trips_on_pattern": 20,
+   "span": {
+    "source_points": 674,
+    "first": 0,
+    "last": 673
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.99,
+   "points_compiled": 256
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "71",
+   "direction_id": "0",
+   "shape_id": "710019",
+   "path_index": 3,
+   "trips_on_pattern": 18,
+   "span": {
+    "source_points": 855,
+    "first": 0,
+    "last": 854
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.971,
+   "points_compiled": 275
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "71",
+   "direction_id": "0",
+   "shape_id": "710021",
+   "path_index": 4,
+   "trips_on_pattern": 10,
+   "span": {
+    "source_points": 92,
+    "first": 0,
+    "last": 91
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.573,
+   "points_compiled": 6
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "74",
+   "direction_id": "1",
+   "shape_id": "740030",
+   "path_index": 0,
+   "trips_on_pattern": 6,
+   "span": {
+    "source_points": 904,
+    "first": 0,
+    "last": 903
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.989,
+   "points_compiled": 193
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "74",
+   "direction_id": "1",
+   "shape_id": "740028",
+   "path_index": 1,
+   "trips_on_pattern": 6,
+   "span": {
+    "source_points": 948,
+    "first": 0,
+    "last": 947
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.989,
+   "points_compiled": 187
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "74",
+   "direction_id": "0",
+   "shape_id": "740031",
+   "path_index": 2,
+   "trips_on_pattern": 6,
+   "span": {
+    "source_points": 870,
+    "first": 0,
+    "last": 869
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.971,
+   "points_compiled": 182
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "74",
+   "direction_id": "0",
+   "shape_id": "740029",
+   "path_index": 3,
+   "trips_on_pattern": 6,
+   "span": {
+    "source_points": 835,
+    "first": 0,
+    "last": 834
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.971,
+   "points_compiled": 189
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "75",
+   "direction_id": "1",
+   "shape_id": "750011",
+   "path_index": 0,
+   "trips_on_pattern": 3,
+   "span": {
+    "source_points": 645,
+    "first": 0,
+    "last": 644
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 2.0,
+   "points_compiled": 172
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "75",
+   "direction_id": "0",
+   "shape_id": "750010",
+   "path_index": 1,
+   "trips_on_pattern": 3,
+   "span": {
+    "source_points": 618,
+    "first": 0,
+    "last": 617
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.978,
+   "points_compiled": 180
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "77",
+   "direction_id": "1",
+   "shape_id": "770027",
+   "path_index": 0,
+   "trips_on_pattern": 110,
+   "span": {
+    "source_points": 946,
+    "first": 0,
+    "last": 945
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.985,
+   "points_compiled": 201
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "77",
+   "direction_id": "0",
+   "shape_id": "770025",
+   "path_index": 1,
+   "trips_on_pattern": 110,
+   "span": {
+    "source_points": 935,
+    "first": 0,
+    "last": 934
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.999,
+   "points_compiled": 209
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "78",
+   "direction_id": "1",
+   "shape_id": "780072",
+   "path_index": 0,
+   "trips_on_pattern": 82,
+   "span": {
+    "source_points": 1355,
+    "first": 0,
+    "last": 1354
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.99,
+   "points_compiled": 247
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "78",
+   "direction_id": "0",
+   "shape_id": "780061",
+   "path_index": 1,
+   "trips_on_pattern": 78,
+   "span": {
+    "source_points": 1311,
+    "first": 0,
+    "last": 1310
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.99,
+   "points_compiled": 240
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "78",
+   "direction_id": "1",
+   "shape_id": "780073",
+   "path_index": 2,
+   "trips_on_pattern": 59,
+   "span": {
+    "source_points": 1125,
+    "first": 0,
+    "last": 1124
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.99,
+   "points_compiled": 136
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "78",
+   "direction_id": "0",
+   "shape_id": "780063",
+   "path_index": 3,
+   "trips_on_pattern": 59,
+   "span": {
+    "source_points": 1112,
+    "first": 0,
+    "last": 1111
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.991,
+   "points_compiled": 137
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "78",
+   "direction_id": "0",
+   "shape_id": "780062",
+   "path_index": 4,
+   "trips_on_pattern": 7,
+   "span": {
+    "source_points": 562,
+    "first": 0,
+    "last": 561
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.99,
+   "points_compiled": 74
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "78",
+   "direction_id": "1",
+   "shape_id": "780071",
+   "path_index": 5,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 1154,
+    "first": 0,
+    "last": 1153
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.99,
+   "points_compiled": 153
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "78",
+   "direction_id": "0",
+   "shape_id": "780068",
+   "path_index": 6,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 1160,
+    "first": 0,
+    "last": 1159
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.991,
+   "points_compiled": 162
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "8",
+   "direction_id": "1",
+   "shape_id": "80025",
+   "path_index": 0,
+   "trips_on_pattern": 7,
+   "span": {
+    "source_points": 734,
+    "first": 0,
+    "last": 733
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.967,
+   "points_compiled": 158
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "8",
+   "direction_id": "0",
+   "shape_id": "80023",
+   "path_index": 1,
+   "trips_on_pattern": 7,
+   "span": {
+    "source_points": 720,
+    "first": 0,
+    "last": 719
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.971,
+   "points_compiled": 158
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "8",
+   "direction_id": "1",
+   "shape_id": "80026",
+   "path_index": 2,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 802,
+    "first": 0,
+    "last": 801
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.967,
+   "points_compiled": 165
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "8",
+   "direction_id": "0",
+   "shape_id": "80024",
+   "path_index": 3,
+   "trips_on_pattern": 2,
+   "span": {
+    "source_points": 779,
+    "first": 0,
+    "last": 778
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.971,
+   "points_compiled": 163
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "81",
+   "direction_id": "1",
+   "shape_id": "810020",
+   "path_index": 0,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 724,
+    "first": 0,
+    "last": 723
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.974,
+   "points_compiled": 147
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "81",
+   "direction_id": "0",
+   "shape_id": "810021",
+   "path_index": 1,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 754,
+    "first": 0,
+    "last": 753
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.974,
+   "points_compiled": 144
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "82",
+   "direction_id": "0",
+   "shape_id": "820013",
+   "path_index": 0,
+   "trips_on_pattern": 8,
+   "span": {
+    "source_points": 854,
+    "first": 0,
+    "last": 853
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.978,
+   "points_compiled": 238
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "82",
+   "direction_id": "1",
+   "shape_id": "820014",
+   "path_index": 1,
+   "trips_on_pattern": 6,
+   "span": {
+    "source_points": 819,
+    "first": 0,
+    "last": 818
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 2.0,
+   "points_compiled": 217
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "90",
+   "direction_id": "1",
+   "shape_id": "900017",
+   "path_index": 0,
+   "trips_on_pattern": 66,
+   "span": {
+    "source_points": 1006,
+    "first": 0,
+    "last": 1005
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.965,
+   "points_compiled": 143
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "90",
+   "direction_id": "0",
+   "shape_id": "900018",
+   "path_index": 1,
+   "trips_on_pattern": 66,
+   "span": {
+    "source_points": 863,
+    "first": 0,
+    "last": 862
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.965,
+   "points_compiled": 119
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "90",
+   "direction_id": "1",
+   "shape_id": "900007",
+   "path_index": 2,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 933,
+    "first": 0,
+    "last": 932
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.965,
+   "points_compiled": 129
+  },
+  {
+   "feed": "sorta",
+   "feed_version": "gtfs_20261004-20261205_20260929",
+   "feed_md5": "38de391a4735e9b356f30ccf322982a6",
+   "route_id": "90",
+   "direction_id": "0",
+   "shape_id": "900019",
+   "path_index": 3,
+   "trips_on_pattern": 4,
+   "span": {
+    "source_points": 813,
+    "first": 0,
+    "last": 812
+   },
+   "transform": "full-shape extent (greenfield compile: no deployed path to span against)",
+   "simplification": {
+    "rule": "Douglas-Peucker perpendicular point-to-segment, endpoints kept; fold zones densified from source under the fold-guard gate loop",
+    "tolerance_m": 2.0
+   },
+   "fold_guard": {
+    "iterations": 0,
+    "severe_remaining": 0
+   },
+   "deviation_max_m": 1.965,
+   "points_compiled": 115
+  }
+ ]
+}
