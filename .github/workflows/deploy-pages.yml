@@ -125,6 +125,14 @@ jobs:
             cp -r live-transit deployment/ || echo "live-transit copy failed"
           fi
 
+          # Copy Voter Guide (app shell + geography surface;
+          # Board 62 Integration 1 promotion, 2026-10-26 — the
+          # directory was never in the copy list, so /voter-guide/*
+          # 404'd despite the files being in the repo)
+          if [ -d "voter-guide" ]; then
+            cp -r voter-guide deployment/ || echo "voter-guide copy failed"
+          fi
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
