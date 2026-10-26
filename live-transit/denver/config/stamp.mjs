@@ -1,5 +1,5 @@
 // stamp.mjs — Unified build stamp governance (LT-KAES-04).
-// DENVER/AURORA BUILD (Board 52) — platform file. PRODUCTION stamp assigned at the launch gate, 2026-10-26 (Justin's "Deploy all and continue," Board 52 item 7): 20261026-1707, replacing the local staging stamp 20261026-1603. Label: UNVERIFIED / legacy-unsigned.
+// DENVER/AURORA BUILD (Board 52) — platform file. PRODUCTION stamp assigned at the launch gate, 2026-10-26 (Justin's "Deploy all and continue," Board 52 item 7): 20261026-1707, replacing the local staging stamp 20261026-1603. Launch-fix bump to 20261026-1751 the same day: the surfaces boot fan-out was made config-driven (single-feed {rtd}) and the geometry/basemap assets were published at the city root, per the production layout proven by Cincinnati/Philadelphia. Label: UNVERIFIED / legacy-unsigned.
 //
 // KAES-04 normative position: ONE build stamp governs a city
 // application — it appears as a constant in the app, is echoed in
@@ -23,7 +23,7 @@
 // tranche assigns the production stamp in the city's sequence at
 // that time (LT-KAES-46 / LT-P1 ritual).
 
-export const BUILD_STAMP = '20261026-1707';
+export const BUILD_STAMP = '20261026-1751';
 
 /** Append the governing stamp to a same-origin asset/data URL. */
 export function withStamp(url) {
