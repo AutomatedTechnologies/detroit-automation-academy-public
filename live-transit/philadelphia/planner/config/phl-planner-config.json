@@ -1,1 +1,59 @@
-{"asset":{"bytes":41840065,"feedVersion":"v202609271+v202609271","file":"assets/planner-timetable-v202609271-v202609271.json","gzipBytes":6873744,"md5":"c27c0d1326b4cbbd5718b5a78d1a423b","service_model":"set","sidecars":{"stops":"assets/stops-sidecar.json (md5 ea3e1c14a7b81c0ffeee3e084ac2fd36; 13,651 stops, registry segments bus 0..13494 / rail 13495..13650)","tripMap":"assets/trip-map.json (md5 4b1366a746737ed156ff781a1a09988b; compiler trip-copy map)"},"validity":{"bus":"20260927..20270220","rail":"20260927..20261121","railExpiryNote":"SEPTA rail zip validity ends 2026-11-21; a refresh tranche is due by 2026-11-14 (queue GATED). This staged asset must be rebuilt from the successor rail zip before any page build ships after that date."}},"bundle":"phl-planner-integration-staging","city":"philadelphia","engine":{"file":"engine/raptor-v2-set.js","md5":"6746dfbc3aae7c531e42206478d572da","pairingRule":"An asset whose meta.service_model is 'set' MUST be loaded only by an engine exposing servicesFor(). The loader (lib/loader.mjs) refuses the pairing loudly otherwise. A legacy (unmarked) asset under this engine is permitted (Detroit-shaped data resolves identically).","requiredExport":"servicesFor","serviceModel":"set"},"prd":"PRD-006","presentationDecisionsNotTaken":[{"id":"PHL11","question":"Walk-only journey presentation: PHL11's fastest result is 383 s of pure walking. Whether walk-only results are presented as journeys is Justin's call, taken when a city build approaches presentation.","stagingBehavior":"The selection module neither filters nor relabels walk-only results. It FLAGS them in its output (presentationFlags.walkOnlyFastest) so the eventual page build surfaces the decision instead of burying it."}],"selection":{"capSec":7200,"constants":{"adopted":"W0-default-T35-P15 — Philadelphia calibration 2026-10-23 (files/calibration-2026-10-23.md), measured on Philadelphia data; a defended tie with Detroit's values","distanceWeights":{"corridor":0.35,"modeMix":0.15,"transferDelta":0.2,"transferStopDisplacement":0.1,"walkBurden":0.2},"nearDuplicateThreshold":0.35,"reliabilityForm":"v2 (design §3): sum of corridor merged-stream median-gap headways, capped at 60 min, + penalty * transfers","reliabilityHeadwayCapMin":60,"reliabilityTransferPenaltyMin":15},"correctnessContract":"Ruling 5, structural: the fastest archetype's arrival equals the single-optimum (plan()) baseline exactly, 0 s tolerance, on every pair. Any nonzero delta fails the build verification.","enumerationWindowMin":120,"flatFloorSec":1800,"mode":"frequency-aware (design-addendum Addendum 3) — the binding selection mode for Philadelphia","module":"lib/selection.mjs"},"status":"STAGING ONLY — not deployed; the Philadelphia page build that consumes this bundle is a separate, gated step (Board 48 item 7 launch gate is Justin's; production pushes are Justin's word)."}
+{
+ "asset": {
+  "bytes": 93456210,
+  "feedVersion": "v202609271u202611010+v202609271u202611010",
+  "file": "assets/planner-timetable-v202609271u202611010-v202609271u202611010.json",
+  "gzipBytes": 15120162,
+  "md5": "30d827d5e7932b92b9f0068fbadde738",
+  "service_model": "set",
+  "sidecars": {
+   "stops": "assets/stops-sidecar.json (md5 5def299b64a17f36d0f70c9f80469247; 13,660 stops, registry segments bus 0..13503 / rail 13504..13659)",
+   "tripMap": "assets/trip-map.json (md5 1d43a102b442d49e474fc2690defc908; compiler trip-copy map)"
+  },
+  "validity": {
+   "bus": "20260927..20270220",
+   "rail": "20260927..20270220",
+   "railExpiryNote": "REFRESHED 2026-10-26 (Board 65 item 3): SEPTA published wave v202611010 for both zips (from 2026-11-01). This asset is a union compile (compiler of record, unmodified): the v202609271 book governs through 2026-10-31, the v202611010 book from 2026-11-01; rail service now runs to 2027-02-20 (calendar-measured), past the previous 2026-11-21 cliff. Publisher anomaly on record: the new rail feed_info declares end 20261121 while its calendar runs services to 20270220. Next vintage watch: SEPTA successor wave or by 2027-01-22."
+  }
+ },
+ "bundle": "phl-planner-integration-staging",
+ "city": "philadelphia",
+ "engine": {
+  "file": "engine/raptor-v2-set.js",
+  "md5": "6746dfbc3aae7c531e42206478d572da",
+  "pairingRule": "An asset whose meta.service_model is 'set' MUST be loaded only by an engine exposing servicesFor(). The loader (lib/loader.mjs) refuses the pairing loudly otherwise. A legacy (unmarked) asset under this engine is permitted (Detroit-shaped data resolves identically).",
+  "requiredExport": "servicesFor",
+  "serviceModel": "set"
+ },
+ "prd": "PRD-006",
+ "presentationDecisionsNotTaken": [
+  {
+   "id": "PHL11",
+   "question": "Walk-only journey presentation: PHL11's fastest result is 383 s of pure walking. Whether walk-only results are presented as journeys is Justin's call, taken when a city build approaches presentation.",
+   "stagingBehavior": "The selection module neither filters nor relabels walk-only results. It FLAGS them in its output (presentationFlags.walkOnlyFastest) so the eventual page build surfaces the decision instead of burying it."
+  }
+ ],
+ "selection": {
+  "capSec": 7200,
+  "constants": {
+   "adopted": "W0-default-T35-P15 \u2014 Philadelphia calibration 2026-10-23 (files/calibration-2026-10-23.md), measured on Philadelphia data; a defended tie with Detroit's values",
+   "distanceWeights": {
+    "corridor": 0.35,
+    "modeMix": 0.15,
+    "transferDelta": 0.2,
+    "transferStopDisplacement": 0.1,
+    "walkBurden": 0.2
+   },
+   "nearDuplicateThreshold": 0.35,
+   "reliabilityForm": "v2 (design \u00a73): sum of corridor merged-stream median-gap headways, capped at 60 min, + penalty * transfers",
+   "reliabilityHeadwayCapMin": 60,
+   "reliabilityTransferPenaltyMin": 15
+  },
+  "correctnessContract": "Ruling 5, structural: the fastest archetype's arrival equals the single-optimum (plan()) baseline exactly, 0 s tolerance, on every pair. Any nonzero delta fails the build verification.",
+  "enumerationWindowMin": 120,
+  "flatFloorSec": 1800,
+  "mode": "frequency-aware (design-addendum Addendum 3) \u2014 the binding selection mode for Philadelphia",
+  "module": "lib/selection.mjs"
+ },
+ "status": "STAGING ONLY \u2014 not deployed; the Philadelphia page build that consumes this bundle is a separate, gated step (Board 48 item 7 launch gate is Justin's; production pushes are Justin's word)."
+}

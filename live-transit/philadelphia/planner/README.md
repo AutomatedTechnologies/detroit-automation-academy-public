@@ -21,9 +21,9 @@ against the staging verification record):
 | lib/signature.mjs | `55d49c0c0a1eb98db4dbe5db0c1b1404` |
 | lib/archetypes-v2.mjs | `79d5d6b9383ff4840f5b90281522a851` |
 | lib/loader.mjs | `0153d149fa58931a19891c37e708eea1` |
-| assets/planner-timetable-v202609271-v202609271.json | `c27c0d1326b4cbbd5718b5a78d1a423b` |
-| assets/stops-sidecar.json | `ea3e1c14a7b81c0ffeee3e084ac2fd36` |
-| assets/trip-map.json | `4b1366a746737ed156ff781a1a09988b` |
+| assets/planner-timetable-v202609271u202611010-v202609271u202611010.json | `30d827d5e7932b92b9f0068fbadde738` |
+| assets/stops-sidecar.json | `5def299b64a17f36d0f70c9f80469247` |
+| assets/trip-map.json | `1d43a102b442d49e474fc2690defc908` |
 | config/phl-planner-config.json | `28d81f148f733e7273478fc9fbed62bd` |
 
 Notes:

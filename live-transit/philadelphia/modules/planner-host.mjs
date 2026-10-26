@@ -11,8 +11,10 @@
 //   engine  planner/engine/raptor-v2-set.js  MD5 6746dfbc…
 //   lib     planner/lib/{selection,signature,archetypes-v2,
 //           loader}.mjs (pairing guard)
-//   asset   planner/assets/planner-timetable-v202609271-
-//           v202609271.json MD5 c27c0d13…, service_model "set"
+//   asset   planner/assets/planner-timetable-v202609271u202611010-
+//           v202609271u202611010.json MD5 30d827d5…, service_model "set"
+//           (Board 65 item 3 refresh, 2026-10-26: union of SEPTA waves
+//           v202609271 + v202611010; rail validity to 2027-02-20)
 //
 // D1(b) LIVES HERE. The policy constant is config's
 // planner.policy.walkOnlyPresentation ('B', decided by Justin

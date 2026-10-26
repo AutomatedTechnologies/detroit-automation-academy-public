@@ -177,8 +177,8 @@ export const CITY_CONFIG = Object.freeze({
     // Planner assets (staged bundle identities — R4 hosts these;
     // the files themselves are NOT copied into this tree, see the
     // design note's salvage inventory).
-    plannerTimetable: 'planner-timetable-v202609271-v202609271.json', // identity carries both feed vintages (LT-KAES-28)
-    plannerTimetableMd5: 'c27c0d1326b4cbbd5718b5a78d1a423b', //          [STG config]
+    plannerTimetable: 'planner-timetable-v202609271u202611010-v202609271u202611010.json', // identity carries both feed vintages (LT-KAES-28)
+    plannerTimetableMd5: '30d827d5e7932b92b9f0068fbadde738', //          [STG config]
     plannerStops: 'planner-stops.json',
     // Published live-data family (LT-KAES-21) — TARGET set. The
     // outgoing build published exactly one file (vehicles.json);
