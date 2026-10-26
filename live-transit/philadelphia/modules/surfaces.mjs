@@ -659,16 +659,30 @@ export function createSurfaces(deps = {}) {
         .map((r) => ({ ...r, routeLabel: (byId[r.routeId] ? routeLabel(byId[r.routeId]) : String(r.routeId)) }))
       : [];
     // Scoped alerts (LT-S5.1): stop-scoped, route-scoped, system.
+    // Repair 2026-10-25 (stop-card flood): SEPTA publishes its
+    // per-trip cancellation notices with an EMPTY informed-entity
+    // selector and the trip named only in the header ("Trip
+    // cancellation for trip 871100."). The old test read any
+    // route-less/stop-less entity as System-wide, so all ~161
+    // cancellations landed on every stop card. System-wide now
+    // requires the alert to be genuinely unscoped (no selector
+    // content at all) AND not a per-trip cancellation; a
+    // cancelled trip already shows in this stop's live arrivals.
     const rawId = stop.id.split(':')[1];
     const alerts = [];
     for (const a of activeAlerts(atMs)) {
       let scope = null;
-      for (const e of a.informed_entities || []) {
+      const ents = a.informed_entities || [];
+      for (const e of ents) {
         if (e.stop_id && e.stop_id === rawId) { scope = 'This stop'; break; }
         if (e.route_id && (stop.r || []).includes(e.route_id)) scope = 'This route';
-        if (!e.route_id && !e.stop_id && !scope) scope = 'System-wide';
       }
-      if (scope) alerts.push({ header: a.header || '', scope });
+      if (!scope) {
+        const unscoped = ents.length === 0
+          || ents.every((e) => !e.route_id && !e.stop_id && !e.trip_id);
+        if (unscoped && !/^trip cancellation\b/i.test(a.header || '')) scope = 'System-wide';
+      }
+      if (scope) alerts.push({ header: alertHeader(a), scope });
     }
     // "Live on these routes" boarding rows (LT-S5.1).
     const boardingRows = [];
