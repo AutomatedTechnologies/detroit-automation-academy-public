@@ -227,7 +227,13 @@ export function createPlannerHost() {
     for (const off of [-1, 0, 1]) {
       const d = new Date(when.getTime() + off * 86400000);
       for (const f of feeds) {
-        ENGINE.servicesFor(state.ttFull, ymdOf(d), d.getDay(), f).forEach((s) => active.add(s));
+        // Repair 2026-10-25: ymd must be a STRING — the engine's
+        // exception test is the strict compare `e.date !== ymd`
+        // (its own internal callers pass fmtYMD strings), so the
+        // numeric ymdOf silently skipped every calendar_dates
+        // exception: services that run only via an exception
+        // (added: 1) never entered the day compilation.
+        ENGINE.servicesFor(state.ttFull, String(ymdOf(d)), d.getDay(), f).forEach((s) => active.add(s));
       }
     }
     const trips = state.assetData.trips.filter((t) => active.has(t.s));
