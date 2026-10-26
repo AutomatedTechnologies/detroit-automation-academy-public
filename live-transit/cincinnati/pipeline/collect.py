@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """collect.py — COLLECT stage of the rebuilt PHL pipeline (KAES-19).
 
-CINCINNATI BUILD (Board 51) — platform stage, adapted from PHL REBUILD R2. Label: UNVERIFIED / legacy-unsigned.
+CINCINNATI BUILD (Board 51) — platform stage, adapted from
+PHL REBUILD R2. Label: UNVERIFIED / legacy-unsigned.
 
 Fetch-only. Downloads the six raw GTFS-RT payloads of the R1
 config's endpoint set (LT-KAES-16) and writes them, untouched, as
