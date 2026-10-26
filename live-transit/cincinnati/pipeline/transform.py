@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""transform.py — TRANSFORM stage of the Cincinnati pipeline (platform stage adapted from the PHL rebuild).
+"""transform.py — TRANSFORM stage of the Cincinnati pipeline
+(platform stage adapted from the PHL rebuild).
 
 CINCINNATI BUILD (Board 51). Label: UNVERIFIED / legacy-unsigned.
 
