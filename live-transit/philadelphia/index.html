@@ -18,9 +18,14 @@
   #lt-status{font-weight:600;color:#17365d;margin:8px 0}
   #lt-map{width:100%;height:68vh;display:block;background:#0b0e13;border:1px solid #222;border-radius:8px;touch-action:none}
   .lt-region{margin:12px 0}
-  #lt-load-error{display:none;border:1px solid #a33;border-radius:8px;padding:12px 14px;background:#fdf3f3}
-  #lt-degraded{display:none;border:1px solid #b8860b;border-radius:8px;padding:12px 14px;background:#fffaf0}
-  #lt-info{display:none;border:1px solid #ccc;border-radius:8px;padding:12px 14px;background:#f7f9fb;max-width:75ch}
+  /* Repair 2026-10-25 (contrast): the estate stylesheet sets a
+     light body text color (--paper #F5F2EA) for its dark theme;
+     these three panels pin LIGHT backgrounds, so their inherited
+     text rendered cream-on-cream (~1.05:1, illegible). Each
+     panel now pins a dark text color to match its background. */
+  #lt-load-error{display:none;border:1px solid #a33;border-radius:8px;padding:12px 14px;background:#fdf3f3;color:#571f1f}
+  #lt-degraded{display:none;border:1px solid #b8860b;border-radius:8px;padding:12px 14px;background:#fffaf0;color:#4a3800}
+  #lt-info{display:none;border:1px solid #ccc;border-radius:8px;padding:12px 14px;background:#f7f9fb;max-width:75ch;color:#14202b}
 </style>
 <!-- Vendored rendering library, declared once (LT-KAES-05).
      R3 vendors three.module.min.js at this path; the importmap is
@@ -28,7 +33,7 @@
 <script type="importmap">
 {
   "imports": {
-    "three": "./vendor/three.module.min.js?v=20261025-2131",
+    "three": "./vendor/three.module.min.js?v=20261025-2132",
     "three/addons/": "./vendor/three-addons/"
   }
 }
@@ -118,7 +123,7 @@
 <!-- The one application module (LT-KAES-06). Feature engines load
      lazily through it (LT-KAES-05) — no classic-script sprawl, and
      no estate script the reference application does not load. -->
-<script type="module" src="./modules/app.mjs?v=20261025-2131"></script>
+<script type="module" src="./modules/app.mjs?v=20261025-2132"></script>
 <script src="/assets/measure.js?v=20261023-o2" defer></script>
 </body>
 </html>
