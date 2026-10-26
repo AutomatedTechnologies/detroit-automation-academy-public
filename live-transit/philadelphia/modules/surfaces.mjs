@@ -1081,7 +1081,6 @@ export function createSurfaces(deps = {}) {
     const routesTotal = stats ? stats.routesTotal : 0;
     const alerts = state.alerts ? activeAlerts(now()).length : 0;
     const pm = rideAlong.pickerModel((state.vehicles && state.vehicles.vehicles) || []);
-    const meta = host && host.state && host.state.meta;
     return {
       collapsed: state.launcher === 'collapsed',
       tiles: [
@@ -1093,7 +1092,10 @@ export function createSurfaces(deps = {}) {
         },
         {
           id: 'plan', label: 'Plan a trip',
-          proof: meta ? `From the published timetable (feed ${meta.feed_version})` : 'From the published timetable',
+          // Repair 2026-10-25: rider copy only — the raw feed
+          // version string ("(feed v202609271+v202609271)") is an
+          // internal identifier, not information for a rider.
+          proof: 'From the published timetable',
         },
         {
           id: 'ride-along', label: 'Ride Along',
@@ -1248,7 +1250,10 @@ export function createSurfaces(deps = {}) {
     if (!n) return;
     const P = state.planner;
     const meta = host && host.state && host.state.meta;
-    const feedLine = meta ? `now · feed ${esc(meta.feed_version)}` : 'now · published timetable (loads on first use)';
+    // Repair 2026-10-25: the feed version string is an internal
+    // identifier; the line tells the rider what the plan is
+    // computed from, in rider terms.
+    const feedLine = meta ? 'now · from the published timetable' : 'now · timetable loads on first use';
     let results = '';
     if (P.busy) results = '<p>Planning…</p>';
     else if (P.error) results = `<p class="lt-plan-error">${esc(P.error)}</p>`;
