@@ -1080,7 +1080,6 @@ export function createSurfaces(deps = {}) {
     const markers = stats ? stats.markers : 0;
     const routesTotal = stats ? stats.routesTotal : 0;
     const alerts = state.alerts ? activeAlerts(now()).length : 0;
-    const pm = rideAlong.pickerModel((state.vehicles && state.vehicles.vehicles) || []);
     return {
       collapsed: state.launcher === 'collapsed',
       tiles: [
@@ -1099,7 +1098,13 @@ export function createSurfaces(deps = {}) {
         },
         {
           id: 'ride-along', label: 'Ride Along',
-          proof: pm.boardable.length ? `${pm.boardable.length} vehicle${pm.boardable.length === 1 ? '' : 's'} reporting` : 'No vehicles reporting right now',
+          // Repair 2026-10-25 (count basis, RC5/RC10): the tile
+          // counted boardable vehicles over the raw envelope
+          // while the status line counts the current view, so
+          // under a route filter the two disagreed on the same
+          // quantity (6 live vs 430 reporting). One basis for
+          // every rider-facing count: the view (renderer stats).
+          proof: markers ? `${markers} vehicle${markers === 1 ? '' : 's'} reporting` : 'No vehicles reporting right now',
         },
         { id: 'all-routes', label: 'All routes', proof: `${routesTotal} SEPTA routes` },
         { id: 'near-me', label: 'Near me', proof: 'Find your nearest stop' },
