@@ -1,5 +1,17 @@
 /* raptor.js — client-side RAPTOR trip planner for Live Transit.
  *
+ * SET-RESOLUTION COPY (Board 47 item 7, implementation tranche 1,
+ * 2026-10-22): a working copy of the served production engine
+ * (inputs/raptor-v2.js, MD5 b325eb67b8a8839b52d243c76ac54262) with
+ * service resolution generalized per
+ * engine-generalization-design-2026-10-22.md section 1: servicesFor()
+ * returns the active service SET for (feed, date) — (calendar set
+ * minus removals) union additions — plan()/planRange()/planArriveBy()
+ * admit trips by set membership, and serviceFor() is retained as the
+ * first-element compatibility shim for its three-argument callers.
+ * Every other line is the served engine's, byte for byte. LOCAL ONLY:
+ * this copy is never deployed.
+ *
  * Data: planner-timetable-<ddot>-<smart>.json — the DDOT timetable
  * (built by build-timetable.py from DDOT GTFS) merged with SMART
  * scheduled service built from SMART's own published GTFS (U7 Phase B,
@@ -93,53 +105,51 @@ function fmtYMD(d) {
   return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate() + '';
 }
 
-function serviceFor(tt, ymd, dow, feed) {
+function servicesFor(tt, ymd, dow, feed) {
   var mi = (dow + 6) % 7; // mask is Mon..Sun
-  // Per-feed resolution (U7 Phase B): services carry a feed tag
-  // (0 = DDOT, 1 = SMART); an untagged service is feed 0, so the
-  // legacy single-feed timetable resolves identically. The default
-  // feed is 0 — the DDOT service — which is what the three-argument
-  // callers (stop cards, the delay matcher, the Departure Board)
-  // have always meant.
+  // Per-feed resolution: services carry a feed tag (0 = DDOT,
+  // 1 = SMART); an untagged service is feed 0. The default feed is 0,
+  // matching serviceFor's legacy default.
   var effFeed = (feed === undefined || feed === null) ? 0 : feed;
   function feedOf(s) { return s.feed || 0; }
-  var best = -1, i;
+  // The calendar set: every service of this feed whose window covers
+  // the date and whose mask matches the day. Unlike the legacy
+  // resolver there is no single winner — concurrent services are the
+  // normal case on multi-service feeds (SEPTA runs 7-27 per date).
+  var set = new Set(), i;
   for (i = 0; i < tt.services.length; i++) {
     var s = tt.services[i];
     if (feedOf(s) !== effFeed) continue;
-    if (ymd >= s.start && ymd <= s.end && s.mask[mi]) best = i;
+    if (ymd >= s.start && ymd <= s.end && s.mask[mi]) set.add(i);
   }
-  // GTFS calendar_dates exceptions: the builder stores the raw
-  // exception_type in `added` (1 = service added, 2 = service removed).
-  // Test the value, never the truthiness — 2 is truthy, and processing a
-  // removal as an addition made exception dates resolve to the removed
-  // service (holidays planned weekday service). Collect the date's
-  // exceptions first, then apply them as a set: a removal of the
-  // calendar's pick re-scans the calendar for another service that runs
-  // this date and was not itself removed; an addition then governs.
-  var exRemoved = {}, exAdded = -1;
+  // GTFS calendar_dates exceptions, applied to the set as published:
+  // added: 1 joins the set, added: 2 leaves it — (calendar set minus
+  // removals) union additions, the GTFS-true reading. The exception's
+  // service is matched by id within this feed, as in the legacy code.
+  // The value is tested, never truthiness (2 is truthy).
   for (i = 0; i < tt.exceptions.length; i++) {
     var e = tt.exceptions[i];
-    if (e.date === ymd) {
-      var si = -1;
-      for (var j = 0; j < tt.services.length; j++) {
-        if (tt.services[j].id === e.service && feedOf(tt.services[j]) === effFeed) { si = j; break; }
-      }
-      if (si < 0) continue;
-      if (e.added === 1) exAdded = si;
-      else if (e.added === 2) exRemoved[si] = true;
+    if (e.date !== ymd) continue;
+    var si = -1;
+    for (var j = 0; j < tt.services.length; j++) {
+      if (tt.services[j].id === e.service && feedOf(tt.services[j]) === effFeed) { si = j; break; }
     }
+    if (si < 0) continue;
+    if (e.added === 1) set.add(si);
+    else if (e.added === 2) set.delete(si);
   }
-  if (best >= 0 && exRemoved[best]) {
-    best = -1;
-    for (i = 0; i < tt.services.length; i++) {
-      var s2 = tt.services[i];
-      if (feedOf(s2) !== effFeed) continue;
-      if (!exRemoved[i] && ymd >= s2.start && ymd <= s2.end && s2.mask[mi]) best = i;
-    }
-  }
-  if (exAdded >= 0) best = exAdded;
-  return best;
+  return Array.from(set).sort(function (a, b) { return a - b; });
+}
+
+// Compatibility shim (design section 1.2): the legacy single-pick
+// contract, defined as the first element of the resolved set (or -1
+// when the set is empty). On any feed whose active set is a
+// singleton — Detroit on every date — this returns exactly what the
+// legacy resolver returned, so the three-argument callers (stop
+// cards, the delay matcher, the Departure Board) are unaffected.
+function serviceFor(tt, ymd, dow, feed) {
+  var set = servicesFor(tt, ymd, dow, feed);
+  return set.length ? set[0] : -1;
 }
 
 var MAX_WALK_SECS = 1800; // 30 min cumulative walk per round: transfers and
@@ -228,9 +238,12 @@ function planImpl(tt, fromSeeds, toIdx, when) {
     if (feeds.indexOf(f) < 0) feeds.push(f);
   });
   var svcByFeed = {}, prevByFeed = {}, anySvc = false;
+  var svcSetByFeed = {}, prevSetByFeed = {};
   feeds.forEach(function (f) {
     svcByFeed[f] = serviceFor(tt, ymd, dow, f);
     prevByFeed[f] = serviceFor(tt, fmtYMD(pd), pd.getDay(), f);
+    svcSetByFeed[f] = new Set(servicesFor(tt, ymd, dow, f));
+    prevSetByFeed[f] = new Set(servicesFor(tt, fmtYMD(pd), pd.getDay(), f));
     if (svcByFeed[f] >= 0 || prevByFeed[f] >= 0) anySvc = true;
   });
   var svc = (svcByFeed[0] === undefined) ? -1 : svcByFeed[0];
@@ -314,8 +327,8 @@ function planImpl(tt, fromSeeds, toIdx, when) {
           // today, and must not be planned at face value.
           var shift = 0;
           var tFeed = (tt.services[t.s] && tt.services[t.s].feed) || 0;
-          if (t.s !== svcByFeed[tFeed]) {
-            if (t.s !== prevByFeed[tFeed]) continue;
+          if (!svcSetByFeed[tFeed].has(t.s)) {
+            if (!prevSetByFeed[tFeed].has(t.s)) continue;
             shift = -86400;
           }
           if (depA(t, pos) + shift < prevArr[p]) continue; // cannot catch
@@ -474,7 +487,7 @@ export function setLiveDelays(tt, delayMap, stampMs) {
 }
 
 // Exported for the client-side trip matcher (Phase 2b-i).
-export { serviceFor };
+export { serviceFor, servicesFor };
 
 /* ------------------------------------------------------------------ *
  * Tranche A (Project 39, RAPTOR Engine v2) — multi-criteria results.
@@ -705,12 +718,17 @@ function feedServices(tt, when) {
     if (feeds.indexOf(f) < 0) feeds.push(f);
   });
   var svcByFeed = {}, prevByFeed = {}, anySvc = false;
+  var svcSetByFeed = {}, prevSetByFeed = {};
   feeds.forEach(function (f) {
     svcByFeed[f] = serviceFor(tt, ymd, dow, f);
     prevByFeed[f] = serviceFor(tt, fmtYMD(pd), pd.getDay(), f);
+    svcSetByFeed[f] = new Set(servicesFor(tt, ymd, dow, f));
+    prevSetByFeed[f] = new Set(servicesFor(tt, fmtYMD(pd), pd.getDay(), f));
     if (svcByFeed[f] >= 0 || prevByFeed[f] >= 0) anySvc = true;
   });
-  return { feeds: feeds, svcByFeed: svcByFeed, prevByFeed: prevByFeed, anySvc: anySvc };
+  return { feeds: feeds, svcByFeed: svcByFeed, prevByFeed: prevByFeed,
+           svcSetByFeed: svcSetByFeed, prevSetByFeed: prevSetByFeed,
+           anySvc: anySvc };
 }
 
 // The frame shift plan() applies to a trip under a resolution pair:
@@ -719,6 +737,11 @@ function feedServices(tt, when) {
 // service runs on neither day.
 function tripShift(tt, t, svc) {
   var tFeed = (tt.services[t.s] && tt.services[t.s].feed) || 0;
+  if (svc.svcSetByFeed) {
+    if (svc.svcSetByFeed[tFeed] && svc.svcSetByFeed[tFeed].has(t.s)) return 0;
+    if (svc.prevSetByFeed[tFeed] && svc.prevSetByFeed[tFeed].has(t.s)) return -86400;
+    return null;
+  }
   if (t.s === svc.svcByFeed[tFeed]) return 0;
   if (t.s === svc.prevByFeed[tFeed]) return -86400;
   return null;
