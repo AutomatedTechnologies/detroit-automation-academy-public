@@ -23,7 +23,13 @@
 // tranche assigns the production stamp in the city's sequence at
 // that time (LT-KAES-46 / LT-P1 ritual).
 
-export const BUILD_STAMP = '20261026-1751';
+// Repair bump to 20261026-1831 the same day: modules/data-layer.mjs envelope validators
+// (validateVehicleEnvelope + validateTripUpdatesEnvelope) now enumerate this city's
+// own feed family ['rtd'] — the shipped copy carried the PHL reference families
+// ['bus','rail'] and rejected this city's own published envelopes, whose sources
+// carry only this city's family. Record: envelope-validator-repair-2026-10-26.md
+// in this city's goal workspace (Denver goal files/). Label: UNVERIFIED / legacy-unsigned.
+export const BUILD_STAMP = '20261026-1831';
 
 /** Append the governing stamp to a same-origin asset/data URL. */
 export function withStamp(url) {
