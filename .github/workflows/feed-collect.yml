@@ -17,10 +17,21 @@ name: Feed collect (raw source payloads)
 # decided against the previous bundle's manifest), so the DDOT draw
 # does not double. The publisher makes zero source calls.
 #
-# Triggers: workflow_dispatch only. Cadence is owned by the VM (the
+# Triggers: workflow_dispatch + a coarse schedule floor (every
+# 15 minutes; resilience tranche 2026-10-26,
+# feed-resilience-2026-10-26.md D5). Cadence is owned by the VM (the
 # publisher dispatches on bundle age; the dispatch driver backstops on
-# served age) — GitHub's scheduler delivers ~2.4% of */5 crons in this
-# account (measured, Project 30 diagnosis), so no schedule is declared.
+# served age) — the VM holds the fine ~5-minute cadence. The schedule
+# is only a floor: it runs on GITHUB_TOKEN, whose quota is per-repo
+# and independent of the PAT window the VM consumers share, so
+# bundles keep flowing at reduced cadence even if the VM is dead or
+# its consumers are parked on an exhausted PAT quota. GitHub's
+# scheduler delivers ~2.4% of */5 crons in this account (measured,
+# Project 30 diagnosis) — at */15 the floor is a backstop, never the
+# cadence owner. Overlap is safe: this workflow's concurrency group
+# serializes runs, the commit step no-ops on a byte-identical bundle,
+# and the publisher keys on bundle commit identity, so a floor bundle
+# can never double-publish.
 # The orphan branch keeps the site repo's Pages copy list (built from
 # main) and CI (branches: main/develop) untouched, and GITHUB_TOKEN
 # pushes trigger no workflows.
@@ -32,6 +43,8 @@ name: Feed collect (raw source payloads)
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"
 
 permissions:
   contents: write
