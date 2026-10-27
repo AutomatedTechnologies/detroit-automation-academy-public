@@ -98,6 +98,13 @@ def decode_leg(payloads, manifest, leg_id):
     if not entry["ok"]:
         state["error"] = f"collect: {entry.get('error')}"
         return None, state
+    if not payloads[leg_id]:
+        # Defense in depth for bundles collected before the
+        # collect-stage empty-body guard (or by any other
+        # collector): a zero-byte leg is a failed fetch, never a
+        # healthy empty feed (defect B3, Board 48, 2026-10-27).
+        state["error"] = "decode: empty payload (0 bytes)"
+        return None, state
     try:
         decoded = decode_feed(payloads[leg_id])
     except Exception as e:  # a corrupt leg must not abort the run
