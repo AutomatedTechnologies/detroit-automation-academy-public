@@ -72,6 +72,16 @@ def collect(bundle_dir, fail_leg=None):
             if fail_leg == leg_id:
                 raise RuntimeError("forced leg failure (leg-kill test)")
             buf = fetch(url)
+            if not buf:
+                # A completed HTTP read with a zero-length body is
+                # not a feed: a valid GTFS-RT FeedMessage always
+                # carries a header. SEPTA's rail TU endpoint
+                # returned an empty 200 body for the cycle collected
+                # 2026-10-27T17:18:30Z and the leg was recorded ok,
+                # publishing the rail source as healthy with
+                # feed_header_at null (defect B3, Board 48). Record
+                # the leg as the failed fetch it is.
+                raise RuntimeError("empty response body (0 bytes)")
             (bundle / entry["file"]).write_bytes(buf)
             entry["ok"] = True
             entry["bytes"] = len(buf)
