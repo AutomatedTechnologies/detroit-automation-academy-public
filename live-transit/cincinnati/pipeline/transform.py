@@ -110,12 +110,20 @@ def decode_leg(payloads, manifest, leg_id):
 
 
 def vehicle_records(decoded, family, statics):
-    """Canonical vehicle records for one VP leg (KAES-24/25)."""
+    """Canonical vehicle records for one VP leg (KAES-24/25).
+
+    Returns (records, counts, unresolved_trips, normalized_ids):
+    normalized_ids lists the published trip_ids that resolved
+    only via the gated instance-suffix rule in classify.py
+    (reported distinctly, never silently absorbed; the records
+    themselves keep the published trip_id).
+    """
     records = []
     counts = {"TRIP-MATCHED": 0, "ROUTE-MATCHED": 0, "UNASSIGNED": 0}
     unresolved_trips = 0
+    normalized_ids = []
     if decoded is None:
-        return records, counts, unresolved_trips
+        return records, counts, unresolved_trips, normalized_ids
     seen = set()
     for ent in decoded["entities"]:
         vp = ent["vehicle"]
@@ -147,6 +155,9 @@ def vehicle_records(decoded, family, statics):
         counts[classification] += 1
         if unresolved:
             unresolved_trips += 1
+        resolved_key = statics.resolve_trip_id(family, trip_id)
+        if resolved_key is not None and resolved_key != trip_id:
+            normalized_ids.append(trip_id)
         ts = vp["timestamp"] or decoded["header_ts"]
         records.append(
             {
@@ -172,7 +183,7 @@ def vehicle_records(decoded, family, statics):
                 "classification": classification,
             }
         )
-    return records, counts, unresolved_trips
+    return records, counts, unresolved_trips, normalized_ids
 
 
 def trip_update_records(decoded, family, statics):
@@ -209,9 +220,7 @@ def trip_update_records(decoded, family, statics):
                 "vehicle_id": (tu["vehicle"] or {}).get("id"),
                 "timestamp": iso(tu["timestamp"]),
                 "delay": tu["delay"],
-                "trip_resolved": bool(
-                    trip_id and trip_id in statics.trips.get(family, {})
-                ),
+                "trip_resolved": (statics.resolve_trip_id(family, trip_id) is not None),
                 "stop_time_updates": stus,
             }
         )
@@ -358,16 +367,23 @@ def transform(bundle_dir, out_dir, sorta_static):
 
     # ---- vehicles (KAES-24/25) ----
     vehicles, classification, unresolved = [], {}, 0
+    normalized_ids = []
     vp_states = {}
     for family, leg in (("sorta", "sorta-vp"),):
-        recs, counts, unres = vehicle_records(decoded[leg], family, statics)
+        recs, counts, unres, norm = vehicle_records(decoded[leg], family, statics)
         vehicles.extend(recs)
         vp_states[family] = states[leg]
         unresolved += unres
+        normalized_ids.extend(norm)
         for k, v in counts.items():
             classification[k] = classification.get(k, 0) + v
     classification["total"] = len(vehicles)
     classification["unresolved_trip_ids"] = unresolved
+    # Instance-suffix-normalized population, reported distinctly
+    # (classify.py docstring): these records are inside
+    # TRIP-MATCHED above, counted here so the normalization is
+    # never a silent absorption.
+    classification["suffix_normalized_trip_ids"] = len(normalized_ids)
     vehicles_doc = {
         "generated_at": generated_at,
         "count": len(vehicles),
@@ -463,7 +479,11 @@ def transform(bundle_dir, out_dir, sorta_static):
             }
             for leg, s in states.items()
         },
-        "vehicles": {"count": len(vehicles), "classification": classification},
+        "vehicles": {
+            "count": len(vehicles),
+            "classification": classification,
+            "suffix_normalized_ids": sorted(set(normalized_ids)),
+        },
         "trip_updates": {
             "count": len(tu_records),
             "resolved": sum(1 for r in tu_records if r["trip_resolved"]),
