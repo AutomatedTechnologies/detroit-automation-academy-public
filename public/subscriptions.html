@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Subscriptions - Detroit Automation Academy</title>
     
-    <link rel="stylesheet" href="branding/palette.css">
+    <link rel="stylesheet" href="../branding/palette.css">
     <style>
         /* ── Standardized Header/Footer Styles ── */
         header {
@@ -117,6 +117,299 @@
         .logo-reactive:hover #circuits path {
             stroke-dashoffset: 100;
         }
+
+        body {
+            background: var(--daa-bg);
+            color: var(--daa-fg);
+            font-family: var(--daa-body-font);
+        }
+
+        body::before {
+            background-image: linear-gradient(90deg, rgba(0, 107, 115, 0.08) 1px, transparent 1px), linear-gradient(rgba(0, 107, 115, 0.08) 1px, transparent 1px);
+            background-size: 72px 72px;
+            opacity: 0.55;
+        }
+
+        header {
+            background: color-mix(in srgb, var(--daa-bg) 92%, transparent);
+            border-bottom-color: var(--daa-border);
+        }
+
+        nav {
+            max-width: var(--daa-content-width);
+            min-height: 76px;
+        }
+
+        .logo svg {
+            max-width: 190px;
+            height: auto;
+        }
+
+        .nav-links a {
+            color: var(--daa-fg) !important;
+        }
+
+        .nav-links a:hover {
+            color: var(--daa-primary) !important;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--daa-primary-dark) 0%, var(--daa-primary) 100%);
+            padding: clamp(64px, 10vw, 112px) 24px;
+            text-align: left;
+        }
+
+        .hero h1,
+        .hero p {
+            max-width: var(--daa-content-width);
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero h1 {
+            font-family: var(--daa-display-font);
+            font-size: clamp(2.6rem, 6vw, 5rem);
+            letter-spacing: -0.03em;
+            text-transform: none;
+        }
+
+        .hero p {
+            margin-bottom: 0;
+            font-size: clamp(1rem, 2vw, 1.2rem);
+        }
+
+        .pricing-section {
+            max-width: var(--daa-content-width);
+            margin: 0 auto;
+            padding: clamp(48px, 8vw, 96px) 24px;
+        }
+
+        .pricing-grid {
+            align-items: stretch;
+            gap: 20px;
+        }
+
+        .pricing-card {
+            background: var(--daa-bg-card);
+            border: 1px solid var(--daa-border);
+            border-radius: var(--daa-radius-md);
+            box-shadow: 0 18px 42px var(--daa-shadow);
+            padding: 32px;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--daa-primary);
+        }
+
+        .pricing-card.popular {
+            border: 2px solid var(--daa-primary);
+        }
+
+        .popular-badge {
+            top: -14px;
+            background: var(--daa-primary);
+            border-radius: var(--daa-radius-sm);
+            padding: 5px 14px;
+        }
+
+        .tier-name {
+            font-family: var(--daa-display-font);
+            font-size: 1.5rem;
+            text-transform: none;
+        }
+
+        .price {
+            font-family: var(--daa-display-font);
+            font-size: clamp(2.7rem, 5vw, 3.7rem);
+            color: var(--daa-primary);
+        }
+
+        .features li::before {
+            content: '\2713';
+            color: var(--daa-secondary);
+            font-weight: 800;
+        }
+
+        .cta-button {
+            background: var(--daa-primary);
+            color: #fff !important;
+            border-radius: var(--daa-radius-sm);
+            padding: 13px 20px;
+        }
+
+        .cta-button:hover {
+            background: var(--daa-primary-dark);
+        }
+
+        .license-link {
+            font-size: 11px;
+            margin-top: 12px;
+            text-align: center;
+        }
+
+        .checkout-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(23, 33, 38, 0.76);
+            backdrop-filter: blur(8px);
+        }
+
+        .checkout-modal.is-open {
+            display: flex;
+        }
+
+        .checkout-dialog {
+            width: min(100%, 480px);
+            max-height: min(720px, calc(100vh - 40px));
+            overflow-y: auto;
+            position: relative;
+            padding: clamp(24px, 5vw, 40px);
+            background: var(--daa-bg-card);
+            border: 1px solid var(--daa-border);
+            border-radius: var(--daa-radius-lg);
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+        }
+
+        .checkout-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 40px;
+            min-height: 40px;
+            padding: 0;
+            border: 1px solid var(--daa-border);
+            border-radius: 50%;
+            background: transparent;
+            color: var(--daa-fg);
+            font-size: 22px;
+        }
+
+        .checkout-kicker {
+            margin-bottom: 8px;
+            color: var(--daa-secondary);
+            font-family: var(--daa-mono-font);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .checkout-dialog h2 {
+            margin-bottom: 8px;
+            font-family: var(--daa-display-font);
+            font-size: 2rem;
+            text-transform: none;
+        }
+
+        .checkout-price {
+            margin-bottom: 24px;
+            color: var(--daa-primary);
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .checkout-form {
+            display: grid;
+            gap: 10px;
+        }
+
+        .checkout-form label {
+            margin-top: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .checkout-form input {
+            width: 100%;
+            min-height: 48px;
+            padding: 12px 14px;
+            border: 1px solid var(--daa-border);
+            border-radius: var(--daa-radius-sm);
+            background: var(--daa-bg);
+            color: var(--daa-fg);
+            font: inherit;
+        }
+
+        .checkout-form input:focus {
+            border-color: var(--daa-primary);
+            outline: 3px solid var(--daa-primary-glow);
+        }
+
+        .secure-note {
+            margin: 14px 0 4px;
+            padding: 12px;
+            border-left: 3px solid var(--daa-secondary);
+            background: var(--daa-bg-raised);
+            color: var(--daa-fg-muted);
+            font-size: 0.85rem;
+        }
+
+        .checkout-submit {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .checkout-submit[disabled] {
+            cursor: wait;
+            opacity: 0.65;
+        }
+
+        .checkout-error {
+            display: none;
+            margin: 4px 0 0;
+            color: var(--danger-red);
+            font-size: 0.85rem;
+        }
+
+        .checkout-error.is-visible {
+            display: block;
+        }
+
+        .checkout-cancel {
+            width: 100%;
+            margin-top: 4px;
+            border: 0;
+            background: transparent;
+            color: var(--daa-fg-muted);
+        }
+
+        @media (max-width: 760px) {
+            .nav-links {
+                display: none;
+            }
+
+            nav {
+                padding: 12px 20px;
+            }
+
+            .pricing-grid {
+                max-width: none;
+            }
+        }
+
+        @media (max-width: 460px) {
+            .logo svg {
+                width: 150px;
+            }
+
+            .hero {
+                padding-inline: 20px;
+            }
+
+            .pricing-section {
+                padding-inline: 20px;
+            }
+
+            .pricing-card {
+                padding: 24px;
+            }
+        }
     </style>
 </head>
 <body class="dark-mode">
@@ -149,12 +442,12 @@
             </div>
             <ul class="nav-links">
                 <li><a href="index.html?v=2026040220">🏠 Home</a></li>
-                <li><a href="https://blog.detroitautomationacademy.com">📝 Blog</a></li>
+                <li><a href="blog/">📝 Blog</a></li>
                 <li><a href="dashboard.html?v=2026040220">📊 Dashboard</a></li>
                 <li><a href="students.html?v=2026040220">👨‍🎓 Students</a></li>
                 <li><a href="instructors.html?v=2026040220">👨‍🏫 Instructors</a></li>
                 <li><a href="partners.html?v=2026040220">💼 Partners</a></li>
-                <li><a href="https://enroll.detroitautomationacademy.com" style="color: #39ff14; font-weight: 800; border: 1px solid #39ff14; padding: 5px 12px; border-radius: 6px;">Enroll</a></li>
+                <li><a href="enroll.html" style="color: #39ff14; font-weight: 800; border: 1px solid #39ff14; padding: 5px 12px; border-radius: 6px;">Enroll</a></li>
             </ul>
         </nav>
     </header>
@@ -224,7 +517,7 @@
                     <li>Stakeholder Comms Templates</li>
                 </ul>
                 <button class="cta-button" type="button" data-checkout-plan="academy">Launch Your Academy</button>
-                <p style="font-size: 11px; margin-top: 12px; text-align: center;"><a href="https://guides.detroitautomationacademy.com/EDUCATIONAL_PARTNER_LICENSE.md" style="color: var(--daa-fg-muted); text-decoration: underline;">View License Agreement</a></p>
+                <p class="license-link"><a href="https://guides.detroitautomationacademy.com/EDUCATIONAL_PARTNER_LICENSE.md">View License Agreement</a></p>
             </div>
 
             <!-- Tier 3 -->
@@ -245,26 +538,25 @@
     </section>
 
     <!-- ── Checkout Modal ── -->
-    <div id="checkout-modal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
-        <div style="background: var(--daa-bg-card); padding: 40px; border-radius: 20px; max-width: 450px; width: 90%; border: 1px solid var(--daa-border); box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center;">
-            <div style="font-size: 48px; margin-bottom: 16px;">💎</div>
-            <h2 id="modal-tier-name" style="font-family: 'Courier New', Courier, monospace; font-size: 24px; margin-bottom: 8px;">Checkout</h2>
-            <p id="modal-tier-price" style="font-size: 18px; color: var(--daa-primary); font-weight: 700; margin-bottom: 24px;">$0/mo</p>
-            
-            <form id="checkout-form" style="display: flex; flex-direction: column; gap: 12px; text-align: left;">
-                <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; opacity: 0.7;">Organization Name</label>
-                <input id="organization-name" name="organization_name" required type="text" placeholder="e.g. Detroit STEM Club" style="padding: 12px; border-radius: 8px; border: 1px solid var(--daa-border); background: var(--daa-bg); color: var(--daa-fg);">
-                
-                <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; opacity: 0.7;">Billing Email</label>
-                <input id="billing-email" name="email" required type="email" placeholder="billing@org.com" style="padding: 12px; border-radius: 8px; border: 1px solid var(--daa-border); background: var(--daa-bg); color: var(--daa-fg);">
-                
-                <div style="margin-top: 12px; padding: 16px; background: rgba(102, 204, 0, 0.1); border-radius: 8px; font-size: 13px; color: var(--daa-accent); border: 1px solid var(--daa-accent);">
-                    🛡️ Secure payment powered by Automated Technologies.
-                </div>
-                
-                <button id="checkout-submit" type="submit" class="cta-button" style="margin-top: 12px; padding: 16px; background: var(--daa-primary); color: white;">Continue to secure checkout</button>
-                <p id="checkout-error" role="alert" style="display: none; color: #ff6b6b; font-size: 13px;"></p>
-                <button type="button" onclick="closeCheckout()" style="background: transparent; border: none; color: var(--daa-fg-muted); cursor: pointer; font-size: 13px; margin-top: 8px;">Cancel</button>
+    <div id="checkout-modal" class="checkout-modal" aria-hidden="true">
+        <div class="checkout-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-tier-name" aria-describedby="modal-tier-price">
+            <button type="button" class="checkout-close" aria-label="Close checkout" data-checkout-close>&times;</button>
+            <p class="checkout-kicker">Secure organization checkout</p>
+            <h2 id="modal-tier-name">Checkout</h2>
+            <p id="modal-tier-price" class="checkout-price">$0/mo</p>
+
+            <form id="checkout-form" class="checkout-form">
+                <label for="organization-name">Organization name</label>
+                <input id="organization-name" name="organization_name" required type="text" autocomplete="organization" placeholder="Detroit STEM Club">
+
+                <label for="billing-email">Billing email</label>
+                <input id="billing-email" name="email" required type="email" autocomplete="email" placeholder="billing@org.com">
+
+                <p class="secure-note">Secure payment powered by Automated Technologies. You will complete payment on Stripe.</p>
+
+                <button id="checkout-submit" type="submit" class="cta-button checkout-submit">Continue to secure checkout</button>
+                <p id="checkout-error" class="checkout-error" role="alert" aria-live="polite"></p>
+                <button type="button" class="checkout-cancel" data-checkout-close>Cancel</button>
             </form>
         </div>
     </div>
@@ -273,7 +565,7 @@
 
         <footer>
         <div class="footer-links">
-            <a href="https://blog.detroitautomationacademy.com">Blog</a>
+            <a href="blog/">Blog</a>
             <a href="dashboard.html?v=2026040220">Dashboard</a>
             <a href="https://status.detroitautomationacademy.com">System Status</a>
             <a href="https://github.com/smit4786/detroit-automation-academy-public" target="_blank">GitHub</a>

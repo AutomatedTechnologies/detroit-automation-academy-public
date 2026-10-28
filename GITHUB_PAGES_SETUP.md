@@ -11,6 +11,20 @@
 
 ## GitHub Pages Hosting for Detroit Automation Academy
 
+## Current HTTPS Remediation
+
+The repository is configured for the apex domain `detroitautomationacademy.com`, but the live GitHub Pages site must use the same custom domain. In GitHub repository settings, open **Settings -> Pages** and set **Custom domain** to:
+
+```text
+detroitautomationacademy.com
+```
+
+Save the setting, wait for the certificate status to become ready, then enable **Enforce HTTPS**. The current API state has the custom domain set to `www.detroitautomationacademy.com` and HTTPS enforcement disabled, which causes GitHub's `*.github.io` certificate to be served for the custom domain.
+
+The apex DNS records must remain the four GitHub Pages A records listed below. Do not point the apex at a different hosting provider while GitHub Pages is selected as the deployment target.
+
+The public conversion pages use same-origin `/blog/` and `enroll.html` links. Keep `blog.detroitautomationacademy.com`, `enroll.detroitautomationacademy.com`, and `checkout.detroitautomationacademy.com` out of public links until DNS records and certificates are provisioned for those hosts.
+
 **Status:** Ready to configure  
 **Date:** March 31, 2026  
 **Target Launch:** April 2, 2026

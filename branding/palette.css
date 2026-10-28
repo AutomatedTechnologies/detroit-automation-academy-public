@@ -1,93 +1,104 @@
-/* 
-File Location: C:\Users\dbkr\workspace\daa-public-staging\branding\palette.css
-Purpose: Agentic Design Corp (ADC) color palette and theme variables for DAA
-Last Modified: March 31, 2026
-*/
-
-/* ── Agentic Design Corp (ADC) — DAA Redesign ────────────────────────────────
-   Epoch IV: Zero-Human Operations.
-   Visual Synthesis: Dark Mode, High Contrast, Monospace Precision.
-   ─────────────────────────────────────────────────────────────────────────── */
-
 :root {
-  /* ADC Aesthetic - Agentic Theme V1.0.0 (Epoch VI) */
-  --daa-bg: #050507; /* Deep Charcoal/Black */
-  --daa-bg-card: rgba(22, 22, 26, 0.65); /* Panel Background */
-  --daa-bg-raised: #0a0a0c;
-  --daa-fg: #f8fafc; /* Text Color */
-  --daa-fg-muted: #94a3b8;
-  --daa-primary: #00f0ff; /* Neon Blue */
-  --daa-primary-glow: rgba(0, 240, 255, 0.35);
-  --daa-secondary: #39ff14; /* Cyber Green */
-  --daa-accent: #00f0ff; /* Unified with primary for consistency */
-  --daa-accent-glow: rgba(0, 240, 255, 0.2);
-  --daa-student: #BB6EE7; /* Purple/Lavender for Student-facing */
-  --daa-student-glow: rgba(187, 110, 231, 0.3);
-  --daa-card: rgba(22, 22, 26, 0.65);
-  --daa-border: rgba(0, 240, 255, 0.2);
-  --daa-border-green: rgba(57, 255, 20, 0.3);
-  --daa-link: #00f0ff;
-  --daa-shadow: rgba(0, 0, 0, 0.8);
-  --daa-shadow-blue: 0 0 15px rgba(0, 240, 255, 0.15);
-  
-  --danger-red: #ff3333;
+  --daa-bg: #f4f0e8;
+  --daa-bg-card: #fffdf8;
+  --daa-bg-raised: #ebe5da;
+  --daa-fg: #172126;
+  --daa-fg-muted: #56646a;
+  --daa-primary: #006b73;
+  --daa-primary-dark: #004b52;
+  --daa-primary-glow: rgba(0, 107, 115, 0.18);
+  --daa-secondary: #d56a32;
+  --daa-accent: #d56a32;
+  --daa-accent-glow: rgba(213, 106, 50, 0.18);
+  --daa-student: #006b73;
+  --daa-student-glow: rgba(0, 107, 115, 0.18);
+  --daa-card: #fffdf8;
+  --daa-border: #c9c1b4;
+  --daa-border-green: rgba(0, 107, 115, 0.35);
+  --daa-link: #005b63;
+  --daa-shadow: rgba(23, 33, 38, 0.12);
+  --daa-shadow-blue: 0 16px 40px rgba(23, 33, 38, 0.1);
+  --daa-focus: #b84f1e;
+  --daa-success: #176b4d;
+  --danger-red: #b42318;
+  --daa-radius-sm: 6px;
+  --daa-radius-md: 12px;
+  --daa-radius-lg: 20px;
+  --daa-content-width: 1180px;
+  --daa-display-font: Georgia, 'Times New Roman', serif;
+  --daa-body-font: 'Trebuchet MS', Arial, sans-serif;
+  --daa-mono-font: 'Courier New', monospace;
 }
 
-/* Force dark mode across all preferences */
-@media (prefers-color-scheme: light) {
+@media (prefers-color-scheme: dark) {
   :root {
-    --daa-bg: #0b0e14;
-    --daa-bg-card: #161b22;
-    --daa-bg-raised: #161b22;
-    --daa-fg: #c9d1d9;
-    --daa-fg-muted: rgba(201, 209, 217, 0.7);
-    --daa-primary: #39ff14;
-    --daa-primary-glow: rgba(57, 255, 20, 0.25);
-    --daa-secondary: #ffcc00;
-    --daa-accent: #00ffff;
-    --daa-accent-glow: rgba(0, 255, 255, 0.2);
-    --daa-card: #161b22;
-    --daa-border: #30363d;
-    --daa-border-green: rgba(57, 255, 20, 0.4);
-    --daa-link: #00ffff;
-    --daa-shadow: rgba(0, 0, 0, 0.8);
-    --daa-shadow-blue: 0 0 15px rgba(0, 255, 255, 0.15);
-    
-    --danger-red: #ff3333;
+    --daa-bg: #172126;
+    --daa-bg-card: #202d31;
+    --daa-bg-raised: #2b393d;
+    --daa-fg: #f5f1e8;
+    --daa-fg-muted: #b9c3c1;
+    --daa-primary: #66c6c2;
+    --daa-primary-dark: #3e9997;
+    --daa-primary-glow: rgba(102, 198, 194, 0.18);
+    --daa-secondary: #e58a52;
+    --daa-accent: #e58a52;
+    --daa-accent-glow: rgba(229, 138, 82, 0.18);
+    --daa-student: #66c6c2;
+    --daa-student-glow: rgba(102, 198, 194, 0.18);
+    --daa-card: #202d31;
+    --daa-border: #46575a;
+    --daa-border-green: rgba(102, 198, 194, 0.35);
+    --daa-link: #8bd9d3;
+    --daa-shadow: rgba(0, 0, 0, 0.28);
+    --daa-shadow-blue: 0 16px 40px rgba(0, 0, 0, 0.25);
+    --daa-focus: #f0a273;
+    --daa-success: #7bd5a9;
+    --danger-red: #ff8f85;
   }
 }
 
-/* Overriding global html/body fonts if they rely on palette.css */
-html, body, button, input, select, textarea, .font-sans, h1, h2, h3, h4, h5, h6 {
-  font-family: 'Courier New', Courier, monospace !important;
+html {
+  scroll-behavior: smooth;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  color: var(--daa-accent) !important;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--daa-body-font);
 }
 
 a {
   color: var(--daa-link) !important;
-  transition: all 0.2s ease;
+  text-underline-offset: 3px;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
-a:hover {
-  color: var(--daa-primary) !important;
-  text-shadow: 0 0 5px var(--daa-primary-glow);
+a:hover,
+a:focus-visible {
+  color: var(--daa-primary-dark) !important;
 }
 
-.btn, button, .cyber-button {
-  background: transparent !important;
-  color: var(--daa-primary) !important;
-  border: 1px solid var(--daa-primary) !important;
-  border-radius: 4px;
-  font-family: 'Courier New', Courier, monospace !important;
-  transition: all 0.2s ease;
+button,
+.btn,
+.cyber-button {
+  min-height: 44px;
+  cursor: pointer;
 }
 
-.btn:hover, button:hover, .cyber-button:hover {
-  background: rgba(57, 255, 20, 0.1) !important;
-  box-shadow: 0 0 10px rgba(57, 255, 20, 0.2) !important;
+:focus-visible {
+  outline: 3px solid var(--daa-focus);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

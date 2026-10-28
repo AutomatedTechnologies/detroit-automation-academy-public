@@ -6,12 +6,14 @@ on:
     paths:
       - 'services/checkout/**'
       - 'public/js/checkout.js'
+      - 'public/subscriptions.html'
       - 'public/success.html'
       - '.github/workflows/deploy-checkout.yml'
   pull_request:
     paths:
       - 'services/checkout/**'
       - 'public/js/checkout.js'
+      - 'public/subscriptions.html'
       - 'public/success.html'
       - '.github/workflows/deploy-checkout.yml'
   workflow_dispatch:

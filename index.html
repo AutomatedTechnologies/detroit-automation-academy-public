@@ -595,6 +595,146 @@ Last Modified: March 31, 2026
             }
         }
 
+        /* ── Refined industrial visual layer ── */
+        body {
+            background: var(--daa-bg);
+            color: var(--daa-fg);
+            font-family: var(--daa-body-font);
+        }
+
+        body::before {
+            background-image: linear-gradient(90deg, rgba(0, 107, 115, 0.08) 1px, transparent 1px), linear-gradient(rgba(0, 107, 115, 0.08) 1px, transparent 1px);
+            background-size: 72px 72px;
+            opacity: 0.55;
+        }
+
+        header {
+            background: color-mix(in srgb, var(--daa-bg) 92%, transparent);
+            border-bottom-color: var(--daa-border);
+        }
+
+        .nav-links a {
+            color: var(--daa-fg) !important;
+        }
+
+        .nav-links a:hover {
+            color: var(--daa-primary) !important;
+        }
+
+        .hero {
+            padding: clamp(96px, 14vw, 164px) 24px 88px;
+            text-align: left;
+        }
+
+        .hero-content {
+            max-width: var(--daa-content-width);
+        }
+
+        .hero h1 {
+            max-width: 760px;
+            font-family: var(--daa-display-font);
+            font-size: clamp(3.4rem, 9vw, 7.6rem);
+            letter-spacing: -0.05em;
+            line-height: 0.92;
+            text-transform: none;
+        }
+
+        .hero h1 span {
+            background: none;
+            color: var(--daa-secondary);
+            -webkit-text-fill-color: currentColor;
+        }
+
+        .hero p {
+            max-width: 660px;
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        .hero-eyebrow {
+            border-radius: var(--daa-radius-sm);
+            background: var(--daa-bg-raised);
+            color: var(--daa-primary);
+            border-color: var(--daa-border);
+        }
+
+        .hero-buttons {
+            justify-content: flex-start;
+        }
+
+        .cta-button {
+            border-radius: var(--daa-radius-sm);
+            background: var(--daa-primary);
+            color: #fff !important;
+            box-shadow: none;
+        }
+
+        .cta-button:hover {
+            background: var(--daa-primary-dark);
+            box-shadow: none;
+        }
+
+        .cta-button-secondary {
+            color: var(--daa-fg) !important;
+            border-color: var(--daa-border);
+        }
+
+        .hero-stats,
+        .event-success-content,
+        .program-card,
+        .role-card,
+        .cta-inner {
+            border-radius: var(--daa-radius-md);
+            border-color: var(--daa-border);
+        }
+
+        .hero-stats {
+            margin-left: 0;
+            background: var(--daa-border);
+        }
+
+        .hero-stats > div {
+            background: var(--daa-bg-card);
+        }
+
+        .hero-stat-num,
+        .stat-number {
+            color: var(--daa-primary);
+        }
+
+        .event-success-content,
+        .program-card,
+        .role-card,
+        .cta-inner {
+            background: var(--daa-bg-card);
+            box-shadow: var(--daa-shadow-blue);
+        }
+
+        .section-heading,
+        .event-success h2,
+        .cta-section h2,
+        .role-card h3 {
+            font-family: var(--daa-display-font);
+            text-transform: none;
+        }
+
+        .program-card:hover,
+        .role-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--daa-primary);
+            box-shadow: var(--daa-shadow-blue);
+        }
+
+        @media (max-width: 640px) {
+            .hero {
+                padding: 84px 20px 64px;
+            }
+
+            .hero-stats {
+                margin-left: 0;
+            }
+        }
+
         /* ── Logo Animation ── */
         .logo-reactive #gear {
             transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
@@ -647,12 +787,12 @@ Last Modified: March 31, 2026
             </div>
             <ul class="nav-links">
                 <li><a href="index.html?v=2026040220">🏠 Home</a></li>
-                <li><a href="https://blog.detroitautomationacademy.com">📝 Blog</a></li>
+                <li><a href="blog/">📝 Blog</a></li>
                 <li><a href="dashboard.html?v=2026040220">📊 Dashboard</a></li>
                 <li><a href="students.html?v=2026040220">👨‍🎓 Students</a></li>
                 <li><a href="instructors.html?v=2026040220">👨‍🏫 Instructors</a></li>
                 <li><a href="partners.html?v=2026040220">💼 Partners</a></li>
-                <li><a href="https://enroll.detroitautomationacademy.com" style="color: #39ff14; font-weight: 800; border: 1px solid #39ff14; padding: 5px 12px; border-radius: 6px;">Enroll</a></li>
+                <li><a href="enroll.html" style="color: #39ff14; font-weight: 800; border: 1px solid #39ff14; padding: 5px 12px; border-radius: 6px;">Enroll</a></li>
             </ul>
         </nav>
     </header>
@@ -664,7 +804,7 @@ Last Modified: March 31, 2026
             <h1>Automate<br><span>The Future</span></h1>
             <p>> // INITIATE_TRAINING_SEQUENCE<br>> Master robotics, parametric CAD design, and autonomous systems architecture.<br>> A fully funded 12-week deployment at The Station @ Michigan Central.<br>> Powered by the AEAM Singularity Network.</p>
             <div class="hero-buttons">
-                <a href="https://enroll.detroitautomationacademy.com?utm_source=daa_public&utm_medium=organic&utm_campaign=spring_2026" class="cta-button"
+                <a href="enroll.html?utm_source=daa_public&utm_medium=organic&utm_campaign=spring_2026" class="cta-button"
                     target="_blank">DEPLOY_NOW() →</a>
                 <a href="#programs" class="cta-button cta-button-secondary">PROTOCOL_OVERVIEW</a>
             </div>
@@ -762,7 +902,7 @@ Last Modified: March 31, 2026
                     <span class="role-icon">🧠</span>
                     <h3>STUDENT_AGENT</h3>
                     <p>Access full autonomous training curriculum. Deploy your specialized skills into the Detroit ecosystem. Gain real-world experience with live hardware and AI-powered mentorship from our agent network.</p>
-                    <a href="https://enroll.detroitautomationacademy.com?utm_source=daa_public&utm_medium=organic&utm_campaign=spring_2026" target="_blank">ACTIVATE_ENROLLMENT() →</a>
+                    <a href="enroll.html?utm_source=daa_public&utm_medium=organic&utm_campaign=spring_2026">ACTIVATE_ENROLLMENT() →</a>
                 </div>
                 <div class="role-card">
                     <span class="role-icon">🎓</span>
@@ -785,7 +925,7 @@ Last Modified: March 31, 2026
         <div class="cta-inner">
             <h2>> // DEPLOYMENT_AVAILABLE</h2>
             <p>The Spring 2026 autonomous training sequence initiates March 8 at The Station @ Michigan Central. Ecosystem capacity: limited seats. Execute enrollment protocol now.</p>
-            <a href="https://enroll.detroitautomationacademy.com?utm_source=daa_public&utm_medium=organic&utm_campaign=spring_2026" class="cta-button" target="_blank">LAUNCH_APPLICATION() →</a>
+                    <a href="enroll.html?utm_source=daa_public&utm_medium=organic&utm_campaign=spring_2026" class="cta-button">LAUNCH_APPLICATION() →</a>
             <p class="seat-note">📍 AEAM Youth STEM Lab · 2001 15th St, Detroit · COST: $0.00 (Fully Funded)</p>
         </div>
     </section>
@@ -793,7 +933,7 @@ Last Modified: March 31, 2026
     <!-- ── Footer ── -->
         <footer>
         <div class="footer-links">
-            <a href="https://blog.detroitautomationacademy.com">Blog</a>
+            <a href="blog/">Blog</a>
             <a href="dashboard.html?v=2026040220">Dashboard</a>
             <a href="https://status.detroitautomationacademy.com">System Status</a>
             <a href="https://github.com/smit4786/detroit-automation-academy-public" target="_blank">GitHub</a>

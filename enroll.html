@@ -315,6 +315,122 @@ Last Modified: March 31, 2026
                 padding: 12px 20px;
             }
         }
+
+        body {
+            background: var(--daa-bg);
+            color: var(--daa-fg);
+            font-family: var(--daa-body-font);
+        }
+
+        body::before {
+            background-image: linear-gradient(90deg, rgba(0, 107, 115, 0.08) 1px, transparent 1px), linear-gradient(rgba(0, 107, 115, 0.08) 1px, transparent 1px);
+            background-size: 72px 72px;
+            opacity: 0.55;
+        }
+
+        header {
+            background: color-mix(in srgb, var(--daa-bg) 92%, transparent);
+            border-bottom-color: var(--daa-border);
+        }
+
+        .container {
+            max-width: 980px;
+            padding-top: clamp(48px, 8vw, 88px);
+        }
+
+        .enrollment-hero {
+            text-align: left;
+            max-width: 760px;
+        }
+
+        .enrollment-hero h1 {
+            font-family: var(--daa-display-font);
+            font-size: clamp(2.6rem, 6vw, 4.8rem);
+            letter-spacing: -0.03em;
+            text-transform: none;
+        }
+
+        .enrollment-hero h1 span {
+            background: none;
+            color: var(--daa-primary);
+            -webkit-text-fill-color: currentColor;
+        }
+
+        .enrollment-hero p {
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        .enrollment-hero .eyebrow {
+            border-radius: var(--daa-radius-sm);
+            background: var(--daa-bg-raised);
+            color: var(--daa-primary);
+            border-color: var(--daa-border);
+        }
+
+        .enrollment-form-wrapper {
+            border-radius: var(--daa-radius-md);
+            border-color: var(--daa-border);
+            box-shadow: var(--daa-shadow-blue);
+        }
+
+        .form-section-heading {
+            color: var(--daa-primary);
+            font-family: var(--daa-mono-font);
+            letter-spacing: 0.08em;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="date"],
+        select,
+        textarea {
+            min-height: 48px;
+            border-color: var(--daa-border);
+            border-radius: var(--daa-radius-sm);
+            background: var(--daa-bg);
+            color: var(--daa-fg);
+            font-family: var(--daa-body-font);
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="tel"]:focus,
+        input[type="date"]:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--daa-primary);
+            background: var(--daa-bg-card);
+            box-shadow: 0 0 0 3px var(--daa-primary-glow);
+        }
+
+        .info-box {
+            border-color: var(--daa-border-green);
+            border-radius: var(--daa-radius-md);
+            background: var(--daa-bg-raised);
+        }
+
+        .submit-btn {
+            background: var(--daa-primary);
+            color: #fff;
+            border-radius: var(--daa-radius-sm);
+            font-family: var(--daa-body-font);
+        }
+
+        .submit-btn:hover {
+            background: var(--daa-primary-dark);
+        }
+
+        @media (max-width: 640px) {
+            .enrollment-hero {
+                text-align: left;
+            }
+
+            .enrollment-form-wrapper {
+                padding: 24px 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -347,12 +463,12 @@ Last Modified: March 31, 2026
             </div>
             <ul class="nav-links">
                 <li><a href="index.html?v=2026040220">🏠 Home</a></li>
-                <li><a href="https://blog.detroitautomationacademy.com">📝 Blog</a></li>
+                <li><a href="blog/">📝 Blog</a></li>
                 <li><a href="dashboard.html?v=2026040220">📊 Dashboard</a></li>
                 <li><a href="students.html?v=2026040220">👨‍🎓 Students</a></li>
                 <li><a href="instructors.html?v=2026040220">👨‍🏫 Instructors</a></li>
                 <li><a href="partners.html?v=2026040220">💼 Partners</a></li>
-                <li><a href="https://enroll.detroitautomationacademy.com" style="color: #39ff14; font-weight: 800; border: 1px solid #39ff14; padding: 5px 12px; border-radius: 6px;">Enroll</a></li>
+                <li><a href="enroll.html" style="color: #39ff14; font-weight: 800; border: 1px solid #39ff14; padding: 5px 12px; border-radius: 6px;">Enroll</a></li>
             </ul>
         </nav>
     </header>
@@ -508,7 +624,7 @@ Last Modified: March 31, 2026
 
         <footer>
         <div class="footer-links">
-            <a href="https://blog.detroitautomationacademy.com">Blog</a>
+            <a href="blog/">Blog</a>
             <a href="dashboard.html?v=2026040220">Dashboard</a>
             <a href="https://status.detroitautomationacademy.com">System Status</a>
             <a href="https://github.com/smit4786/detroit-automation-academy-public" target="_blank">GitHub</a>

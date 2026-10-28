@@ -486,6 +486,66 @@
         .logo-reactive:hover #circuits path {
             stroke-dashoffset: 100;
         }
+
+        body {
+            background: var(--daa-bg);
+            color: var(--daa-fg);
+            font-family: var(--daa-body-font);
+        }
+
+        body::before {
+            background-image: linear-gradient(90deg, rgba(0, 107, 115, 0.08) 1px, transparent 1px), linear-gradient(rgba(0, 107, 115, 0.08) 1px, transparent 1px);
+            background-size: 72px 72px;
+            opacity: 0.55;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--daa-primary-dark) 0%, var(--daa-primary) 100%);
+            padding: clamp(72px, 12vw, 128px) 24px;
+            text-align: left;
+        }
+
+        .hero-content {
+            max-width: var(--daa-content-width);
+        }
+
+        .hero h1 {
+            font-family: var(--daa-display-font);
+            font-size: clamp(2.8rem, 7vw, 5.8rem);
+            letter-spacing: -0.04em;
+            text-transform: none;
+        }
+
+        .hero p,
+        .hero-buttons {
+            max-width: 700px;
+            margin-left: 0;
+        }
+
+        .cta-button {
+            border-radius: var(--daa-radius-sm);
+            background: var(--daa-primary);
+            color: #fff !important;
+            box-shadow: none;
+        }
+
+        .cta-button:hover {
+            background: var(--daa-primary-dark);
+        }
+
+        .event-success,
+        .program-card,
+        .role-card,
+        .cta-inner {
+            border-radius: var(--daa-radius-md);
+        }
+
+        .program-card,
+        .role-card,
+        .cta-inner {
+            background: var(--daa-bg-card);
+            border-color: var(--daa-border);
+        }
     </style>
 </head>
 
@@ -519,12 +579,12 @@
             </div>
             <ul class="nav-links">
                 <li><a href="index.html?v=2026040220">🏠 Home</a></li>
-                <li><a href="https://blog.detroitautomationacademy.com">📝 Blog</a></li>
+                <li><a href="blog/">📝 Blog</a></li>
                 <li><a href="dashboard.html?v=2026040220">📊 Dashboard</a></li>
                 <li><a href="students.html?v=2026040220">👨‍🎓 Students</a></li>
                 <li><a href="instructors.html?v=2026040220">👨‍🏫 Instructors</a></li>
                 <li><a href="partners.html?v=2026040220">💼 Partners</a></li>
-                <li><a href="https://enroll.detroitautomationacademy.com" style="color: #39ff14; font-weight: 800; border: 1px solid #39ff14; padding: 5px 12px; border-radius: 6px;">Enroll</a></li>
+                <li><a href="enroll.html" style="color: #39ff14; font-weight: 800; border: 1px solid #39ff14; padding: 5px 12px; border-radius: 6px;">Enroll</a></li>
             </ul>
         </nav>
     </header>
@@ -564,7 +624,7 @@
             <h1>Automation Skills for Detroit's Future</h1>
             <p>Learn robotics, CAD design, and autonomous systems. Built by Detroit, for Detroit.</p>
             <div class="hero-buttons">
-                <a href="https://enroll.detroitautomationacademy.com?utm_source=daa_public&utm_medium=organic&utm_campaign=spring_2026&utm_content=landing_hero" class="cta-button"
+                <a href="enroll.html?utm_source=daa_public&utm_medium=organic&utm_campaign=spring_2026&utm_content=landing_hero" class="cta-button"
                     target="_blank">Apply Now</a>
                 <a href="#programs" class="cta-button cta-button-secondary">Learn More</a>
             </div>
@@ -639,7 +699,7 @@
                 <h3>Students</h3>
                 <p>Ready to learn automation? Apply to our 12-week program and gain hands-on skills in robotics and
                     autonomous systems.</p>
-                <a href="https://enroll.detroitautomationacademy.com?utm_source=daa_public&utm_medium=organic&utm_campaign=spring_2026&utm_content=landing_roles" target="_blank">Apply Today</a>
+                <a href="enroll.html?utm_source=daa_public&utm_medium=organic&utm_campaign=spring_2026&utm_content=landing_roles">Apply Today</a>
             </div>
             <div class="role-card">
                 <div class="role-icon">👩‍🏫</div>
@@ -666,7 +726,7 @@
 
                     <footer>
         <div class="footer-links">
-            <a href="https://blog.detroitautomationacademy.com">Blog</a>
+            <a href="blog/">Blog</a>
             <a href="dashboard.html?v=2026040220">Dashboard</a>
             <a href="https://status.detroitautomationacademy.com">System Status</a>
             <a href="https://github.com/smit4786/detroit-automation-academy-public" target="_blank">GitHub</a>

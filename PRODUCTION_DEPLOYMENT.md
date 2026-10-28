@@ -282,6 +282,10 @@ bash scripts/deploy.sh production all
 curl -I https://detroitautomationacademy.com
 # Expected: HTTP/1.1 200 OK
 
+# If macOS 10.8 cannot negotiate TLS with the system curl/openssl binaries,
+# use the documented MacPorts or proxy workaround:
+# docs/MACOS_10_8_TLS_TROUBLESHOOTING.md
+
 # Check blog loads
 curl -I https://blog.detroitautomationacademy.com
 # Expected: HTTP/1.1 200 OK
