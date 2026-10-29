@@ -843,9 +843,14 @@ export function createSurfaces(deps = {}) {
   }
 
   /** The real pick handler: canvas taps (browser) and harness
-   *  picks both land here. null = clean no-op (LT-G14). */
+   *  picks both land here. A null pick closes an open card
+   *  (LT-U5: tap-on-empty clears); with no card open it is a
+   *  clean no-op (LT-G14). */
   function handlePick(pick) {
-    if (!pick) return { ok: false, reason: 'no-hit' };
+    if (!pick) {
+      if (state.card) closeCard();
+      return { ok: false, reason: 'no-hit' };
+    }
     if (pick.kind === 'stop' && pick.stop) {
       openCard('stop', pick.stop.id);
       return { ok: true, kind: 'stop', id: pick.stop.id };
