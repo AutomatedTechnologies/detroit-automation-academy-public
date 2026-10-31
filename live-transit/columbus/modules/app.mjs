@@ -1,5 +1,5 @@
 // modules/app.mjs — Main application module (LT-KAES-06).
-// PHL REBUILD R1 foundation. Label: UNVERIFIED / legacy-unsigned.
+// Platform rebuild R1 foundation. Label: UNVERIFIED / legacy-unsigned.
 //
 // KAES-06: the city client is a MODULE SYSTEM — a main application
 // module plus separately loadable feature modules — never a
