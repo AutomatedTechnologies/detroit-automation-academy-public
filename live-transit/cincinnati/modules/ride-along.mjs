@@ -1,5 +1,5 @@
 // modules/ride-along.mjs — Ride Along (LT-KAES-32 / LT-S6).
-// PHL REBUILD R5 implementation. Label: UNVERIFIED / legacy-unsigned.
+// Platform rebuild R5 implementation. Label: UNVERIFIED / legacy-unsigned.
 //
 // Ride Along is its own module (KAES-32), behind the host
 // interface the R1 surfaces contract declared. Boarding is ALWAYS
@@ -20,7 +20,7 @@
 //
 // Time display is coverage-honest (LT-S6.3), per stop:
 //   live      — the trip-updates family carries a time for the
-//               stop on this trip (the SEPTA TU leg produces them);
+//               stop on this trip (the trip-updates leg produces them);
 //   scheduled — no TU time, but the trip resolves in the compiled
 //               timetable (trip-map) and carries a scheduled time;
 //   none      — no time is published to this view for the stop;
