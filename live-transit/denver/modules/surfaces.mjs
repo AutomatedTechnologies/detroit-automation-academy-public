@@ -1,5 +1,5 @@
 // modules/surfaces.mjs — feature surfaces (LT-KAES-30…36/40/41/47).
-// PHL REBUILD R5 implementation, on the R1 contract. Label:
+// Platform rebuild R5 implementation, on the R1 contract. Label:
 // UNVERIFIED / legacy-unsigned.
 //
 // Every surface mounts into a region the R1 shell declares
@@ -46,7 +46,7 @@ export const SURFACE_MOUNTS = Object.freeze([
 ]);
 
 // ------------------------------------------------------------------
-// Text + label helpers (Standards S2/S3 live here for PHL surfaces)
+// Text + label helpers (Standards S2/S3 live here for the surfaces)
 // ------------------------------------------------------------------
 
 /** Escape a string for HTML text/attribute contexts. */
@@ -56,9 +56,9 @@ export function esc(s) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-/* Repair 2026-10-25 (literal entities): SEPTA's GTFS-RT alert
- * text arrives entity-encoded at the source ("Washington Ave
- * &amp; Moyamensing Ave", "&ldquo;...&rdquo;") and the pipeline
+/* Repair 2026-10-25 (literal entities): an agency's GTFS-RT
+ * alert text may arrive entity-encoded at the source ("A
+ * &amp; B Ave", "&ldquo;...&rdquo;") and the pipeline
  * stores it verbatim — provenance-correct. Rendering it through
  * esc() alone double-encodes it, so riders saw the literal
  * "&amp;". Decode first, then esc(): the visible text is the
@@ -128,6 +128,14 @@ export function compassOf(bearing) {
 // ------------------------------------------------------------------
 
 const TZ = CITY_CONFIG.city.timezone;
+
+// Posture copy (SF-5): the fleet's only behavioral fork becomes data.
+// A static-posture city (config posture.model = 'static') renders the
+// non-publication copy family carried in its config (posture.copy);
+// a live city renders the platform live strings. The branch reads the
+// posture field — never a city identity.
+const POSTURE_COPY = CITY_CONFIG.posture && CITY_CONFIG.posture.model === 'static'
+  ? CITY_CONFIG.posture.copy : null;
 
 function tzOffsetMs(ms) {
   const dtf = new Intl.DateTimeFormat('en-US', {
@@ -231,6 +239,13 @@ export function evaluateDegradation({ vehiclesError = null, vehicles = null, now
   }
   if (!vehicles) return null;
   const genMs = Date.parse(vehicles.generated_at);
+  // T1 RECONCILIATION (2026-10-30): design C.2 specified a posture
+  // short-circuit here (static cities skip live-staleness). The
+  // static city's own harness contradicts it — its U5-01 feeds
+  // a stale envelope and asserts it IS flagged, and all seven v1
+  // builds carry this evaluation unbranched. The generic behavior
+  // wins; the field stays in config as documentation of the served
+  // behavior. Design iteration 3 owns the re-specification.
   if (Number.isFinite(genMs) && nowMs - genMs > CITY_CONFIG.freshness.degradedAfterMs) {
     const ageMin = Math.round((nowMs - genMs) / 60000);
     return {
@@ -364,8 +379,8 @@ export function createSurfaces(deps = {}) {
     const markers = stats ? stats.markers : 0;
     const unassigned = stats ? stats.unassignedMarkers : 0;
     let text;
-    if (!state.vehicles) text = 'Loading live vehicles…';
-    else if (markers === 0) text = 'No vehicles live right now';
+    if (!state.vehicles) text = POSTURE_COPY ? POSTURE_COPY.statusLoading : 'Loading live vehicles…';
+    else if (markers === 0) text = POSTURE_COPY ? POSTURE_COPY.statusZero : 'No vehicles live right now';
     else text = `${markers} vehicle${markers === 1 ? '' : 's'} live`;
     if (state.vehicles && unassigned > 0) {
       text += ` · ${unassigned} reporting without a route assignment`;
@@ -643,14 +658,14 @@ export function createSurfaces(deps = {}) {
       if (seen.has(key)) continue;
       seen.add(key);
       const route = resolveRouteId(byId, tu.route_id);
-      const veh = tu.vehicle_id ? state.vehiclesByKey.get(`${tu.agency || 'rtd'}|${tu.vehicle_id}`) : null;
+      const veh = tu.vehicle_id ? state.vehiclesByKey.get(`${tu.agency || CITY_CONFIG.agency.id}|${tu.vehicle_id}`) : null;
       live.push({
         routeId: route ? route.id : tu.route_id,
         routeLabel: route ? routeLabel(route) : String(tu.route_id || ''),
         headsign: headsignForTrip(tu.trip_id) || (veh && veh.destination) || (route ? route.name : null),
         timeMs, kind: 'live',
         vehicleId: tu.vehicle_id || null,
-        agency: tu.agency || 'rtd',
+        agency: tu.agency || CITY_CONFIG.agency.id,
       });
     }
     live.sort((a, b) => a.timeMs - b.timeMs);
@@ -663,7 +678,7 @@ export function createSurfaces(deps = {}) {
         .map((r) => ({ ...r, routeLabel: (byId[r.routeId] ? routeLabel(byId[r.routeId]) : String(r.routeId)) }))
       : [];
     // Scoped alerts (LT-S5.1): stop-scoped, route-scoped, system.
-    // Repair 2026-10-25 (stop-card flood): SEPTA publishes its
+    // Repair 2026-10-25 (stop-card flood): an agency may publish its
     // per-trip cancellation notices with an EMPTY informed-entity
     // selector and the trip named only in the header ("Trip
     // cancellation for trip 871100."). The old test read any
@@ -930,7 +945,7 @@ export function createSurfaces(deps = {}) {
           <label><input type="checkbox" data-role="route-vis" data-route="${esc(r.routeId)}" ${r.visible ? 'checked' : ''}>
           <span class="lt-route-chip" style="background:${esc(r.color || '#444')}"></span>
           ${esc(r.label)}</label>
-          <span class="lt-route-meta">${esc(r.group)} · ${r.live} live</span>
+          <span class="lt-route-meta">${esc(r.group)} · ${POSTURE_COPY ? POSTURE_COPY.routeMeta : `${r.live} live`}</span>
           <button type="button" data-action="route-solo" data-route="${esc(r.routeId)}">Only this route</button>
           <button type="button" data-action="route-card" data-route="${esc(r.routeId)}">Details</button>
         </li>`).join('')}
@@ -1089,10 +1104,10 @@ export function createSurfaces(deps = {}) {
       collapsed: state.launcher === 'collapsed',
       tiles: [
         {
-          id: 'live-map', label: 'Live map',
+          id: 'live-map', label: POSTURE_COPY ? POSTURE_COPY.mapTileLabel : 'Live map',
           proof: state.vehicles
-            ? (markers === 0 ? 'No vehicles live right now' : `${markers} vehicle${markers === 1 ? '' : 's'} live right now`)
-            : 'Loading live vehicles…',
+            ? (markers === 0 ? (POSTURE_COPY ? POSTURE_COPY.mapTileProofZero : 'No vehicles live right now') : `${markers} vehicle${markers === 1 ? '' : 's'} live right now`)
+            : (POSTURE_COPY ? POSTURE_COPY.statusLoading : 'Loading live vehicles…'),
         },
         {
           id: 'plan', label: 'Plan a trip',
@@ -1111,7 +1126,7 @@ export function createSurfaces(deps = {}) {
           // every rider-facing count: the view (renderer stats).
           proof: markers ? `${markers} vehicle${markers === 1 ? '' : 's'} reporting` : 'No vehicles reporting right now',
         },
-        { id: 'all-routes', label: 'All routes', proof: `${routesTotal} RTD routes` },
+        { id: 'all-routes', label: 'All routes', proof: `${routesTotal} ${CITY_CONFIG.agency.shortName} routes` },
         { id: 'near-me', label: 'Near me', proof: 'Find your nearest stop' },
         {
           id: 'alerts', label: 'Alerts',
@@ -1524,7 +1539,7 @@ export function renderStopCard(m) {
     <p class="lt-card-sub">${esc(m.routesLine)}</p>
     ${m.alerts.length ? `<div class="lt-card-alerts">${m.alerts.map((a) => `<p>⚠ ${esc(a.header)} <span class="lt-scope">(${esc(a.scope)})</span></p>`).join('')}</div>` : ''}
     <h3>Next arrivals</h3>
-    ${live ? `<ul class="lt-arrivals">${live}</ul>` : '<p>No live arrivals in the next 90 minutes.</p>'}
+    ${live ? `<ul class="lt-arrivals">${live}</ul>` : `<p>${POSTURE_COPY ? POSTURE_COPY.arrivalsEmpty : 'No live arrivals in the next 90 minutes.'}</p>`}
     ${sched ? `<ul class="lt-arrivals lt-scheduled">${sched}</ul>` : ''}
     ${m.timetablePending ? '<p class="lt-note">Scheduled times load with the timetable…</p>' : ''}
     ${m.boardingRows.length ? `<h3>Live on these routes</h3>
@@ -1573,7 +1588,7 @@ export function renderRouteCard(m) {
     ${m.vehicles.length ? `<h3>Live vehicles</h3>
       <ul class="lt-boarding">${m.vehicles.map((v) => `
         <li><button type="button" data-action="board-vehicle" data-agency="${esc(v.agency)}" data-vehicle-id="${esc(v.vehicleId)}">Vehicle ${esc(v.vehicleId)}</button>${v.destination ? ` to ${esc(v.destination)}` : ''}</li>`).join('')}
-      </ul>` : '<p>No vehicles live on this route right now.</p>'}
+      </ul>` : `<p>${POSTURE_COPY ? POSTURE_COPY.routeVehiclesEmpty : 'No vehicles live on this route right now.'}</p>`}
     <p><button type="button" data-action="route-solo" data-route="${esc(m.routeId)}">Show only this route</button>
     <button type="button" data-action="card-close">Close</button></p>
   </article>`;
@@ -1657,12 +1672,11 @@ export async function bootBrowser(deps = {}) {
     const paths = geometryAssetPaths();
     // Feed set is config-driven (LT-S4/LT-KAES-12): iterate the
     // city's declared routesByFeed entries, never a hardcoded feed
-    // pair. (Launch fix 2026-10-26: this fan-out previously named
-    // the PHL build's two feeds — bus/rail — so a single-feed city
-    // (Denver/Aurora: {rtd}) fetched `undefined` and the boot failed
-    // into the load-error overlay on the production URL. Identical
-    // defect and fix at the Cincinnati launch, 2026-10-26. The scene
-    // model already consumes routesByFeed generically by feed id.)
+    // pair. (Launch fix 2026-10-26: this fan-out previously named a
+    // fixed pair of feeds, so a single-feed city fetched `undefined`
+    // and the boot failed into the load-error overlay on the
+    // production URL. The scene model already consumes routesByFeed
+    // generically by feed id.)
     const feedEntries = Object.entries(paths.routesByFeed);
     const [streets, stops, water, landmarks, names, ...feedDocs] = await Promise.all([
       stampedJson(paths.streets, deps.fetchImpl),
