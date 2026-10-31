@@ -1,5 +1,5 @@
 // modules/renderer.mjs — 3D renderer (LT-KAES-09).
-// PHL REBUILD R3 implementation, on the R1 contract. Label:
+// Platform rebuild R3 implementation, on the R1 contract. Label:
 // UNVERIFIED / legacy-unsigned.
 //
 // What R3 builds here, against the register:
