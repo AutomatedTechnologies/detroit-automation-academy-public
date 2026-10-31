@@ -1,8 +1,8 @@
-// Philadelphia planner selection — integration staging module
-// (Board 48 item 6, integration step 2026-10-23).
+// Platform planner selection — core module (Cities V2).
+// Lineage: the integration staging module of 2026-10-23.
 //
 // This is the experiment's selection pipeline, packaged as the
-// module a Philadelphia page build would consume:
+// module a city page build consumes:
 //   candidate enumeration  plan() at the instant UNION
 //                          planRange(+120 min), deduped on legs+arrival
 //   reliability pricing    v2 (lib/archetypes-v2.mjs) — corridor
@@ -12,11 +12,11 @@
 //                          departure of the earliest candidate whose
 //                          addition to the flat pool adds a
 //                          representative), hard cap +120 min
-//   constants              CITY_CONSTANTS below — Philadelphia's
-//                          calibrated constants W0-default-T35-P15
-//                          (files/calibration-2026-10-23.md),
-//                          asserted against the lib values before
-//                          any selection runs (the constants gate).
+//   constants              CITY_CONSTANTS below — the city's
+//                          calibrated adopted set, injected from
+//                          config at assembly (slot 1), asserted
+//                          against the lib values before any
+//                          selection runs (the constants gate).
 //
 // The selection logic is the tranche-3 / calibration machinery's,
 // moved — not rewritten: summarizeMode, the flat/frequency-aware
@@ -25,14 +25,14 @@
 // cross-check scaffolding removed. Verification
 // (verification/verify-bundle.mjs) proves the staged module
 // reproduces the recorded experiment output field-for-field on
-// every Philadelphia golden pair.
+// every golden pair.
 //
 // Correctness contract (ruling 5, structural, 0 s tolerance): the
 // fastest representative's arrival equals the plan() baseline
 // exactly on every pair; any nonzero delta is reported in the
 // result (ruling5Violation), never absorbed.
 //
-// PHL11 / walk-only: this module does NOT decide the walk-only
+// Walk-only presentation: this module does NOT decide the walk-only
 // presentation question (Justin's, at page-build time). A fastest
 // representative with zero transit legs is flagged in
 // presentationFlags and returned like any other result.
@@ -51,7 +51,7 @@ import {
   HEADWAY_SINGLE_TRIP_CAP_MIN,
 } from './archetypes-v2.mjs';
 
-export const CITY_CONSTANTS = { // DENVER ADOPTED SET, calibration 2026-10-26 (winner W0-default-T35-P15; harness/results-denver-calibration-2026-10-26.json — Denver-measured, never transferred, LT-N8)
+export const CITY_CONSTANTS = { // DENVER & AURORA ADOPTED SET — adopted set W0-default-T35-P15; calibration record: harness/results-denver-calibration-2026-10-26.json (injected at assembly from config planner.constants; SL-1/SL-2)
   distanceWeights: {
     corridor: 0.35,
     walkBurden: 0.2,
@@ -199,7 +199,7 @@ export function headwayLookupFor(rawTrips) {
   return headwayCache.get(rawTrips);
 }
 
-// Plan one golden/OD query through the full Philadelphia selection
+// Plan one golden/OD query through the full selection
 // pipeline. R = engine module (set-resolution), tt = loaded
 // timetable (via lib/loader.mjs), headwayMin = v2 lookup for the
 // asset's trips. Returns the experiment record's per-query shape,
