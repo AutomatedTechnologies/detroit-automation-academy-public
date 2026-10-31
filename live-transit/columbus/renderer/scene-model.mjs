@@ -1,5 +1,5 @@
 // renderer/scene-model.mjs — the renderer's scene, as data.
-// PHL REBUILD R3 (LT-KAES-09/12/13/14/15). Label: UNVERIFIED /
+// Platform rebuild R3 (LT-KAES-09/12/13/14/15). Label: UNVERIFIED /
 // legacy-unsigned.
 //
 // The scene model is the single source the browser renderer
@@ -169,7 +169,7 @@ export function createSceneModel({ width = 960, height = 640 } = {}) {
       S.stopGroups.set(st.id, gs);
     }
     // water / landmarks / names (each optional in the doc set, but
-    // the staged PHL family carries all three — harness asserts).
+    // the staged family carries all three — harness asserts).
     S.water = {
       polygons: (water && water.polygons) || [],
       lines: (water && water.lines) || [],
