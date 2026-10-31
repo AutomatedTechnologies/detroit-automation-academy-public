@@ -1,5 +1,5 @@
 // platform/picking.mjs — Shared-platform seam: interaction geometry.
-// PHL REBUILD R1 foundation. Label: UNVERIFIED / legacy-unsigned.
+// Platform rebuild R1 foundation. Label: UNVERIFIED / legacy-unsigned.
 //
 // LT-KAES-14 / LT-G14 (Interaction Geometry): picking resolves
 // against the rendered scene's own geometry; interaction
