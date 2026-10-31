@@ -1,100 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Releases — Live Transit Detroit · Detroit Automation Academy</title>
-<meta name="description" content="Live Transit Detroit release record: every named dot release, its build stamp, and what shipped — newest first.">
-<meta name="author" content="Justin Spencer Smith">
-<meta property="og:title" content="Releases — Live Transit Detroit">
-<meta property="og:description" content="The named-release record for Live Transit Detroit: dot versions over build stamps, each with its payload and its build.">
-<meta property="og:type" content="website">
-<link rel="icon" type="image/webp" href="../assets/logo.webp">
-<link rel="stylesheet" href="../styles.css?v=20261018-1404">
-<style>
-.rel-hero{padding:4rem 0 2rem;}
-.rel-hero h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(2.2rem,5vw,3.4rem);margin:.4rem 0;}
-.rel-hero h1 .accent{color:#E85D1A;}
-.rel-card{border:1px solid rgba(245,242,234,.12);border-radius:12px;padding:1.5rem;margin:0 0 1.5rem;background:rgba(255,255,255,.015);}
-.rel-card h2{font-family:'Space Grotesk',sans-serif;font-size:1.5rem;margin:.1rem 0 .9rem;line-height:1.3;}
-.rel-card p{line-height:1.6;margin:.45rem 0;color:#e8e6df;}
-.rel-card .meta{font-size:.92rem;color:#9AA0A6;margin:.2rem 0 1rem;}
-.rel-card .src{font-size:.85rem;color:#9AA0A6;margin-top:1rem;padding-top:.8rem;border-top:1px dashed rgba(245,242,234,.15);}
-</style>
-<link rel="canonical" href="https://www.detroitautomationacademy.com/releases/">
-<meta name="robots" content="index, follow, max-image-preview:large">
-<meta property="og:site_name" content="Detroit Automation Academy">
-<meta property="og:url" content="https://www.detroitautomationacademy.com/releases/">
-<meta property="og:image" content="https://www.detroitautomationacademy.com/assets/logo.webp">
-<meta property="og:image:alt" content="Detroit Automation Academy — Forge D logo">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Releases — Live Transit Detroit">
-<meta name="twitter:description" content="The named-release record for Live Transit Detroit: dot versions over build stamps, each with its payload and its build.">
-<meta name="twitter:image" content="https://www.detroitautomationacademy.com/assets/logo.webp">
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  "name": "Releases — Live Transit Detroit",
-  "url": "https://www.detroitautomationacademy.com/releases/",
-  "description": "Live Transit Detroit release record: every named dot release, its build stamp, and what shipped — newest first.",
-  "author": { "@type": "Person", "name": "Justin Spencer Smith" },
-  "publisher": {
-    "@type": "Organization",
-    "name": "Detroit Automation Academy",
-    "url": "https://www.detroitautomationacademy.com/"
-  }
-}
-</script>
-  <link rel="alternate" type="application/rss+xml" title="Detroit Automation Academy — RSS feed" href="/feed.xml">
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta http-equiv="refresh" content="0; url=/dashboard.html#releases">
+<link rel="canonical" href="https://www.detroitautomationacademy.com/dashboard.html">
+<title>Page moved — Detroit Automation Academy</title>
 </head>
 <body>
-<header class="nav"><a class="brand" href="/" aria-label="Detroit Automation Academy — home"><img src="/assets/logo.webp" alt="" class="brand-mark"><span class="brand-word">Detroit Automation <em>Academy</em></span></a><nav class="nav-links" id="daaNavLinks" aria-label="Primary"><a class="lane" data-audience="viewer" href="/watch/">Watch</a><a class="lane" data-audience="reader" href="/signal/">Read</a><a class="lane" data-audience="reader" href="/notes/">Notes</a><a class="lane" data-audience="reader" href="/press/">Press</a><a class="lane" data-audience="user" href="/live-transit.html">Do</a><a class="lane" data-audience="user" href="/live-transit/">Cities</a><a class="lane" data-audience="visitor" href="/programs.html">Programs</a><a class="lane" data-audience="user" href="/api.html">API</a><a class="lane" data-audience="visitor" href="/partners.html">Partners</a><a class="lane" data-audience="visitor" href="/#mission">About</a><a class="lane" data-audience="visitor" href="/apple-learning-coach/">Bio</a><a class="lane" data-audience="visitor" href="/find.html">Find</a><a class="lane" data-audience="subscriber" href="https://www.linkedin.com/newsletters/7508391258638311424/" target="_blank" rel="noopener" aria-label="Subscribe, opens in new tab">Subscribe</a></nav><button class="nav-toggle" id="daaNavToggle" aria-label="Toggle navigation" aria-expanded="false"><span></span><span></span><span></span></button></header>
-
-<div id="daa-nav"></div>
-<script src="/nav.js?v=20261023-0221"></script>
-
-<main id="top">
-<section class="section">
-  <div class="wrap">
-    <div class="rel-hero">
-      <p class="kicker">Live Transit Detroit · Releases</p>
-      <h1>Release <span class="accent">Record</span></h1>
-      <p class="lede">Live Transit builds carry a build stamp — the build identifier. Releases carry a public dot name over the stamp, so a rider, a partner, or a reporter can cite a release by a name, not a timestamp. A dot is assigned when its payload has passed the release gate: verified payloads, browser-checked on the production site, with a one-step rollback per dot. Dots ship per-feature — when the payload verifies, not on a fixed calendar.</p>
-    </div>
-
-    <div class="rel-card">
-      <h2>Live Transit v2.0 — a new planning engine</h2>
-      <p class="meta">Released October 21, 2026 · Build 20261021-0917</p>
-      <p>The trip planner now runs on Live Transit's second-generation engine. The answers are the ones riders already get — verified identical on our regression grid — and they arrive faster: the median plan time on the Woodward acceptance trip is down from 340 ms to 267 ms in benchmark measurement.</p>
-      <p>The new engine also computes fewest-transfer and least-walking alternatives, departure windows, and arrive-by plans; those reach the planner's interface in a following release (v2.1). DDOT and SMART trips are planned from the agencies' published schedules; live bus positions stay on the map, as before. Planning still runs entirely on the rider's device — an origin and a destination never leave the phone.</p>
-      <p class="src">Payload: the assembled second-generation planner engine (one file, byte-verified against its benchmark record before release). Rollback unit: build 20261020-1647.</p>
-    </div>
-
-    <div class="rel-card">
-      <h2>The v1 line</h2>
-      <p>Builds before the dot era belong to the v1 line and carry build stamps only — no retroactive dot numbers are assigned. The last v1 build was 20261020-1647.</p>
-    </div>
-
-    <p><a href="/press/media-kit.html">Media kit</a> · <a href="/live-transit.html">Open Live Transit</a></p>
-  </div>
-</section>
-</main>
-
-<footer class="footer">
-  <div class="wrap footer-inner">
-    <div class="footer-brand">
-      <img src="/assets/logo.webp" alt="" class="brand-mark">
-      <span>Detroit Automation Academy</span>
-    </div>
-    <p class="footer-fine">Southfield, Michigan · <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a></p>
-    <p class="footer-fine"><a href="/live-transit.html">Live Transit Detroit</a> · <a href="/live-transit/">Cities</a> · <a href="/programs.html">Programs</a> · <a href="/signal/">The Signal</a> · <a href="/voter-guide.html">Voter Guide</a> · <a href="/press/">Press</a> · <a href="/board/">Board</a> · <a href="/find.html">Find</a> · <a href="/api.html">API</a></p>
-    <p class="footer-fine"><a href="/terms.html">Terms of Service</a> · <a href="/privacy.html">Privacy Policy</a> · <a href="/dashboard.html">Platform status</a></p>
-    <p class="footer-fine">© 2026 AutomatedTechnologies d/b/a Detroit Automation Academy</p>
-  </div>
-</footer>
-
-<script src="/nav.js?v=20261023-0221"></script>
-<script src="/assets/measure.js?v=20261023-o2" defer></script>
+<p>This page has moved. <a href="/dashboard.html#releases">Go to the new page</a>.</p>
 </body>
 </html>

@@ -1,103 +1,13 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Anmeldung live: Von Null auf Cloud Run in einer Session</title>
-<meta name="description" content="Wie wir ein fehlerhaftes mandantenfähiges Registrierungssystem — Go-Backend, React-Frontend — in einer Session live auf Google Cloud Run gebracht haben.">
-<meta property="og:title" content="Anmeldung live: Von Null auf Cloud Run in einer Session">
-<meta property="og:description" content="Wie wir ein fehlerhaftes mandantenfähiges Registrierungssystem — Go-Backend, React-Frontend — in einer Session live auf Google Cloud Run gebracht haben.">
-<meta property="og:image" content="https://www.detroitautomationacademy.com/assets/logo.webp">
-<meta property="og:type" content="article">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Anmeldung live: Von Null auf Cloud Run in einer Session">
-<meta name="twitter:description" content="Wie wir ein fehlerhaftes mandantenfähiges Registrierungssystem — Go-Backend, React-Frontend — in einer Session live auf Google Cloud Run gebracht haben.">
-<link rel="icon" type="image/webp" href="../../../assets/logo.webp">
-<link rel="stylesheet" href="../../../styles.css?v=20261018-1404">
-<style>h1{font-size:var(--step-2);letter-spacing:-0.01em;margin:0.4em 0 0.6em}</style>
-<link rel="canonical" href="https://www.detroitautomationacademy.com/notes/de/daa-crm-cloud-run-deployment/">
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  "name": "Anmeldung live: Von Null auf Cloud Run in einer Session",
-  "description": "Wie wir ein fehlerhaftes mandantenfähiges Registrierungssystem — Go-Backend, React-Frontend — in einer Session live auf Google Cloud Run gebracht haben.",
-  "url": "https://www.detroitautomationacademy.com/notes/de/daa-crm-cloud-run-deployment/",
-  "inLanguage": "de",
-  "publisher": {
-    "@type": "Organization",
-    "name": "Detroit Automation Academy",
-    "url": "https://www.detroitautomationacademy.com/"
-  }
-}
-</script>
-  <link rel="alternate" hreflang="en" href="https://www.detroitautomationacademy.com/notes/daa-crm-cloud-run-deployment/">
-  <link rel="alternate" hreflang="de" href="https://www.detroitautomationacademy.com/notes/de/daa-crm-cloud-run-deployment/">
-  <link rel="alternate" hreflang="x-default" href="https://www.detroitautomationacademy.com/notes/daa-crm-cloud-run-deployment/">
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta http-equiv="refresh" content="0; url=/notes/daa-crm-cloud-run-deployment/">
+<link rel="canonical" href="https://www.detroitautomationacademy.com/notes/daa-crm-cloud-run-deployment/">
+<title>Page moved — Detroit Automation Academy</title>
 </head>
 <body>
-
-<div id="daa-nav"><header class="nav"><a class="brand" href="/" aria-label="Detroit Automation Academy — home"><img src="/assets/logo.webp" alt="" class="brand-mark"><span class="brand-word">Detroit Automation <em>Academy</em></span></a><nav class="nav-links" id="daaNavLinks" aria-label="Primary"><a class="lane" data-audience="viewer" href="/watch/">Watch</a><a class="lane" data-audience="reader" href="/signal/">Read</a><a class="lane" data-active="true" aria-current="page" data-audience="reader" href="/notes/">Notes</a><a class="lane" data-audience="reader" href="/press/">Press</a><a class="lane" data-audience="user" href="/live-transit.html">Do</a><a class="lane" data-audience="user" href="/live-transit/">Cities</a><a class="lane" data-audience="visitor" href="/programs.html">Programs</a><a class="lane" data-audience="user" href="/api.html">API</a><a class="lane" data-audience="visitor" href="/partners.html">Partners</a><a class="lane" data-audience="visitor" href="/#mission">About</a><a class="lane" data-audience="visitor" href="/apple-learning-coach/">Bio</a><a class="lane" data-audience="visitor" href="/find.html">Find</a><a class="lane" data-audience="subscriber" href="https://www.linkedin.com/newsletters/7508391258638311424/" target="_blank" rel="noopener" aria-label="Subscribe, opens in new tab">Subscribe</a></nav><button class="nav-toggle" id="daaNavToggle" aria-label="Toggle navigation" aria-expanded="false"><span></span><span></span><span></span></button></header></div>
-<script src="/nav.js?v=20261023-0221"></script>
-
-<main id="top">
-
-  <article class="section">
-    <div class="wrap">
-      <p class="kicker"><a href="../">Notizen</a> · DevOps · Februar 2026</p>
-      <h1>Anmeldung live: <span class="accent">Von Null auf Cloud Run in einer Session</span></h1>
-      <p class="fine">Veröffentlicht 28. Februar 2026 · Detroit Automation Academy · Historische technische Notiz — aus dem stillgelegten Blog migriert.</p>
-      <div class="prose">
-        <p>Wir haben das Registrierungssystem der Academy von einem fehlerhaften Build zu einem vollständig bereitgestellten, öffentlich zugänglichen System in einer einzigen Engineering-Session gebracht. So sah das tatsächlich aus.</p>
-        <h3>Ausgangspunkt: fünf aufeinanderfolgende Build-Fehler</h3>
-        <p>Das <code>deploy.sh</code>-Skript existierte. Die Docker-Images existierten. Was nicht existierte: ein funktionierender Build.</p>
-        <p>Der erste Fehler war ein Go-Syntaxfehler in <code>backend/main.go</code> — ein roher Zeilenumbruch in einem String-Literal:</p>
-        <pre><code>// Fehlerhaft
-fmt.Printf("...starting on port %s...
-", port)
-
-// Korrigiert
-fmt.Printf("...starting on port %s...\n", port)</code></pre>
-        <p>Go erlaubt keine nicht maskierten Zeilenumbrüche in String-Literalen. Die Korrektur war ein einziges Zeichen.</p>
-        <h3>IAM-Berechtigungskaskade</h3>
-        <p>Nachdem das Backend baute, schlug der Push zur Container Registry fehl — das Compute-Servicekonto hatte die nötige Rolle, das Cloud-Build-Servicekonto nicht. Wir gewährten die fehlende Rolle beiden Konten und der Build lief durch.</p>
-        <h3>Das fehlende Frontend-Gerüst</h3>
-        <p>Das React-Frontend hatte <code>App.tsx</code> und <code>EnrollmentForm.tsx</code> — aber kein <code>public/index.html</code>, kein <code>src/index.tsx</code> und eine ungültige <code>tsconfig.json</code>. <code>react-scripts build</code> braucht alle drei.</p>
-        <p>Dazu ein TypeScript-Fehler: In einem Early-Return-Block verengte TypeScript eine View-State-Variable auf einen Literaltyp, was einen späteren Vergleich zu einem toten Zweig machte (TS2367). Behoben durch Refactoring auf ein einziges Return mit bedingtem Rendering.</p>
-        <h3>Terraform durch direkte Bereitstellung ersetzt</h3>
-        <p>Das Deploy-Skript endete mit <code>terraform init &amp;&amp; terraform apply</code> — aber Terraform war nicht installiert und das Infra-Verzeichnis existierte nicht. Statt zu blockieren, ersetzten wir es durch direkte <code>gcloud run deploy</code>-Aufrufe. Backend und Frontend waren in 60 Sekunden live.</p>
-        <h3>Firestore-Persistenz</h3>
-        <p>Das ursprüngliche Backend speicherte Datensätze im Arbeitsspeicher — bei jedem Kaltstart gelöscht. Wir schrieben den Speicher-Handler um auf Firestore mit elegantem In-Memory-Fallback:</p>
-        <ul>
-          <li>Mandantenspezifische Namensräume für Sammlungen</li>
-          <li>Thread-sicherer In-Memory-Fallback, wenn Firestore nicht erreichbar ist</li>
-          <li>Der <code>/health</code>-Endpunkt meldet, welcher Speicher aktiv ist</li>
-        </ul>
-        <hr>
-        <p><em>Historische Notiz: Die Endpunkte aus dieser Session sind nicht mehr live. Dieser Beitrag bleibt als technischer Bericht des Builds erhalten.</em></p>
-      </div>
-      <div class="signal-pager">
-        <a href="../" class="btn btn-ghost">← Alle Notizen</a>
-      </div>
-    </div>
-  </article>
-
-</main>
-
-<footer class="footer">
-  <div class="wrap footer-inner">
-    <div class="footer-brand">
-      <img src="/assets/logo.webp" alt="" class="brand-mark">
-      <span>Detroit Automation Academy</span>
-    </div>
-    <p class="footer-fine">Southfield, Michigan · <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a></p>
-    <p class="footer-fine"><a href="/live-transit.html">Live Transit Detroit</a> · <a href="/live-transit/">Cities</a> · <a href="/programs.html">Programs</a> · <a href="/signal/">The Signal</a> · <a href="/voter-guide.html">Voter Guide</a> · <a href="/press/">Press</a> · <a href="/board/">Board</a> · <a href="/find.html">Find</a> · <a href="/api.html">API</a></p>
-    <p class="footer-fine"><a href="/terms.html">Terms of Service</a> · <a href="/privacy.html">Privacy Policy</a> · <a href="/dashboard.html">Platform status</a></p>
-    <p class="footer-fine">© 2026 AutomatedTechnologies d/b/a Detroit Automation Academy</p>
-  </div>
-</footer>
-
-<script src="../../../script.js"></script>
-<script src="/assets/measure.js?v=20261023-o2" defer></script>
+<p>This page has moved. <a href="/notes/daa-crm-cloud-run-deployment/">Go to the new page</a>.</p>
 </body>
 </html>

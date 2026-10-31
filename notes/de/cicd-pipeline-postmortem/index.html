@@ -1,111 +1,13 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CI/CD-Pipeline: Submodule, leere Commits und das QA-Gate</title>
-<meta name="description" content="Analyse wiederkehrender Bereitstellungsfehler — Hugo-Builds mit fehlendem Inhalt, nicht initialisierte Theme-Submodule und das QA-Gate, das sie abfing.">
-<meta property="og:title" content="CI/CD-Pipeline: Submodule, leere Commits und das QA-Gate">
-<meta property="og:description" content="Analyse wiederkehrender Bereitstellungsfehler — Hugo-Builds mit fehlendem Inhalt, nicht initialisierte Theme-Submodule und das QA-Gate, das sie abfing.">
-<meta property="og:image" content="https://www.detroitautomationacademy.com/assets/logo.webp">
-<meta property="og:type" content="article">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="CI/CD-Pipeline: Submodule, leere Commits und das QA-Gate">
-<meta name="twitter:description" content="Analyse wiederkehrender Bereitstellungsfehler — Hugo-Builds mit fehlendem Inhalt, nicht initialisierte Theme-Submodule und das QA-Gate, das sie abfing.">
-<link rel="icon" type="image/webp" href="../../../assets/logo.webp">
-<link rel="stylesheet" href="../../../styles.css?v=20261018-1404">
-<style>h1{font-size:var(--step-2);letter-spacing:-0.01em;margin:0.4em 0 0.6em}</style>
-<link rel="canonical" href="https://www.detroitautomationacademy.com/notes/de/cicd-pipeline-postmortem/">
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  "name": "CI/CD-Pipeline: Submodule, leere Commits und das QA-Gate",
-  "description": "Analyse wiederkehrender Bereitstellungsfehler — Hugo-Builds mit fehlendem Inhalt, nicht initialisierte Theme-Submodule und das QA-Gate, das sie abfing.",
-  "url": "https://www.detroitautomationacademy.com/notes/de/cicd-pipeline-postmortem/",
-  "inLanguage": "de",
-  "publisher": {
-    "@type": "Organization",
-    "name": "Detroit Automation Academy",
-    "url": "https://www.detroitautomationacademy.com/"
-  }
-}
-</script>
-  <link rel="alternate" hreflang="en" href="https://www.detroitautomationacademy.com/notes/cicd-pipeline-postmortem/">
-  <link rel="alternate" hreflang="de" href="https://www.detroitautomationacademy.com/notes/de/cicd-pipeline-postmortem/">
-  <link rel="alternate" hreflang="x-default" href="https://www.detroitautomationacademy.com/notes/cicd-pipeline-postmortem/">
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta http-equiv="refresh" content="0; url=/notes/cicd-pipeline-postmortem/">
+<link rel="canonical" href="https://www.detroitautomationacademy.com/notes/cicd-pipeline-postmortem/">
+<title>Page moved — Detroit Automation Academy</title>
 </head>
 <body>
-
-<div id="daa-nav"><header class="nav"><a class="brand" href="/" aria-label="Detroit Automation Academy — home"><img src="/assets/logo.webp" alt="" class="brand-mark"><span class="brand-word">Detroit Automation <em>Academy</em></span></a><nav class="nav-links" id="daaNavLinks" aria-label="Primary"><a class="lane" data-audience="viewer" href="/watch/">Watch</a><a class="lane" data-audience="reader" href="/signal/">Read</a><a class="lane" data-active="true" aria-current="page" data-audience="reader" href="/notes/">Notes</a><a class="lane" data-audience="reader" href="/press/">Press</a><a class="lane" data-audience="user" href="/live-transit.html">Do</a><a class="lane" data-audience="user" href="/live-transit/">Cities</a><a class="lane" data-audience="visitor" href="/programs.html">Programs</a><a class="lane" data-audience="user" href="/api.html">API</a><a class="lane" data-audience="visitor" href="/partners.html">Partners</a><a class="lane" data-audience="visitor" href="/#mission">About</a><a class="lane" data-audience="visitor" href="/apple-learning-coach/">Bio</a><a class="lane" data-audience="visitor" href="/find.html">Find</a><a class="lane" data-audience="subscriber" href="https://www.linkedin.com/newsletters/7508391258638311424/" target="_blank" rel="noopener" aria-label="Subscribe, opens in new tab">Subscribe</a></nav><button class="nav-toggle" id="daaNavToggle" aria-label="Toggle navigation" aria-expanded="false"><span></span><span></span><span></span></button></header></div>
-<script src="/nav.js?v=20261023-0221"></script>
-
-<main id="top">
-
-  <article class="section">
-    <div class="wrap">
-      <p class="kicker"><a href="../">Notizen</a> · DevOps · Februar 2026</p>
-      <h1>Fehlerbehebung in unserer CI/CD-Pipeline: <span class="accent">Submodule, leere Commits und das QA-Gate</span></h1>
-      <p class="fine">Veröffentlicht 28. Februar 2026 · Detroit Automation Academy · Historische technische Notiz — aus dem stillgelegten Blog migriert.</p>
-      <div class="prose">
-        <p>Unsere Website-Pipeline hatte ein wiederkehrendes Problem: Bereitstellungen, die lokal funktionierten, schlugen in GitHub Actions lautlos fehl oder waren in Actions erfolgreich, produzierten aber eine fehlerhafte Website. Hier ist die Ursachenanalyse und was wir geändert haben.</p>
-        <h3>Die drei Fehlermodi</h3>
-        <ol>
-          <li><strong>Build erfolgreich, Website-Inhalt fehlt</strong> — das Ausgabeverzeichnis wurde generiert, aber der Git-Commit-Schritt schlug lautlos fehl, weil es nichts Neues zu committen gab. Der Bereitstellungsschritt lief trotzdem und übertrug einen veralteten Build.</li>
-          <li><strong>Theme-Submodul nicht initialisiert</strong> — das Theme ist ein Git-Submodul. Frische Actions-Runner klonen das Repo, initialisieren Submodule aber nicht automatisch. Der Build lief mit leerem Theme-Verzeichnis und erzeugte einen ungestylten Build, der dennoch mit Code 0 endete.</li>
-          <li><strong>Verzögerung bei der Cache-Invalidierung</strong> — über das CDN zwischengespeicherte Seiten lieferten nach einer neuen Bereitstellung veraltete Inhalte.</li>
-        </ol>
-        <h3>Fix 1: Submodul-Initialisierung</h3>
-        <pre><code>- uses: actions/checkout@v4
-  with:
-    submodules: true        # ← dies fehlte
-    fetch-depth: 0</code></pre>
-        <p>Ohne <code>submodules: true</code> findet der Build die Theme-Referenz, sucht im Theme-Verzeichnis, findet nichts und greift auf Standard-Templates zurück — komplett ungestylt.</p>
-        <h3>Fix 2: Der Schutz vor leeren Commits</h3>
-        <pre><code># Vorher — committet immer, schlägt fehl, wenn sich nichts geändert hat
-git add public/
-git commit -m "Deploy"
-git push
-
-# Nachher — überspringt, wenn sich nichts geändert hat
-git add public/
-git diff --staged --quiet || git commit -m "chore: deploy $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-git push</code></pre>
-        <p><code>git diff --staged --quiet</code> endet mit 0 (keine Änderungen) → Commit überspringen. Endet ungleich Null (Änderungen vorhanden) → Commit und Push.</p>
-        <h3>Das automatisierte QA-Gate</h3>
-        <p>Um diese Fehler ohne manuelle Prüfung abzufangen, haben wir einen Verifizierungsschritt in die Pipeline eingebaut:</p>
-        <ol>
-          <li>Ruft die URL der Live-Site nach einer Bereitstellung ab</li>
-          <li>Prüft, ob der Titel des neuesten Beitrags im HTML vorhanden ist</li>
-          <li>Prüft, ob der <code>Last-Modified</code>-Header neuer ist als der vorherige Bereitstellungszeitpunkt</li>
-          <li>Lässt die Pipeline fehlschlagen, wenn eine Prüfung nicht besteht</li>
-        </ol>
-        <p>Das verwandelt die Bereitstellungsprüfung von einem manuellen Check in ein automatisiertes Gate.</p>
-        <hr>
-        <p><em>Historische Notiz: Diese Analyse betrifft die stillgelegte Hugo-Pipeline. Die Website nutzt inzwischen ein Direkt-Bereitstellungsmodell.</em></p>
-      </div>
-      <div class="signal-pager">
-        <a href="../" class="btn btn-ghost">← Alle Notizen</a>
-      </div>
-    </div>
-  </article>
-
-</main>
-
-<footer class="footer">
-  <div class="wrap footer-inner">
-    <div class="footer-brand">
-      <img src="/assets/logo.webp" alt="" class="brand-mark">
-      <span>Detroit Automation Academy</span>
-    </div>
-    <p class="footer-fine">Southfield, Michigan · <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a></p>
-    <p class="footer-fine"><a href="/live-transit.html">Live Transit Detroit</a> · <a href="/live-transit/">Cities</a> · <a href="/programs.html">Programs</a> · <a href="/signal/">The Signal</a> · <a href="/voter-guide.html">Voter Guide</a> · <a href="/press/">Press</a> · <a href="/board/">Board</a> · <a href="/find.html">Find</a> · <a href="/api.html">API</a></p>
-    <p class="footer-fine"><a href="/terms.html">Terms of Service</a> · <a href="/privacy.html">Privacy Policy</a> · <a href="/dashboard.html">Platform status</a></p>
-    <p class="footer-fine">© 2026 AutomatedTechnologies d/b/a Detroit Automation Academy</p>
-  </div>
-</footer>
-
-<script src="../../../script.js"></script>
-<script src="/assets/measure.js?v=20261023-o2" defer></script>
+<p>This page has moved. <a href="/notes/cicd-pipeline-postmortem/">Go to the new page</a>.</p>
 </body>
 </html>

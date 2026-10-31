@@ -1,85 +1,13 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stabilität durch gemeinsamen Speicher: Der App-Group-Meilenstein</title>
-<meta name="description" content="Gemeinsame App-Group-Architektur, damit iOS-App und Home-Screen-Widget denselben SwiftData-Speicher lesen und schreiben — das Leere-Widget-Problem beseitigt.">
-<meta property="og:title" content="Stabilität durch gemeinsamen Speicher: Der App-Group-Meilenstein">
-<meta property="og:description" content="Gemeinsame App-Group-Architektur, damit iOS-App und Home-Screen-Widget denselben SwiftData-Speicher lesen und schreiben — das Leere-Widget-Problem beseitigt.">
-<meta property="og:image" content="https://www.detroitautomationacademy.com/assets/logo.webp">
-<meta property="og:type" content="article">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Stabilität durch gemeinsamen Speicher: Der App-Group-Meilenstein">
-<meta name="twitter:description" content="Gemeinsame App-Group-Architektur, damit iOS-App und Home-Screen-Widget denselben SwiftData-Speicher lesen und schreiben — das Leere-Widget-Problem beseitigt.">
-<link rel="icon" type="image/webp" href="../../../assets/logo.webp">
-<link rel="stylesheet" href="../../../styles.css?v=20261018-1404">
-<style>h1{font-size:var(--step-2);letter-spacing:-0.01em;margin:0.4em 0 0.6em}</style>
-<link rel="canonical" href="https://www.detroitautomationacademy.com/notes/de/app-group-stability/">
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  "name": "Stabilität durch gemeinsamen Speicher: Der App-Group-Meilenstein",
-  "description": "Gemeinsame App-Group-Architektur, damit iOS-App und Home-Screen-Widget denselben SwiftData-Speicher lesen und schreiben — das Leere-Widget-Problem beseitigt.",
-  "url": "https://www.detroitautomationacademy.com/notes/de/app-group-stability/",
-  "inLanguage": "de",
-  "publisher": {
-    "@type": "Organization",
-    "name": "Detroit Automation Academy",
-    "url": "https://www.detroitautomationacademy.com/"
-  }
-}
-</script>
-  <link rel="alternate" hreflang="en" href="https://www.detroitautomationacademy.com/notes/app-group-stability/">
-  <link rel="alternate" hreflang="de" href="https://www.detroitautomationacademy.com/notes/de/app-group-stability/">
-  <link rel="alternate" hreflang="x-default" href="https://www.detroitautomationacademy.com/notes/app-group-stability/">
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta http-equiv="refresh" content="0; url=/notes/app-group-stability/">
+<link rel="canonical" href="https://www.detroitautomationacademy.com/notes/app-group-stability/">
+<title>Page moved — Detroit Automation Academy</title>
 </head>
 <body>
-
-<div id="daa-nav"><header class="nav"><a class="brand" href="/" aria-label="Detroit Automation Academy — home"><img src="/assets/logo.webp" alt="" class="brand-mark"><span class="brand-word">Detroit Automation <em>Academy</em></span></a><nav class="nav-links" id="daaNavLinks" aria-label="Primary"><a class="lane" data-audience="viewer" href="/watch/">Watch</a><a class="lane" data-audience="reader" href="/signal/">Read</a><a class="lane" data-active="true" aria-current="page" data-audience="reader" href="/notes/">Notes</a><a class="lane" data-audience="reader" href="/press/">Press</a><a class="lane" data-audience="user" href="/live-transit.html">Do</a><a class="lane" data-audience="user" href="/live-transit/">Cities</a><a class="lane" data-audience="visitor" href="/programs.html">Programs</a><a class="lane" data-audience="user" href="/api.html">API</a><a class="lane" data-audience="visitor" href="/partners.html">Partners</a><a class="lane" data-audience="visitor" href="/#mission">About</a><a class="lane" data-audience="visitor" href="/apple-learning-coach/">Bio</a><a class="lane" data-audience="visitor" href="/find.html">Find</a><a class="lane" data-audience="subscriber" href="https://www.linkedin.com/newsletters/7508391258638311424/" target="_blank" rel="noopener" aria-label="Subscribe, opens in new tab">Subscribe</a></nav><button class="nav-toggle" id="daaNavToggle" aria-label="Toggle navigation" aria-expanded="false"><span></span><span></span><span></span></button></header></div>
-<script src="/nav.js?v=20261023-0221"></script>
-
-<main id="top">
-
-  <article class="section">
-    <div class="wrap">
-      <p class="kicker"><a href="../">Notizen</a> · iOS · Februar 2026</p>
-      <h1>Stabilität durch gemeinsamen Speicher: <span class="accent">Der App-Group-Meilenstein</span></h1>
-      <p class="fine">Veröffentlicht 21. Februar 2026 · Detroit Automation Academy · Historische technische Notiz — aus dem stillgelegten Blog migriert.</p>
-      <div class="prose">
-        <p>Systemstabilität ist nicht verhandelbar. Wir haben eine gemeinsame <strong>App-Group</strong>-Architektur für die Tagebuch-App implementiert, die einen nahtlosen Datenfluss zwischen der Hauptanwendung und ihrem Home-Screen-Widget gewährleistet.</p>
-        <ul>
-          <li><strong>Gemeinsamer Modell-Container:</strong> Die Migration auf einen Gruppen-Container eliminierte Datenlatenzen zwischen den App- und Widget-Zielen.</li>
-          <li><strong>Entitlement-Abgleich:</strong> Die Sicherheitsstruktur von App und Widget wurde vereinheitlicht, um Echtzeit-Lese-/Schreibzugriff auf den Kern-SwiftData-Speicher zu ermöglichen.</li>
-          <li><strong>Zuverlässigkeit:</strong> Das verhindert das „Leere-Widget-Syndrom“ — das Widget spiegelt immer die neuesten Daten statt eines veralteten oder fehlenden Snapshots.</li>
-        </ul>
-        <p>Diese Grundlagenarbeit bereitet die App auf hintergrundgetriebene Funktionen wie Live-Standortverfolgung und Hintergrund-Fotoverarbeitung vor.</p>
-        <hr>
-        <p><em>Dies ist ein privates Projekt. Derzeit ist keine Veröffentlichung im App Store geplant.</em></p>
-      </div>
-      <div class="signal-pager">
-        <a href="../" class="btn btn-ghost">← Alle Notizen</a>
-      </div>
-    </div>
-  </article>
-
-</main>
-
-<footer class="footer">
-  <div class="wrap footer-inner">
-    <div class="footer-brand">
-      <img src="/assets/logo.webp" alt="" class="brand-mark">
-      <span>Detroit Automation Academy</span>
-    </div>
-    <p class="footer-fine">Southfield, Michigan · <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a></p>
-    <p class="footer-fine"><a href="/live-transit.html">Live Transit Detroit</a> · <a href="/live-transit/">Cities</a> · <a href="/programs.html">Programs</a> · <a href="/signal/">The Signal</a> · <a href="/voter-guide.html">Voter Guide</a> · <a href="/press/">Press</a> · <a href="/board/">Board</a> · <a href="/find.html">Find</a> · <a href="/api.html">API</a></p>
-    <p class="footer-fine"><a href="/terms.html">Terms of Service</a> · <a href="/privacy.html">Privacy Policy</a> · <a href="/dashboard.html">Platform status</a></p>
-    <p class="footer-fine">© 2026 AutomatedTechnologies d/b/a Detroit Automation Academy</p>
-  </div>
-</footer>
-
-<script src="../../../script.js"></script>
-<script src="/assets/measure.js?v=20261023-o2" defer></script>
+<p>This page has moved. <a href="/notes/app-group-stability/">Go to the new page</a>.</p>
 </body>
 </html>

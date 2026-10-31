@@ -1,103 +1,13 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sprint 2: Datenschutzorientiertes Tagebuch, native Apple-Frameworks</title>
-<meta name="description" content="Warum wir uns für native Apple-Frameworks statt Drittanbieter-SDKs entschieden haben — MusicKit, EventKit, CoreData mit CloudKit.">
-<meta property="og:title" content="Sprint 2: Datenschutzorientiertes Tagebuch, native Apple-Frameworks">
-<meta property="og:description" content="Warum wir uns für native Apple-Frameworks statt Drittanbieter-SDKs entschieden haben — MusicKit, EventKit, CoreData mit CloudKit.">
-<meta property="og:image" content="https://www.detroitautomationacademy.com/assets/logo.webp">
-<meta property="og:type" content="article">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Sprint 2: Datenschutzorientiertes Tagebuch, native Apple-Frameworks">
-<meta name="twitter:description" content="Warum wir uns für native Apple-Frameworks statt Drittanbieter-SDKs entschieden haben — MusicKit, EventKit, CoreData mit CloudKit.">
-<link rel="icon" type="image/webp" href="../../../assets/logo.webp">
-<link rel="stylesheet" href="../../../styles.css?v=20261018-1404">
-<style>h1{font-size:var(--step-2);letter-spacing:-0.01em;margin:0.4em 0 0.6em}</style>
-<link rel="canonical" href="https://www.detroitautomationacademy.com/notes/de/at-diary-sprint-2/">
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  "name": "Sprint 2: Datenschutzorientiertes Tagebuch, native Apple-Frameworks",
-  "description": "Warum wir uns für native Apple-Frameworks statt Drittanbieter-SDKs entschieden haben — MusicKit, EventKit, CoreData mit CloudKit.",
-  "url": "https://www.detroitautomationacademy.com/notes/de/at-diary-sprint-2/",
-  "inLanguage": "de",
-  "publisher": {
-    "@type": "Organization",
-    "name": "Detroit Automation Academy",
-    "url": "https://www.detroitautomationacademy.com/"
-  }
-}
-</script>
-  <link rel="alternate" hreflang="en" href="https://www.detroitautomationacademy.com/notes/at-diary-sprint-2/">
-  <link rel="alternate" hreflang="de" href="https://www.detroitautomationacademy.com/notes/de/at-diary-sprint-2/">
-  <link rel="alternate" hreflang="x-default" href="https://www.detroitautomationacademy.com/notes/at-diary-sprint-2/">
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta http-equiv="refresh" content="0; url=/notes/at-diary-sprint-2/">
+<link rel="canonical" href="https://www.detroitautomationacademy.com/notes/at-diary-sprint-2/">
+<title>Page moved — Detroit Automation Academy</title>
 </head>
 <body>
-
-<div id="daa-nav"><header class="nav"><a class="brand" href="/" aria-label="Detroit Automation Academy — home"><img src="/assets/logo.webp" alt="" class="brand-mark"><span class="brand-word">Detroit Automation <em>Academy</em></span></a><nav class="nav-links" id="daaNavLinks" aria-label="Primary"><a class="lane" data-audience="viewer" href="/watch/">Watch</a><a class="lane" data-audience="reader" href="/signal/">Read</a><a class="lane" data-active="true" aria-current="page" data-audience="reader" href="/notes/">Notes</a><a class="lane" data-audience="reader" href="/press/">Press</a><a class="lane" data-audience="user" href="/live-transit.html">Do</a><a class="lane" data-audience="user" href="/live-transit/">Cities</a><a class="lane" data-audience="visitor" href="/programs.html">Programs</a><a class="lane" data-audience="user" href="/api.html">API</a><a class="lane" data-audience="visitor" href="/partners.html">Partners</a><a class="lane" data-audience="visitor" href="/#mission">About</a><a class="lane" data-audience="visitor" href="/apple-learning-coach/">Bio</a><a class="lane" data-audience="visitor" href="/find.html">Find</a><a class="lane" data-audience="subscriber" href="https://www.linkedin.com/newsletters/7508391258638311424/" target="_blank" rel="noopener" aria-label="Subscribe, opens in new tab">Subscribe</a></nav><button class="nav-toggle" id="daaNavToggle" aria-label="Toggle navigation" aria-expanded="false"><span></span><span></span><span></span></button></header></div>
-<script src="/nav.js?v=20261023-0221"></script>
-
-<main id="top">
-
-  <article class="section">
-    <div class="wrap">
-      <p class="kicker"><a href="../">Notizen</a> · iOS · Februar 2026</p>
-      <h1>Sprint 2: Aufbau eines datenschutzorientierten Tagebuchs <span class="accent">auf nativen Apple-Frameworks</span></h1>
-      <p class="fine">Veröffentlicht 28. Februar 2026 · Detroit Automation Academy · Historische technische Notiz — aus dem stillgelegten Blog migriert.</p>
-      <div class="prose">
-        <p>Sprint 2 der Tagebuch-App ist mit einem erfolgreichen Build abgeschlossen. Hier ist, was wir ausgeliefert haben und wie sich die Architektur-Entscheidungen bewähren.</p>
-        <h3>Die Kernvoraussetzung</h3>
-        <p>Die meisten Tagebuch-Apps verlangen, dass Sie ihren Servern Ihre persönlichsten Daten anvertrauen. Diese App tut das nicht. Jedes Datenelement — Musikverlauf, Kalenderereignisse, Standortkontext, Fotos — wird <strong>auf dem Gerät</strong> verarbeitet und mit iCloud-Verschlüsselung gespeichert. Nichts wird nach Hause gesendet.</p>
-        <h3>Der Framework-Stack</h3>
-        <table>
-          <thead><tr><th>Framework</th><th>Datendomäne</th><th>Datenschutz-Ansatz</th></tr></thead>
-          <tbody>
-            <tr><td><strong>MusicKit</strong></td><td>Was Sie hören</td><td>Fordert Benutzererlaubnis an; keine Daten verlassen das Gerät</td></tr>
-            <tr><td><strong>EventKit</strong></td><td>Kalender &amp; Erinnerungen</td><td>Lesezugriff auf autorisierte Kalender</td></tr>
-            <tr><td><strong>Contacts</strong></td><td>Benannte Entitäten in Ihrem Tag</td><td>Zugriff nur über Identifier, nie Massenimport</td></tr>
-            <tr><td><strong>CoreLocation</strong></td><td>Wo Sie sind</td><td>Nur signifikante Standortänderungen, gespeichert als Geohash</td></tr>
-            <tr><td><strong>Photos</strong></td><td>Visuelle Erinnerungsauslöser</td><td>Thumbnails lokal generiert, Originale werden nie gelesen</td></tr>
-          </tbody>
-        </table>
-        <h3>Sprint 2 Ergebnisse</h3>
-        <p><strong>MusicKit-Integration.</strong> Autorisierungsfluss abgeschlossen. Die App erfasst den aktuellen Titel zum Zeitpunkt der Erstellung des Eintrags. Album-Cover werden aus dem MusicKit-Katalog abgerufen und als kontextbezogenes Vorschaubild angezeigt.</p>
-        <p><strong>EventKit-Lesepipeline.</strong> Kalenderereignisse für den aktuellen Tag werden abgerufen und nach Dauer und Nähe zur aktuellen Zeit eingestuft. Die Top 3 Ereignisse füllen automatisch den Abschnitt „Heutiger Kontext“.</p>
-        <p><strong>CoreData + CloudKit Persistenz.</strong> Alle Tagebucheinträge werden in einem <code>CoreData</code>-Stack gespeichert, mit CloudKit-Synchronisierung über <code>NSPersistentCloudKitContainer</code>. Einträge werden über alle Apple-Geräte synchronisiert, ohne jemals einen Drittanbieter-Server zu berühren.</p>
-        <p><strong>Erfolgreicher Build.</strong> Sauberer Build gegen das iOS-18.0-Ziel mit null Warnungen bei allen datenschutzsensiblen Framework-Aufrufen.</p>
-        <h3>Nächste Schritte</h3>
-        <ul>
-          <li><strong>Design der Eintragskarten:</strong> reichhaltige kontextbezogene Kacheln mit Musik-, Standort- und Ereigniskontext</li>
-          <li><strong>Timeline-Ansicht:</strong> chronologisches Scrollen mit Umgebungsfarben aus den Album-Covern</li>
-          <li><strong>On-Device ML:</strong> Verwendung von <code>CreateML</code>, um wiederkehrende Muster aufzuzeigen</li>
-        </ul>
-        <hr>
-        <p><em>Dies ist ein privates Projekt. Derzeit ist keine Veröffentlichung im App Store geplant.</em></p>
-      </div>
-      <div class="signal-pager">
-        <a href="../" class="btn btn-ghost">← Alle Notizen</a>
-      </div>
-    </div>
-  </article>
-
-</main>
-
-<footer class="footer">
-  <div class="wrap footer-inner">
-    <div class="footer-brand">
-      <img src="/assets/logo.webp" alt="" class="brand-mark">
-      <span>Detroit Automation Academy</span>
-    </div>
-    <p class="footer-fine">Southfield, Michigan · <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a></p>
-    <p class="footer-fine"><a href="/live-transit.html">Live Transit Detroit</a> · <a href="/live-transit/">Cities</a> · <a href="/programs.html">Programs</a> · <a href="/signal/">The Signal</a> · <a href="/voter-guide.html">Voter Guide</a> · <a href="/press/">Press</a> · <a href="/board/">Board</a> · <a href="/find.html">Find</a> · <a href="/api.html">API</a></p>
-    <p class="footer-fine"><a href="/terms.html">Terms of Service</a> · <a href="/privacy.html">Privacy Policy</a> · <a href="/dashboard.html">Platform status</a></p>
-    <p class="footer-fine">© 2026 AutomatedTechnologies d/b/a Detroit Automation Academy</p>
-  </div>
-</footer>
-
-<script src="../../../script.js"></script>
-<script src="/assets/measure.js?v=20261023-o2" defer></script>
+<p>This page has moved. <a href="/notes/at-diary-sprint-2/">Go to the new page</a>.</p>
 </body>
 </html>
