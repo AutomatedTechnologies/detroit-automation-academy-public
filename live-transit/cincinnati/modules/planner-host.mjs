@@ -1,5 +1,5 @@
 // modules/planner-host.mjs — R4 IMPLEMENTATION: planner host.
-// PHL REBUILD R4 (planner rebuild). Label: UNVERIFIED /
+// Platform rebuild R4 (planner rebuild). Label: UNVERIFIED /
 // legacy-unsigned. LOCAL BUILD ONLY — nothing here is deployed.
 //
 // R4 rebuilds the planner surface (LT-KAES-29) by HOSTING the
@@ -11,10 +11,9 @@
 //   engine  planner/engine/raptor-v2-set.js  MD5 6746dfbc…
 //   lib     planner/lib/{selection,signature,archetypes-v2,
 //           loader}.mjs (pairing guard)
-//   asset   planner/assets/planner-timetable-v202609271u202611010-
-//           v202609271u202611010.json MD5 30d827d5…, service_model "set"
-//           (Board 65 item 3 refresh, 2026-10-26: union of SEPTA waves
-//           v202609271 + v202611010; rail validity to 2027-02-20)
+//   asset   planner/assets/planner-timetable-<feed-version>.json,
+//           service_model "set" (the asset's identity and MD5 are
+//           the city's config facts, assets.plannerTimetable*)
 //
 // D1(b) LIVES HERE. The policy constant is config's
 // planner.policy.walkOnlyPresentation ('B', decided by Justin
@@ -27,9 +26,10 @@
 // results (presentationFlags.walkOnlyFastest) and decides nothing.
 //
 // LATENCY MITIGATION (R4 first-class component; design record in
-// files/phl-rebuild-r4-planner-2026-10-24.md). The shipped page
+// the R4 planner design record (2026-10-24)). The shipped page
 // cost ≈ 2 × (plan + planRange[≤240 plan() calls]) per plan —
-// PHL1 107 s / PHL5 13 s / PHL11 749 s / Paoli 21 s (VM Node).
+// Golden-pair measurements on the densest launch city ran to
+// 749 s per plan before mitigation (VM Node).
 // The mitigation is three exact-preserving layers, none of which
 // touches a bundle byte or a computed value:
 //   M1 SINGLE ENUMERATION. planTrip runs selection.planQuery
