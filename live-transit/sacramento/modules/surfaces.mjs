@@ -643,14 +643,14 @@ export function createSurfaces(deps = {}) {
       if (seen.has(key)) continue;
       seen.add(key);
       const route = resolveRouteId(byId, tu.route_id);
-      const veh = tu.vehicle_id ? state.vehiclesByKey.get(`${tu.agency || 'rtd'}|${tu.vehicle_id}`) : null;
+      const veh = tu.vehicle_id ? state.vehiclesByKey.get(`${tu.agency || 'sacrt'}|${tu.vehicle_id}`) : null;
       live.push({
         routeId: route ? route.id : tu.route_id,
         routeLabel: route ? routeLabel(route) : String(tu.route_id || ''),
         headsign: headsignForTrip(tu.trip_id) || (veh && veh.destination) || (route ? route.name : null),
         timeMs, kind: 'live',
         vehicleId: tu.vehicle_id || null,
-        agency: tu.agency || 'rtd',
+        agency: tu.agency || 'sacrt',
       });
     }
     live.sort((a, b) => a.timeMs - b.timeMs);
@@ -843,9 +843,14 @@ export function createSurfaces(deps = {}) {
   }
 
   /** The real pick handler: canvas taps (browser) and harness
-   *  picks both land here. null = clean no-op (LT-G14). */
+   *  picks both land here. A null pick closes an open card
+   *  (LT-U5: tap-on-empty clears); with no card open it is a
+   *  clean no-op (LT-G14). */
   function handlePick(pick) {
-    if (!pick) return { ok: false, reason: 'no-hit' };
+    if (!pick) {
+      if (state.card) closeCard();
+      return { ok: false, reason: 'no-hit' };
+    }
     if (pick.kind === 'stop' && pick.stop) {
       openCard('stop', pick.stop.id);
       return { ok: true, kind: 'stop', id: pick.stop.id };
@@ -1106,7 +1111,7 @@ export function createSurfaces(deps = {}) {
           // every rider-facing count: the view (renderer stats).
           proof: markers ? `${markers} vehicle${markers === 1 ? '' : 's'} reporting` : 'No vehicles reporting right now',
         },
-        { id: 'all-routes', label: 'All routes', proof: `${routesTotal} RTD routes` },
+        { id: 'all-routes', label: 'All routes', proof: `${routesTotal} SacRT routes` },
         { id: 'near-me', label: 'Near me', proof: 'Find your nearest stop' },
         {
           id: 'alerts', label: 'Alerts',
