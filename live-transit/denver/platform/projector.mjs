@@ -1,13 +1,13 @@
 // platform/projector.mjs — Shared-platform seam: equirectangular projector.
-// PHL REBUILD R1 foundation. Label: UNVERIFIED / legacy-unsigned.
+// Platform rebuild R1 foundation. Label: UNVERIFIED / legacy-unsigned.
 //
 // LT-KAES-07 (Shared Platform Code, No Per-City Forks): the
-// projector is a PLATFORM concept. Detroit and Philadelphia both
-// project lat/lon onto one shared plane per city (Standard S10);
-// the outgoing PHL build reimplemented it privately inside phl.js.
+// projector is a PLATFORM concept. Every city projects
+// lat/lon onto one shared plane per city (Standard S10);
+// the outgoing build reimplemented it privately per city.
 // In the rebuilt structure the projector lives behind this platform
 // seam: the implementation below is the platform formula (the same
-// convention the SEPTA assets' compiler used — carried from the
+// convention the assets' compiler used — carried from the
 // outgoing build's projector(lat0, lon0), which was itself correct),
 // and when the shared platform package lands, this file becomes a
 // re-export of it. City code never reimplements it again.
