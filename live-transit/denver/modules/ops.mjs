@@ -1,6 +1,5 @@
 // modules/ops.mjs — R6 CONTRACT: ops hooks (client-visible half).
-// PHL REBUILD R1 foundation — interface skeleton. Label:
-// UNVERIFIED / legacy-unsigned.
+// Core module (Cities V2). Label: UNVERIFIED / legacy-unsigned.
 //
 // R6 (ops parity) stands up the server-side ops chain; this module
 // declares the CLIENT-VISIBLE ops contracts the page itself must
@@ -13,38 +12,35 @@
 //     window.__LT_OPS__ (below), and every published file carries
 //     the envelope the data layer validates.
 //   - Self-heal independence (LT-KAES-43): the heal dependency is
-//     DECLARED, in order, never discovered by failure. The defect
-//     case: on 2026-10-23 the PHL heal failed because Detroit's
-//     egress forwarder (127.0.0.1:8888) was down and had to be
-//     restored first — an ordering discovered by failure. The
-//     declared order for the rebuilt chain is recorded here and
-//     R6 writes the ensure path to match:
-//       1. egress forwarder 127.0.0.1:8888 (shared infrastructure)
-//       2. feed-chain timers/units for this city
-//       3. watchdog hook verification (verify, never trust timers)
-//   - Telemetry (LT-KAES-44, ADAPTABLE): Philadelphia has no
-//     consuming surface yet, so production is DEFERRED — R6 files
-//     the decision record either way; the deferral is recorded in
-//     the R1 design note, not silent. If a consuming surface exists
-//     by R6 claim time, R6 builds the product under the fence
-//     discipline (agency-direct feeds only — trivially satisfied
-//     here: no fenced feed exists, LT-KAES-27 N-A).
+//     DECLARED, in order, never discovered by failure. (The defect
+//     case of record, 2026-10-23: a city heal failed because
+//     Detroit's egress forwarder (127.0.0.1:8888) was down and had
+//     to be restored first — an ordering discovered by failure.)
+//     The declared order's SHAPE is platform truth and lives here;
+//     the per-city unit names are config data (ops.chainUnits,
+//     CV2-D13) — a chainless (static-only) city declares nulls and
+//     its order is the forwarder leg alone.
+//   - Telemetry (LT-KAES-44, ADAPTABLE): each city's telemetry
+//     state is its own config record (ops.telemetry, CV2-D13),
+//     never an inherited sentence. A deferral is recorded in the
+//     city's config, not silent.
 //   - Deploy path (LT-KAES-46): same repo, same Pages workflow,
 //     explicit allowlist; page changes ride the city stamp
 //     sequence (config/stamp.mjs), data commits ride the chain's
 //     cadence. No staging sites, no push-triggered hosted builds.
 
 import { BUILD_STAMP } from '../config/stamp.mjs';
+import { CITY_CONFIG } from '../config/city-config.mjs';
 
 export const HEAL_DEPENDENCY_ORDER = Object.freeze([
   'egress-forwarder-127.0.0.1:8888',
-  'phl-feed-chain-timers',
-  'phl-watchdog-hook-verification',
+  ...(CITY_CONFIG.ops.chainUnits.cityTimerUnit ? [CITY_CONFIG.ops.chainUnits.cityTimerUnit] : []),
+  ...(CITY_CONFIG.ops.chainUnits.watchdogHook ? [CITY_CONFIG.ops.chainUnits.watchdogHook] : []),
 ]);
 
 export const TELEMETRY_STATE = Object.freeze({
-  product: 'deferred', // KAES-44 adaptation — no consuming surface yet
-  decisionRecordDue: 'R6', // R6 files the decision record either way
+  product: CITY_CONFIG.ops.telemetry.state, // KAES-44 state, per-city (OPS-2)
+  decisionRecordDue: CITY_CONFIG.ops.telemetry.decisionRecord,
 });
 
 /** Boot/stamp assertion surface for the hourly verification set. */
