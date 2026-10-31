@@ -42,7 +42,7 @@ import {
 // Reliability constants (design-addendum Addendum 2): unchanged from
 // v1 — penalty 15 min per transfer, headway cap 60 min.
 // ---------------------------------------------------------------------
-export const RELIABILITY_TRANSFER_PENALTY_MIN = 15 // DENVER ADOPTED 2026-10-26: calibration winner W0-default-T35-P15 (harness/results-denver-calibration-2026-10-26.json) — the Denver sweep's winner equals the platform default of 15; the constant is a per-city calibration property (LT-N8) and this copy is the Denver bundle's frozen value; the platform default is 15 — this constant is a per-city calibration property (LT-N8) and this copy is the Cincinnati bundle's frozen value;
+export const RELIABILITY_TRANSFER_PENALTY_MIN = 15; // SAN DIEGO ADOPTED — adopted set W0-default-T35-P15; calibration record: harness/results-sandiego-calibration-2026-10-26.json (injected at assembly from config planner.constants; AR-1/AR-2)
 export const HEADWAY_SINGLE_TRIP_CAP_MIN = 60;
 
 function medianOfSorted(sortedArr) {
