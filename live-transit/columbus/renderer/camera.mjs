@@ -1,5 +1,5 @@
 // renderer/camera.mjs — perspective camera view model (LT-KAES-10).
-// PHL REBUILD R3. Label: UNVERIFIED / legacy-unsigned.
+// Platform rebuild R3. Label: UNVERIFIED / legacy-unsigned.
 //
 // One perspective camera model consumed by BOTH the browser renderer
 // (which syncs the THREE camera + controls to it) and the picking
