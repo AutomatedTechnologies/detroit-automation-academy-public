@@ -1,5 +1,5 @@
-// Loader pairing guard — Philadelphia planner integration staging
-// (Board 48 item 6, integration step 2026-10-23).
+// Loader pairing guard — platform planner integration
+// (integration step 2026-10-23).
 //
 // The pairing rule (engine-generalization design §1.3 + the Detroit
 // cutover package's step 1, applied here at staging): an asset whose
