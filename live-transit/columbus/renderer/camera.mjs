@@ -39,6 +39,30 @@ export function createCamera({ fovDeg = DEFAULT_FOV_DEG, width = 960, height = 6
       cam.distance = Math.max(r / t, r / (t * aspect)) * pad;
       return cam;
     },
+    // CG-12 fold: camera-memory + street-view seams. A snapshot is
+    // the full view model as plain data; restore validates and
+    // clamps into the model's own limits (tilt 8-82, distance
+    // 120-250000 — the zoomBy/orbitBy limits). Persistence itself
+    // (any storage key) lives in the scene model / renderer, which
+    // own the config; the camera stays storage-free.
+    snapshot() {
+      return {
+        target: { x: cam.target.x, z: cam.target.z },
+        distance: cam.distance,
+        azimuthDeg: cam.azimuthDeg,
+        tiltDeg: cam.tiltDeg,
+      };
+    },
+    restoreSnapshot(snap) {
+      if (!snap || typeof snap !== 'object' || !snap.target) return false;
+      const { x, z } = snap.target;
+      if (![x, z, snap.distance].every((v) => typeof v === 'number' && Number.isFinite(v))) return false;
+      cam.target = { x, z };
+      cam.distance = Math.max(120, Math.min(250000, snap.distance));
+      if (Number.isFinite(snap.azimuthDeg)) cam.azimuthDeg = snap.azimuthDeg % 360;
+      if (Number.isFinite(snap.tiltDeg)) cam.tiltDeg = Math.max(8, Math.min(82, snap.tiltDeg));
+      return true;
+    },
     panBy(dxM, dzM) { cam.target.x += dxM; cam.target.z += dzM; },
     zoomBy(factor) {
       cam.distance = Math.max(120, Math.min(250000, cam.distance / factor));
