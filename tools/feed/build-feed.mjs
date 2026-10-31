@@ -1219,6 +1219,33 @@ async function main() {
   const v = writeIfChanged(path.join(OUT_DIR, 'vehicles.json'), vehiclesBody);
   const a = reuse.reuse ? 'unchanged' : writeIfChanged(alertsPath, alertsBody);
 
+  /* Canonical trip-updates (KAES-21) — honest empty envelope (T6.3b).
+   * Detroit has NO canonical TU source: DDOT BusTime publishes no
+   * trip-updates leg this builder consumes, QLINE publishes none, and
+   * the SMART Swiftly TU payload is DISPLAY-ONLY (§4(vi)) — it ships
+   * as smart-trip-updates.json and must NEVER be republished as the
+   * canonical file (provenance fence). Until a canonical source
+   * exists, this file publishes the truth: zero trip updates, every
+   * family in the named no-tu-source state. Same write policy as the
+   * siblings (material change or heartbeat). Fault-isolated: a
+   * failure here must never abort or corrupt the sibling writes. */
+  let t = 'failed';
+  try {
+    const tuBody = {
+      generated_at: nowIso,
+      count: 0,
+      trip_updates: [],
+      sources: {
+        ddot: { ok: false, state: 'no-tu-source' },
+        smart: { ok: false, state: 'no-tu-source' },
+        qline: { ok: false, state: 'no-tu-source' },
+      },
+    };
+    t = writeIfChanged(path.join(OUT_DIR, 'trip-updates.json'), tuBody);
+  } catch (err) {
+    console.log(`trip-updates.json: failed (${err.message})`);
+  }
+
   /* SMART display payload — written only while the leg is active.
    * Envelope mirrors vehicles.json (generated_at, count, vehicles)
    * plus the leg's own source state under `source`. Same write policy
@@ -1291,6 +1318,7 @@ async function main() {
 
   console.log(`vehicles.json: ${v} (ddot=${ddot.vehicles.length} ok=${ddot.state.ok}, qline=${qline.vehicles.length} ok=${qline.state.ok})`);
   console.log(`alerts.json: ${a} (ddot alerts=${ddotAlerts.alerts.length} ok=${ddotAlerts.state.ok})`);
+  console.log(`trip-updates.json: ${t} (canonical TU: no source; honest empty envelope)`);
   console.log(smartNote);
   console.log(smartTuNote);
   console.log(smartTuDerivNote);
