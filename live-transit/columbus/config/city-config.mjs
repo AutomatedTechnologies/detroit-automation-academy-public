@@ -24,8 +24,10 @@
 // and the populated alerts feed, and labels the vehicle layer
 // with the agency's non-publication, never with a live claim.
 
-import { BUILD_STAMP } from './stamp.mjs';
 
+// SCHEMA V2 (Cities V2, design iteration 2 §C): v1 sections carried
+// verbatim; posture/ops/release added; agency.shortName added;
+// build.stamp retired to the assembler-generated stamp module.
 export const CITY_CONFIG = Object.freeze({
   // ---- Identity -------------------------------------------------------
   city: Object.freeze({
@@ -40,13 +42,14 @@ export const CITY_CONFIG = Object.freeze({
 
   // ---- Build ----------------------------------------------------------
   build: Object.freeze({
-    stamp: BUILD_STAMP, // single governing stamp, defined ONLY in ./stamp.mjs (LT-KAES-04)
+    // stamp: RETIRED in schema v2 — BUILD_STAMP is assembler-generated (design C.1/D.3)
     stage: 'columbus-build-staging', // local only; NOT a production build (launch gate: Board 56 item 7)
   }),
 
   // ---- Agency & license -------------------------------------------------
   agency: Object.freeze({
     id: 'cota',
+    shortName: 'COTA', // NEW schema v2 — proof-string form (SF-2) [design C.1]
     name: 'Central Ohio Transit Authority', //                 [PRD §2]
     publisherHost: 'www.cota.com', // static on cota.com; RT on realtime.cota.com (TMGTFS) [PRD §2 / A2]
     // License: COTA GTFS Terms of Use + Developer License,
@@ -208,6 +211,8 @@ export const CITY_CONFIG = Object.freeze({
 
   // ---- Planner policy ----------------------------------------------------
   planner: Object.freeze({
+    hosting: 'main-thread', // NEW schema v2 (WK-1) [design A.9/C.1]
+    calibrationRecord: 'harness/results-columbus-calibration-2026-10-26.json', // NEW — adopted-set citation pointer (SL-2)
     policy: Object.freeze({
       // D1(b) — the platform policy of record: walk-only is
       // presented ONLY when no transit journey exists in the
@@ -287,6 +292,72 @@ export const CITY_CONFIG = Object.freeze({
     placesPriceState: 'UNDECIDED',
   }),
 
+  // ---- Posture (NEW, schema v2 §C.2) -----------------------------------
+  posture: Object.freeze({
+    model: 'static', // static-only city (SF-5)
+    degradation: Object.freeze({
+      evaluateLiveStaleness: true, // served behavior in ALL seven v1 builds (T1 reconciliation: Columbus U5-01 asserts stale envelopes ARE flagged; design C.2's short-circuit contradicted the harness — iteration 3 owns the re-spec)
+    }),
+    nonPublication: Object.freeze({
+      statement: 'COTA does not publish live vehicle positions',
+      citation: 'SF-5 inventory (design iteration 2 §A.5); Columbus conformance record 2026-10-30',
+    }),
+    copy: Object.freeze({
+      // The SF-5 static copy family, verbatim from the served build —
+      // T3 byte-compares these strings pre/post migration.
+      statusLoading: 'Loading the scheduled network…',
+      statusZero: 'COTA does not publish live vehicle positions — showing the scheduled network',
+      routeMeta: 'scheduled service',
+      mapTileLabel: 'Route map',
+      mapTileProofZero: 'Scheduled network — COTA publishes no live vehicle positions',
+      arrivalsEmpty: 'No live arrivals — COTA does not publish live data; scheduled arrivals follow.',
+      routeVehiclesEmpty: 'COTA does not publish live vehicle positions for this route.',
+    }),
+  }),
+
+  // ---- Ops (NEW, schema v2 §C.3) ----------------------------------------
+  ops: Object.freeze({
+    chainUnits: Object.freeze({
+      cityTimerUnit: null, // OPS-1 destination (CV2-D13)
+      watchdogHook: null,
+    }),
+    telemetry: Object.freeze({
+      state: 'undecided', // OPS-2 destination (CV2-D13)
+      decisionRecord: null,
+    }),
+  }),
+
+  // ---- Release (NEW, schema v2 §C.3) -------------------------------------
+  release: Object.freeze({
+    corePin: 't1-extract-1', // the T1-extracted core (CV2-1 cycle 2)
+    canary: false, // standing release canary: San Diego (CV2-D11)
+  }),
+
+  // ---- Fares (NEW, optional, schema v2 §C.3) ------------------------------
+  fares: Object.freeze({
+    base: 2, dayCap: null, currency: 'USD',
+    source: 'city conformance record 2026-10-30 (COTA $2.00 flat as served)', // LT-F6: a figure exists only with its citation
+  }), // no fare figure on record for this city — the absence stands (LT-F6)
+
+  // ---- Page shell prose (NEW, schema v2.1, T2) ----------------------------
+  // The generated index.html’s per-city content (iteration-2 design A.10:
+  // IH-1/IH-3/IH-5/IH-6 verbatim; A.12 terms presence declared). Extracted
+  // byte-exact from the city’s served shell by tools/extract_page.mjs;
+  // the T2 assembler inserts it into the platform page template.
+  // Canonical URL is NOT stored — it derives from city.canonicalPath.
+  page: Object.freeze({
+    title: "Columbus — Live Transit · Detroit Automation Academy",
+    metaDescription: "The COTA bus network on one map of Columbus — the full scheduled network, current service alerts, and a trip planner on the published timetable. COTA does not publish live vehicle positions, and this page says so — agency-direct data, published by AutomatedTechnologies.",
+    h1: "Columbus — Live Transit",
+    intro: "The COTA bus network on one map of Columbus. COTA does not publish\n    live vehicle positions, so this page shows the full scheduled network,\n    COTA's current service alerts, and a trip planner on the published\n    timetable — no live claims. There are no ads on this map. Ever.",
+    statusText: "Loading the scheduled network…",
+    plannerLine: " — scheduled journeys across the Columbus region from the published timetable.",
+    canvasAriaLabel: "Map of Columbus with the COTA scheduled bus network",
+    aboutCoverage: "The map covers the COTA service area — Columbus and Franklin\n    County, reaching into southern Delaware County — drawn from U.S.\n    Census TIGER/Line 2025 roads. Route lines and stops come from\n    COTA's published GTFS. Service alerts come from COTA's\n    agency-direct GTFS-Realtime alerts feed, fetched and republished\n    by AutomatedTechnologies. COTA's vehicle-position and trip-update\n    feeds publish no data — they return empty in every sampling —\n    so this page presents scheduled service only and labels it that\n    way.",
+    aboutLicense: "Live Transit Columbus is published by AutomatedTechnologies\n    d/b/a Detroit Automation Academy, from COTA's public data under\n    the COTA GTFS Terms of Use and Developer License. This page makes\n    no use of COTA branding or logos and implies no sponsorship or\n    endorsement. Riders never pay for Live Transit.",
+    terms: true, // terms.html present in this city’s tree — a decision on record (A.12), asserted by the contract gate
+  }),
+
   // ---- Persisted rider state (LT-KAES-37) --------------------------------
   storageKeys: Object.freeze({
     launcherSheet: 'cb-fv-sheet', // first-view sheet state (LT-S1.2 dedicated key)
@@ -298,6 +369,7 @@ export const CITY_CONFIG = Object.freeze({
 export const REQUIRED_CONFIG_KEYS = Object.freeze([
   'city', 'build', 'agency', 'feeds', 'layerGroups',
   'assets', 'freshness', 'planner', 'commercial', 'storageKeys',
+  'posture', 'ops', 'release', 'page', // schema v2 + page (T2 v2.1); fares is optional
 ]);
 
 /** Resolve a layer group's boot state: stored preference wins (KAES-37/38). */
