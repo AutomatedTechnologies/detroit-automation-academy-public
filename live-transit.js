@@ -7549,9 +7549,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // filterState.routes[rid] is the ONLY visibility gate: any route can be
   // toggled on its own, no group header required. Group headers are bulk
   // setters (all on / all off); they never gate individual routes.
-  // filterState.hideIdle (default ON): fully hide routes confirmed not-running.
+  // filterState.hideIdle (default OFF since 2026-10-31, Justin's direction:
+  // all routes on by default): fully hide routes confirmed not-running.
   // filterState.nearMe: only routes with a stop within NEAR_ME_M of you.
-  var filterState = { groups: {}, routes: {}, hideIdle: true, nearMe: false };
+  var filterState = { groups: {}, routes: {}, hideIdle: false, nearMe: false };
   var NEAR_ME_M = 1250;
   var nearMeSet = null;   // rid -> true, rebuilt when you move or toggle
   var userXZ = null;      // your projected position, set by onLocated
@@ -7812,9 +7813,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var host = $('filter-groups');
     host.innerHTML = '';
     groups.forEach(function (g) {
-      // Calm default: only the ConnectTen core network is on. The panel
-      // opens as an accordion (3 rows); route chips expand per group.
-      var gOn = (g.id === 'connect-ten');
+      // All routes on by default (Justin's direction, 2026-10-31): every
+      // group starts on for a fresh profile, so every route starts on.
+      // The panel opens as an accordion; route chips expand per group.
+      var gOn = true;
       var gLabel = g.name;
       // SMART (reactivated 2026-10-15; production uplift 2026-10-15):
       // default ON like DDOT/QLINE. A stored visitor preference still
