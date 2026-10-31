@@ -1,5 +1,5 @@
 /* Detroit Automation Academy — platform navigation, single source.
- * v3.0 (2026-10-23): the nav markup is inlined in every page's static HTML
+ * v4.0 (2026-10-31): the nav markup is inlined in every page's static HTML
  * (domain fix program T4), so the static/no-JS link graph is complete.
  * This script now ENHANCES the static markup — mobile toggle + active-lane
  * state — and renders from scratch only as a fallback for a page whose
@@ -9,36 +9,26 @@
 (function () {
   'use strict';
 
-  var NEWSLETTER_URL = 'https://www.linkedin.com/newsletters/7508391258638311424/';
-
-  /* Audience lanes. Order is the nav order. Flat — no dropdown layers.
+    /* Audience lanes. Order is the nav order. Flat — no dropdown layers.
    * Keep in sync with the static markup inlined in the pages. */
   var LANES = [
-    { label: 'Watch', href: '/watch/', audience: 'viewer' },
-    { label: 'Read', href: '/signal/', audience: 'reader' },
-    { label: 'Notes', href: '/notes/', audience: 'reader' },
-    { label: 'Press', href: '/press/', audience: 'reader' },
-    { label: 'Do', href: '/live-transit.html', audience: 'user' },
+    { label: 'Live Map', href: '/live-transit.html', audience: 'user' },
+    { label: 'Cities', href: '/live-transit/', audience: 'user' },
     { label: 'Programs', href: '/programs.html', audience: 'visitor' },
-    { label: 'API', href: '/api.html', audience: 'user' },
-    { label: 'Partners', href: '/partners.html', audience: 'visitor' },
-    { label: 'About', href: '/#mission', audience: 'visitor' },
-    { label: 'Bio', href: '/apple-learning-coach/', audience: 'visitor' },
-    { label: 'Find', href: '/find.html', audience: 'visitor' },
-    { label: 'Subscribe', href: NEWSLETTER_URL, audience: 'subscriber', external: true }
+    { label: 'Voter Guide', href: '/voter-guide.html', audience: 'visitor' },
+    { label: 'The Signal', href: '/signal/', audience: 'reader' },
+    { label: 'Contact', href: '/inquire.html', audience: 'visitor' },
+    { label: 'Find', href: '/find.html', audience: 'visitor' }
   ];
 
   /* Map the current path to its lane for the active state. */
   function activeLane(path) {
-    if (/^\/watch\//.test(path)) return 'Watch';
-    if (/^\/(signal|live-transit-detroit)\//.test(path) || /^\/voter-guide/.test(path)) return 'Read';
-    if (/^\/notes\//.test(path)) return 'Notes';
-    if (/^\/press\//.test(path)) return 'Press';
-    if (/^\/(live-transit\.html|district\.html)/.test(path)) return 'Do';
+    if (/^\/live-transit\.html/.test(path) || /^\/board\//.test(path)) return 'Live Map';
+    if (/^\/live-transit\//.test(path)) return 'Cities';
     if (/^\/programs\.html/.test(path) || /^\/curriculum\//.test(path)) return 'Programs';
-    if (/^\/api\.html/.test(path)) return 'API';
-    if (/^\/partners\.html/.test(path)) return 'Partners';
-    if (/^\/apple-learning-coach\//.test(path)) return 'Bio';
+    if (/^\/voter-guide/.test(path)) return 'Voter Guide';
+    if (/^\/signal\//.test(path)) return 'The Signal';
+    if (/^\/inquire\.html/.test(path)) return 'Contact';
     if (/^\/find\.html/.test(path)) return 'Find';
     return null;
   }

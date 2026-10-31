@@ -337,6 +337,12 @@ a { color: inherit; }
 .footer-line { color: var(--forge); font-weight: 600; margin-bottom: 8px; }
 .footer-fine { color: var(--concrete); font-size: 0.85rem; }
 
+/* ---------- Footer groups (site-map redesign, 2026-10-31) ---------- */
+.footer-groups { margin: 20px auto 4px; max-width: 880px; }
+.footer-group { margin-bottom: 14px; }
+.footer-group h3 { font-family: 'Space Grotesk', sans-serif; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--forge); margin: 0 0 5px; }
+.footer-group .footer-fine { margin: 2px 0; }
+
 /* ---------- Reveal on scroll ---------- */
 .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
 .reveal.visible { opacity: 1; transform: none; }
