@@ -17,8 +17,10 @@
 // A value with no record behind it is recorded as UNDECIDED / null
 // (LT-F6: no invented figures; LT-F7: honest null).
 
-import { BUILD_STAMP } from './stamp.mjs';
 
+// SCHEMA V2 (Cities V2, design iteration 2 §C): v1 sections carried
+// verbatim; posture/ops/release added; agency.shortName added;
+// build.stamp retired to the assembler-generated stamp module.
 export const CITY_CONFIG = Object.freeze({
   // ---- Identity -------------------------------------------------------
   city: Object.freeze({
@@ -33,13 +35,14 @@ export const CITY_CONFIG = Object.freeze({
 
   // ---- Build ----------------------------------------------------------
   build: Object.freeze({
-    stamp: BUILD_STAMP, // single governing stamp, defined ONLY in ./stamp.mjs (LT-KAES-04)
+    // stamp: RETIRED in schema v2 — BUILD_STAMP is assembler-generated (design C.1/D.3)
     stage: 'austin-build-staging', // local only; NOT a production build (launch gate: Board 53 item 7)
   }),
 
   // ---- Agency & license -------------------------------------------------
   agency: Object.freeze({
     id: 'capmetro',
+    shortName: 'CapMetro', // NEW schema v2 — proof-string form (SF-2) [design C.1]
     name: 'Capital Metropolitan Transportation Authority', //  [PRD §2]
     publisherHost: 'data.texas.gov', // the agency-designated publication channel: CapMetro's own developer page links developers to the State of Texas Socrata portal for static + realtime (A2); capmetro.org itself 403s the /data/*.pb pattern its documentation shows [A2 §2]
     // License: CapMetro Open Data License Agreement, A1 PASS
@@ -190,6 +193,8 @@ export const CITY_CONFIG = Object.freeze({
 
   // ---- Planner policy ----------------------------------------------------
   planner: Object.freeze({
+    hosting: 'main-thread', // NEW schema v2 (WK-1) [design A.9/C.1]
+    calibrationRecord: 'harness/results-austin-calibration-2026-10-26.json', // NEW — adopted-set citation pointer (SL-2)
     policy: Object.freeze({
       // D1(b) — the platform policy of record: walk-only is
       // presented ONLY when no transit journey exists in the
@@ -273,6 +278,63 @@ export const CITY_CONFIG = Object.freeze({
     placesPriceState: 'UNDECIDED',
   }),
 
+  // ---- Posture (NEW, schema v2 §C.2) -----------------------------------
+  posture: Object.freeze({
+    model: 'live', // live vehicle layer
+    degradation: Object.freeze({
+      evaluateLiveStaleness: true, // served behavior in ALL seven v1 builds (T1 reconciliation: Columbus U5-01 asserts stale envelopes ARE flagged; design C.2's short-circuit contradicted the harness — iteration 3 owns the re-spec)
+    }),
+    servicePresence: Object.freeze({
+      rule: 'vehicles-or-unassigned-none', // San Diego C4, generalized [C.2]
+      serviceHours: Object.freeze({ model: 'always', windows: Object.freeze([]) }),
+      lowServiceShape: null,
+    }),
+    nonPublication: null,
+  }),
+
+  // ---- Ops (NEW, schema v2 §C.3) ----------------------------------------
+  ops: Object.freeze({
+    chainUnits: Object.freeze({
+      cityTimerUnit: 'aus-publisher.timer', // OPS-1 destination (CV2-D13)
+      watchdogHook: 'aus-watchdog.timer',
+    }),
+    telemetry: Object.freeze({
+      state: 'undecided', // OPS-2 destination (CV2-D13)
+      decisionRecord: null,
+    }),
+  }),
+
+  // ---- Release (NEW, schema v2 §C.3) -------------------------------------
+  release: Object.freeze({
+    corePin: 't1-extract-1', // the T1-extracted core (CV2-1 cycle 2)
+    canary: false, // standing release canary: San Diego (CV2-D11)
+  }),
+
+  // ---- Fares (NEW, optional, schema v2 §C.3) ------------------------------
+  fares: Object.freeze({
+    base: 1.25, dayCap: null, currency: 'USD',
+    source: 'CapMetro fare_attributes: 2 products (local $1.25, express $3.50 single-ride); the feed carries NO day-cap product — DIA-04 correction 2026-10-31 (audit: cities-v2-data-integrity-audit-2026-10-30.md); $3.50 was the express single-ride fare, misrecorded as a day cap in rev 2', // LT-F6: a figure exists only with its citation
+  }),
+
+  // ---- Page shell prose (NEW, schema v2.1, T2) ----------------------------
+  // The generated index.html’s per-city content (iteration-2 design A.10:
+  // IH-1/IH-3/IH-5/IH-6 verbatim; A.12 terms presence declared). Extracted
+  // byte-exact from the city’s served shell by tools/extract_page.mjs;
+  // the T2 assembler inserts it into the platform page template.
+  // Canonical URL is NOT stored — it derives from city.canonicalPath.
+  page: Object.freeze({
+    title: "Austin — Live Transit · Detroit Automation Academy",
+    metaDescription: "CapMetro buses and the Metro Rail Red Line live on one map of Austin — agency-direct data, published by AutomatedTechnologies.",
+    h1: "Austin — Live Transit",
+    intro: "CapMetro buses and the Metro Rail Red Line, live on one map of Austin.\n    Data comes from CapMetro's own published feeds. There are no ads on this map. Ever.",
+    statusText: "Loading live vehicles…",
+    plannerLine: " — scheduled journeys across the Austin region from the published timetable.",
+    canvasAriaLabel: "Map of Austin with live CapMetro vehicle positions",
+    aboutCoverage: "The map covers the Austin region in Travis, Williamson and Hays counties,\n    Texas — the CapMetro service area — drawn from U.S. Census TIGER/Line\n    2025 roads. Route lines and stops come from CapMetro's published GTFS.\n    Vehicle positions come from CapMetro's agency-direct GTFS-Realtime\n    feeds, fetched and republished by AutomatedTechnologies. Service alerts\n    are adapted from CapMetro's published alerts record.",
+    aboutLicense: "Live Transit Austin is published by AutomatedTechnologies\n    d/b/a Detroit Automation Academy, from Capital Metro's public data under\n    the CapMetro Open Data License Agreement. This page makes no use of\n    CapMetro branding or logos and implies no sponsorship or endorsement.\n    Riders never pay for Live Transit.",
+    terms: true, // terms.html present in this city’s tree — a decision on record (A.12), asserted by the contract gate
+  }),
+
   // ---- Persisted rider state (LT-KAES-37) --------------------------------
   storageKeys: Object.freeze({
     launcherSheet: 'aus-fv-sheet', // first-view sheet state (LT-S1.2 dedicated key)
@@ -284,6 +346,7 @@ export const CITY_CONFIG = Object.freeze({
 export const REQUIRED_CONFIG_KEYS = Object.freeze([
   'city', 'build', 'agency', 'feeds', 'layerGroups',
   'assets', 'freshness', 'planner', 'commercial', 'storageKeys',
+  'posture', 'ops', 'release', 'page', // schema v2 + page (T2 v2.1); fares is optional
 ]);
 
 /** Resolve a layer group's boot state: stored preference wins (KAES-37/38). */
