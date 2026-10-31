@@ -32,7 +32,7 @@
 
 import { CITY_CONFIG } from '../config/city-config.mjs';
 import { BUILD_STAMP } from '../config/stamp.mjs';
-import { installOpsHooks } from './ops.mjs';
+import { installOpsHooks, installClientRecovery } from './ops.mjs';
 
 export const APP_MODULES = Object.freeze([
   'config', 'data-layer', 'renderer', 'planner-host', 'surfaces', 'ops',
@@ -45,6 +45,12 @@ export function createApp() {
     stamp: BUILD_STAMP,
     state,
     ops: installOpsHooks(state),
+    // CG-13 (core fold F6): client recovery (error log / recovery
+    // ladder / frame watchdog), installed during boot ONLY when
+    // ops.clientRecovery configures a piece. Absent (every fleet
+    // config) this installs nothing and is {installed:false}.
+    // The __LT_OPS__ boot report above is shape-unchanged either way.
+    clientRecovery: installClientRecovery(),
   };
   state.booted = true;
   return ctx;
