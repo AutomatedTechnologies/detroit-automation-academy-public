@@ -169,6 +169,23 @@ export function plannerFoldConfig(cfg) {
   const b = p.budgetMs || {};
   const l = p.live || {};
   const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+  // F8 fence: display-only feed ids from every fold declaration —
+  // agency.displayOnlyFeeds, the display-vehicle entries, and the
+  // display trip-updates source (all optional / absent-safe).
+  const displayOnlyFeeds = new Set();
+  const agency = (cfg && cfg.agency) || {};
+  if (Array.isArray(agency.displayOnlyFeeds)) {
+    for (const d of agency.displayOnlyFeeds) if (d != null) displayOnlyFeeds.add(String(d));
+  }
+  const liveData = ((cfg && cfg.assets) || {}).liveData || {};
+  if (Array.isArray(liveData.displayVehicles)) {
+    for (const e of liveData.displayVehicles) {
+      if (e && e.feed != null) displayOnlyFeeds.add(String(e.feed));
+    }
+  }
+  if (liveData.displayTripUpdates && liveData.displayTripUpdates.feed != null) {
+    displayOnlyFeeds.add(String(liveData.displayTripUpdates.feed));
+  }
   return {
     presentation: p.presentation === 'direct' ? 'direct' : 'selection',
     budgetMs: { plan: num(b.plan), replan: num(b.replan) },
@@ -179,10 +196,23 @@ export function plannerFoldConfig(cfg) {
       replan: l.replan === true,
     },
     routesRegistry: !!((cfg && cfg.assets) || {}).routesRegistry,
+    displayOnlyFeeds,
   };
 }
 
 const FOLD = plannerFoldConfig(CITY_CONFIG);
+
+/* F8 fence predicate: a vehicle record is display-only when the
+ * data layer tagged it so (displayOnly / displayFeed — the primary
+ * signal), or when its feed is a configured display-only feed
+ * (covers hand-fed arrays carrying no tags). Pure over the record
+ * plus the configured feed set (default: this host's FOLD set). */
+export function isDisplayVehicle(v, displayOnlyFeeds) {
+  if (!v) return false;
+  if (v.displayOnly === true || v.displayFeed != null) return true;
+  const set = displayOnlyFeeds || FOLD.displayOnlyFeeds;
+  return v.feed != null && !!set && set.has(String(v.feed));
+}
 
 /* Walk-model arithmetic (census B6): every seed/bridge walk in the
  * fold paths is max(perEdgeFloorSec, round(distanceM / speedMps))
@@ -564,7 +594,8 @@ export function createPlannerHost() {
     registryStops: null,
     tripDelayState: new Map(), lastVehicles: null,
     lastJourneys: null, lastSelIndex: 0, lastPlanContext: null,
-    lastDirectResult: null, lastSelectionResult: null, lastGuidance: null,
+    lastDirectResult: null, directResults: new Map(), lastSelectionResult: null,
+    lastSelectionKey: null, lastGuidance: null,
     matcherLast: null, matcherCum: null, liveDelayCalls: 0,
     routeIdxById: null, arcCache: new WeakMap(),
   };
@@ -755,9 +786,13 @@ export function createPlannerHost() {
       // than presenting an empty plan as if none existed (the
       // monolith's rollback semantics, census P4). Only reachable
       // when a budget was actually supplied to the engine.
+      // F8: the rollback fires ONLY for the same query — the
+      // retained result is tagged with its query key and a budget
+      // hit on a different query never presents it.
+      const selKey = fromIdx + '|' + toIdx + '|' + (opts.ttBasis || 'day');
       if (typeof budgetPlan === 'number' && capture.baseline &&
           capture.baseline.meta && capture.baseline.meta.reason === 'budget' &&
-          state.lastSelectionResult) {
+          state.lastSelectionResult && state.lastSelectionKey === selKey) {
         return {
           ...state.lastSelectionResult,
           meta: { ...state.lastSelectionResult.meta, budgetRollback: true, planMs: Date.now() - t0 },
@@ -789,7 +824,15 @@ export function createPlannerHost() {
         },
       };
       // F3 retention + live bookkeeping — only on gated configs.
-      if (typeof budgetPlan === 'number') state.lastSelectionResult = out;
+      // F8: retention is tagged with this query's key (see above),
+      // and a budget-hit query does NOT displace the retained
+      // result (its baseline is not a successful result — the
+      // direct mode's non-budget-only retention, mirrored).
+      if (typeof budgetPlan === 'number' &&
+          !(capture.baseline && capture.baseline.meta && capture.baseline.meta.reason === 'budget')) {
+        state.lastSelectionResult = out;
+        state.lastSelectionKey = fromIdx + '|' + toIdx + '|' + (opts.ttBasis || 'day');
+      }
       if (FOLD.live.matcher || FOLD.live.fusion || FOLD.live.guidance || FOLD.live.replan) {
         state.lastPlanContext = { mode: 'selection', fromIdx, toIdx, departAfterIso };
         state.lastJourneys = presented.map((p) => p.journey).filter(Boolean);
@@ -837,8 +880,9 @@ export function createPlannerHost() {
      *  when the key is present (a re-plan passes the replan value,
      *  possibly null); otherwise the configured plan budget; a
      *  non-number passes NO opts object to the engine. On a budget
-     *  result the retained previous result is returned when one
-     *  exists (rollback), else the budget result as-is. */
+     *  result the retained result OF THE SAME QUERY (per-query map,
+     *  F8) is returned when one exists (rollback), else the budget
+     *  result as-is. */
     async planDirectAsync(fromSpec, toSpec, departAfterIso, opts = {}) {
       if (!state.ready) return { ok: false, reason: 'not-ready' };
       const t0 = Date.now();
@@ -903,16 +947,29 @@ export function createPlannerHost() {
         return { ok: false, reason: 'same-stop' };
       }
       const when = new Date(departAfterIso);
+      // F8: per-query retention key — the RESOLVED computation
+      // identity (seeds + dest). Depart time is deliberately
+      // excluded: replanLive re-plans the same endpoints at a new
+      // instant and must hit the same key.
+      const directKey = JSON.stringify({
+        seeds: seeds.map((s) => s.stop + ':' + s.walk), dest,
+      });
       const budget = ('budgetMs' in opts) ? opts.budgetMs : FOLD.budgetMs.plan;
       const res = (typeof budget === 'number')
         ? ENGINE.plan(tt, seeds, dest, when, { budgetMs: budget })
         : ENGINE.plan(tt, seeds, dest, when);
-      // Rollback: a budget result never displaces retained results.
-      if (res.meta && res.meta.reason === 'budget' && state.lastDirectResult) {
-        return {
-          ...state.lastDirectResult, budgetRollback: true,
-          meta: { ...state.lastDirectResult.meta, reason: 'budget', budgetRollback: true },
-        };
+      // Rollback: a budget result never displaces retained results,
+      // and rolls back ONLY to the retained result of THIS query;
+      // with no retained result for this key the budget result is
+      // returned as-is (below).
+      if (res.meta && res.meta.reason === 'budget') {
+        const retained = state.directResults ? state.directResults.get(directKey) : null;
+        if (retained) {
+          return {
+            ...retained, budgetRollback: true,
+            meta: { ...retained.meta, reason: 'budget', budgetRollback: true },
+          };
+        }
       }
       const journeys = res.journeys || [];
       if (FOLD.live.fusion && state.lastVehicles) applyTripFusion(journeys, state.lastVehicles);
@@ -928,6 +985,14 @@ export function createPlannerHost() {
       };
       if (!(res.meta && res.meta.reason === 'budget')) {
         state.lastDirectResult = out;
+        // F8: retain per query key, FIFO-capped at 8.
+        if (state.directResults) {
+          if (state.directResults.has(directKey)) state.directResults.delete(directKey);
+          state.directResults.set(directKey, out);
+          while (state.directResults.size > 8) {
+            state.directResults.delete(state.directResults.keys().next().value);
+          }
+        }
         state.lastPlanContext = { mode: 'direct', fromSpec, toSpec, departAfterIso };
         state.lastJourneys = journeys;
         state.lastSelIndex = 0;
@@ -950,15 +1015,25 @@ export function createPlannerHost() {
      * handing the delay map to the engine — setLiveDelays on the
      * full timetable and every cached day timetable, so both
      * planning bases see the same live state. Service resolution
-     * generalizes the monolith's single-feed serviceFor form to
-     * the union of servicesFor over the asset's feeds (identical
-     * on a single-feed asset). Returns this poll's stats; the
+     * is the monolith's SINGULAR feed-0 servicesFor form (today
+     * and yesterday): the fold's recorded deviation 'service
+     * resolution generalized over feeds' is REVERTED by the F8
+     * fix release as the fence restoration — display-only feeds'
+     * trips are structurally never matcher candidates, and
+     * display vehicles are filtered out at entry (below), so
+     * display data never enters computation. (Day-compilation /
+     * planning keeps all feeds; only live matching is fenced.)
+     * Returns this poll's stats; the
      * cumulative pair is read via getMatcherStats() and the
      * global __flMatcherStats hook, mirroring the monolith. */
     runMatcher(vehicles, nowMs) {
       if (!state.ready || !state.ttFull) return null;
       const tt = state.ttFull;
       const t = typeof nowMs === 'number' ? nowMs : Date.now();
+      // F8 fence: display vehicles are filtered out at entry —
+      // no fix count, no candidate match, no layover bind below.
+      const eligible = (Array.isArray(vehicles) ? vehicles : [])
+        .filter((v) => !isDisplayVehicle(v));
       const stats = matcherZero();
       stats.t = t;
       if (!state.routeIdxById) {
@@ -969,12 +1044,9 @@ export function createPlannerHost() {
       const dNow = new Date(t), dPrev = new Date(t - 86400000);
       const secOf = (d) => d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
       const nowSec = secOf(dNow);
-      const feeds = [...new Set(tt.services.map((s) => s.feed || 0))];
-      const svcToday = new Set(), svcPrev = new Set();
-      for (const f of feeds) {
-        ENGINE.servicesFor(tt, String(ymdOf(dNow)), dNow.getDay(), f).forEach((s) => svcToday.add(s));
-        ENGINE.servicesFor(tt, String(ymdOf(dPrev)), dPrev.getDay(), f).forEach((s) => svcPrev.add(s));
-      }
+      // F8 fence: SINGULAR feed-0 service sets (monolith form).
+      const svcToday = new Set(ENGINE.servicesFor(tt, String(ymdOf(dNow)), dNow.getDay(), 0));
+      const svcPrev = new Set(ENGINE.servicesFor(tt, String(ymdOf(dPrev)), dPrev.getDay(), 0));
       const candCache = new Map();
       const candsFor = (ridx) => {
         if (candCache.has(ridx)) return candCache.get(ridx);
@@ -997,7 +1069,7 @@ export function createPlannerHost() {
         return out;
       };
       const matches = [];
-      for (const v of vehicles || []) {
+      for (const v of eligible) {
         if (!v || v.lat == null || v.lon == null) continue;
         // Gate on the fix's own age, not poll receipt.
         const fixAgeMs = v.updated_at ? (t - new Date(v.updated_at).getTime()) : 0;
@@ -1093,7 +1165,7 @@ export function createPlannerHost() {
       // origin inside its window binds the trip — identity only.
       state.tripDelayState.forEach((st, trip) => {
         if (!st.layover) return;
-        const veh = (vehicles || []).find((v) => String(v.vehicle_id) === String(st.vehicleId));
+        const veh = eligible.find((v) => String(v.vehicle_id) === String(st.vehicleId));
         const o = veh && state.stops[trip.stops[0]];
         if (veh && o && veh.lat != null &&
             haversineM(veh.lat, veh.lon, o.lat, o.lon) <= 250 &&
@@ -1101,7 +1173,7 @@ export function createPlannerHost() {
       });
       const heldIds = new Set();
       state.tripDelayState.forEach((st) => heldIds.add(String(st.vehicleId)));
-      for (const v of vehicles || []) {
+      for (const v of eligible) {
         if (!v || v.lat == null || heldIds.has(String(v.vehicle_id))) continue;
         if (typeof v.speed_mph !== 'number' || v.speed_mph > 2) continue;
         const fixAge = v.updated_at ? (t - new Date(v.updated_at).getTime()) : Infinity;
@@ -1223,7 +1295,11 @@ export function createPlannerHost() {
      *  replanned, guidance }. */
     async onLivePoll(vehicles, nowMs) {
       const t = typeof nowMs === 'number' ? nowMs : Date.now();
-      state.lastVehicles = Array.isArray(vehicles) ? vehicles : [];
+      // F8 fence: partition at entry — lastVehicles holds ONLY
+      // computation-eligible (non-display) vehicles, so fusion
+      // and guidance never see display vehicles either.
+      state.lastVehicles = (Array.isArray(vehicles) ? vehicles : [])
+        .filter((v) => !isDisplayVehicle(v));
       const out = { ok: true, matcher: null, fusion: false, replanned: false, guidance: null };
       if (FOLD.live.matcher) out.matcher = host.runMatcher(state.lastVehicles, t);
       if (FOLD.live.fusion && state.lastJourneys && state.lastJourneys.length) {
