@@ -36,10 +36,17 @@ Template repair 2026-10-20 (DAA Estate Uplift U6, R5): render_html's
 head predated the 2026-10-18 fonts self-host deploy — it linked Google
 Fonts and styles.css?v=20261010-2130. The head now matches the served
 estate standard: no Google Fonts references (the self-hosted @font-face
-rules live in styles.css) and styles.css?v=20261018-1404. Note: the
+rules live in styles.css) and styles.css?v=20261031-0615. Note: the
 first post-repair regeneration also refreshes item descriptions in
 feed.xml and the /feed/ cards to the pages' current (U3-conformed)
 meta descriptions; the item set, order, and dates are unchanged.
+
+Template shell update 2026-10-31 (site-map redesign T2): the inline
+header and footer now match the estate shell (lanes: Live Map, Cities,
+Programs, Voter Guide, The Signal, Contact, Find; four footer groups),
+and the nav.js / styles.css stamps move to v=20261031-0615. The {foot}
+and {legal} lines are subsumed by the shared footer and no longer
+rendered.
 
 Source defects found 2026-10-16 and corrected the same day (UAT Pass 1a):
   * sitemap.xml listed /live-transit-detroit/shut-down-by-the-meter/ but no
@@ -339,11 +346,6 @@ def render_html(items: list[dict]) -> str:
         "the latest below."
     )
     feed_title = "Detroit Automation Academy \u2014 RSS feed"
-    foot = "every edition and installment, as it publishes."
-    legal = (
-        '<a href="/terms.html">Terms of Service</a> · '
-        '<a href="/privacy.html">Privacy Policy</a>'
-    )
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -352,7 +354,7 @@ def render_html(items: list[dict]) -> str:
 <title>RSS feed — Detroit Automation Academy</title>
 <meta name="description" content="{meta_desc}">
 <link rel="icon" type="image/webp" href="/assets/logo.webp">
-<link rel="stylesheet" href="/styles.css?v=20261018-1404">
+<link rel="stylesheet" href="/styles.css?v=20261031-0615">
 <link rel="canonical" href="{BASE}/feed/">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta property="og:type" content="website">
@@ -414,8 +416,21 @@ def render_html(items: list[dict]) -> str:
 <body>
 <a class="skip-link" href="#top">Skip to main content</a>
 
-<div id="daa-nav"></div>
-<script src="/nav.js?v=20261016-1340"></script>
+<div id="daa-nav"><header class="nav">
+<a class="brand" href="/" aria-label="Detroit Automation Academy — home">
+<img src="/assets/logo.webp" alt="" class="brand-mark"><span class="brand-word">
+Detroit Automation <em>Academy</em></span></a>
+<nav class="nav-links" id="daaNavLinks" aria-label="Primary">
+<a class="lane" data-audience="user" href="/live-transit.html">Live Map</a>
+<a class="lane" data-audience="user" href="/live-transit/">Cities</a>
+<a class="lane" data-audience="visitor" href="/programs.html">Programs</a>
+<a class="lane" data-audience="visitor" href="/voter-guide.html">Voter Guide</a>
+<a class="lane" data-audience="reader" href="/signal/">The Signal</a>
+<a class="lane" data-audience="visitor" href="/inquire.html">Contact</a>
+<a class="lane" data-audience="visitor" href="/find.html">Find</a></nav> <button
+class="nav-toggle" id="daaNavToggle" aria-label="Toggle navigation"
+aria-expanded="false"><span></span><span></span><span></span></button></header></div>
+<script src="/nav.js?v=20261031-0615"></script>
 
 <main id="top">
   <section class="wrap feedp-hero">
@@ -440,18 +455,38 @@ def render_html(items: list[dict]) -> str:
   </section>
 </main>
 
-<footer class="footer">
-  <div class="wrap footer-inner">
-    <div class="footer-brand">
-      <img src="/assets/logo.webp" alt="" class="brand-mark">
-      <span>Detroit Automation Academy</span>
-    </div>
-    <p class="footer-line">Built without funding. Finished on principle.</p>
-    <p class="footer-line"><a href="/feed/">RSS feed</a> — {foot}</p>
-    <p class="footer-line">{legal}</p>
-    <p class="footer-fine">© 2026 Detroit Automation Academy · Detroit, Michigan</p>
-  </div>
-</footer>
+<footer class="footer"> <div class="wrap footer-inner"> <div class="footer-brand">
+<img src="/assets/logo.webp" alt="" class="brand-mark"> <span>
+Detroit Automation Academy</span> </div> <p class="footer-fine">
+Southfield, Michigan · <a href="mailto:justin@detroitautomationacademy.com">
+justin@detroitautomationacademy.com</a></p>
+<nav class="footer-groups" aria-label="Site"> <div class="footer-group"> <h3>Ride
+</h3> <p class="footer-fine"><a href="/live-transit.html">Live Map</a> ·
+<a href="/board/">Departure Board</a> · <a href="/live-transit/">Cities</a></p>
+<p class="footer-fine"><a href="/live-transit.html">Detroit</a> ·
+<a href="/live-transit/philadelphia/">Philadelphia</a> ·
+<a href="/live-transit/cincinnati/">Cincinnati</a> ·
+<a href="/live-transit/denver/">Denver</a> · <a href="/live-transit/austin/">Austin
+</a> · <a href="/live-transit/sacramento/">Sacramento</a> ·
+<a href="/live-transit/san-diego/">San Diego</a> ·
+<a href="/live-transit/columbus/">Columbus</a></p> </div> <div class="footer-group">
+ <h3>Read</h3> <p class="footer-fine"><a href="/signal/">The Signal</a> ·
+<a href="/live-transit-detroit/">Live Transit Detroit stories</a> ·
+<a href="/notes/">Notes</a> · <a href="/press/">The Press</a> · <a href="/feed/">
+Latest</a> · <a href="/watch/">Watch</a></p> </div> <div class="footer-group"> <h3>
+Learn &amp; work</h3> <p class="footer-fine"><a href="/programs.html">Programs</a>
+ · <a href="/curriculum/online-safety/">Online Safety</a> ·
+<a href="/voter-guide.html">Voter Guide</a> · <a href="/partners.html">Partners</a>
+ · <a href="/api.html">API</a> · <a href="/inquire.html">Contact</a> ·
+<a href="/apple-learning-coach/">Coach Profile</a> ·
+<a href="/press/media-kit.html">Media Kit</a></p> </div> <div class="footer-group">
+<h3>Trust</h3> <p class="footer-fine"><a href="/dashboard.html">Status</a> ·
+<a href="/terms.html">Terms of Service</a> · <a href="/privacy.html">Privacy Policy
+</a> · <a href="/live-transit/terms/">Live Transit Terms</a></p> </div> </nav>
+<p class="footer-fine"><a href="/find.html">Find</a> (search) ·
+<a href="mailto:justin@detroitautomationacademy.com">
+justin@detroitautomationacademy.com</a></p> <p class="footer-fine">
+© 2026 AutomatedTechnologies d/b/a Detroit Automation Academy</p> </div> </footer>
 
 </body>
 </html>
