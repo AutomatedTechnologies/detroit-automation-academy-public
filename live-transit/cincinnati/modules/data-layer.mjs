@@ -25,7 +25,8 @@
 //     (LT-KAES-34 build half / LT-S8.1).
 //   per-route trip-update derivatives under data/tu/, each
 //     <= 25,000 B, index-verified (LT-KAES-45).
-//   per-source state in the vehicles envelope: sources.{bus,rail}
+//   per-source state in the vehicles envelope: sources keyed by
+//     feed family (the family's set is config-derived, DL-1)
 //     each { ok, ...batch counters } — a failed leg is VISIBLE in
 //     the product, never silent (LT-KAES-20 / RC7).
 //
@@ -41,10 +42,19 @@
 //   - Display separation (LT-KAES-23, ADAPTABLE): split points
 //     follow this city's feed structure — bus and rail stay
 //     separate through storage and computation and join only at
-//     render (LT-F5(b)). Philadelphia has NO display-only feed
-//     (LT-KAES-27 N-A), so no fence split exists here.
+//     render (LT-F5(b)). a city with no display-only feed
+//     (its agency.displayOnlyFeeds list is empty) has no fence
+//     split; the fence itself is the LT-F4 rule, stated once here.
 
 import { CITY_CONFIG } from '../config/city-config.mjs';
+
+// Feed families are CONFIG-DERIVED (DL-1): the union of the families
+// declared in feeds.static and feeds.realtime. No family literal
+// survives in code (remnant-scan rule R-3).
+export const FEED_FAMILIES = Object.freeze([...new Set([
+  ...(CITY_CONFIG.feeds.static || []).map((f) => f.family),
+  ...(CITY_CONFIG.feeds.realtime || []).map((f) => f.family),
+])]);
 import { stampedJson } from '../platform/loader.mjs';
 
 export const VEHICLE_RECORD_FIELDS = Object.freeze([
@@ -72,7 +82,7 @@ export function validateVehicleEnvelope(doc) {
   if (!doc.sources || typeof doc.sources !== 'object') {
     problems.push('missing sources{} per-source state (KAES-20)');
   } else {
-    for (const family of ['sorta']) {
+    for (const family of FEED_FAMILIES) {
       const s = doc.sources[family];
       if (!s || typeof s.ok !== 'boolean') problems.push(`sources.${family}.ok missing/not boolean`);
     }
@@ -89,7 +99,7 @@ export function validateAlertsEnvelope(doc) {
   return problems;
 }
 
-// ---- R2 implementation (PHL REBUILD R2, 2026-10-24) ----
+// ---- R2 implementation (platform rebuild R2, 2026-10-24) ----
 // The loaders consume exactly the published family the R2 server
 // pipeline (../pipeline/) produces. Classification is computed
 // server-side against the static trip/route sets and carried on
@@ -111,7 +121,7 @@ export function validateTripUpdatesEnvelope(doc) {
   if (!doc.sources || typeof doc.sources !== 'object') {
     problems.push('missing sources{} per-source state (KAES-20)');
   } else {
-    for (const family of ['sorta']) {
+    for (const family of FEED_FAMILIES) {
       const s = doc.sources[family];
       if (!s || typeof s.ok !== 'boolean') problems.push(`sources.${family}.ok missing/not boolean`);
     }
