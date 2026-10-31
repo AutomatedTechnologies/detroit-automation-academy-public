@@ -17,8 +17,10 @@
 // A value with no record behind it is recorded as UNDECIDED / null
 // (LT-F6: no invented figures; LT-F7: honest null).
 
-import { BUILD_STAMP } from './stamp.mjs';
 
+// SCHEMA V2 (Cities V2, design iteration 2 §C): v1 sections carried
+// verbatim; posture/ops/release added; agency.shortName added;
+// build.stamp retired to the assembler-generated stamp module.
 export const CITY_CONFIG = Object.freeze({
   // ---- Identity -------------------------------------------------------
   city: Object.freeze({
@@ -33,13 +35,14 @@ export const CITY_CONFIG = Object.freeze({
 
   // ---- Build ----------------------------------------------------------
   build: Object.freeze({
-    stamp: BUILD_STAMP, // single governing stamp, defined ONLY in ./stamp.mjs (LT-KAES-04)
+    // stamp: RETIRED in schema v2 — BUILD_STAMP is assembler-generated (design C.1/D.3)
     stage: 'san-diego-build-staging', // local only; NOT a production build (launch gate: Board 55 item 7)
   }),
 
   // ---- Agency & license -------------------------------------------------
   agency: Object.freeze({
     id: 'mts',
+    shortName: 'MTS', // NEW schema v2 — proof-string form (SF-2) [design C.1]
     name: 'San Diego Metropolitan Transit System', //          [PRD §2]
     publisherHost: 'www.sdmts.com', // static on sdmts.com; RT on realtime.sdmts.com (OneBusAway) [PRD §2 / A2]
     // License: MTS Developer License Agreement, A1 PASS
@@ -205,6 +208,8 @@ export const CITY_CONFIG = Object.freeze({
 
   // ---- Planner policy ----------------------------------------------------
   planner: Object.freeze({
+    hosting: 'main-thread', // NEW schema v2 (WK-1) [design A.9/C.1]
+    calibrationRecord: 'harness/results-sandiego-calibration-2026-10-26.json', // NEW — adopted-set citation pointer (SL-2)
     policy: Object.freeze({
       // D1(b) — the platform policy of record: walk-only is
       // presented ONLY when no transit journey exists in the
@@ -284,6 +289,63 @@ export const CITY_CONFIG = Object.freeze({
     placesPriceState: 'UNDECIDED',
   }),
 
+  // ---- Posture (NEW, schema v2 §C.2) -----------------------------------
+  posture: Object.freeze({
+    model: 'live', // live vehicle layer
+    degradation: Object.freeze({
+      evaluateLiveStaleness: true, // served behavior in ALL seven v1 builds (T1 reconciliation: Columbus U5-01 asserts stale envelopes ARE flagged; design C.2's short-circuit contradicted the harness — iteration 3 owns the re-spec)
+    }),
+    servicePresence: Object.freeze({
+      rule: 'vehicles-or-unassigned-none', // San Diego C4, generalized [C.2]
+      serviceHours: Object.freeze({ model: 'always', windows: Object.freeze([]) }),
+      lowServiceShape: null,
+    }),
+    nonPublication: null,
+  }),
+
+  // ---- Ops (NEW, schema v2 §C.3) ----------------------------------------
+  ops: Object.freeze({
+    chainUnits: Object.freeze({
+      cityTimerUnit: 'sd-publisher.timer', // OPS-1 destination (CV2-D13)
+      watchdogHook: 'sd-watchdog.timer',
+    }),
+    telemetry: Object.freeze({
+      state: 'undecided', // OPS-2 destination (CV2-D13)
+      decisionRecord: null,
+    }),
+  }),
+
+  // ---- Release (NEW, schema v2 §C.3) -------------------------------------
+  release: Object.freeze({
+    corePin: 't1-extract-1', // the T1-extracted core (CV2-1 cycle 2)
+    canary: true, // standing release canary: San Diego (CV2-D11)
+  }),
+
+  // ---- Fares (NEW, optional, schema v2 §C.3) ------------------------------
+  fares: Object.freeze({
+    base: 2.5, dayCap: 6, currency: 'USD',
+    source: 'city conformance record 2026-10-30 (MTS fares as served)', // LT-F6: a figure exists only with its citation
+  }), // no fare figure on record for this city — the absence stands (LT-F6)
+
+  // ---- Page shell prose (NEW, schema v2.1, T2) ----------------------------
+  // The generated index.html’s per-city content (iteration-2 design A.10:
+  // IH-1/IH-3/IH-5/IH-6 verbatim; A.12 terms presence declared). Extracted
+  // byte-exact from the city’s served shell by tools/extract_page.mjs;
+  // the T2 assembler inserts it into the platform page template.
+  // Canonical URL is NOT stored — it derives from city.canonicalPath.
+  page: Object.freeze({
+    title: "San Diego — Live Transit · Detroit Automation Academy",
+    metaDescription: "MTS buses, the Trolley, and the Coronado Ferry live on one map of San Diego — agency-direct data, published by AutomatedTechnologies.",
+    h1: "San Diego — Live Transit",
+    intro: "MTS buses, the Trolley, and the Coronado Ferry, live on one map of San Diego.\n    Data comes from MTS's own published feeds. There are no ads on this map. Ever.",
+    statusText: "Loading live vehicles…",
+    plannerLine: " — scheduled journeys across the San Diego region from the published timetable.",
+    canvasAriaLabel: "Map of San Diego with live MTS vehicle positions",
+    aboutCoverage: "The map covers San Diego County, California — the MTS service\n    area, from San Ysidro to Oceanside and east to El Cajon and Santee —\n    drawn from U.S. Census TIGER/Line 2025 roads. Route lines and stops\n    come from MTS's published GTFS. Vehicle positions come from MTS's\n    agency-direct GTFS-Realtime feeds, fetched and republished by\n    AutomatedTechnologies.",
+    aboutLicense: "Live Transit San Diego is published by AutomatedTechnologies\n    d/b/a Detroit Automation Academy, from MTS's public data under the\n    MTS Developer License Agreement. This page makes no use of MTS\n    branding or logos and implies no sponsorship or endorsement.\n    Riders never pay for Live Transit.",
+    terms: true, // terms.html present in this city’s tree — a decision on record (A.12), asserted by the contract gate
+  }),
+
   // ---- Persisted rider state (LT-KAES-37) --------------------------------
   storageKeys: Object.freeze({
     launcherSheet: 'sd-fv-sheet', // first-view sheet state (LT-S1.2 dedicated key)
@@ -295,6 +357,7 @@ export const CITY_CONFIG = Object.freeze({
 export const REQUIRED_CONFIG_KEYS = Object.freeze([
   'city', 'build', 'agency', 'feeds', 'layerGroups',
   'assets', 'freshness', 'planner', 'commercial', 'storageKeys',
+  'posture', 'ops', 'release', 'page', // schema v2 + page (T2 v2.1); fares is optional
 ]);
 
 /** Resolve a layer group's boot state: stored preference wins (KAES-37/38). */
