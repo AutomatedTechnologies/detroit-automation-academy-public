@@ -1,5 +1,5 @@
 // platform/loader.mjs — Disciplined asset loading (LT-KAES-05).
-// PHL REBUILD R1 foundation. Label: UNVERIFIED / legacy-unsigned.
+// Platform rebuild R1 foundation. Label: UNVERIFIED / legacy-unsigned.
 //
 // KAES-05 normative position: a city application loads under ONE
 // declared strategy — module scripts with declared imports
@@ -9,7 +9,7 @@
 // conforming load path. (Detroit reference: importmap -> Three.js,
 // one ES-module application script, runtime dynamic imports for
 // feature engines, ~20 runtime fetches all cache:'no-store'. The
-// outgoing PHL build: three classic scripts in document order and
+// outgoing pre-rebuild build: three classic scripts in document order and
 // ad-hoc fetches — the GAP this module replaces.)
 //
 // THE LOADER CONTRACT (every later tranche builds against this):
