@@ -32,7 +32,9 @@ import hashlib
 import json
 import sys
 import time
+import urllib.parse
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 DEFAULT_BASE = "https://www.detroitautomationacademy.com"
@@ -52,7 +54,7 @@ def is_publisher_owned(rel):
     return rel == "publish-manifest.json" or (parts and parts[0] == "data")
 
 
-def fetch_md5(url):
+def fetch_md5(url, timeout=30):
     if not url.startswith(("https://", "http://")):
         raise ValueError(f"refusing non-http(s) URL: {url}")
     req = urllib.request.Request(url, headers={"User-Agent": "daa-served-verify"})
@@ -62,7 +64,7 @@ def fetch_md5(url):
     # restricted to http/https by the check above — the urlopen
     # below carries a B310 nosec on this basis (estate pattern,
     # cf. live-transit/cincinnati/pipeline/collect.py).
-    with urllib.request.urlopen(req, timeout=30) as resp:  # nosec B310
+    with urllib.request.urlopen(req, timeout=timeout) as resp:  # nosec B310
         if resp.status != 200:
             return None
         while True:
@@ -136,17 +138,34 @@ def main(argv):
             want[url_path] = hashlib.md5(
                 f.read_bytes(), usedforsecurity=False
             ).hexdigest()
-    print(f"served-verify: {len(want)} files to confirm at {base}")
+    print(f"served-verify: {len(want)} files to confirm at {base}", flush=True)
     pending = dict(want)
     deadline = time.time() + budget
+
+    def check(url_path):
+        # Percent-encode: manifest paths legitimately contain
+        # spaces (planner timetable filenames). Unencoded, those
+        # fetches could never match — the defect that burned the
+        # full budget and false-failed run 41275380038
+        # (2026-11-01). Fetches run in parallel so a sweep takes
+        # seconds, and each fetch's timeout shrinks to the time
+        # left: the budget is a hard wall, checked per file, not
+        # a between-sweeps suggestion.
+        remaining = deadline - time.time()
+        if remaining <= 0:
+            return url_path, False
+        url = f"{base}/{urllib.parse.quote(url_path)}"
+        try:
+            got = fetch_md5(url, timeout=max(1.0, min(30.0, remaining)))
+        except Exception:  # noqa: BLE001 — a failed fetch is a miss
+            got = None
+        return url_path, got == want[url_path]
+
     while True:
-        for url_path in list(pending):
-            try:
-                got = fetch_md5(f"{base}/{url_path}")
-            except Exception as e:  # noqa: BLE001 — report, keep retrying
-                got = f"error: {e}"
-            if got == pending[url_path]:
-                del pending[url_path]
+        with ThreadPoolExecutor(max_workers=16) as pool:
+            for url_path, ok in pool.map(check, list(pending)):
+                if ok:
+                    del pending[url_path]
         if not pending:
             print("EVIDENCE gate=served-verify class=bytes verdict=pass")
             print("served-verify: served == deployed for every checked file")
@@ -162,7 +181,12 @@ def main(argv):
                 print(f"FAIL {url_path}: want md5 {pending[url_path]}", file=sys.stderr)
             print("EVIDENCE gate=served-verify class=bytes verdict=fail")
             return 1
-        time.sleep(30)
+        print(
+            f"served-verify: {len(want) - len(pending)}/{len(want)} "
+            "matched, next sweep in 30s",
+            flush=True,
+        )
+        time.sleep(min(30.0, max(0.0, deadline - time.time())))
 
 
 if __name__ == "__main__":
