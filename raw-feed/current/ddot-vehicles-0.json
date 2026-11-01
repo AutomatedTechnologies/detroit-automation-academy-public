@@ -2,17 +2,38 @@
 	"bustime-response": {
 		"vehicle": [
 			{
+				"vid": "1420",
+				"tmstmp": "20261101 03:56",
+				"lat": "42.42797",
+				"lon": "-83.28554666666666",
+				"hdg": "299",
+				"pid": 1191,
+				"rt": "3",
+				"des": "Downtown",
+				"pdist": 181,
+				"dly": false,
+				"spd": 0,
+				"tatripid": "7124",
+				"origtatripno": "1320682",
+				"tablockid": "3-200",
+				"zone": "",
+				"mode": 1,
+				"psgld": "N/A",
+				"stst": 18000,
+				"stsd": "2026-11-01"
+			},
+			{
 				"vid": "2209",
-				"tmstmp": "20261101 03:54",
-				"lat": "42.330262780516804",
-				"lon": "-83.0503682421384",
-				"hdg": "159",
+				"tmstmp": "20261101 03:56",
+				"lat": "42.328716169188766",
+				"lon": "-83.0468398213484",
+				"hdg": "73",
 				"pid": 502427,
 				"rt": "5",
 				"des": "Bel Air Center",
-				"pdist": 2720,
+				"pdist": 4215,
 				"dly": false,
-				"spd": 1,
+				"spd": 18,
 				"tatripid": "6758",
 				"origtatripno": "1327068",
 				"tablockid": "5-200",
@@ -24,7 +45,7 @@
 			},
 			{
 				"vid": "1413",
-				"tmstmp": "20261101 03:54",
+				"tmstmp": "20261101 03:56",
 				"lat": "42.376172912841",
 				"lon": "-83.01217730086448",
 				"hdg": "241",
@@ -42,6 +63,27 @@
 				"psgld": "N/A",
 				"stst": 20280,
 				"stsd": "2026-11-01"
+			},
+			{
+				"vid": "1922",
+				"tmstmp": "20261101 03:56",
+				"lat": "42.318255",
+				"lon": "-83.219664",
+				"hdg": "359",
+				"pid": 1147,
+				"rt": "10",
+				"des": "Providence Hospital",
+				"pdist": 0,
+				"dly": false,
+				"spd": 0,
+				"tatripid": "7411",
+				"origtatripno": "1320756",
+				"tablockid": "10-200",
+				"zone": "",
+				"mode": 1,
+				"psgld": "N/A",
+				"stst": 18000,
+				"stsd": "2026-11-01"
 			}
 		],
 		"error": [
@@ -51,10 +93,6 @@
 			},
 			{
 				"rt": "2",
-				"msg": "No data found for parameter"
-			},
-			{
-				"rt": "3",
 				"msg": "No data found for parameter"
 			},
 			{
@@ -71,10 +109,6 @@
 			},
 			{
 				"rt": "9",
-				"msg": "No data found for parameter"
-			},
-			{
-				"rt": "10",
 				"msg": "No data found for parameter"
 			}
 		]
