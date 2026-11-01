@@ -78,6 +78,27 @@ const BOOT_FN = () => {
       panelChildren,
       booted: statusOk && !!canvas && !!panel && panelChildren > 0,
       detail: t.slice(0, 120),
+      ...(() => {
+        const all = document.querySelectorAll('canvas');
+        let firstCanvasHome = null;
+        if (all.length) {
+          let el = all[0];
+          const chain = [];
+          while (el && chain.length < 5) {
+            chain.push(el.id ? `#${el.id}` : el.tagName.toLowerCase());
+            el = el.parentElement;
+          }
+          firstCanvasHome = chain.join(' < ');
+        }
+        let webgl = false;
+        try {
+          const c = document.createElement('canvas');
+          webgl = !!(c.getContext('webgl2') || c.getContext('webgl'));
+        } catch {
+          webgl = false;
+        }
+        return { anyCanvas: all.length, firstCanvasHome, webgl };
+      })(),
     };
   }
   const updated = document.getElementById('bus-updated');
@@ -93,6 +114,27 @@ const BOOT_FN = () => {
       panelChildren: -1,
       booted: statusOk && !!canvas,
       detail: t.slice(0, 120),
+      ...(() => {
+        const all = document.querySelectorAll('canvas');
+        let firstCanvasHome = null;
+        if (all.length) {
+          let el = all[0];
+          const chain = [];
+          while (el && chain.length < 5) {
+            chain.push(el.id ? `#${el.id}` : el.tagName.toLowerCase());
+            el = el.parentElement;
+          }
+          firstCanvasHome = chain.join(' < ');
+        }
+        let webgl = false;
+        try {
+          const c = document.createElement('canvas');
+          webgl = !!(c.getContext('webgl2') || c.getContext('webgl'));
+        } catch {
+          webgl = false;
+        }
+        return { anyCanvas: all.length, firstCanvasHome, webgl };
+      })(),
     };
   }
   return {
@@ -103,6 +145,9 @@ const BOOT_FN = () => {
     panelChildren: -1,
     booted: false,
     detail: 'no known status element',
+    anyCanvas: document.querySelectorAll('canvas').length,
+    firstCanvasHome: null,
+    webgl: false,
   };
 };
 
@@ -110,7 +155,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const browser = await puppeteer.launch({
   headless: true,
-  protocolTimeout: 300000,
+  protocolTimeout: 180000,
   args: [
     '--no-sandbox',
     '--disable-dev-shm-usage',
@@ -153,6 +198,9 @@ for (const { city, url } of PAGES) {
         panelChildren: -1,
         booted: false,
         detail: 'predicate never evaluated (renderer unresponsive)',
+        anyCanvas: -1,
+        firstCanvasHome: null,
+        webgl: false,
       };
     }
     verdict = { city, url, ...state, pageErrors };
@@ -167,6 +215,9 @@ for (const { city, url } of PAGES) {
       panelChildren: -1,
       booted: false,
       detail: String(e).slice(0, 300),
+      anyCanvas: -1,
+      firstCanvasHome: null,
+      webgl: false,
       pageErrors,
     };
   } finally {
@@ -181,6 +232,10 @@ for (const { city, url } of PAGES) {
   console.log(
     `     components: statusOk=${verdict.statusOk} canvas=${verdict.canvas} ` +
       `panel=${verdict.panelId} panelChildren=${verdict.panelChildren}`,
+  );
+  console.log(
+    `     diag: anyCanvas=${verdict.anyCanvas} webgl=${verdict.webgl} ` +
+      `firstCanvasHome=${verdict.firstCanvasHome}`,
   );
   if (pageErrors.length) {
     console.log(`     pageerrors: ${pageErrors.slice(0, 3).join(' | ')}`);
