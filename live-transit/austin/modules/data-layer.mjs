@@ -433,6 +433,7 @@ function displayTuRow(raw, bareId, ctx) {
     displayOnly: true,
     trip_id: raw.trip_id ?? raw.tripId ?? ctx.trip_id ?? null,
     route_id: raw.route_id ?? raw.routeId ?? ctx.route_id ?? null,
+    vehicle_id: raw.vehicle_id ?? raw.vehicleId ?? ctx.vehicle_id ?? null,
     arrival_time: raw.arrival_time ?? raw.arrivalTime ?? (arrival ? (arrival.time ?? arrival.timestamp ?? null) : null),
     departure_time: raw.departure_time ?? raw.departureTime ?? (departure ? (departure.time ?? departure.timestamp ?? null) : null),
   };
@@ -443,6 +444,8 @@ function displayTuRow(raw, bareId, ctx) {
  * Stale-gated at entry.staleMs against the document generated_at:
  * a stale payload is ignored whole (prior fresh state stands).
  * Accepts canonical-style {trip_updates[] with stop_time_updates},
+ * the served display shape {trips[] with stop_time_updates} (the
+ * Swiftly publication's own key — T6 parity α, 2026-10-31),
  * realtime-JSON {entity[].trip_update}, flat arrival rows, and
  * pre-keyed {stops|by_stop: {stopId: rows[]}} shapes. Returns
  * { ingested, stale, rows }. Never throws.
@@ -468,6 +471,7 @@ export function ingestDisplayTripUpdates(doc, entry, nowMs = Date.now()) {
   }
   const updates = Array.isArray(doc) ? doc
     : Array.isArray(doc.trip_updates) ? doc.trip_updates
+    : Array.isArray(doc.trips) ? doc.trips
     : Array.isArray(doc.entity) ? doc.entity.map((e) => (e && (e.trip_update || e.tripUpdate)) || e)
     : Array.isArray(doc.updates) ? doc.updates : [];
   for (const u of updates) {
@@ -477,6 +481,7 @@ export function ingestDisplayTripUpdates(doc, entry, nowMs = Date.now()) {
       feed,
       trip_id: u.trip_id ?? u.tripId ?? trip.trip_id ?? trip.tripId ?? null,
       route_id: u.route_id ?? u.routeId ?? trip.route_id ?? trip.routeId ?? null,
+      vehicle_id: u.vehicle_id ?? u.vehicleId ?? trip.vehicle_id ?? trip.vehicleId ?? null,
     };
     const stus = u.stop_time_updates || u.stop_time_update || u.stopTimeUpdates;
     if (Array.isArray(stus) && stus.length) {
