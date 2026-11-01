@@ -19,7 +19,82 @@ defaults:
     shell: bash
 
 jobs:
+  # Pre-deploy verification (CI/CD adoption, 2026-11-01). The deploy
+  # runs ONLY behind these gates: a push whose code/shell/manifest
+  # bytes break the shell contract, the build manifests, or
+  # referential integrity never reaches Pages. Data-only pushes
+  # (the feed publishers' cadence) skip the heavy gates — they
+  # carry no code — so the feed's deploy cadence is unchanged.
+  verify:
+    runs-on: ubuntu-latest
+    outputs:
+      code_changed: ${{ steps.scope.outputs.code_changed }}
+      verdict: ${{ steps.evidence.outputs.verdict }}
+      evidence_class: ${{ steps.evidence.outputs.evidence_class }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine change scope
+        id: scope
+        run: |
+          if [ "${{ github.event_name }}" != "push" ] || [ -z "${{ github.event.before }}" ] || [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            echo "code_changed=true" >> "$GITHUB_OUTPUT"
+            echo "scope: non-push or first push — full gates"
+            exit 0
+          fi
+          changed="$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}")"
+          printf '%s\n' "$changed"
+          if [ -z "$changed" ]; then
+            echo "code_changed=true" >> "$GITHUB_OUTPUT"
+            echo "scope: empty diff — full gates (safe default)"
+          elif printf '%s\n' "$changed" | grep -qvE '^(live-data/|live-transit/[^/]+/data/|feed-raw/)'; then
+            echo "code_changed=true" >> "$GITHUB_OUTPUT"
+            echo "scope: code/shell/manifest paths changed — full gates"
+          else
+            echo "code_changed=false" >> "$GITHUB_OUTPUT"
+            echo "scope: data-only push — heavy gates skipped (feed cadence)"
+            for g in shell-contract manifest-recompute ref-integrity; do
+              echo "EVIDENCE gate=$g class=bytes verdict=skip" >> gate-skipped.log
+            done
+          fi
+
+      - name: Shell-contract gate
+        if: steps.scope.outputs.code_changed == 'true'
+        run: |
+          set -eo pipefail
+          python3 tools/cicd/shell_contract.py 2>&1 | tee gate-shell.log
+
+      - name: Build-manifest recompute gate
+        if: steps.scope.outputs.code_changed == 'true'
+        run: |
+          set -eo pipefail
+          python3 tools/cicd/manifest_check.py 2>&1 | tee gate-manifest.log
+
+      - name: Referential-integrity gate
+        if: steps.scope.outputs.code_changed == 'true'
+        run: |
+          set -eo pipefail
+          python3 tools/cicd/ref_integrity.py 2>&1 | tee gate-ref.log
+
+      # Headline verdict with its evidence class (lowest present;
+      # an all-skipped stage reports SKIP / class claim — it
+      # verified nothing and says so).
+      - name: Evidence verdict
+        id: evidence
+        if: always()
+        run: |
+          for f in gate-shell.log gate-manifest.log gate-ref.log gate-skipped.log; do
+            [ -f "$f" ] || touch "$f"
+          done
+          python3 tools/cicd/evidence_verdict.py \
+            gate-shell.log gate-manifest.log gate-ref.log gate-skipped.log \
+            | tee evidence-verdict.txt
+
   build:
+    needs: verify
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -158,3 +233,88 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
 
+  # Post-deploy self-detection (CI/CD adoption, 2026-11-01):
+  # served bytes are compared against the deployed tree, and —
+  # for code/shell deploys — every city page must actually BOOT
+  # in a real headless Chromium (the 2026-10-31 incident was
+  # invisible to byte checks: the bytes were right, the page was
+  # dead). Detection + alarm only: on failure this job opens an
+  # issue naming the stage and city; automatic rollback is a
+  # separate tranche, deliberately not in scope here.
+  postdeploy:
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Served-byte verification
+        id: served
+        run: |
+          set -eo pipefail
+          if [ "${{ needs.verify.outputs.code_changed }}" = "true" ]; then
+            python3 tools/cicd/served_verify.py --mode full --budget 600 2>&1 | tee gate-served.log
+          else
+            python3 tools/cicd/served_verify.py --mode shells --budget 600 2>&1 | tee gate-served.log
+          fi
+
+      - name: Boot smoke check
+        id: smoke
+        if: needs.verify.outputs.code_changed == 'true' || github.event_name == 'workflow_dispatch'
+        run: |
+          set -eo pipefail
+          cd tools/cicd
+          npm init -y >/dev/null 2>&1
+          npm install puppeteer@23.11.1 --no-audit --no-fund
+          node boot_smoke.mjs --out smoke-summary.json 2>&1 | tee ../../gate-smoke.log
+
+      # Post-deploy evidence verdict: served-verify is the bytes
+      # class; boot smoke is the behavior class — when it runs,
+      # it is part of the set; the headline stays the lowest
+      # class present.
+      - name: Evidence verdict (post-deploy)
+        if: always()
+        run: |
+          if [ ! -f gate-smoke.log ]; then
+            echo "EVIDENCE gate=boot-smoke class=behavior verdict=skip" > gate-smoke.log
+          fi
+          python3 tools/cicd/evidence_verdict.py \
+            gate-served.log gate-smoke.log | tee evidence-verdict.txt
+
+      - name: Alarm — open issue on post-deploy failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          stage="served-bytes"
+          cities=""
+          if [ -f tools/cicd/smoke-summary.json ]; then
+            stage="boot-smoke"
+            cities="$(python3 -c "import json; d=json.load(open('tools/cicd/smoke-summary.json')); print(', '.join(r['city'] for r in d if not r['booted']) or 'unknown')")"
+          fi
+          echo "::error title=Post-deploy verification failed::stage=${stage} cities=${cities} sha=${GITHUB_SHA}"
+          {
+            echo "Post-deploy verification failed for commit ${GITHUB_SHA}."
+            echo ""
+            echo "- stage: ${stage}"
+            echo "- failing cities: ${cities:-n/a (served-byte stage)}"
+            echo "- run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            if [ -f evidence-verdict.txt ]; then
+              echo "- evidence: $(grep RELEASE-VERDICT evidence-verdict.txt || true)"
+            fi
+            echo ""
+            echo "Detection only — no automatic rollback exists yet (CI/CD adoption record, 2026-11-01). If a page is down for riders, revert first per standing doctrine, then diagnose."
+            if [ -f tools/cicd/smoke-summary.json ]; then
+              echo ""
+              echo "Boot smoke summary:"
+              echo '```json'
+              cat tools/cicd/smoke-summary.json
+              echo '```'
+            fi
+          } > issue-body.md
+          gh label create ci-cd --color B60205 --description "CI/CD pipeline alarms" --force || true
+          gh issue create --title "[post-deploy] ${stage} failed${cities:+ — }${cities} @ ${GITHUB_SHA:0:7}" --body-file issue-body.md --label ci-cd || \
+            gh issue create --title "[post-deploy] ${stage} failed @ ${GITHUB_SHA:0:7}" --body-file issue-body.md
