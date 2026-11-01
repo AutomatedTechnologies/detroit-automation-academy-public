@@ -252,7 +252,7 @@ jobs:
   # issue naming the stage and city; automatic rollback is a
   # separate tranche, deliberately not in scope here.
   postdeploy:
-    needs: deploy
+    needs: [deploy, verify]
     runs-on: ubuntu-latest
     permissions:
       contents: read
