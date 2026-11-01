@@ -44,13 +44,12 @@
 }
 </script>
 <link rel="icon" type="image/webp" href="assets/logo.webp">
-<link rel="stylesheet" href="ride-along.css?v=20261019-1228">
 <link rel="stylesheet" href="styles.css?v=20261031-0615">
 <script type="importmap">
 {
   "imports": {
-    "three": "./assets/three.module.min.js?v=20261019-1228",
-    "three/addons/": "./assets/three-addons/"
+    "three": "./live-transit/detroit/vendor/three.module.min.js?v=20261025-2057",
+    "three/addons/": "./live-transit/detroit/vendor/three-addons/"
   }
 }
 </script>
@@ -1136,8 +1135,7 @@
   // was quota-paused on 2026-10-15 and is no longer consumed.
   window.FORGE_LIVE_PROXY = "live-data";
 </script>
-<script src="ride-along.js?v=20261019-1228"></script>
-<script type="module" src="live-transit.js?v=20261031-0645"></script>
+<script type="module" src="./live-transit/detroit/modules/app.mjs?v=20261025-2057"></script>
 <script src="/assets/measure.js?v=20261023-o2" defer></script>
 </body>
 </html>
