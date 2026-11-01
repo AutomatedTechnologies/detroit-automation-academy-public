@@ -2,25 +2,358 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#000000">
-<title>Detroit Automation Academy</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DAAD — Detroit Automation Academy</title>
+<meta name="description" content="Detroit Automation Academy — Live Transit Detroit, live on the map. The Signal. The Press.">
 <style>
-  html { background: #000; color-scheme: dark; }
-  body { background: #000; color: #fff; margin: 0; min-height: 100vh; min-height: 100dvh;
-         font-family: system-ui, sans-serif;
-         display: flex; align-items: center; justify-content: center; }
-  main { text-align: center; padding: clamp(1.5rem, 9vw, 4rem); }
-  h1 { font-size: clamp(1.375rem, 2.5vw + 1rem, 2.5rem); font-weight: 600;
-       line-height: 1.2; margin: 0 0 0.75rem; }
-  p { color: #9a9aa0; font-size: clamp(1rem, 1.2vw + 0.75rem, 1.25rem); margin: 0; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#000; color:#fff; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased; min-height:100vh; }
+  #intro { position:fixed; inset:0; background:#000; z-index:9; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity .8s ease; }
+  #intro.gone { opacity:0; pointer-events:none; }
+  #intro .sub { font-size:10px; font-weight:600; letter-spacing:.44em; color:rgba(255,255,255,.45); text-transform:uppercase; }
+  #intro .hero { font-weight:800; font-size:clamp(64px,17vw,150px); letter-spacing:.06em; line-height:1.05; margin-top:10px; }
+  #intro .track { width:min(340px,64vw); height:2px; background:rgba(255,255,255,.14); margin-top:30px; position:relative; }
+  #intro .fill { position:absolute; left:0; top:0; bottom:0; background:#fff; width:0%; transition:width .25s ease; }
+  #intro .st { margin-top:14px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; color:rgba(255,255,255,.55); letter-spacing:.2em; }
+  #page { opacity:0; transform:translateY(12px); transition:opacity .8s ease .1s, transform .8s ease .1s; max-width:960px; margin:0 auto; padding:0 16px 30px; }
+  #page.on { opacity:1; transform:none; }
+  header.top { display:flex; justify-content:space-between; align-items:baseline; padding:22px 2px 16px; }
+  .wm { font-weight:800; font-size:21px; letter-spacing:.1em; }
+  .wm small { display:block; font-size:8px; font-weight:600; letter-spacing:.4em; color:rgba(255,255,255,.45); margin-top:4px; }
+  nav.top { display:flex; gap:26px; }
+  nav.top a { color:rgba(255,255,255,.55); text-decoration:none; font-size:10px; font-weight:700; letter-spacing:.3em; text-transform:uppercase; transition:color .3s; }
+  nav.top a:hover, nav.top a.hot { color:#fff; }
+  #alert { display:none; border:1px solid rgba(255,255,255,.4); border-left:6px solid #fff; padding:11px 14px; margin-bottom:14px; font-size:12px; line-height:1.6; }
+  #alert b { letter-spacing:.18em; font-size:10px; text-transform:uppercase; display:block; margin-bottom:2px; }
+  #alert span { color:rgba(255,255,255,.75); }
+  .frame { position:relative; border:1px solid rgba(255,255,255,.18); background:#050505; overflow:hidden; }
+  svg.map { display:block; width:100%; height:auto; }
+  #world { transition:transform .8s cubic-bezier(.5,.05,.2,1); transform-origin:400px 300px; }
+  .layer { transition:opacity .5s ease; }
+  .layer.off { opacity:0; pointer-events:none; }
+  #dyn, #dyn-smart { transition:opacity .6s ease; }
+  .veh { cursor:pointer; }
+  .bar { position:absolute; top:0; left:0; right:0; display:flex; justify-content:space-between; padding:13px 15px; pointer-events:none; }
+  .bar .t { font-size:10px; font-weight:700; letter-spacing:.32em; text-transform:uppercase; }
+  .bar .t small { display:block; font-size:8px; letter-spacing:.24em; color:rgba(255,255,255,.45); margin-top:3px; font-weight:600; }
+  .fresh { text-align:right; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; }
+  .fresh .dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:#fff; margin-right:6px; animation:pl 1.6s ease-in-out infinite; }
+  @keyframes pl { 0%,100%{opacity:.2} 50%{opacity:1} }
+  .fresh small { display:block; font-size:8px; letter-spacing:.22em; color:rgba(255,255,255,.45); margin-top:3px; font-family:-apple-system,sans-serif; }
+  .fresh small.stale { background:#fff; color:#000; padding:1px 5px; font-weight:700; }
+  .tools { position:absolute; right:13px; top:82px; display:flex; flex-direction:column; gap:8px; }
+  .tools button { width:36px; height:36px; background:rgba(0,0,0,.72); border:1px solid rgba(255,255,255,.35); color:#fff; font-size:16px; cursor:pointer; transition:background .25s,color .25s; }
+  .tools button:hover { background:#fff; color:#000; }
+  .layers { position:absolute; left:13px; bottom:13px; display:flex; gap:8px; }
+  .layers button { background:rgba(0,0,0,.72); border:1px solid rgba(255,255,255,.35); color:#fff; font:inherit; font-size:9px; font-weight:700; letter-spacing:.26em; padding:8px 12px; cursor:pointer; text-transform:uppercase; transition:all .3s; }
+  .layers button.off { opacity:.38; }
+  #feedstate { position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); display:none; border:1px dashed rgba(255,255,255,.5); padding:12px 20px; font-size:10px; font-weight:700; letter-spacing:.3em; text-transform:uppercase; background:rgba(0,0,0,.8); }
+  #sheet { position:absolute; left:0; right:0; bottom:0; background:rgba(4,4,4,.94); border-top:1px solid rgba(255,255,255,.3); padding:15px 17px 17px; transform:translateY(105%); opacity:0; transition:transform .5s cubic-bezier(.5,.05,.2,1), opacity .4s; }
+  #sheet.on { transform:none; opacity:1; }
+  #sheet .hd { display:flex; align-items:center; gap:12px; }
+  .chip { min-width:40px; text-align:center; font-weight:800; font-size:13px; border:1.5px solid #fff; padding:5px 4px 6px; }
+  .chip.fill { background:#fff; color:#000; }
+  .chip.dim { border-color:rgba(255,255,255,.35); color:rgba(255,255,255,.65); }
+  #sheet h3 { font-size:14px; font-weight:700; }
+  #sheet .hd small { display:block; font-size:8px; letter-spacing:.24em; color:rgba(255,255,255,.45); text-transform:uppercase; margin-top:2px; }
+  #sheet .x { margin-left:auto; background:none; border:1px solid rgba(255,255,255,.35); color:#fff; width:28px; height:28px; cursor:pointer; }
+  #sheet .nx { display:flex; gap:20px; margin-top:12px; flex-wrap:wrap; }
+  #sheet .nx b { display:block; font-size:12px; font-weight:600; }
+  #sheet .nx span { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; color:rgba(255,255,255,.55); }
+  #sheet .nx .lbl { font-family:-apple-system,sans-serif; font-size:8px; letter-spacing:.24em; color:rgba(255,255,255,.4); text-transform:uppercase; display:block; margin-bottom:3px; }
+  .board { margin-top:18px; }
+  .board .bh { display:flex; justify-content:space-between; align-items:baseline; padding:0 2px 4px; }
+  .board .bh h2 { font-size:11px; font-weight:700; letter-spacing:.3em; text-transform:uppercase; }
+  .board .bh span { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; color:rgba(255,255,255,.55); }
+  .brow { display:flex; align-items:center; gap:14px; padding:13px 2px; border-bottom:1px solid rgba(255,255,255,.09); }
+  .brow .dest { flex:1; }
+  .brow .dest b { display:block; font-size:13.5px; font-weight:600; }
+  .brow .dest small { font-size:9px; letter-spacing:.2em; color:rgba(255,255,255,.42); text-transform:uppercase; }
+  .brow .n { text-align:right; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:15px; }
+  .brow .n small { display:block; font-family:-apple-system,sans-serif; font-size:8px; letter-spacing:.24em; color:rgba(255,255,255,.4); margin-top:2px; }
+  .brow.msg { font-size:12px; color:rgba(255,255,255,.55); letter-spacing:.06em; }
+  .rows { margin-top:10px; }
+  .srow { display:flex; align-items:baseline; gap:16px; padding:17px 2px; border-bottom:1px solid rgba(255,255,255,.1); text-decoration:none; color:#fff; transition:background .25s, padding-left .25s; }
+  .srow:hover { background:rgba(255,255,255,.04); padding-left:9px; }
+  .srow .k { font-size:9px; font-weight:700; letter-spacing:.3em; color:rgba(255,255,255,.45); text-transform:uppercase; min-width:104px; }
+  .srow .v { flex:1; }
+  .srow .v b { font-size:14px; font-weight:600; }
+  .srow .v small { display:block; font-size:11px; color:rgba(255,255,255,.45); margin-top:2px; }
+  footer { margin-top:24px; display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; font-size:9px; letter-spacing:.24em; color:rgba(255,255,255,.32); text-transform:uppercase; }
 </style>
 </head>
 <body>
-<main>
-  <h1>Detroit Automation Academy</h1>
-  <p>Under construction.</p>
-</main>
+
+<div id="intro">
+  <div class="sub">Detroit Automation Academy</div>
+  <div class="hero">DAAD</div>
+  <div class="track"><div class="fill" id="ifill"></div></div>
+  <div class="st"><span id="istat">LOADING</span> · <span id="ipct">0</span>%</div>
+</div>
+
+<div id="page">
+  <header class="top">
+    <div class="wm">DAAD<small>Detroit Automation Academy</small></div>
+    <nav class="top">
+      <a href="/" class="hot">Live Transit</a><a href="/signal/">Signal</a><a href="/press/">Press</a>
+    </nav>
+  </header>
+
+  <div id="alert"><b id="alert-h">Service alert</b><span id="alert-d"></span></div>
+
+  <div class="frame">
+    <svg class="map" viewBox="0 0 800 600" id="svg">
+      <defs>
+        <pattern id="hatch" width="9" height="9" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+          <rect width="9" height="9" fill="#070707"/><line x1="0" y1="0" x2="0" y2="9" stroke="rgba(255,255,255,.13)" stroke-width="2"/>
+        </pattern>
+      </defs>
+      <g id="world">
+        <g stroke="rgba(255,255,255,.07)">
+          <path d="M0 80H800M0 160H800M0 240H800M0 320H800M0 400H800"/>
+          <path d="M80 0V520M160 0V520M240 0V520M320 0V520M480 0V520M560 0V520M640 0V520M720 0V520"/>
+        </g>
+        <g font-size="11" fill="rgba(255,255,255,.30)" letter-spacing="4" font-weight="600">
+          <text x="352" y="492">DOWNTOWN</text><text x="238" y="238">MIDTOWN</text><text x="196" y="96">NEW CENTER</text><text x="596" y="180">EASTERN MARKET</text>
+        </g>
+        <rect x="0" y="522" width="800" height="78" fill="url(#hatch)"/>
+        <text x="596" y="570" font-size="11" letter-spacing="5" fill="rgba(255,255,255,.4)" font-weight="600">DETROIT RIVER</text>
+        <g stroke="rgba(255,255,255,.20)" stroke-width="3">
+          <path d="M400 470 L92 402"/><path d="M400 470 L118 168"/><path d="M400 470 L742 128"/><path d="M400 470 L128 522"/><path d="M400 470 L796 452"/>
+        </g>
+        <g font-size="9.5" fill="rgba(255,255,255,.42)" letter-spacing="2.5">
+          <text x="96" y="392">MICHIGAN AVE</text>
+          <text x="128" y="150" transform="rotate(-63 128 150)">GRAND RIVER</text>
+          <text x="618" y="196" transform="rotate(-24 618 196)">GRATIOT</text>
+          <text x="668" y="442">JEFFERSON</text>
+        </g>
+        <g class="layer" id="lay-routes">
+          <path id="p-woodward" d="M400 470 L252 36" stroke="#fff" stroke-width="3" fill="none"/>
+          <path id="p-qline" d="M400 470 L330 252" stroke="#fff" stroke-width="6" fill="none" stroke-dasharray="2 9" opacity=".85"/>
+          <path id="p-mack" d="M36 318 L764 318" stroke="rgba(255,255,255,.55)" stroke-width="2.4" fill="none" stroke-dasharray="10 6"/>
+          <text x="238" y="30" font-size="9.5" fill="rgba(255,255,255,.55)" letter-spacing="2.5" transform="rotate(-71 238 30)">WOODWARD</text>
+        </g>
+        <g class="layer" id="lay-stops" fill="#050505" stroke="#fff" stroke-width="2">
+          <circle cx="289" cy="128" r="5.5"/><circle cx="327" cy="240" r="5.5"/><circle cx="371" cy="368" r="5.5"/><circle cx="400" cy="470" r="6.5"/><circle cx="341" cy="318" r="5.5"/>
+        </g>
+        <g id="dyn-smart"></g>
+        <g id="dyn"></g>
+        <circle id="selring" r="21" fill="none" stroke="#fff" stroke-width="1.6" opacity="0"/>
+      </g>
+    </svg>
+
+    <div class="bar">
+      <div class="t">Live Transit Detroit<small>Detroit · Live map</small></div>
+      <div class="fresh"><span class="dot"></span><span id="clock">--:--:--</span><small id="freshlbl">Connecting…</small></div>
+    </div>
+    <div class="tools">
+      <button id="zin">+</button><button id="zout">&minus;</button><button id="zre">&#8634;</button>
+    </div>
+    <div class="layers">
+      <button data-l="lay-routes">Routes</button><button data-l="lay-stops">Stops</button><button data-l="buses">Buses</button>
+    </div>
+    <div id="feedstate">Feed unavailable — retrying</div>
+
+    <div id="sheet">
+      <div class="hd"><div class="chip fill" id="s-chip">4</div>
+        <div><h3 id="s-title">—</h3><small id="s-sub">—</small></div>
+        <button class="x" id="s-x">&times;</button>
+      </div>
+      <div class="nx">
+        <div><span class="lbl">Speed</span><b id="s-spd">—</b><span>mph, reported</span></div>
+        <div><span class="lbl">Position</span><b id="s-pos">—</b><span>lat · lon, reported</span></div>
+        <div><span class="lbl">Updated</span><b id="s-upd">—</b><span>vehicle report time</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="board">
+    <div class="bh"><h2>On the road now</h2><span id="bcount">— vehicles</span></div>
+    <div id="brows"><div class="brow msg">Loading live positions…</div></div>
+  </div>
+
+  <div class="rows">
+    <a class="srow" href="/"><span class="k">Live Transit</span><span class="v"><b>Eight cities, one screen</b><small>Detroit leads — Cincinnati · Columbus · Denver · Austin · Sacramento · San Diego · Philadelphia</small></span></a>
+    <a class="srow" href="/signal/"><span class="k">The Signal</span><span class="v"><b>Edition 7 — Detroit Votes This Week</b><small>Latest edition · Election Day Tuesday, November 3</small></span></a>
+    <a class="srow" href="/press/"><span class="k">The Press</span><span class="v"><b>Publications &amp; archive</b><small>Every edition, the book, the record</small></span></a>
+  </div>
+
+  <footer><span>Detroit, Michigan</span><span>Schematic map — corridor placement by live position reports · Data: DDOT · QLINE · SMART (display only)</span><span>&copy; 2026 DAAD</span></footer>
+</div>
+
+<script>
+  (function(){
+    var NS = 'http://www.w3.org/2000/svg';
+    // intro
+    var ifill = document.getElementById('ifill'), ipct = document.getElementById('ipct'), istat = document.getElementById('istat'),
+        intro = document.getElementById('intro'), page = document.getElementById('page'), start = null;
+    function step(ts){
+      if (!start) start = ts;
+      var p = Math.min(1, (ts - start) / 1500), e = 1 - Math.pow(1 - p, 3), v = Math.round(e * 100);
+      ifill.style.width = v + '%'; ipct.textContent = v;
+      if (p < 1) requestAnimationFrame(step);
+      else { istat.textContent = 'STANDBY'; setTimeout(function(){ intro.classList.add('gone'); page.classList.add('on'); }, 420); }
+    }
+    requestAnimationFrame(step);
+
+    // projection (schematic scatter for citywide context)
+    var LON0 = -83.60, LON1 = -82.70, LAT0 = 42.20, LAT1 = 42.70;
+    function proj(lat, lon){
+      var x = 10 + (lon - LON0) / (LON1 - LON0) * 780;
+      var y = 515 - (lat - LAT0) / (LAT1 - LAT0) * 500;
+      return [Math.max(8, Math.min(792, x)), Math.max(8, Math.min(514, y))];
+    }
+    var wood = document.getElementById('p-woodward'), WL = wood.getTotalLength();
+    var qpath = document.getElementById('p-qline'), QL = qpath.getTotalLength();
+    function corridor(lat, isQ){
+      // Woodward corridor: lat 42.3314 (downtown) → 42.398 (Grand Blvd, QLINE end) / 42.45 (route 4 north end)
+      var hi = isQ ? 42.398 : 42.45, t = (lat - 42.3314) / (hi - 42.3314);
+      t = Math.max(0, Math.min(1, t));
+      var pt = (isQ ? qpath : wood).getPointAtLength(t * (isQ ? QL : WL));
+      return [pt.x, pt.y];
+    }
+    function isCorridor(v){ return v.route_id === '4' || v.route_id === 'QLINE' || v.agency === 'qline'; }
+
+    var dyn = document.getElementById('dyn'), dynS = document.getElementById('dyn-smart'),
+        ring = document.getElementById('selring'), sheet = document.getElementById('sheet'),
+        freshlbl = document.getElementById('freshlbl'), feedstate = document.getElementById('feedstate'),
+        brows = document.getElementById('brows'), bcount = document.getElementById('bcount');
+    var selVeh = null, genAt = null, lastOk = false;
+
+    function el(name, attrs){
+      var e = document.createElementNS(NS, name);
+      for (var k in attrs) e.setAttribute(k, attrs[k]);
+      return e;
+    }
+    function fmtTime(s){
+      var d = new Date(s);
+      if (isNaN(d)) return s || '—';
+      return ('0'+d.getHours()).slice(-2) + ':' + ('0'+d.getMinutes()).slice(-2);
+    }
+    function openSheet(v){
+      var isQ = v.agency === 'qline' || v.route_id === 'QLINE';
+      var c = document.getElementById('s-chip');
+      c.textContent = isQ ? 'Q' : (v.route_id || '·');
+      c.className = 'chip' + (isCorridor(v) ? ' fill' : '');
+      document.getElementById('s-title').textContent = v.destination || (isQ ? 'QLINE' : 'Route ' + (v.route_id || '—'));
+      document.getElementById('s-sub').textContent = (isQ ? 'QLINE streetcar' : 'DDOT') + ' · Bus ' + v.vehicle_id + (isCorridor(v) ? ' · Woodward corridor' : '');
+      document.getElementById('s-spd').textContent = (v.speed_mph == null ? '—' : Math.round(v.speed_mph));
+      document.getElementById('s-pos').textContent = v.lat.toFixed(4) + ' · ' + v.lon.toFixed(4);
+      document.getElementById('s-upd').textContent = fmtTime(v.updated_at);
+      sheet.classList.add('on');
+    }
+    document.getElementById('s-x').addEventListener('click', function(){ sheet.classList.remove('on'); ring.setAttribute('opacity','0'); selVeh = null; });
+
+    function marker(v){
+      var isQ = v.agency === 'qline' || v.route_id === 'QLINE', corr = isCorridor(v);
+      var xy = corr ? corridor(v.lat, isQ) : proj(v.lat, v.lon);
+      var g = el('g', { 'class': 'veh', transform: 'translate(' + xy[0] + ' ' + xy[1] + ')' });
+      if (corr){
+        g.appendChild(el('circle', { r: 12, fill: isQ ? '#000' : '#fff', stroke: '#fff', 'stroke-width': isQ ? 2 : 0 }));
+        var t = el('text', { 'text-anchor': 'middle', dy: 3.5, 'font-size': 9.5, 'font-weight': 800, fill: isQ ? '#fff' : '#000' });
+        t.textContent = isQ ? 'Q' : '4'; g.appendChild(t);
+      } else {
+        g.appendChild(el('circle', { r: 4.5, fill: 'rgba(255,255,255,.5)' }));
+      }
+      g.addEventListener('click', function(){
+        selVeh = v;
+        ring.setAttribute('transform', 'translate(' + xy[0] + ' ' + xy[1] + ')');
+        ring.setAttribute('opacity', '1');
+        openSheet(v);
+      });
+      return g;
+    }
+
+    function renderBoard(vehicles, smartCount){
+      var groups = {}, order = [];
+      vehicles.forEach(function(v){
+        var key = (v.agency === 'qline' || v.route_id === 'QLINE') ? 'QLINE' : (v.route_id || '—');
+        if (!groups[key]) { groups[key] = { n: 0, dest: v.destination || '', agency: v.agency }; order.push(key); }
+        groups[key].n++; if (!groups[key].dest && v.destination) groups[key].dest = v.destination;
+      });
+      order.sort(function(a, b){ return groups[b].n - groups[a].n; });
+      var html = '';
+      if (!vehicles.length) html = '<div class="brow msg">No vehicles reported right now — the feed is live; service is thin or done for the day.</div>';
+      order.slice(0, 5).forEach(function(key){
+        var g = groups[key], isQ = key === 'QLINE';
+        html += '<div class="brow"><div class="chip' + (isQ || key === '4' ? ' fill' : ' dim') + '">' + (isQ ? 'Q' : key) + '</div>' +
+          '<div class="dest"><b>' + (g.dest ? g.dest.replace(/</g, '&lt;') : 'Route ' + key) + '</b><small>' + (isQ ? 'QLINE streetcar' : 'DDOT') + '</small></div>' +
+          '<div class="n">' + g.n + '<small>' + (g.n === 1 ? 'Bus' : 'Buses') + '</small></div></div>';
+      });
+      if (smartCount != null){
+        html += '<div class="brow"><div class="chip dim">S</div><div class="dest"><b>SMART</b><small>Display only — not routed, not stored</small></div><div class="n">' + smartCount + '<small>Buses</small></div></div>';
+      }
+      brows.innerHTML = html;
+      bcount.textContent = vehicles.length + ' vehicles · DDOT + QLINE';
+    }
+
+    function render(data, smart){
+      genAt = new Date(data.generated_at);
+      var vs = data.vehicles || [];
+      dyn.style.opacity = 0; dynS.style.opacity = 0;
+      setTimeout(function(){
+        while (dyn.firstChild) dyn.removeChild(dyn.firstChild);
+        while (dynS.firstChild) dynS.removeChild(dynS.firstChild);
+        vs.forEach(function(v){ if (typeof v.lat === 'number' && typeof v.lon === 'number') dyn.appendChild(marker(v)); });
+        if (smart && smart.vehicles) smart.vehicles.forEach(function(v){
+          if (typeof v.lat !== 'number' || typeof v.lon !== 'number') return;
+          var xy = proj(v.lat, v.lon);
+          dynS.appendChild(el('circle', { cx: xy[0], cy: xy[1], r: 3.5, fill: 'rgba(255,255,255,.22)' }));
+        });
+        dyn.style.opacity = 1; dynS.style.opacity = 1;
+      }, 220);
+      renderBoard(vs, smart ? (smart.count != null ? smart.count : smart.vehicles.length) : null);
+      lastOk = true; feedstate.style.display = 'none';
+    }
+
+    function load(){
+      var got = { v: null, s: null, a: null }, done = 0;
+      function fin(){
+        if (++done < 3) return;
+        if (got.v) render(got.v, got.s); else { lastOk = false; feedstate.style.display = 'block'; }
+        var al = document.getElementById('alert');
+        if (got.a && got.a.count > 0 && got.a.alerts && got.a.alerts[0]){
+          document.getElementById('alert-h').textContent = 'Service alert — ' + (got.a.alerts[0].header || 'DDOT');
+          var d = got.a.alerts[0].description || '';
+          document.getElementById('alert-d').textContent = d.length > 220 ? d.slice(0, 220) + '…' : d;
+          al.style.display = 'block';
+        } else al.style.display = 'none';
+      }
+      function get(url, key){
+        fetch(url, { cache: 'no-store' }).then(function(r){ if (!r.ok) throw 0; return r.json(); })
+          .then(function(j){ got[key] = j; fin(); }).catch(function(){ fin(); });
+      }
+      get('/live-data/vehicles.json', 'v'); get('/live-data/smart-display.json', 's'); get('/live-data/alerts.json', 'a');
+    }
+    load(); setInterval(load, 30000);
+
+    var clock = document.getElementById('clock');
+    function tick(){
+      var d = new Date();
+      clock.textContent = ('0'+d.getHours()).slice(-2) + ':' + ('0'+d.getMinutes()).slice(-2) + ':' + ('0'+d.getSeconds()).slice(-2);
+      if (genAt){
+        var age = Math.max(0, Math.round((Date.now() - genAt.getTime()) / 1000));
+        var lbl = age < 90 ? age + 's ago' : Math.round(age / 60) + ' min ago';
+        freshlbl.textContent = 'Feed ' + lbl;
+        freshlbl.className = age > 1200 ? 'stale' : '';
+        if (age > 1200) freshlbl.textContent = 'Stale · ' + lbl;
+      } else if (!lastOk) freshlbl.textContent = 'Feed unavailable';
+    }
+    tick(); setInterval(tick, 1000);
+
+    document.querySelectorAll('.layers button').forEach(function(b){
+      b.addEventListener('click', function(){
+        if (b.dataset.l === 'buses'){ dyn.style.display = dyn.style.display === 'none' ? '' : 'none'; dynS.style.display = dyn.style.display; }
+        else document.getElementById(b.dataset.l).classList.toggle('off');
+        b.classList.toggle('off');
+      });
+    });
+    var world = document.getElementById('world'), z = 1;
+    function apply(){ world.style.transform = 'scale(' + z + ')'; }
+    document.getElementById('zin').addEventListener('click', function(){ z = Math.min(2.2, z + 0.3); apply(); });
+    document.getElementById('zout').addEventListener('click', function(){ z = Math.max(1, z - 0.3); apply(); });
+    document.getElementById('zre').addEventListener('click', function(){ z = 1; apply(); });
+  })();
+</script>
 </body>
 </html>
