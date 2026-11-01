@@ -271,6 +271,18 @@ jobs:
             cp -r planner deployment/ || echo "planner copy failed"
           fi
 
+          # Copy V2 personal-domain + IA-2 directories (DAA Domain
+          # V2 deploy, 2026-11-01 — about/work/writing/academy/vote/
+          # status were pushed to the repo in the V2 deploy but never
+          # served: a new top-level directory must be added to this
+          # copy list or it pushes but never serves — same failure
+          # class as voter-guide/planner above)
+          for d in about work writing academy vote status; do
+            if [ -d "$d" ]; then
+              cp -r "$d" deployment/ || echo "$d copy failed"
+            fi
+          done
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
