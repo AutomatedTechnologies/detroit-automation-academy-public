@@ -11,12 +11,15 @@
 # it under the city's timezone (the T1 verification conditions).
 #
 # Coverage, honestly stated (2026-11-01):
-#   covered: austin, cincinnati, columbus, philadelphia,
+#   covered: austin, cincinnati, columbus, denver, philadelphia,
 #            sacramento, san-diego (22/22 each at adoption)
-#   denver:  no LT-U5 port exists in the estate to vendor — gap
-#            recorded in the CI/CD adoption record; Denver is held
-#            by the shell-contract, manifest, ref-integrity and
-#            boot-smoke gates.
+#   denver:  port vendored 2026-11-01 (correction: the port
+#            existed all along at goals/live-transit-denver-aurora/
+#            hidden_files/u5-port/test-pick-den.mjs, md5
+#            86ae70180221d43408455beaf92d24c6; the adoption-night
+#            search looked in the wrong goal directory and
+#            reported a false gap — corrected in the adoption
+#            record the same night).
 #   detroit: its LT-U5 harness assumes the assembler bundle layout
 #            (assets at the bundle root); the repo layout keeps
 #            Detroit assets at the repo root, so the harness cannot
@@ -52,6 +55,7 @@ run_city() {
 run_city austin      test-pick-aus.mjs America/Chicago
 run_city cincinnati  test-pick-cin.mjs America/New_York
 run_city columbus    test-pick-col.mjs America/New_York
+run_city denver      test-pick-den.mjs America/Denver
 run_city philadelphia test-pick-phl.mjs America/New_York
 run_city sacramento  test-pick-sac.mjs America/Los_Angeles
 run_city san-diego   test-pick-sd.mjs  America/Los_Angeles
