@@ -27,6 +27,7 @@ jobs:
   # carry no code — so the feed's deploy cadence is unchanged.
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     outputs:
       code_changed: ${{ steps.scope.outputs.code_changed }}
       verdict: ${{ steps.evidence.outputs.verdict }}
@@ -254,6 +255,10 @@ jobs:
   postdeploy:
     needs: [deploy, verify]
     runs-on: ubuntu-latest
+    # Hard backstop: a stuck verification step must never hold
+    # the `pages` concurrency group (and every queued deploy)
+    # hostage — the 2026-11-01 run 41275380038 lesson.
+    timeout-minutes: 30
     permissions:
       contents: read
       issues: write
@@ -263,6 +268,7 @@ jobs:
 
       - name: Served-byte verification
         id: served
+        timeout-minutes: 15
         run: |
           set -eo pipefail
           if [ "${{ needs.verify.outputs.code_changed }}" = "true" ]; then
