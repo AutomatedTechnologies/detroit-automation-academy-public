@@ -1,0 +1,113 @@
+name: Live Transit CI
+
+# Verification pipeline for the Live Transit site + Cities V2 core
+# delivery (adopted 2026-11-01, after the T6.6 P0 S1: a bundle that
+# passed every local gate shipped a shell its app could not boot).
+# This workflow automates VERIFICATION, not authorization — feature
+# ships still require Justin's word per tranche; the pipeline's job
+# is that no unverified or contract-breaking state can deploy, and
+# a bad deploy self-detects (see deploy-pages.yml postdeploy).
+#
+# Path discipline mirrors ci.yml's R4 lesson: publisher data churn
+# (live-transit/<city>/data/**, live-data/**) never triggers the
+# suite; only code, shells, manifests, and the gate machinery do.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'live-transit/**'
+      - 'live-transit.html'
+      - 'live-transit.js'
+      - 'live-fusion.js'
+      - 'raptor.js'
+      - 'raptor-v2.js'
+      - 'ride-along.js'
+      - 'ride-along.css'
+      - 'build-manifest.json'
+      - 'planner/**'
+      - 'tools/cicd/**'
+      - '.github/workflows/live-transit-ci.yml'
+      - '.github/workflows/deploy-pages.yml'
+    paths-ignore:
+      - 'live-transit/*/data/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'live-transit/**'
+      - 'live-transit.html'
+      - 'live-transit.js'
+      - 'live-fusion.js'
+      - 'raptor.js'
+      - 'raptor-v2.js'
+      - 'ride-along.js'
+      - 'ride-along.css'
+      - 'build-manifest.json'
+      - 'planner/**'
+      - 'tools/cicd/**'
+      - '.github/workflows/live-transit-ci.yml'
+      - '.github/workflows/deploy-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-transit-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    name: Live Transit gates (shell contract · manifest · refs · fixtures)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Toolchain versions
+        run: |
+          python3 --version
+          node --version
+
+      # The gate that kills the 2026-10-31 failure class: every
+      # shell must carry every mount id its own app declares
+      # (SURFACE_MOUNTS, derived per city — never hardcoded), and
+      # the Detroit monolith shell must carry the ids its scripts
+      # require from it.
+      - name: Shell-contract gate
+        run: |
+          set -eo pipefail
+          python3 tools/cicd/shell_contract.py 2>&1 | tee gate-shell.log
+
+      # Every build-owned file must still hash to its assembled
+      # build-manifest value (publisher-owned data and the
+      # terms.html slot are exempt — see the script header).
+      - name: Build-manifest recompute gate
+        run: |
+          set -eo pipefail
+          python3 tools/cicd/manifest_check.py 2>&1 | tee gate-manifest.log
+
+      # Every manifest entry, module import, and shell reference
+      # must resolve to a file that exists.
+      - name: Referential-integrity gate
+        run: |
+          set -eo pipefail
+          python3 tools/cicd/ref_integrity.py 2>&1 | tee gate-ref.log
+
+      # The cities' own LT-U5 certifying harnesses, run against
+      # the shipped trees (coverage + gaps: see the script).
+      - name: LT-U5 fixture gate
+        run: |
+          set -eo pipefail
+          bash tools/cicd/run_fixtures.sh 2>&1 | tee gate-fixtures.log
+
+      # Every gate tags its verdict with an evidence class
+      # (bytes | behavior | claim). The headline release verdict
+      # carries the LOWEST class present — a bytes-only green can
+      # never present as behavior-verified (directive 2026-11-01).
+      - name: Evidence verdict
+        if: always()
+        run: |
+          python3 tools/cicd/evidence_verdict.py \
+            gate-shell.log gate-manifest.log gate-ref.log gate-fixtures.log \
+            | tee evidence-verdict.txt
