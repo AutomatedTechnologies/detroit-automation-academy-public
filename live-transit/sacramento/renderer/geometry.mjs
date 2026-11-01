@@ -1,5 +1,5 @@
 // renderer/geometry.mjs — pure geometry for the 3D deck-ribbon renderer.
-// PHL REBUILD R3 (LT-KAES-09/13). Label: UNVERIFIED / legacy-unsigned.
+// Platform rebuild R3 (LT-KAES-09/13). Label: UNVERIFIED / legacy-unsigned.
 //
 // KAES-07 seam-adjacent: the ribbon algorithm is the platform's
 // reference geometry (transcribed from Detroit's production
