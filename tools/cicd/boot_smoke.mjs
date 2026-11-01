@@ -15,10 +15,14 @@
 //       carries live content (count / scheduled-network / updated)
 //     - #lt-filter-panel or #lt-browse-panel gains children
 //       (route/group UI actually rendered)
-//     - a <canvas> exists inside #lt-map (renderer materialised)
+//     - the renderer's canvas is live: #lt-map IS a <canvas>
+//       element in the modular shell (verified from served
+//       bytes 2026-11-01 — the original '#lt-map canvas'
+//       descendant selector could never match it and failed
+//       eight booted pages; a nested canvas is also accepted)
 //   monolith shell (#bus-updated present):
 //     - #bus-updated text leaves the static "connecting..." state
-//     - a <canvas> exists inside #live-map
+//     - a <canvas> exists at/inside #live-map
 // Every verdict prints its predicate COMPONENTS (statusOk /
 // canvas / panel children) so a false negative names the exact
 // sub-condition instead of hiding behind a status string — the
@@ -67,7 +71,7 @@ const BOOT_FN = () => {
     const panel =
       document.getElementById('lt-filter-panel') ||
       document.getElementById('lt-browse-panel');
-    const canvas = document.querySelector('#lt-map canvas');
+    const canvas = document.querySelector('canvas#lt-map, #lt-map canvas');
     const statusOk = t.length > 0 && !/loading|connecting/i.test(t);
     const panelChildren = panel ? panel.childElementCount : -1;
     return {
@@ -104,7 +108,7 @@ const BOOT_FN = () => {
   const updated = document.getElementById('bus-updated');
   if (updated) {
     const t = text(updated);
-    const canvas = document.querySelector('#live-map canvas');
+    const canvas = document.querySelector('canvas#live-map, #live-map canvas');
     const statusOk = t.length > 0 && !/connecting/i.test(t);
     return {
       shell: 'monolith',
@@ -175,10 +179,13 @@ for (const { city, url } of PAGES) {
     await page.setViewport({ width: 1280, height: 800 });
     page.on('pageerror', (e) => pageErrors.push(String(e).slice(0, 300)));
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
-    // Poll the predicate in-page for up to 60 s; a stalled
+    // Poll the predicate in-page for up to 120 s (Philadelphia's
+    // data layer needs longer than 60 s under SwiftShader on a
+    // shared runner — run 41280352947 caught it mid-boot with
+    // panels rendered and status still loading); a stalled
     // renderer makes individual evaluates throw — that is a
     // not-yet verdict, retried until the deadline.
-    const deadline = Date.now() + 60000;
+    const deadline = Date.now() + 120000;
     let state = null;
     while (Date.now() < deadline) {
       try {
