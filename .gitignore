@@ -1,0 +1,81 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.bak
+
+# Pre-commit
+.pre-commit/
+
+# Node
+node_modules/
+package-lock.json
+
+# Hugo
+public/
+resources/
+.hugo_build.lock
+
+# Testing
+.pytest_cache/
+.tox/
+coverage.xml
+*.cover
+
+# Git worktrees - not tracked
+themes/*/worktrees/
+*.worktrees/
+
+# Hugo local build output (built by CI from blog-source)
+/blog/
+
+# Security remediation R2 (2026-10-23): gcloud config never belongs in a repo
+**/.gcloud_config/

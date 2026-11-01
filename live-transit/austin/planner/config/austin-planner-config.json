@@ -1,0 +1,52 @@
+{
+ "asset": {
+  "bytes": 15969735,
+  "capabilities": {
+   "fares": "PRESENT \u2014 CapMetro publishes legacy fare_attributes (2 products: local $1.25, express $3.50) + fare_rules mapping all 70 routes; no GTFS-Fares v2 (A2 capability gate 4.6, compiler build record)"
+  },
+  "compiler": "build-timetable-generalized.py (T6 generalized compiler, Austin-local copy; austin lane pointed at the build-time re-fetch)",
+  "counts": {
+   "exceptions": 432,
+   "servedStops": 2334,
+   "services": 30,
+   "trips": 24830
+  },
+  "feedValidity": {
+   "capmetro": "20261007..20270109"
+  },
+  "feedVersion": "261007_1345",
+  "file": "planner-timetable-261007_1345.json",
+  "md5": "712c490a2640ccb4f9be59287957bd01",
+  "serviceModel": "set",
+  "sidecar": {
+   "file": "planner-stops.json",
+   "md5": "c6c83f36c00c886a0e4ca30d18a807d6"
+  },
+  "tripMap": {
+   "file": "trip-map.json",
+   "md5": "b02ac35154d9e06b84e1732a49c20275"
+  }
+ },
+ "city": "austin",
+ "engine": {
+  "file": "raptor-v2-set.js",
+  "md5": "6746dfbc3aae7c531e42206478d572da",
+  "note": "byte-identical to the platform staged bundle (hosted-bundle posture, LT-KAES-07 anti-fork)"
+ },
+ "label": "UNVERIFIED / legacy-unsigned",
+ "probes": "all ymd arguments passed as STRINGS (finding (b): the engine resolves calendar_dates exceptions only under strict string equality; AUS5 + the G3 audit + the numeric-ymd counter-probe in harness/out/d4-g3-results.json prove both directions \u2014 numeric ymd resolves NO services at all in this calendar_dates-only feed)",
+ "selection": {
+  "adoptedSet": "W0-default-T35-P15",
+  "calibration": "harness/results-austin-calibration-2026-10-26.json (90-configuration sweep on Austin data; validation gate field-for-field vs the freqbound run; ruling-5 kills 0). Austin's measured winner equals the platform default set \u2014 adopted by measurement, not by transfer (LT-N8).",
+  "distanceWeights": {
+   "corridor": 0.35,
+   "modeMix": 0.15,
+   "transferDelta": 0.2,
+   "transferStopDisplacement": 0.1,
+   "walkBurden": 0.2
+  },
+  "nearDuplicateThreshold": 0.35,
+  "reliabilityHeadwayCapMin": 60,
+  "reliabilityTransferPenaltyMin": 15
+ }
+}
