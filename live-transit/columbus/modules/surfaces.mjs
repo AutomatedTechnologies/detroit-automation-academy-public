@@ -650,6 +650,7 @@ export function createSurfaces(deps = {}) {
     vehiclesByKey: new Map(),
     degraded: null, degradedDismissedSig: null,
     card: null, // {kind:'stop'|'vehicle'|'route', id}
+    cardCovered: false, // T6 parity β: ride card covers the info card (monolith cover semantics)
     launcher: 'open',
     places: { enabled: false, status: 'off', places: [], note: null, fetches: 0 },
     planner: {
@@ -868,7 +869,10 @@ export function createSurfaces(deps = {}) {
 
   /** Ingest one display-TU payload into the fenced store. The
    *  payload is dropped whole past its stale gate. Accepted
-   *  shapes: { trip_updates[] } in the canonical TU shape, or
+   *  shapes: { trip_updates[] } in the canonical TU shape,
+   *  { trips[] } in the served display shape (flat epoch-second
+   *  arrival_time / departure_time on each stop_time_update —
+   *  T6 parity α, 2026-10-31), or
    *  { rowsByStop / byStop: { stopId: rows[] } }. */
   function ingestDisplayTripUpdates(payload, cfgEntry) {
     state.display.tuPayload = payload || null;
@@ -882,16 +886,21 @@ export function createSurfaces(deps = {}) {
       if (!state.display.tuByStop.has(gid)) state.display.tuByStop.set(gid, []);
       state.display.tuByStop.get(gid).push(row);
     };
-    if (Array.isArray(payload.trip_updates)) {
-      for (const tu of payload.trip_updates) {
+    const tuList = Array.isArray(payload.trip_updates) ? payload.trip_updates
+      : Array.isArray(payload.trips) ? payload.trips : null;
+    if (tuList) {
+      for (const tu of tuList) {
         for (const stu of tu.stop_time_updates || []) {
           const ev = stu.arrival || stu.departure;
-          if (!ev || typeof ev.time !== 'number') continue;
+          const evSec = ev && typeof ev.time === 'number' ? ev.time
+            : typeof stu.arrival_time === 'number' ? stu.arrival_time
+              : typeof stu.departure_time === 'number' ? stu.departure_time : null;
+          if (evSec == null) continue;
           const raw = String(stu.stop_id || '').split(':').pop();
           pushRow(geomStopId(tu.family || feed, raw), {
             routeId: tu.route_id, routeLabel: String(tu.route_id || ''),
             headsign: displayHeadsignFor(tu.trip_id) || null,
-            timeMs: ev.time * 1000, kind: 'live', displayOnly: true,
+            timeMs: evSec * 1000, kind: 'live', displayOnly: true,
             vehicleId: tu.vehicle_id || null, agency: tu.agency || config.agency.id,
           });
         }
@@ -1506,6 +1515,15 @@ export function createSurfaces(deps = {}) {
       : model.kind === 'vehicle' ? renderVehicleCard(model)
         : model.kind === 'station' ? renderStationCard(model)
           : renderRouteCard(model);
+    // T6 parity β: while a ride is boarded the ride card covers
+    // this card — the card stays in state and DOM (not closed),
+    // marked covered; ride-exit uncovers it (the monolith's
+    // return-through-the-bus-card path).
+    n.classList.toggle('lt-covered', !!state.cardCovered);
+    if (typeof n.setAttribute === 'function') {
+      if (state.cardCovered) n.setAttribute('aria-hidden', 'true');
+      else if (typeof n.removeAttribute === 'function') n.removeAttribute('aria-hidden');
+    }
   }
 
   function openCard(kind, id) {
@@ -1518,6 +1536,7 @@ export function createSurfaces(deps = {}) {
 
   function closeCard() {
     state.card = null;
+    state.cardCovered = false;
     const n = el('lt-info');
     if (n) { n.style.display = 'none'; n.innerHTML = ''; }
   }
@@ -2016,13 +2035,31 @@ export function createSurfaces(deps = {}) {
 
   // ---------- Ride Along surface (LT-KAES-32 / LT-S6) ---------------
 
+  /** Move focus to a surface panel (browser focus model; harness
+   *  fakes record the call). Ensures the panel is focusable. */
+  function focusPanel(id) {
+    const n = el(id);
+    if (!n) return;
+    if (typeof n.setAttribute === 'function' && typeof n.getAttribute === 'function'
+      && !n.getAttribute('tabindex')) n.setAttribute('tabindex', '-1');
+    if (typeof n.focus === 'function') n.focus();
+  }
+
   function boardVehicle(agency, vehicleId) {
     const rec = state.vehiclesByKey.get(`${agency}|${vehicleId}`);
     if (!rec) return { ok: false, reason: 'not-reporting' };
     const r = rideAlong.board(rec);
     if (r.ok) {
+      // T6 parity β — the monolith boarding funnel
+      // (rideFromStopLiveRow): showBus selects the vehicle, so
+      // the info card becomes the bus card; then the ride card
+      // opens OVER the bus/stop cards — covered, not closed —
+      // and takes focus. Ride-exit uncovers the bus card.
+      state.card = { kind: 'vehicle', id: `${agency}|${vehicleId}` };
+      state.cardCovered = true;
+      renderCard();
       renderRideAlong();
-      if (state.card) renderCard();
+      focusPanel('lt-ride-along');
     }
     return r;
   }
@@ -2239,7 +2276,14 @@ export function createSurfaces(deps = {}) {
       const dataset = await stampedJson(config.assets.places, fetchImpl);
       const list = Array.isArray(dataset) ? dataset : dataset.places;
       if (!Array.isArray(list)) throw new Error('places dataset has no places list');
-      state.places.places = list.filter((p) => p && typeof p.name === 'string');
+      // T6 parity γ (2026-10-31): dual-key name — the Detroit
+      // dataset keys the name `n`; fleet datasets use `name`.
+      // Records are normalized to carry `name` so every
+      // downstream consumer (stop-card proximity, renderer
+      // setPlaces, list render) reads one key.
+      state.places.places = list
+        .filter((p) => p && (typeof p.name === 'string' || typeof p.n === 'string'))
+        .map((p) => (typeof p.name === 'string' ? p : { ...p, name: p.n }));
       state.places.coverage = dataset.coverage || null;
       state.places.attribution = dataset.attribution || null;
       state.places.status = 'ready';
@@ -2486,7 +2530,7 @@ export function createSurfaces(deps = {}) {
     if (!action) return;
     if (action === 'card-close') closeCard();
     else if (action === 'board-vehicle' || action === 'picker-board') boardVehicle(d.agency, d.vehicleId);
-    else if (action === 'ride-exit') { rideAlong.exit(); renderRideAlong(); if (state.card) renderCard(); }
+    else if (action === 'ride-exit') { rideAlong.exit(); state.cardCovered = false; renderRideAlong(); if (state.card) { renderCard(); focusPanel('lt-info'); } }
     else if (action === 'ride-open') { const n = el('lt-ride-along'); if (n && n.scrollIntoView) n.scrollIntoView(); }
     else if (action === 'launcher-toggle') onLauncherToggle();
     else if (action === 'launcher-tile') onLauncherTile(d.tile);
@@ -2658,15 +2702,18 @@ export function createSurfaces(deps = {}) {
 // ------------------------------------------------------------------
 
 export function renderStopCard(m) {
+  // T6 parity β (2026-10-31): live rows carry the monolith's
+  // stop-live-row class (the class was dead shell CSS with no
+  // producer); boarding rows below are button.stop-live-row.
   const live = m.liveArrivals.map((r) => `
-    <li><strong>${esc(r.routeLabel)}</strong>${r.headsign ? ` — ${esc(r.headsign)}` : ''}
+    <li class="stop-live-row"><strong>${esc(r.routeLabel)}</strong>${r.headsign ? ` — ${esc(r.headsign)}` : ''}
       · ${esc(r.whenText)} <span class="lt-live">LIVE</span>
       ${r.vehicleId ? `<button type="button" data-action="board-vehicle" data-agency="${esc(r.agency)}" data-vehicle-id="${esc(r.vehicleId)}">Ride vehicle ${esc(r.vehicleId)}</button>` : ''}
     </li>`).join('');
   // CG-2: display-only arrivals (present only on models built
   // for display-fed stops; empty/absent on every fleet model).
   const display = (m.displayArrivals || []).map((r) => `
-    <li><strong>${esc(r.routeLabel)}</strong>${r.headsign ? ` — ${esc(r.headsign)}` : ''}
+    <li class="stop-live-row"><strong>${esc(r.routeLabel)}</strong>${r.headsign ? ` — ${esc(r.headsign)}` : ''}
       · ${esc(r.whenText)} <span class="lt-live">LIVE</span></li>`).join('');
   const suggestions = (m.suggestions || []).map((s) => `
     <li><strong>${esc(s.routeLabel || '')}</strong>${s.headsign ? ` — ${esc(s.headsign)}` : ''}
@@ -2686,7 +2733,7 @@ export function renderStopCard(m) {
     ${m.timetablePending ? '<p class="lt-note">Scheduled times load with the timetable…</p>' : ''}
     ${m.boardingRows.length ? `<h3>Live on these routes</h3>
       <ul class="lt-boarding">${m.boardingRows.map((r) => `
-        <li><button type="button" data-action="board-vehicle" data-agency="${esc(r.agency)}" data-vehicle-id="${esc(r.vehicleId)}">${esc(r.routeLabel)} — vehicle ${esc(r.vehicleId)}</button>${r.headsign ? ` to ${esc(r.headsign)}` : ''}${r.distanceM != null ? ` · ${r.distanceM} m away` : ''}</li>`).join('')}
+        <li><button type="button" class="stop-live-row" data-action="board-vehicle" data-agency="${esc(r.agency)}" data-vehicle-id="${esc(r.vehicleId)}">${esc(r.routeLabel)} — vehicle ${esc(r.vehicleId)}</button>${r.headsign ? ` to ${esc(r.headsign)}` : ''}${r.distanceM != null ? ` · ${r.distanceM} m away` : ''}</li>`).join('')}
       </ul>` : ''}
     ${m.directionRows.length ? `<h3>Directions</h3>
       <ul class="lt-directions">${m.directionRows.map((r) => `
