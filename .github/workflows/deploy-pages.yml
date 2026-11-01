@@ -43,7 +43,7 @@ jobs:
           # an internal pre-launch shell script shipped publicly. A new
           # root .json data file must be added here deliberately; root
           # shell scripts are never site content and are not copied.
-          for f in commentary.json ddot-fleet.json ddot-routes-3d.json ddot-timetable-S1000182.json geometry-manifest.json landmarks.json live.json peoplemover-3d.json places.json planner-timetable-S1000182-S1000147.json qline-3d.json search-index.json smart-routes-3d.json; do
+          for f in build-manifest.json commentary.json ddot-fleet.json ddot-routes-3d.json ddot-timetable-S1000182.json geometry-manifest.json landmarks.json live.json peoplemover-3d.json places.json planner-timetable-S1000182-S1000147.json qline-3d.json search-index.json smart-routes-3d.json; do
             cp "$f" deployment/ || echo "allowlisted JSON missing: $f"
           done
           
@@ -131,6 +131,15 @@ jobs:
           # 404'd despite the files being in the repo)
           if [ -d "voter-guide" ]; then
             cp -r voter-guide deployment/ || echo "voter-guide copy failed"
+          fi
+
+          # Copy planner assets (Cities V2 Detroit bundle, T6.6,
+          # 2026-10-31 — the modular Detroit page loads its planner
+          # timetable from planner/assets/; the directory was never
+          # in the copy list, so the files 404'd despite being in
+          # the repo — same failure class as voter-guide above)
+          if [ -d "planner" ]; then
+            cp -r planner deployment/ || echo "planner copy failed"
           fi
 
       - name: Upload artifact
