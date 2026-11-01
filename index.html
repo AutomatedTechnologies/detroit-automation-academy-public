@@ -1,119 +1,26 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Justin Spencer Smith — Detroit, Michigan</title><meta name="description" content="The personal site of Justin Spencer Smith: Live Transit for eight cities, The Signal, The Press, and a body of work built in Detroit.">
-<meta name="author" content="Justin Spencer Smith">
-<link rel="stylesheet" href="/styles.css">
-<link rel="canonical" href="https://www.detroitautomationacademy.com/">
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#000000">
+<title>Detroit Automation Academy</title>
 <style>
-:root{--ink:#000;--paper:#fff;--paper2:#f5f5f5;--g1:#111;--g2:#222;--g3:#333;--g5:#555;--g7:#777;--g9:#999;--gb:#bbb;--gd:#ddd;--line:rgba(0,0,0,.18)}
-*{box-sizing:border-box} body{margin:0;background:var(--paper);color:var(--g1);font-family:'Inter',system-ui,sans-serif;font-size:17px;line-height:1.6}
-body{background-image:linear-gradient(rgba(0,0,0,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.05) 1px,transparent 1px);background-size:28px 28px}
-h1,h2,h3{font-family:'Space Grotesk','Inter',sans-serif;line-height:1.15}
-.mono{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace}
-.wrap{max-width:1060px;margin:0 auto;padding:0 20px}
-.kicker{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--g5)}
-.stamp{display:inline-block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;border:2px solid var(--g1);padding:.2rem .55rem;transform:rotate(-1.2deg)}
-a{color:var(--g1)} .btn{display:inline-block;border:2px solid var(--g1);padding:.55rem 1rem;text-decoration:none;font-weight:600;background:var(--paper)} .btn.solid{background:var(--g1);color:var(--paper)}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin:1.2rem 0}
-.card{border:1px solid var(--g1);background:var(--paper);padding:1rem} .card h3{margin:.3rem 0} .card p{color:var(--g3);margin:.3rem 0}
-section{padding:2.2rem 0;border-top:1px solid var(--line)}
-footer{border-top:3px solid var(--g1);background:var(--paper2);padding:2rem 0} footer nav{display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;font-weight:600}
-.masthead{padding:2.4rem 0 1rem} .masthead .name{font-size:1.35rem;font-weight:700;margin:0} .masthead .role{color:var(--g5);margin:.2rem 0}
-/* embedded browser */
-.browser{border:2px solid var(--g1);border-radius:24px;overflow:hidden;background:var(--paper);margin:1.4rem 0}
-.b-chrome{background:var(--gd);border-bottom:1px solid var(--g9);padding:.6rem .8rem}
-.b-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
-.b-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--g5);background:var(--paper);font-size:1rem;cursor:pointer}
-.b-btn:disabled{opacity:.35;cursor:default}
-.b-addr{flex:1;min-width:180px;display:flex} .b-addr input{flex:1;border:1px solid var(--g5);border-radius:999px;padding:.45rem 1rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem;background:var(--paper);color:var(--g1)}
-.b-tabs{display:flex;gap:.35rem;margin-top:.6rem;flex-wrap:wrap}
-.b-tab{border:1px solid var(--g5);border-bottom:none;border-radius:12px 12px 0 0;background:var(--gb);padding:.4rem .9rem;cursor:pointer;font-weight:600}
-.b-tab[aria-selected="true"]{background:var(--paper)}
-.b-view{width:100%;height:620px;border:0;display:block;background:var(--paper)}
-@media(max-width:640px){.b-view{height:480px}}
-</style></head><body>
-
-<div id="daa-nav"><header class="nav"><a class="brand" href="/" aria-label="Justin Spencer Smith — home"><span class="brand-word">Justin Spencer Smith</span></a><nav class="nav-links" id="daaNavLinks" aria-label="Primary"><a class="lane" href="/">Home</a><a class="lane" href="/work/">Work</a><a class="lane" href="/writing/">Writing</a><a class="lane" href="/live-transit/">Cities</a><a class="lane" href="/about/">About</a></nav><button class="nav-toggle" id="daaNavToggle" aria-label="Toggle navigation" aria-expanded="false"><span></span><span></span><span></span></button></header></div>
-
-<main id="top"><div class="wrap">
-<header class="masthead">
-<p class="stamp">Bench log &middot; Detroit &middot; 2026-11-01</p>
-<p class="name" style="margin-top:1rem">Justin Spencer Smith</p>
-<p class="role">Personal domain &middot; body of work. Detroit, Michigan — along Woodward Avenue.</p>
-<h1>The work, open in one window.</h1>
-<p>Live Transit, The Signal, and The Press live on this domain. The browser below is the front door: open a tab, follow a link inside it, and the address bar keeps up. Everything it shows is a real page of this site.</p>
-</header>
-
-<div class="browser" role="region" aria-label="Embedded browser">
-  <div class="b-chrome">
-    <div class="b-row">
-      <button class="b-btn" id="bBack" aria-label="Back" disabled>&larr;</button>
-      <button class="b-btn" id="bFwd" aria-label="Forward" disabled>&rarr;</button>
-      <button class="b-btn" id="bReload" aria-label="Reload">&#8635;</button>
-      <form class="b-addr" id="bAddrForm"><input id="bAddr" type="text" value="/live-transit.html" aria-label="Address" spellcheck="false"></form>
-    </div>
-    <div class="b-tabs" role="tablist" aria-label="Open a surface">
-      <button class="b-tab" role="tab" aria-selected="true" data-url="/live-transit.html">Live Transit</button>
-      <button class="b-tab" role="tab" aria-selected="false" data-url="/signal/">The Signal</button>
-      <button class="b-tab" role="tab" aria-selected="false" data-url="/press/">The Press</button>
-      <button class="b-tab" role="tab" aria-selected="false" data-url="/live-transit/">Cities</button>
-    </div>
-  </div>
-  <iframe class="b-view" id="bView" src="/live-transit.html" title="Embedded browser viewport"></iframe>
-</div>
-<p class="mono" style="font-size:.8rem;color:#555">NOTE &mdash; SAME-ORIGIN PAGES ONLY. EXTERNAL LINKS INSIDE THE VIEWPORT OPEN IN A NEW TAB.</p>
-
-<section aria-labelledby="work-h"><p class="kicker">Work</p><h2 id="work-h">What is here</h2>
-<div class="cards">
-<article class="card"><p class="kicker">Ride &middot; Product</p><h3>Live Transit</h3><p>Every DDOT bus live in 3D on Woodward and across Detroit; SMART shown live, display only; the QLINE streetcar. A map and trip planner for eight cities.</p><a href="/live-transit.html">Open the map &rarr;</a></article>
-<article class="card"><p class="kicker">Vote &middot; Civic</p><h3>The Detroit Voter Guide</h3><p>Four ballot questions in plain language, and a planned trip to every early vote center. Election Day is Tuesday, November 3, 2026; polls are open 7 a.m.&ndash;8 p.m.</p><a href="/vote/">Open the civic hub &rarr;</a></article>
-<article class="card"><p class="kicker">Read &middot; Publications</p><h3>The Signal &middot; Edition 7</h3><p>&ldquo;Detroit Votes This Week&rdquo; &mdash; the latest edition of the weekly transit newsletter, with the Live Transit Detroit series and Notes alongside it.</p><a href="/signal/">Open the publications hub &rarr;</a></article>
-<article class="card"><p class="kicker">Academy &middot; Institution</p><h3>Programs and the district</h3><p>Robotics, drones, and automation work with young builders in Detroit &mdash; programs, curriculum, and the 3D district.</p><a href="/academy/">Open the institution hub &rarr;</a></article>
-</div></section>
-
-<section aria-labelledby="cities-h"><p class="kicker">Cities</p><h2 id="cities-h">Eight cities, one platform</h2>
-<p>Detroit &middot; Philadelphia &middot; Cincinnati &middot; Denver/Aurora &middot; Austin &middot; Sacramento &middot; San Diego &middot; Columbus. Each city runs on its own transit agency&rsquo;s published data.</p>
-<p><a class="btn" href="/live-transit/">Open the city index</a> <a class="btn solid" href="/board/">Find your stop &mdash; Departure Board</a></p></section>
-
-<section aria-labelledby="dual-h"><p class="kicker">Two surfaces, by design</p><h2 id="dual-h">Desktop home, watch in motion</h2>
-<p>This homepage is the desktop and large-screen home: the embedded browser above is its lead. On the move, the mobile surface of record is the Apple Watch &mdash; a departure board at a glance, nearest stops first, read on the watch itself. A phone shows a fallback sheet of the same pages. No location is sent or recorded by either surface; the watch board works from the stops you choose.</p></section>
-</div></main>
-<script>
-(function(){
-'use strict';
-var view=document.getElementById('bView'),addr=document.getElementById('bAddr'),
-back=document.getElementById('bBack'),fwd=document.getElementById('bFwd'),
-tabs=Array.prototype.slice.call(document.querySelectorAll('.b-tab'));
-var hist=['/live-transit.html'],idx=0,loading=false;
-function sync(){addr.value=hist[idx];back.disabled=idx<=0;fwd.disabled=idx>=hist.length-1;
- tabs.forEach(function(t){t.setAttribute('aria-selected',t.getAttribute('data-url')===hist[idx]?'true':'false');});}
-function go(url,push){ if(push!==false){hist=hist.slice(0,idx+1);hist.push(url);idx++;} loading=true; view.src=url; sync();}
-tabs.forEach(function(t){t.addEventListener('click',function(){go(t.getAttribute('data-url'));});});
-back.addEventListener('click',function(){if(idx>0){idx--;loading=true;view.src=hist[idx];sync();}});
-fwd.addEventListener('click',function(){if(idx<hist.length-1){idx++;loading=true;view.src=hist[idx];sync();}});
-document.getElementById('bReload').addEventListener('click',function(){try{view.contentWindow.location.reload();}catch(e){view.src=hist[idx];}});
-document.getElementById('bAddrForm').addEventListener('submit',function(e){e.preventDefault();var v=addr.value.trim();if(v.charAt(0)!=='/')v='/'+v;go(v);});
-view.addEventListener('load',function(){
-  var p; try{p=view.contentWindow.location.pathname+view.contentWindow.location.search+view.contentWindow.location.hash;}catch(e){return;}
-  if(!loading && p && p!==hist[idx]){hist=hist.slice(0,idx+1);hist.push(p);idx++;}
-  loading=false; sync();
-  try{ var d=view.contentDocument; d.addEventListener('click',function(ev){
-    var a=ev.target.closest?ev.target.closest('a'):null; if(!a)return;
-    if(a.hostname && a.hostname!==window.location.hostname){a.target='_blank';a.rel='noopener';}
-  });}catch(e){}
-});
-sync();
-})();
-</script>
-
-<footer><div class="wrap">
-<p class="mono" style="font-size:.8rem">JUSTIN SPENCER SMITH &middot; DETROIT, MICHIGAN &middot; WOODWARD AVE</p>
-<nav aria-label="Site">
-<a href="/">Home</a><a href="/work/">Work</a><a href="/writing/">Writing</a><a href="/live-transit/">Cities</a><a href="/about/">About</a>
-<a href="/terms.html">Terms</a><a href="/privacy.html">Privacy</a>
-</nav>
-<p style="color:#555">&copy; 2026 Justin Spencer Smith. Live Transit Detroit &middot; The Signal &middot; The Press.</p>
-</div></footer>
-<script src="/nav.js"></script>
-</body></html>
+  html { background: #000; color-scheme: dark; }
+  body { background: #000; color: #fff; margin: 0; min-height: 100vh; min-height: 100dvh;
+         font-family: system-ui, sans-serif;
+         display: flex; align-items: center; justify-content: center; }
+  main { text-align: center; padding: clamp(1.5rem, 9vw, 4rem); }
+  h1 { font-size: clamp(1.375rem, 2.5vw + 1rem, 2.5rem); font-weight: 600;
+       line-height: 1.2; margin: 0 0 0.75rem; }
+  p { color: #9a9aa0; font-size: clamp(1rem, 1.2vw + 0.75rem, 1.25rem); margin: 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Detroit Automation Academy</h1>
+  <p>Under construction.</p>
+</main>
+</body>
+</html>
