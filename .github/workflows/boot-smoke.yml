@@ -1,0 +1,75 @@
+# Live Transit boot smoke — standalone production check.
+#
+# The post-deploy boot smoke inside deploy-pages.yml remains
+# the in-chain behaviour gate, but a dispatched deploy run can
+# be starved indefinitely by the `pages` concurrency group
+# under the feed publishers' ~5-minute cadence (four dispatched
+# runs cancelled in the queue on adoption night, 2026-11-01,
+# without starting). Boot verification of the PRODUCTION pages
+# needs no deploy slot, so it also lives here: dispatch-only,
+# no concurrency group, starts immediately. A scheduled variant
+# is a candidate (adoption record) — not enabled by this file.
+name: Live Transit boot smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  smoke:
+    name: Boot smoke (production pages)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Boot smoke check
+        id: smoke
+        run: |
+          set -eo pipefail
+          cd tools/cicd
+          npm init -y >/dev/null 2>&1
+          npm install puppeteer@23.11.1 --no-audit --no-fund
+          node boot_smoke.mjs --out smoke-summary.json 2>&1 | tee ../../gate-smoke.log
+
+      - name: Evidence verdict
+        if: always()
+        run: |
+          python3 tools/cicd/evidence_verdict.py gate-smoke.log | tee evidence-verdict.txt
+
+      - name: Alarm — open issue on boot failure
+        if: failure() && steps.smoke.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cities=$(python3 -c "
+          import json
+          try:
+              d = json.load(open('tools/cicd/smoke-summary.json'))
+              bad = [r['city'] for r in d if not r['booted']]
+              print(', '.join(bad) if bad else 'summary unavailable')
+          except Exception:
+              print('summary unavailable')
+          ")
+          {
+            echo "Standalone boot smoke failed against production."
+            echo ""
+            echo "- failing cities: $cities"
+            echo "- run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            if [ -f evidence-verdict.txt ]; then
+              echo "- evidence: $(grep RELEASE-VERDICT evidence-verdict.txt || true)"
+            fi
+            echo ""
+            echo "Detection only — no automatic rollback (CI/CD adoption record, 2026-11-01)."
+          } > issue-body.md
+          gh issue create \
+            --title "[boot-smoke] production boot failure @ ${GITHUB_SHA::7}" \
+            --body-file issue-body.md \
+            --label ci-cd \
+          || gh issue create \
+            --title "[boot-smoke] production boot failure @ ${GITHUB_SHA::7}" \
+            --body-file issue-body.md
