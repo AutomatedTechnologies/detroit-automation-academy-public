@@ -32,10 +32,15 @@ jobs:
       verdict: ${{ steps.evidence.outputs.verdict }}
       evidence_class: ${{ steps.evidence.outputs.evidence_class }}
     steps:
+      # Shallow checkout: this repo's full history is heavy and the
+      # verify stage runs ahead of every deploy (incl. the feed
+      # cadence). The scope step only needs the push's `before`
+      # commit; if it is not in the shallow window it falls back
+      # to running the full gates (the safe default).
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          fetch-depth: 0
+          fetch-depth: 2
 
       - name: Determine change scope
         id: scope
@@ -43,6 +48,11 @@ jobs:
           if [ "${{ github.event_name }}" != "push" ] || [ -z "${{ github.event.before }}" ] || [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
             echo "code_changed=true" >> "$GITHUB_OUTPUT"
             echo "scope: non-push or first push — full gates"
+            exit 0
+          fi
+          if ! git cat-file -e "${{ github.event.before }}" 2>/dev/null; then
+            echo "code_changed=true" >> "$GITHUB_OUTPUT"
+            echo "scope: before-commit outside shallow window — full gates (safe default)"
             exit 0
           fi
           changed="$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}")"
