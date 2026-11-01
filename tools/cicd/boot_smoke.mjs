@@ -7,7 +7,7 @@
 // instrument that catches that class is a real browser observing
 // real boot behaviour. This script is that instrument, run on the
 // Actions runner against the PRODUCTION urls after each deploy
-// that touches code or shells.
+// that touches code or shells (and standalone via boot-smoke.yml).
 //
 // Boot predicate (DOM state, never pixels):
 //   modular shell (#lt-status present):
@@ -19,9 +19,22 @@
 //   monolith shell (#bus-updated present):
 //     - #bus-updated text leaves the static "connecting..." state
 //     - a <canvas> exists inside #live-map
-// Page errors are collected and printed; the predicate decides.
+// Every verdict prints its predicate COMPONENTS (statusOk /
+// canvas / panel children) so a false negative names the exact
+// sub-condition instead of hiding behind a status string — the
+// first fleet run (2026-11-01, run 41277965212) failed five
+// pages whose status text already showed live vehicle counts;
+// the components are how that gets diagnosed. Page errors are
+// collected and printed; the predicate decides.
+//
+// Robustness rules (same run's lessons): every per-page action
+// sits inside the per-city try — a CDP ProtocolError on one
+// page is that page's verdict, never the process's death — and
+// the summary is rewritten after every city, so a late crash
+// cannot erase earlier verdicts.
 //
 // Usage: node boot_smoke.mjs [--base URL] [--out summary.json]
+//        [--only city[,city...]]
 // Requires: puppeteer (installed by the workflow step).
 import puppeteer from 'puppeteer';
 import { writeFileSync } from 'node:fs';
@@ -33,6 +46,7 @@ const opt = (name, dflt) => {
 };
 const BASE = opt('--base', 'https://www.detroitautomationacademy.com').replace(/\/$/, '');
 const OUT = opt('--out', null);
+const ONLY = opt('--only', null);
 
 const PAGES = [
   { city: 'detroit', url: `${BASE}/live-transit.html` },
@@ -43,7 +57,7 @@ const PAGES = [
   { city: 'philadelphia', url: `${BASE}/live-transit/philadelphia/` },
   { city: 'sacramento', url: `${BASE}/live-transit/sacramento/` },
   { city: 'san-diego', url: `${BASE}/live-transit/san-diego/` },
-];
+].filter((p) => !ONLY || ONLY.split(',').includes(p.city));
 
 const BOOT_FN = () => {
   const text = (el) => (el ? el.textContent.trim() : '');
@@ -54,14 +68,15 @@ const BOOT_FN = () => {
       document.getElementById('lt-filter-panel') ||
       document.getElementById('lt-browse-panel');
     const canvas = document.querySelector('#lt-map canvas');
+    const statusOk = t.length > 0 && !/loading|connecting/i.test(t);
+    const panelChildren = panel ? panel.childElementCount : -1;
     return {
       shell: 'modular',
-      booted:
-        t.length > 0 &&
-        !/loading|connecting/i.test(t) &&
-        !!canvas &&
-        !!panel &&
-        panel.childElementCount > 0,
+      statusOk,
+      canvas: !!canvas,
+      panelId: panel ? panel.id : null,
+      panelChildren,
+      booted: statusOk && !!canvas && !!panel && panelChildren > 0,
       detail: t.slice(0, 120),
     };
   }
@@ -69,17 +84,33 @@ const BOOT_FN = () => {
   if (updated) {
     const t = text(updated);
     const canvas = document.querySelector('#live-map canvas');
+    const statusOk = t.length > 0 && !/connecting/i.test(t);
     return {
       shell: 'monolith',
-      booted: t.length > 0 && !/connecting/i.test(t) && !!canvas,
+      statusOk,
+      canvas: !!canvas,
+      panelId: null,
+      panelChildren: -1,
+      booted: statusOk && !!canvas,
       detail: t.slice(0, 120),
     };
   }
-  return { shell: 'unknown', booted: false, detail: 'no known status element' };
+  return {
+    shell: 'unknown',
+    statusOk: false,
+    canvas: false,
+    panelId: null,
+    panelChildren: -1,
+    booted: false,
+    detail: 'no known status element',
+  };
 };
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const browser = await puppeteer.launch({
   headless: true,
+  protocolTimeout: 300000,
   args: [
     '--no-sandbox',
     '--disable-dev-shm-usage',
@@ -91,71 +122,71 @@ const browser = await puppeteer.launch({
 
 const results = [];
 for (const { city, url } of PAGES) {
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1280, height: 800 });
-  const pageErrors = [];
-  page.on('pageerror', (e) => pageErrors.push(String(e).slice(0, 300)));
   let verdict;
+  let page = null;
+  const pageErrors = [];
   try {
+    page = await browser.newPage();
+    await page.setViewport({ width: 1280, height: 800 });
+    page.on('pageerror', (e) => pageErrors.push(String(e).slice(0, 300)));
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
-    // Wait until the boot predicate (BOOT_FN's logic, inlined for
-    // serialization) reports booted; on timeout, evaluate once for
-    // the record so the failure output carries the stuck state.
-    const handle = await page
-      .waitForFunction(
-        () => {
-          const text = (el) => (el ? el.textContent.trim() : '');
-          const status = document.getElementById('lt-status');
-          if (status) {
-            const t = text(status);
-            const panel =
-              document.getElementById('lt-filter-panel') ||
-              document.getElementById('lt-browse-panel');
-            const canvas = document.querySelector('#lt-map canvas');
-            const booted =
-              t.length > 0 &&
-              !/loading|connecting/i.test(t) &&
-              !!canvas &&
-              !!panel &&
-              panel.childElementCount > 0;
-            return booted
-              ? { shell: 'modular', booted, detail: t.slice(0, 120) }
-              : false;
-          }
-          const updated = document.getElementById('bus-updated');
-          if (updated) {
-            const t = text(updated);
-            const canvas = document.querySelector('#live-map canvas');
-            const booted =
-              t.length > 0 && !/connecting/i.test(t) && !!canvas;
-            return booted
-              ? { shell: 'monolith', booted, detail: t.slice(0, 120) }
-              : false;
-          }
-          return false;
-        },
-        { timeout: 90000, polling: 1000 },
-      )
-      .catch(() => null);
-    const state = handle ? await handle.jsonValue() : await page.evaluate(BOOT_FN);
+    // Poll the predicate in-page for up to 60 s; a stalled
+    // renderer makes individual evaluates throw — that is a
+    // not-yet verdict, retried until the deadline.
+    const deadline = Date.now() + 60000;
+    let state = null;
+    while (Date.now() < deadline) {
+      try {
+        state = await page.evaluate(BOOT_FN);
+        if (state && state.booted) break;
+      } catch {
+        state = state || null;
+      }
+      await sleep(2000);
+    }
+    if (!state) {
+      state = {
+        shell: 'error',
+        statusOk: false,
+        canvas: false,
+        panelId: null,
+        panelChildren: -1,
+        booted: false,
+        detail: 'predicate never evaluated (renderer unresponsive)',
+      };
+    }
     verdict = { city, url, ...state, pageErrors };
   } catch (e) {
     verdict = {
-      city, url, shell: 'error', booted: false,
-      detail: String(e).slice(0, 300), pageErrors,
+      city,
+      url,
+      shell: 'error',
+      statusOk: false,
+      canvas: false,
+      panelId: null,
+      panelChildren: -1,
+      booted: false,
+      detail: String(e).slice(0, 300),
+      pageErrors,
     };
+  } finally {
+    if (page) await page.close().catch(() => {});
   }
   verdict.evidenceClass = 'behavior';
   results.push(verdict);
+  if (OUT) writeFileSync(OUT, JSON.stringify(results, null, 1));
   console.log(
     `${verdict.booted ? 'PASS' : 'FAIL'} ${city} [${verdict.shell}] ${verdict.detail}`,
+  );
+  console.log(
+    `     components: statusOk=${verdict.statusOk} canvas=${verdict.canvas} ` +
+      `panel=${verdict.panelId} panelChildren=${verdict.panelChildren}`,
   );
   if (pageErrors.length) {
     console.log(`     pageerrors: ${pageErrors.slice(0, 3).join(' | ')}`);
   }
-  await page.close();
 }
-await browser.close();
+await browser.close().catch(() => {});
 
 if (OUT) writeFileSync(OUT, JSON.stringify(results, null, 1));
 const failed = results.filter((r) => !r.booted);
