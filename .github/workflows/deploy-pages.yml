@@ -127,6 +127,19 @@ jobs:
         id: evidence
         if: always()
         run: |
+          if [ "${{ steps.decommission.outputs.stub }}" = "true" ]; then
+            # Decommissioned tree: tools/cicd does not exist by
+            # design, so the aggregation script cannot run. The
+            # gates above reported SKIP (claim class); emit that
+            # verdict inline — this stage verified nothing and
+            # says so. (Gate-config 2, 2026-11-01: the original
+            # unconditional script call failed every post-flip
+            # verify on exactly this missing file.)
+            echo "RELEASE-VERDICT verdict=SKIP evidence-class=claim"
+            echo "verdict=SKIP" >> "$GITHUB_OUTPUT"
+            echo "evidence_class=claim" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           for f in gate-shell.log gate-manifest.log gate-ref.log gate-skipped.log; do
             [ -f "$f" ] || touch "$f"
           done
@@ -332,6 +345,13 @@ jobs:
       - name: Evidence verdict (post-deploy)
         if: always()
         run: |
+          if [ "${{ needs.verify.outputs.stub }}" = "true" ]; then
+            # Decommissioned tree: no tools/cicd by design; the
+            # checks above reported SKIP (claim class). Emit the
+            # verdict inline (gate-config 2, 2026-11-01).
+            echo "RELEASE-VERDICT verdict=SKIP evidence-class=claim"
+            exit 0
+          fi
           if [ ! -f gate-smoke.log ]; then
             echo "EVIDENCE gate=boot-smoke class=behavior verdict=skip" > gate-smoke.log
           fi
