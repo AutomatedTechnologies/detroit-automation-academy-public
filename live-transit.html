@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self'; object-src 'none'; base-uri 'self'">
+<title>Live Transit Detroit — Real-Time DDOT Bus Tracker in 3D</title>
+<meta name="description" content="Every DDOT bus live in 3D; SMART buses shown live under license. Positions publish about every five minutes — the map dead-reckons between updates.">
+<link rel="canonical" href="https://www.detroitautomationacademy.com/live-transit.html">
+<!-- Estate stylesheet at the CURRENT shared stamp (LT-KAES-03).
+     City build stamp (LT-KAES-04) governs the local assets below. -->
+<link rel="stylesheet" href="/styles.css?v=20261031-0615">
+<style>
+  .phl-wrap{max-width:1200px;margin:0 auto;padding:0 16px}
+  .phl-head{padding:28px 0 10px}
+  .phl-head h1{margin:0 0 6px;font-size:30px}
+  .phl-head p{margin:4px 0;color:#444;max-width:75ch}
+  #lt-status{font-weight:600;color:#17365d;margin:8px 0}
+  #lt-map{width:100%;height:68vh;display:block;background:#0b0e13;border:1px solid #222;border-radius:8px;touch-action:none}
+  .lt-region{margin:12px 0}
+  /* Repair 2026-10-25 (contrast): the estate stylesheet sets a
+     light body text color (--paper #F5F2EA) for its dark theme;
+     these three panels pin LIGHT backgrounds, so their inherited
+     text rendered cream-on-cream (~1.05:1, illegible). Each
+     panel now pins a dark text color to match its background. */
+  #lt-load-error{display:none;border:1px solid #a33;border-radius:8px;padding:12px 14px;background:#fdf3f3;color:#571f1f}
+  #lt-degraded{display:none;border:1px solid #b8860b;border-radius:8px;padding:12px 14px;background:#fffaf0;color:#4a3800}
+  #lt-info{display:none;border:1px solid #ccc;border-radius:8px;padding:12px 14px;background:#f7f9fb;max-width:75ch;color:#14202b}
+</style>
+<!-- Vendored rendering library, declared once (LT-KAES-05).
+     R3 vendors three.module.min.js at this path; the importmap is
+     the single declaration of the library for the whole page. -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "./live-transit/detroit/vendor/three.module.min.js?v=20261101-0056",
+    "three/addons/": "./live-transit/detroit/vendor/three-addons/"
+  }
+}
+</script>
+</head>
+<body>
+<header class="nav"><a class="brand" href="/" aria-label="Detroit Automation Academy — home"><img src="/assets/logo.webp" alt="" class="brand-mark"><span class="brand-word">Detroit Automation <em>Academy</em></span></a><nav class="nav-links" id="daaNavLinks" aria-label="Primary"><a class="lane" data-audience="viewer" href="/watch/">Watch</a><a class="lane" data-audience="reader" href="/signal/">Read</a><a class="lane" data-audience="reader" href="/notes/">Notes</a><a class="lane" data-audience="reader" href="/press/">Press</a><a class="lane" data-audience="user" href="/live-transit.html">Do</a><a class="lane" data-audience="user" href="/live-transit/">Cities</a><a class="lane" data-audience="visitor" href="/programs.html">Programs</a><a class="lane" data-audience="user" href="/api.html">API</a><a class="lane" data-audience="visitor" href="/partners.html">Partners</a><a class="lane" data-audience="visitor" href="/#mission">About</a><a class="lane" data-audience="visitor" href="/apple-learning-coach/">Bio</a><a class="lane" data-audience="visitor" href="/find.html">Find</a><a class="lane" data-audience="subscriber" href="https://www.linkedin.com/newsletters/7508391258638311424/" target="_blank" rel="noopener" aria-label="Subscribe, opens in new tab">Subscribe</a></nav><button class="nav-toggle" id="daaNavToggle" aria-label="Toggle navigation" aria-expanded="false"><span></span><span></span><span></span></button></header>
+<script src="/nav.js?v=20261031-0615"></script>
+
+<main class="phl-wrap">
+  <div class="phl-head">
+    <p><a href="/live-transit/">← All cities</a></p>
+    <h1>Live transit <span class="accent">· Detroit</span></h1>
+    <p>83 routes and 10,583 stops drawn on the actual streets of Detroit — DDOT, SMART, and the QLINE streetcar — with live vehicle positions, published about every five minutes.</p>
+    <p id="lt-status" role="status">connecting…</p>
+    <p><a href="#lt-planner"><strong>Plan a trip →</strong></a> — this page shows live bus positions; the trip planner uses scheduled times.</p>
+  </div>
+
+  <!-- First-view launcher sheet mount (LT-KAES-36 / LT-S1.2). -->
+  <section id="lt-launcher" class="lt-region" aria-label="Start"></section>
+
+  <!-- Load-error overlay + degradation notice (LT-KAES-40 / LT-S8.2). -->
+  <div id="lt-load-error" role="alert"></div>
+  <div id="lt-degraded" role="status"></div>
+
+  <!-- Filter panel: groups mirror config.layerGroups (LT-S4.1);
+       R5 renders these from configuration — the checked state here
+       mirrors the configured defaults so the shell is honest
+       before scripts run. Toggling recomputes every derived
+       display immediately (LT-S4.2 / RC10). -->
+  <div id="lt-filter-panel" class="lt-region" role="group" aria-label="Map layers">
+    <label><input type="checkbox" data-group="connect-ten" checked> ConnectTen</label>
+    <label><input type="checkbox" data-group="primary" checked> Primary</label>
+    <label><input type="checkbox" data-group="neighborhood" checked> Neighborhood</label>
+    <label><input type="checkbox" data-group="smart" checked> SMART</label>
+    <label><input type="checkbox" data-group="qline" checked> QLINE Streetcar</label>
+  </div>
+
+  <!-- Browse + search mount (LT-KAES-33 / LT-S4). -->
+  <section id="lt-browse-panel" class="lt-region" aria-label="Browse routes and stops"></section>
+
+  <canvas id="lt-map" aria-label="3D map of DDOT, SMART, and QLINE routes with live bus positions"></canvas>
+
+  <!-- Stop / vehicle card region (LT-KAES-30 / LT-KAES-31). -->
+  <div id="lt-info" role="status"></div>
+
+  <!-- Alerts region (LT-KAES-34 surface half / LT-S8). -->
+  <section id="lt-alerts" class="lt-region" aria-label="Service alerts"></section>
+
+  <!-- Planner surface mount — R4 host renders here (LT-KAES-29). -->
+  <section id="lt-planner" class="lt-region" aria-label="Plan a trip"></section>
+
+  <!-- Ride Along mount (LT-KAES-32 / LT-S6). -->
+  <section id="lt-ride-along" class="lt-region" aria-label="Ride along"></section>
+
+  <!-- Places layer controls (LT-KAES-35 / LT-S9): labeled
+       "Sponsored", default OFF, session-only — rendered by R5. -->
+  <section id="lt-places" class="lt-region" aria-label="Places"></section>
+
+  <section class="phl-about">
+    <h2>What you are looking at</h2>
+    <p>Route shapes and stop positions come from the agencies’ published GTFS schedule data; the bus markers are live vehicle positions from the agencies’ own feeds, published about every five minutes. Zoom in close and the markers resolve into true-scale bus models — each DDOT bus is matched to its fleet model (dimensions and seating from the DDOT fleet roster) and oriented to its reported heading. It is the same live layer that powered the retired Forge Line page’s bus count — the Forge Line concept itself was modeled on the transit Detroit already runs.</p>
+    <h2>About this service</h2>
+    <p>Route shapes & stops: DDOT, SMART, and QLINE GTFS. Bus dimensions & seating: DDOT fleet roster via CPTDB wiki. Street underlay: U.S. Census Bureau TIGER/Line 2025 (Wayne, Oakland & Macomb counties). Live data: DDOT via Clever Devices BusTime; SMART via Swiftly GTFS-Realtime; QLINE via its public GTFS-RT feed. Trademark notice: DDOT is a service mark of the City of Detroit. SMART is a service mark of the Suburban Mobility Authority for Regional Transportation. This is an unofficial project by Detroit Automation Academy — not affiliated with, endorsed by, or acting on behalf of DDOT, SMART, or the City of Detroit.</p>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <img src="/assets/logo.webp" alt="" class="brand-mark">
+      <span>Detroit Automation Academy</span>
+    </div>
+    <p class="footer-fine">Southfield, Michigan · <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a></p>
+    <p class="footer-fine"><a href="/live-transit.html">Live Transit Detroit</a> · <a href="/live-transit/">Cities</a> · <a href="/programs.html">Programs</a> · <a href="/signal/">The Signal</a> · <a href="/voter-guide.html">Voter Guide</a> · <a href="/press/">Press</a> · <a href="/board/">Board</a> · <a href="/find.html">Find</a> · <a href="/api.html">API</a></p>
+    <p class="footer-fine"><a href="/dashboard.html">Status</a> · <a href="/terms.html">Terms of Service</a> · <a href="/privacy.html">Privacy Policy</a> · <a href="/live-transit/terms/">Live Transit Terms</a></p>
+    <p class="footer-fine">© 2026 AutomatedTechnologies d/b/a Detroit Automation Academy</p>
+  </div>
+</footer>
+<!-- The one application module (LT-KAES-06). Feature engines load
+     lazily through it (LT-KAES-05) — no classic-script sprawl, and
+     no estate script the reference application does not load. -->
+<script type="module" src="./live-transit/detroit/modules/app.mjs?v=20261101-0056"></script>
+<script src="/assets/measure.js?v=20261023-o2" defer></script>
+</body>
+</html>

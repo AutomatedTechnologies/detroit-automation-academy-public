@@ -1,0 +1,10 @@
+[flake8]
+# Utility scripts with embedded HTML/templates intentionally deviate:
+#  - update_html.py: long lines live inside HTML f-strings (can't split
+#    without changing output); '##' headers are this repo's own convention
+#    (see scripts/standardize_headers.py).
+#  - scripts/standardize_headers.py: shebang sits below the file header
+#    comments by convention.
+per-file-ignores =
+    update_html.py: E501,E266
+    scripts/standardize_headers.py: E265

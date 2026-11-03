@@ -1,0 +1,42 @@
+{
+ "asset": {
+  "bytes": 3763741,
+  "capabilities": {
+   "fares": "ABSENT \u2014 SacRT publishes no fare files in any feed version (measured at A2 and re-confirmed in the build-time fresh artifact); no fare surface exists in this build",
+   "accessibility": "ABSENT \u2014 wheelchair_boarding blank on all 2,822 stops and wheelchair_accessible blank on all 4,984 trips in every feed version (A2); surfaces state the absence, never an inference (LT-F7)"
+  },
+  "compiler": "build-timetable-generalized.py (T6 generalized compiler, Sacramento-local copy; sacramento lane pointed at the build-time fresh portal fetch)",
+  "counts": {
+   "exceptions": 8,
+   "servedStops": 2822,
+   "services": 3,
+   "trips": 4984
+  },
+  "feedValidity": {
+   "sacrt": "20260809..20270102"
+  },
+  "feedVersion": "SEP26 GTFS",
+  "file": "planner-timetable-SEP26 GTFS.json",
+  "md5": "958451ada1e8c6287467556a47f71a7a",
+  "serviceModel": "set",
+  "sidecar": {
+   "file": "planner-stops.json",
+   "md5": "4e20c31e4938abd2181c12284e717b8c"
+  },
+  "tripMap": {
+   "file": "trip-map.json",
+   "md5": "92b6fae87095817f0ed388cfcb51e36e"
+  }
+ },
+ "city": "sacramento",
+ "ingestGate": [
+  {
+   "feed": "sacramento feed 0 (google_transit-fresh.zip)",
+   "feed_version": "SEP26 GTFS",
+   "valid_from": "2026-08-09",
+   "valid_to": "2027-01-02",
+   "build_date": "2026-10-26",
+   "result": "pass"
+  }
+ ]
+}

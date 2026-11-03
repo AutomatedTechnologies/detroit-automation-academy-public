@@ -32,7 +32,6 @@ jobs:
       code_changed: ${{ steps.scope.outputs.code_changed }}
       verdict: ${{ steps.evidence.outputs.verdict }}
       evidence_class: ${{ steps.evidence.outputs.evidence_class }}
-      stub: ${{ steps.decommission.outputs.stub }}
     steps:
       # Shallow checkout: this repo's full history is heavy and the
       # verify stage runs ahead of every deploy (incl. the feed
@@ -73,52 +72,23 @@ jobs:
             done
           fi
 
-      # Decommissioned state (DAA Domain Deletion, Board 70,
-      # gate-config commit 2026-11-01): a root DECOMMISSIONED marker
-      # means the estate was intentionally replaced by a stub. The
-      # city gates derive their scope from trees that no longer
-      # exist BY DESIGN and refuse a vacuous pass, so on a marked
-      # tree they report SKIP (claim-class evidence: this stage
-      # verified nothing) instead of blocking the deploy. Unmarked
-      # trees are gated exactly as before — removing the marker
-      # (the restore path) restores full gating with no further
-      # workflow change.
-      - name: Detect decommissioned state
-        id: decommission
-        run: |
-          if [ -f DECOMMISSIONED ]; then
-            echo "stub=true" >> "$GITHUB_OUTPUT"
-            echo "DECOMMISSIONED marker present — estate decommissioned; city gates will report SKIP."
-          else
-            echo "stub=false" >> "$GITHUB_OUTPUT"
-            echo "no DECOMMISSIONED marker — full gates apply"
-          fi
-
       - name: Shell-contract gate
-        if: steps.scope.outputs.code_changed == 'true' && steps.decommission.outputs.stub != 'true'
+        if: steps.scope.outputs.code_changed == 'true'
         run: |
           set -eo pipefail
           python3 tools/cicd/shell_contract.py 2>&1 | tee gate-shell.log
 
       - name: Build-manifest recompute gate
-        if: steps.scope.outputs.code_changed == 'true' && steps.decommission.outputs.stub != 'true'
+        if: steps.scope.outputs.code_changed == 'true'
         run: |
           set -eo pipefail
           python3 tools/cicd/manifest_check.py 2>&1 | tee gate-manifest.log
 
       - name: Referential-integrity gate
-        if: steps.scope.outputs.code_changed == 'true' && steps.decommission.outputs.stub != 'true'
+        if: steps.scope.outputs.code_changed == 'true'
         run: |
           set -eo pipefail
           python3 tools/cicd/ref_integrity.py 2>&1 | tee gate-ref.log
-
-      - name: Decommissioned — gates not applicable
-        if: steps.decommission.outputs.stub == 'true'
-        run: |
-          echo "EVIDENCE gate=shell-contract class=claim verdict=skip" >> gate-shell.log
-          echo "EVIDENCE gate=manifest-recompute class=claim verdict=skip" >> gate-manifest.log
-          echo "EVIDENCE gate=ref-integrity class=claim verdict=skip" >> gate-ref.log
-          echo "city gates skipped: DECOMMISSIONED marker present — no shells, manifests or city trees exist by design (Board 70)."
 
       # Headline verdict with its evidence class (lowest present;
       # an all-skipped stage reports SKIP / class claim — it
@@ -127,19 +97,6 @@ jobs:
         id: evidence
         if: always()
         run: |
-          if [ "${{ steps.decommission.outputs.stub }}" = "true" ]; then
-            # Decommissioned tree: tools/cicd does not exist by
-            # design, so the aggregation script cannot run. The
-            # gates above reported SKIP (claim class); emit that
-            # verdict inline — this stage verified nothing and
-            # says so. (Gate-config 2, 2026-11-01: the original
-            # unconditional script call failed every post-flip
-            # verify on exactly this missing file.)
-            echo "RELEASE-VERDICT verdict=SKIP evidence-class=claim"
-            echo "verdict=SKIP" >> "$GITHUB_OUTPUT"
-            echo "evidence_class=claim" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
           for f in gate-shell.log gate-manifest.log gate-ref.log gate-skipped.log; do
             [ -f "$f" ] || touch "$f"
           done
@@ -271,18 +228,6 @@ jobs:
             cp -r planner deployment/ || echo "planner copy failed"
           fi
 
-          # Copy V2 personal-domain + IA-2 directories (DAA Domain
-          # V2 deploy, 2026-11-01 — about/work/writing/academy/vote/
-          # status were pushed to the repo in the V2 deploy but never
-          # served: a new top-level directory must be added to this
-          # copy list or it pushes but never serves — same failure
-          # class as voter-guide/planner above)
-          for d in about work writing academy vote status; do
-            if [ -d "$d" ]; then
-              cp -r "$d" deployment/ || echo "$d copy failed"
-            fi
-          done
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
@@ -321,16 +266,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - name: Decommissioned — post-deploy checks not applicable
-        if: needs.verify.outputs.stub == 'true'
-        run: |
-          echo "EVIDENCE gate=served-verify class=claim verdict=skip" > gate-served.log
-          echo "EVIDENCE gate=boot-smoke class=claim verdict=skip" > gate-smoke.log
-          echo "post-deploy checks skipped: DECOMMISSIONED marker present (Board 70)."
-
       - name: Served-byte verification
         id: served
-        if: needs.verify.outputs.stub != 'true'
         timeout-minutes: 15
         run: |
           set -eo pipefail
@@ -342,7 +279,7 @@ jobs:
 
       - name: Boot smoke check
         id: smoke
-        if: (needs.verify.outputs.code_changed == 'true' || github.event_name == 'workflow_dispatch') && needs.verify.outputs.stub != 'true'
+        if: needs.verify.outputs.code_changed == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           set -eo pipefail
           cd tools/cicd
@@ -357,13 +294,6 @@ jobs:
       - name: Evidence verdict (post-deploy)
         if: always()
         run: |
-          if [ "${{ needs.verify.outputs.stub }}" = "true" ]; then
-            # Decommissioned tree: no tools/cicd by design; the
-            # checks above reported SKIP (claim class). Emit the
-            # verdict inline (gate-config 2, 2026-11-01).
-            echo "RELEASE-VERDICT verdict=SKIP evidence-class=claim"
-            exit 0
-          fi
           if [ ! -f gate-smoke.log ]; then
             echo "EVIDENCE gate=boot-smoke class=behavior verdict=skip" > gate-smoke.log
           fi
