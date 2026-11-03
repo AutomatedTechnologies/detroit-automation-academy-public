@@ -13,7 +13,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 (function () {
   'use strict';
 
-  var STAMP = '20261007-0715';
+  var STAMP = '20261103-1345';
   // Build string in the help footer derives from the cache stamp — never
   // hardcoded (2026-10-06: a stale hardcoded "Build 20261002-2780" shipped
   // for days before anyone noticed).
@@ -4050,7 +4050,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // double-count the lateness (empirical shift + delay vs raw).
     var dep = trip.depL2 || trip.dep, arr = trip.arrL2 || trip.arr;
     for (var j = 0; j < trip.stops.length; j++) {
-      var s = stopS[String(trip.stops[j])];
+      var s = stopS[ttStopId(trip.stops[j])];
       if (s == null) continue;
       pts.push({ s: s, dep: dep[j], arr: arr[j] });
     }
