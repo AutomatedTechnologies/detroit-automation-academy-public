@@ -47,8 +47,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   container.appendChild(renderer.domElement);
 
   var scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0c1116);
-  scene.fog = new THREE.Fog(0x0c1116, 32000, 75000);
+  scene.background = new THREE.Color(0x101010);
+  scene.fog = new THREE.Fog(0x101010, 32000, 75000);
 
   var camera = new THREE.PerspectiveCamera(42, 1, 100, 140000);
   camera.position.set(0, 8500, 16500);
@@ -75,7 +75,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     controls.touches.TWO = THREE.TOUCH.DOLLY_ROTATE;
   }
 
-  scene.add(new THREE.HemisphereLight(0xf5f2ea, 0x0c1116, 0.9));
+  scene.add(new THREE.HemisphereLight(0xf2f2f2, 0x101010, 0.9));
   var sun = new THREE.DirectionalLight(0xffffff, 0.7);
   sun.position.set(9000, 14000, 5000);
   scene.add(sun);
@@ -166,7 +166,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var tw = Math.ceil(mx.measureText(text).width);
     c.width = tw > 460 ? tw + 52 : 512;
     var x = c.getContext('2d');
-    x.fillStyle = 'rgba(12,17,22,0.85)';
+    x.fillStyle = 'rgba(16,16,16,0.85)';
     x.beginPath();
     if (x.roundRect) x.roundRect(6, 14, c.width - 12, 100, 50); else x.rect(6, 14, c.width - 12, 100);
     x.fill();
@@ -315,7 +315,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var tw = Math.ceil(mc.measureText(label).width);
     c.width = tw + 60; c.height = 72;
     var x = c.getContext('2d');
-    x.fillStyle = 'rgba(9,13,17,0.88)';
+    x.fillStyle = 'rgba(12,12,12,0.88)';
     x.beginPath();
     if (x.roundRect) x.roundRect(4, 4, c.width - 8, 64, 16); else x.rect(4, 4, c.width - 8, 64);
     x.fill();
@@ -353,7 +353,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     return s < 60 ? s + 's ago' : Math.floor(s / 60) + 'm ago';
   }
   function drawBusInfo(v) {
-    var col = routeColors[v.route_id] ? '#' + routeColors[v.route_id].getHexString() : '#9aa0a6';
+    var col = routeColors[v.route_id] ? '#' + routeColors[v.route_id].getHexString() : '#9f9f9f';
     var dest = formatDest(v.route_id, v.destination);
     var line1 = v.route_id + ' · ' + (routeNames[v.route_id] || 'DDOT') + (dest ? ' → ' + dest : '');
     var spd = (v.speed_mph != null && !isNaN(v.speed_mph)) ? Math.round(v.speed_mph) + ' mph' : '–';
@@ -366,7 +366,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var w2 = Math.ceil(m.measureText(line2).width);
     c.width = Math.max(w1, w2) + 72; c.height = 128;
     var x = c.getContext('2d');
-    x.fillStyle = 'rgba(9,13,17,0.92)';
+    x.fillStyle = 'rgba(12,12,12,0.92)';
     x.beginPath();
     if (x.roundRect) x.roundRect(4, 4, c.width - 8, c.height - 8, 20); else x.rect(4, 4, c.width - 8, c.height - 8);
     x.fill();
@@ -375,11 +375,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     x.fillStyle = '#ffffff';
     x.font = '700 34px system-ui, -apple-system, sans-serif';
     x.fillText(line1, c.width / 2 - 14, 42);
-    x.fillStyle = '#c9ced4';
+    x.fillStyle = '#cdcdcd';
     x.font = '500 28px system-ui, -apple-system, sans-serif';
     x.fillText(line2, c.width / 2 - 14, 88);
     // Dismiss × — the whole pill is tappable, this is the affordance.
-    x.strokeStyle = '#9AA0A6'; x.lineWidth = 5; x.lineCap = 'round';
+    x.strokeStyle = '#9f9f9f'; x.lineWidth = 5; x.lineCap = 'round';
     var xx = c.width - 36, xy = 34;
     x.beginPath(); x.arc(xx, xy, 16, 0, Math.PI * 2); x.stroke();
     x.beginPath();
@@ -444,12 +444,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var tw = Math.ceil(mc.measureText(name).width);
     c.width = tw + 44; c.height = 56;
     var x = c.getContext('2d');
-    x.fillStyle = 'rgba(12,17,22,0.85)';
+    x.fillStyle = 'rgba(16,16,16,0.85)';
     x.beginPath();
     if (x.roundRect) x.roundRect(2, 2, c.width - 4, 52, 14); else x.rect(2, 2, c.width - 4, 52);
     x.fill();
-    x.lineWidth = 3; x.strokeStyle = 'rgba(245,242,234,0.35)'; x.stroke();
-    x.fillStyle = '#F5F2EA';
+    x.lineWidth = 3; x.strokeStyle = 'rgba(242,242,242,0.35)'; x.stroke();
+    x.fillStyle = '#f2f2f2';
     x.font = '600 36px system-ui, -apple-system, sans-serif';
     x.textAlign = 'center'; x.textBaseline = 'middle';
     x.fillText(name, c.width / 2, 29);
@@ -567,8 +567,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   var busBodyGeo = new THREE.BoxGeometry(1, 1, 1);
   var busWinGeo = new THREE.BoxGeometry(1, 1, 1);
   var wheelGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.4, 12);
-  var busWinMat = new THREE.MeshBasicMaterial({ color: 0x10161c });
-  var wheelMat = new THREE.MeshBasicMaterial({ color: 0x05070a });
+  var busWinMat = new THREE.MeshBasicMaterial({ color: 0x151515 });
+  var wheelMat = new THREE.MeshBasicMaterial({ color: 0x070707 });
 
   var detailPool = [];
   function getDetail(i) {
@@ -1103,12 +1103,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var w = Math.ceil(x.measureText(name).width) + 44;
     c.width = w; c.height = 56;
     var g = x; // redraw after resize (resizing clears the context state)
-    g.fillStyle = 'rgba(10,14,18,0.85)';
+    g.fillStyle = 'rgba(13,13,13,0.85)';
     g.beginPath();
     if (g.roundRect) g.roundRect(0, 0, c.width, c.height, 14); else g.rect(0, 0, c.width, c.height);
     g.fill();
     g.font = '500 30px system-ui, -apple-system, sans-serif';
-    g.fillStyle = '#F5F2EA'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillStyle = '#f2f2f2'; g.textAlign = 'center'; g.textBaseline = 'middle';
     g.fillText(name, c.width / 2, c.height / 2 + 1);
     var t = new THREE.CanvasTexture(c);
     t.anisotropy = 4;
@@ -1463,7 +1463,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     renderBusInstances(); // expand the selected indicator
     var sn = v.route_id;
     var dest = formatDest(sn, v.destination);
-    var chipBg = routeColors[sn] ? '#' + routeColors[sn].getHexString() : '#F5F2EA';
+    var chipBg = routeColors[sn] ? '#' + routeColors[sn].getHexString() : '#f2f2f2';
     $('bus-chip').style.background = chipBg;
     var chipC = $('bus-chip-c'); // compact bar (staging Phase 2 HTML); guard for HTML without it
     if (chipC) chipC.style.background = chipBg;
@@ -1608,7 +1608,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     b.setAttribute('aria-label', 'Stop ' + (st.n || 'unnamed') + ', served by ' + n + (n === 1 ? ' route' : ' routes'));
     var dot = document.createElement('i'); dot.className = 'b-dot';
     var rc = routeColors[(st.r || [])[0]];
-    dot.style.background = rc ? '#' + rc.getHexString() : '#9AA0A6';
+    dot.style.background = rc ? '#' + rc.getHexString() : '#9f9f9f';
     var main = document.createElement('span'); main.className = 'b-main';
     var name = document.createElement('b'); name.textContent = st.n || 'Stop';
     var sub = document.createElement('span');
@@ -1648,7 +1648,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     b.setAttribute('aria-label', 'Bus ' + (v.vehicle_id || '') + ', route ' + v.route_id + ' ' + (routeNames[v.route_id] || '') + (dest ? ', to ' + dest : ''));
     var dot = document.createElement('i'); dot.className = 'b-dot';
     var rc = routeColors[v.route_id];
-    dot.style.background = rc ? '#' + rc.getHexString() : '#F5F2EA';
+    dot.style.background = rc ? '#' + rc.getHexString() : '#f2f2f2';
     var main = document.createElement('span'); main.className = 'b-main';
     var name = document.createElement('b');
     name.textContent = v.route_id + ' · ' + (v.vehicle_id || '');
@@ -1898,14 +1898,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     var beam = new THREE.Mesh(
       new THREE.CylinderGeometry(30, 30, 1000, 12, 1, true),
-      new THREE.MeshBasicMaterial({ color: 0xE85D1A, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })
+      new THREE.MeshBasicMaterial({ color: 0x767676, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })
     );
     beam.position.y = 500;
     g.add(beam);
 
     var ring = new THREE.Mesh(
       new THREE.RingGeometry(120, 170, 40),
-      new THREE.MeshBasicMaterial({ color: 0xE85D1A, transparent: true, opacity: 0.65, side: THREE.DoubleSide, depthWrite: false })
+      new THREE.MeshBasicMaterial({ color: 0x767676, transparent: true, opacity: 0.65, side: THREE.DoubleSide, depthWrite: false })
     );
     ring.rotation.x = -Math.PI / 2;
     ring.position.y = 40;
@@ -1913,7 +1913,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     var accDisc = new THREE.Mesh(
       new THREE.CircleGeometry(200, 40),
-      new THREE.MeshBasicMaterial({ color: 0xE85D1A, transparent: true, opacity: 0.12, depthWrite: false })
+      new THREE.MeshBasicMaterial({ color: 0x767676, transparent: true, opacity: 0.12, depthWrite: false })
     );
     accDisc.rotation.x = -Math.PI / 2;
     accDisc.position.y = 30;
@@ -1933,18 +1933,18 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       c.width = c.height = S;
       var x = c.getContext('2d');
       x.beginPath(); x.arc(S / 2, S / 2, S / 2 - 4, 0, Math.PI * 2);
-      x.fillStyle = '#0C1116'; x.fill();
+      x.fillStyle = '#101010'; x.fill();
       x.save();
       x.beginPath(); x.arc(S / 2, S / 2, S / 2 - 16, 0, Math.PI * 2); x.clip();
       if (img) { x.drawImage(img, 0, 0, S, S); }
       else {
-        x.fillStyle = '#E85D1A';
+        x.fillStyle = '#767676';
         x.font = '700 150px Georgia, "Times New Roman", serif';
         x.textAlign = 'center'; x.textBaseline = 'middle';
         x.fillText('D', S / 2, S / 2 + 10);
       }
       x.restore();
-      x.lineWidth = 10; x.strokeStyle = '#E85D1A';
+      x.lineWidth = 10; x.strokeStyle = '#767676';
       x.beginPath(); x.arc(S / 2, S / 2, S / 2 - 10, 0, Math.PI * 2); x.stroke();
       var tex = new THREE.CanvasTexture(c);
       tex.anisotropy = 4;
@@ -2119,10 +2119,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       stopIM.setMatrixAt(i, _m4);
       if (withColors) {
         if (s.r.length > 1) {
-          _stopTmpColor.set(0xf5f2ea);
+          _stopTmpColor.set(0xf2f2f2);
         } else {
           var rc = routeColors[s.r[0]];
-          if (rc) _stopTmpColor.copy(rc); else _stopTmpColor.set(0xf5f2ea);
+          if (rc) _stopTmpColor.copy(rc); else _stopTmpColor.set(0xf2f2f2);
         }
         stopIM.setColorAt(i, _stopTmpColor);
       }
@@ -2175,10 +2175,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     if (on) {
       _stopTmpColor.set(0xffffff);
     } else if (s.r.length > 1) {
-      _stopTmpColor.set(0xf5f2ea);
+      _stopTmpColor.set(0xf2f2f2);
     } else {
       var rc = routeColors[s.r[0]];
-      if (rc) _stopTmpColor.copy(rc); else _stopTmpColor.set(0xf5f2ea);
+      if (rc) _stopTmpColor.copy(rc); else _stopTmpColor.set(0xf2f2f2);
     }
     stopIM.setColorAt(idx, _stopTmpColor);
     stopIM.instanceColor.needsUpdate = true;
@@ -2202,7 +2202,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       chip.className = 'stop-route';
       var dot = document.createElement('i');
       var rc = routeColors[rid];
-      dot.style.background = rc ? '#' + rc.getHexString() : '#F5F2EA';
+      dot.style.background = rc ? '#' + rc.getHexString() : '#f2f2f2';
       chip.appendChild(dot);
       var b = document.createElement('b');
       b.textContent = rid + ' · ' + (routeNames[rid] || 'DDOT');
@@ -2253,7 +2253,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       row.className = 'stop-live-row';
       var dot = document.createElement('i');
       var rc = routeColors[v.route_id];
-      dot.style.background = rc ? '#' + rc.getHexString() : '#F5F2EA';
+      dot.style.background = rc ? '#' + rc.getHexString() : '#f2f2f2';
       row.appendChild(dot);
       var b = document.createElement('b');
       b.textContent = v.route_id + ' · ' + (formatDest(v.route_id, v.destination) || (routeNames[v.route_id] || 'DDOT'));
@@ -2332,7 +2332,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     scene.add(m);
     return m;
   }
-  var tripOriginMark = tripMarker(0xffb000); // Amber = origin
+  var tripOriginMark = tripMarker(0xb4b4b4); // Amber = origin
   var tripDestMark = tripMarker(0xffffff);   // Paper = destination
   var HINT_DEFAULT = 'drag&nbsp;·&nbsp;orbit&nbsp;&nbsp;&nbsp;scroll&nbsp;·&nbsp;zoom&nbsp;&nbsp;&nbsp;tap bus or stop&nbsp;·&nbsp;details';
 
@@ -2760,7 +2760,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
     var dot = document.createElement('b');
     dot.textContent = kind === 'alight' ? '◉' : (kind === 'missed' ? '⚠' : '●');
-    dot.style.color = urgent ? '#FF6B60' : '#FFB000';
+    dot.style.color = urgent ? '#8a8a8a' : '#b4b4b4';
     banner.appendChild(dot);
     var sp = document.createElement('span');
     sp.textContent = text;
@@ -2910,7 +2910,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       chip.className = 'trip-leg-chip';
       if (l.type === 'bus') {
         var dot = document.createElement('i');
-        dot.style.background = l.color || '#F5F2EA';
+        dot.style.background = l.color || '#f2f2f2';
         chip.appendChild(dot);
         var lbl = document.createElement('b');
         lbl.textContent = l.routeId;
@@ -2966,7 +2966,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
       var dot = document.createElement('i');
       var body = document.createElement('div');
       if (l.type === 'bus') {
-        dot.style.background = l.color || '#F5F2EA';
+        dot.style.background = l.color || '#f2f2f2';
         var t = document.createElement('b');
         t.textContent = l.routeId + ' · ' + (l.headsign || l.routeName || 'DDOT');
         body.appendChild(t);
@@ -3047,7 +3047,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         var sl = busLegSlice(leg);
         if (!sl) return;
         var mat = new THREE.MeshBasicMaterial({
-          color: new THREE.Color(leg.color || '#F5F2EA'), transparent: true,
+          color: new THREE.Color(leg.color || '#f2f2f2'), transparent: true,
           opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide
         });
         mat.userData.baseOpacity = 0.85;
@@ -3058,7 +3058,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         if (pts3.length < 2) return;
         pts3[0].y = 30; pts3[1].y = 30;
         var g = new THREE.BufferGeometry().setFromPoints(pts3);
-        var wm = new THREE.LineDashedMaterial({ color: 0xf5f2ea, transparent: true, opacity: 0.8, dashSize: 60, gapSize: 40 });
+        var wm = new THREE.LineDashedMaterial({ color: 0xf2f2f2, transparent: true, opacity: 0.8, dashSize: 60, gapSize: 40 });
         var line = new THREE.Line(g, wm);
         line.computeLineDistances();
         wm.userData.baseOpacity = 0.8;
@@ -3448,7 +3448,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
   // --- People Mover: stations + downtown loop (static) -------------------------
   // Source: Detroit People Mover GTFS static (agency permalink), projected
   // with the same lat0/lon0 as ddot-routes-3d.json so geometry aligns.
-  // Visual language: Concrete #9AA0A6 deck (reads as infrastructure, distinct
+  // Visual language: Concrete #9f9f9f deck (reads as infrastructure, distinct
   // from the saturated live-route colors), paper-white station pins, narrow
   // 40 m guideway (single track, not a bus corridor). Nothing here implies
   // live vehicles: no beacons, no "LIVE" marker, and the filter-panel note
@@ -3457,12 +3457,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     // Pseudo-route registration so the shared stop card renders a proper
     // chip ("DPM · Detroit People Mover"). Kept OUT of routeOrder: the
     // DDOT filter/dim/near-me machinery must never touch this layer.
-    routeColors['DPM'] = new THREE.Color(0x9AA0A6);
+    routeColors['DPM'] = new THREE.Color(0x9f9f9f);
     routeNames['DPM'] = 'Detroit People Mover';
 
     pmGroup = new THREE.Group();
     pmGroup.name = 'people-mover';
-    var concrete = new THREE.Color(0x9AA0A6);
+    var concrete = new THREE.Color(0x9f9f9f);
     var deckMat = new THREE.MeshLambertMaterial({ color: concrete, side: THREE.DoubleSide });
     var skirtMat = new THREE.MeshLambertMaterial({ color: concrete.clone().multiplyScalar(0.35), side: THREE.DoubleSide });
     var loop = pm.loop.slice();
@@ -3470,9 +3470,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     pmGroup.add(new THREE.Mesh(skirtGeometry(loop, 40, PM_DECK_Y), skirtMat));
 
     var pinGeo = new THREE.CylinderGeometry(24, 32, 300, 12);
-    var pinMat = new THREE.MeshLambertMaterial({ color: 0xF5F2EA });
+    var pinMat = new THREE.MeshLambertMaterial({ color: 0xf2f2f2 });
     var ringGeo = new THREE.RingGeometry(40, 64, 32);
-    var ringMat = new THREE.MeshBasicMaterial({ color: 0xF5F2EA, transparent: true, opacity: 0.45, side: THREE.DoubleSide, depthWrite: false });
+    var ringMat = new THREE.MeshBasicMaterial({ color: 0xf2f2f2, transparent: true, opacity: 0.45, side: THREE.DoubleSide, depthWrite: false });
     pmStations = pm.stations.map(function (s) {
       var pin = new THREE.Mesh(pinGeo, pinMat);
       pin.position.set(s.x, PM_DECK_Y + 150, s.z);
@@ -3486,7 +3486,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     });
 
     var mid = loop[Math.floor(loop.length / 2)];
-    pmLabel = makeLabel('People Mover · Downtown Loop', '#9AA0A6');
+    pmLabel = makeLabel('People Mover · Downtown Loop', '#9f9f9f');
     pmLabel.position.set(mid[0], 1050, mid[1]);
     pmGroup.add(pmLabel);
     pmTether = new THREE.Line(
@@ -3494,7 +3494,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         new THREE.Vector3(mid[0], PM_DECK_Y, mid[1]),
         new THREE.Vector3(mid[0], 980, mid[1])
       ]),
-      new THREE.LineBasicMaterial({ color: 0x9AA0A6, transparent: true, opacity: 0.45 })
+      new THREE.LineBasicMaterial({ color: 0x9f9f9f, transparent: true, opacity: 0.45 })
     );
     pmGroup.add(pmTether);
     pmGroup.visible = pmVisible;
@@ -3523,7 +3523,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     var g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
     g.computeVertexNormals();
-    var island = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0x15211b }));
+    var island = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0x1e1e1e }));
     island.position.y = 3;
     island.renderOrder = 1;
     scene.add(island);
@@ -3533,12 +3533,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
     var shore = new THREE.LineLoop(
       new THREE.BufferGeometry().setFromPoints(shorePts),
-      new THREE.LineBasicMaterial({ color: 0x33523f, transparent: true, opacity: 0.9 })
+      new THREE.LineBasicMaterial({ color: 0x4a4a4a, transparent: true, opacity: 0.9 })
     );
     shore.renderOrder = 2;
     scene.add(shore);
     var lx = B.label ? B.label.x : 14015, lz = B.label ? B.label.z : 4478;
-    belleIsleLabel = makeLabel('Belle Isle', '#9db89a');
+    belleIsleLabel = makeLabel('Belle Isle', '#b0b0b0');
     belleIsleLabel.position.set(lx, 560, lz);
     belleIsleLabel.renderOrder = 36;
     scene.add(belleIsleLabel);
@@ -3547,7 +3547,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         new THREE.Vector3(lx, 4, lz),
         new THREE.Vector3(lx, 490, lz)
       ]),
-      new THREE.LineBasicMaterial({ color: 0x9db89a, transparent: true, opacity: 0.4 })
+      new THREE.LineBasicMaterial({ color: 0xb0b0b0, transparent: true, opacity: 0.4 })
     );
     scene.add(belleIsleTether);
   }
@@ -4392,7 +4392,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         vehicle: v,
         x: pt ? pt.x : p[0], z: pt ? pt.z : p[1],
         rotY: rotY,
-        color: routeColors[v.route_id] || new THREE.Color(0xf5f2ea),
+        color: routeColors[v.route_id] || new THREE.Color(0xf2f2f2),
         tracker: tr
       });
       seen[v.vehicle_id] = true;
@@ -4519,7 +4519,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         var w = se[0] - nw[0], h = se[1] - nw[1];
         var ground = new THREE.Mesh(
           new THREE.PlaneGeometry(w, h),
-          new THREE.MeshBasicMaterial({ color: 0x0d1319 })
+          new THREE.MeshBasicMaterial({ color: 0x121212 })
         );
         ground.rotation.x = -Math.PI / 2;
         ground.position.set(nw[0] + w / 2, 0, nw[1] + h / 2);
@@ -4527,7 +4527,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         // Safe-zone border: dashed amber perimeter at the coverage bounds so the
         // edge of the mapped area stays visible while panning/scrolling. Floats
         // at y=20 — above the street tiers (14-16), below the route decks (~66).
-        // Brand: Amber #FFB000, the academy's signal accent.
+        // Brand: Amber #b4b4b4, the academy's signal accent.
         (function addBoundsBorder() {
           var x0 = nw[0], x1 = se[0], z0 = nw[1], z1 = se[1], yB = 20;
           var g = new THREE.BufferGeometry().setFromPoints([
@@ -4537,7 +4537,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
             new THREE.Vector3(x0, yB, z1)
           ]);
           var border = new THREE.LineLoop(g, new THREE.LineDashedMaterial({
-            color: 0xFFB000, dashSize: 220, gapSize: 140,
+            color: 0xb4b4b4, dashSize: 220, gapSize: 140,
             transparent: true, opacity: 0.55, depthWrite: false
           }));
           border.computeLineDistances();
@@ -4566,12 +4566,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
           scene.add(lines);
           return lines;
         }
-        addTier(streetData.freeway, 0x8a94a0, 0.95, 16);
-        addTier(streetData.arterial, 0x4d5763, 0.9, 15);
-        streetLocal = addTier(streetData.local, 0x333c46, 0.8, 14);
+        addTier(streetData.freeway, 0x939393, 0.95, 16);
+        addTier(streetData.arterial, 0x565656, 0.9, 15);
+        streetLocal = addTier(streetData.local, 0x3b3b3b, 0.8, 14);
       })();
 
-      var casingMat = new THREE.MeshBasicMaterial({ color: 0x0c1116, transparent: true, opacity: 0.9, side: THREE.DoubleSide });
+      var casingMat = new THREE.MeshBasicMaterial({ color: 0x101010, transparent: true, opacity: 0.9, side: THREE.DoubleSide });
 
       // Per-group containers (stops clouds toggle with the group filter).
       groupOrder = data.groups.map(function (g) { return g.id; });
@@ -4582,8 +4582,13 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         groupObjs[g.id] = gr;
       });
 
+      function monoRouteColor(id, ri) {
+        if (id === 'QLINE') return new THREE.Color(0xffffff);
+        var v = 48 + ((ri * 97) % 185);
+        return new THREE.Color((v << 16) | (v << 8) | v);
+      }
       data.routes.forEach(function (route, ri) {
-        var color = new THREE.Color(route.color);
+        var color = monoRouteColor(route.id, ri);
         routeColors[route.id] = color;
         routeNames[route.id] = route.name;
         routeById[route.id] = route;
@@ -4669,7 +4674,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
             g.setAttribute('position', new THREE.Float32BufferAttribute(L.positions, 3));
             g.setIndex(L.index);
             g.computeVertexNormals();
-            var mesh = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ color: 0x3a4a5c }));
+            var mesh = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ color: 0x484848 }));
             mesh.frustumCulled = false;
             scene.add(mesh);
           })
