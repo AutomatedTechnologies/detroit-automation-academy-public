@@ -3389,7 +3389,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         b.className = 'route-chip f-chip';
         b.setAttribute('aria-pressed', 'true');
         b.dataset.route = rid;
-        b.innerHTML = '<i style="background:' + route.color + '"></i><b>' +
+        b.innerHTML = '<i style="background:' + (routeColors[rid] ? '#' + routeColors[rid].getHexString() : '#f2f2f2') + '"></i><b>' +
           rid + ' · ' + route.name + '</b><span class="cnt" id="cnt-' + rid + '">–</span>' +
           '<span class="idle-tag" id="idle-' + rid + '" hidden>not running</span>';
         b.addEventListener('click', function () {
@@ -4631,7 +4631,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         });
         if (longest) {
           var mid = longest[Math.floor(longest.length / 2)];
-          var label = makeLabel(route.id + ' · ' + route.name, route.color);
+          var label = makeLabel(route.id + ' · ' + route.name, '#' + color.getHexString());
           label.position.set(mid[0], 1050, mid[1]);
           grp.add(label);
           var tetherGeo = new THREE.BufferGeometry().setFromPoints([
