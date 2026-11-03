@@ -860,3 +860,32 @@ body.demo-locked { overflow: hidden; }
   .traces .trace:nth-child(n) { animation-delay: calc(0.05s + (sibling-index() - 1) * 0.1s); }
   .nodes .node:nth-child(n) { animation-delay: calc(1.15s + (sibling-index() - 1) * 0.1s); }
 }
+
+/* ---- Feed techniques, tranche 2 (approved 2026-11-03) ---- */
+/* :open — scroll-lock the page while a native dialog is open. No
+   <dialog> exists on the site yet; this is the guard for the first. */
+html:has(dialog:open) { overflow: hidden; }
+
+/* contrast-color() — the ink on the forge/amber fills computes to
+   whichever of black/white contrasts more (black wins on both:
+   6.1:1 and 11.6:1), replacing the hand-picked midnight. Browsers
+   without support keep the hand pick. */
+.btn-primary { color: contrast-color(var(--forge)); }
+.btn-primary:hover, .btn-primary:focus-visible { color: contrast-color(var(--amber)); }
+
+/* Scroll-driven reading-progress bar on long-form article pages:
+   fixed 3px forge bar, scaleX driven by the root scroll timeline.
+   No markup; pages without an <article> get no bar. */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    body:has(article)::before {
+      content: ""; position: fixed; top: 0; left: 0; z-index: 60;
+      width: 100%; height: 3px; background: var(--forge);
+      transform-origin: 0 50%; transform: scaleX(0);
+      animation: daa-progress linear both;
+      animation-timeline: scroll(root block);
+      pointer-events: none;
+    }
+    @keyframes daa-progress { to { transform: scaleX(1); } }
+  }
+}
