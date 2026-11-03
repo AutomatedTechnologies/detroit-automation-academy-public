@@ -1,0 +1,77 @@
+{
+ "stage": "collect",
+ "city": "philadelphia",
+ "agency": "septa",
+ "collected_at": "2026-11-03T14:36:42Z",
+ "collected_at_epoch": 1793716602,
+ "legs": {
+  "bus-vp": {
+   "id": "bus-vp",
+   "family": "bus",
+   "kind": "vehicle-positions",
+   "url": "https://www3.septa.org/gtfsrt/septa-pa-us/Vehicle/rtVehiclePosition.pb",
+   "file": "bus-vp.pb",
+   "ok": true,
+   "error": null,
+   "bytes": 89600,
+   "sha256": "87c028c1f4e67a3dacc6301be0ba95aaac5c7ea7dd47328acdac8c08bbd70474"
+  },
+  "bus-tu": {
+   "id": "bus-tu",
+   "family": "bus",
+   "kind": "trip-updates",
+   "url": "https://www3.septa.org/gtfsrt/septa-pa-us/Trip/rtTripUpdates.pb",
+   "file": "bus-tu.pb",
+   "ok": true,
+   "error": null,
+   "bytes": 941361,
+   "sha256": "72e82107d9dd85dc9f49b470d5d632dc141f6ff787084468d7dc4ed925a08695"
+  },
+  "bus-sa": {
+   "id": "bus-sa",
+   "family": "bus",
+   "kind": "service-alerts",
+   "url": "https://www3.septa.org/gtfsrt/septa-pa-us/Service/rtServiceAlerts.pb",
+   "file": "bus-sa.pb",
+   "ok": true,
+   "error": null,
+   "bytes": 54874,
+   "sha256": "d8eef940ce6cd74060dd04c16dfc982dcf3f7a82df54496ed1f81c4f64c149a0"
+  },
+  "rail-vp": {
+   "id": "rail-vp",
+   "family": "rail",
+   "kind": "vehicle-positions",
+   "url": "https://www3.septa.org/gtfsrt/septarail-pa-us/Vehicle/rtVehiclePosition.pb",
+   "file": "rail-vp.pb",
+   "ok": true,
+   "error": null,
+   "bytes": 6713,
+   "sha256": "4c5eb980a01dbfafa84906b24be881b14b4d0f3ff1fd436c71de958fc9a54adf"
+  },
+  "rail-tu": {
+   "id": "rail-tu",
+   "family": "rail",
+   "kind": "trip-updates",
+   "url": "https://www3.septa.org/gtfsrt/septarail-pa-us/Trip/rtTripUpdates.pb",
+   "file": "rail-tu.pb",
+   "ok": true,
+   "error": null,
+   "bytes": 5840,
+   "sha256": "3a06483a085e9cd860129ab67e60ead33d6ca9e7d054d36826a57767d8c2c2d6"
+  },
+  "rail-sa": {
+   "id": "rail-sa",
+   "family": "rail",
+   "kind": "service-alerts",
+   "url": "https://www3.septa.org/gtfsrt/septarail-pa-us/Service/rtServiceAlerts.pb",
+   "file": "rail-sa.pb",
+   "ok": true,
+   "error": null,
+   "bytes": 5604,
+   "sha256": "81d8c63c55c9f22291789b5986d53da59df8b35d531409e08215c0a0a2930d9e"
+  }
+ },
+ "legs_ok": 6,
+ "legs_total": 6
+}
