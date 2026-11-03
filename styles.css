@@ -313,8 +313,7 @@ a { color: inherit; }
 .signal-card-points li::marker { color: var(--forge); }
 .signal-card-link { margin-top: auto; font-weight: 600; color: var(--forge); text-decoration: none; }
 .signal-card-link:hover { text-decoration: underline; }
-.signal-card-forthcoming { border-style: dashed; opacity: 0.85; }
-.signal-card-forthcoming .signal-card-kicker { color: var(--amber); }
+.signal-card-forthcoming { border-style: dashed; opacity: 0.85; --forthcoming: yes; }
 
 /* ---------- Partners ---------- */
 .partner-list {
@@ -835,4 +834,29 @@ body.demo-locked { overflow: hidden; }
   .lane-items a:hover { background: none; }
   .nav-links > .lane { display: block; padding: 13px 0; border-top: 1px solid var(--line); }
   .nav-links > .lane:first-child { border-top: 0; }
+}
+
+/* ---------- Approved Feed techniques (2026-11-03) ----------
+   1) interpolate-size: <details> panels animate to height:auto where
+      supported (Chromium); Safari/Firefox keep the instant snap.
+   2) Container style query: the forthcoming Signal card carries its
+      state as --forthcoming; descendants follow the query, no
+      descendant selector (replaces .signal-card-forthcoming .signal-card-kicker).
+   3) sibling-index(): the circuit-animation stagger counts itself;
+      the hand-written nth-child delay tables above stay as fallback
+      (equal specificity + later order lets this win where supported). */
+@media (prefers-reduced-motion: no-preference) {
+  :root { interpolate-size: allow-keywords; }
+  details::details-content {
+    height: 0; overflow: clip;
+    transition: height 0.35s ease, content-visibility 0.35s allow-discrete;
+  }
+  details[open]::details-content { height: auto; }
+}
+@container style(--forthcoming: yes) {
+  .signal-card-kicker { color: var(--amber); }
+}
+@supports (animation-delay: calc(sibling-index() * 1ms)) {
+  .traces .trace:nth-child(n) { animation-delay: calc(0.05s + (sibling-index() - 1) * 0.1s); }
+  .nodes .node:nth-child(n) { animation-delay: calc(1.15s + (sibling-index() - 1) * 0.1s); }
 }
