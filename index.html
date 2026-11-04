@@ -2,85 +2,25 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Where to vote today — Detroit Automation Academy</title>
-<meta name="description" content="Enter your ZIP code to find Detroit Election Day polling locations. Tuesday, November 3, 2026. Polls open 7 a.m. to 8 p.m. DDOT and SMART bus rides are free all day today.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#000000">
+<title>Detroit Automation Academy</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#fff;color:#000;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;line-height:1.45}
-main{max-width:640px;margin:0 auto;padding:32px 16px 48px}
-.brand{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#555;margin:0 0 24px}
-h1{font-size:34px;line-height:1.1;margin:0 0 8px;font-weight:800}
-.sub{font-size:17px;color:#333;margin:0 0 32px}
-form{display:flex;gap:8px;margin:0 0 8px}
-label{position:absolute;left:-9999px}
-input{flex:1;min-width:0;font-size:22px;padding:14px 16px;border:2px solid #000;border-radius:0;background:#fff;color:#000;letter-spacing:.08em}
-input:focus{outline:3px solid #000;outline-offset:2px}
-button{font-size:18px;font-weight:700;padding:14px 20px;background:#000;color:#fff;border:2px solid #000;border-radius:0;cursor:pointer}
-button:active{background:#333}
-.hint{font-size:14px;color:#555;margin:0 0 24px}
-.farefree{border:2px solid #000;padding:16px;margin:0 0 24px}
-.ff-head{font-size:19px;font-weight:800;margin:0 0 4px}
-.ff-body{font-size:15px;margin:0}
-.count{font-size:15px;font-weight:700;margin:24px 0 12px}
-.card{border:2px solid #000;padding:16px;margin:0 0 12px}
-.card h2{font-size:19px;margin:0 0 4px}
-.addr{font-size:16px;margin:0}
-.meta{font-size:14px;color:#444;margin:6px 0 0}
-.empty{border:2px solid #000;padding:16px;margin-top:24px;font-size:16px}
-footer{margin-top:40px;border-top:1px solid #bbb;padding-top:16px;font-size:13px;color:#555}
-footer a{color:#000}
-@media (max-width:480px){h1{font-size:28px}form{flex-direction:column}button{width:100%}}
+  html { background: #000; color-scheme: dark; }
+  body { background: #000; color: #fff; margin: 0; min-height: 100vh; min-height: 100dvh;
+         font-family: system-ui, sans-serif;
+         display: flex; align-items: center; justify-content: center; }
+  main { text-align: center; padding: clamp(1.5rem, 9vw, 4rem); }
+  h1 { font-size: clamp(1.375rem, 2.5vw + 1rem, 2.5rem); font-weight: 600;
+       line-height: 1.2; margin: 0 0 0.75rem; }
+  p { color: #9a9aa0; font-size: clamp(1rem, 1.2vw + 0.75rem, 1.25rem); margin: 0; }
 </style>
 </head>
 <body>
 <main>
-<p class="brand">Detroit Automation Academy</p>
-<h1>Where to vote today</h1>
-<p class="sub">Tuesday, November 3, 2026 &middot; Polls open 7 a.m.&ndash;8 p.m.</p>
-<div class="farefree">
-<p class="ff-head">Free rides to vote today</p>
-<p class="ff-body"><strong>DDOT buses are fare-free all day today</strong> &mdash; every route, not just trips to the polls. <strong>SMART buses are free all day too</strong> across Wayne, Oakland, and Macomb counties. Eligible paratransit rides are free; Connector, ADA paratransit, and SMART Flex still need their usual advance reservations. <a href="https://votingaccessforall.org/2026/10/need-a-ride-to-vote-on-november-3-free-transportation-available-in-detroit-oakland-county-washtenaw-county-and-more/">Ride details</a> &middot; <a href="live-transit.html">Live bus map</a></p>
-</div>
-<form id="f">
-<label for="zip">ZIP code</label>
-<input id="zip" name="zip" inputmode="numeric" autocomplete="postal-code" pattern="[0-9]{5}" maxlength="5" placeholder="ZIP code — e.g. 48227" required>
-<button type="submit">Find</button>
-</form>
-<p class="hint">Enter your ZIP code — Wayne, Oakland, or Macomb County. Every Election Day polling location in that ZIP appears below.</p>
-<div id="out" aria-live="polite"></div>
-<footer>
-<p>A ZIP code covers several precincts, and your vote counts only at your assigned precinct&rsquo;s location. Confirm your exact precinct at <a href="https://michigan.gov/vote">Michigan.gov/Vote</a> or call the Detroit Department of Elections at 313-876-0190. If you are in line by 8 p.m., you can vote.</p>
-<p>Sources: City of Detroit election precincts; Michigan Bureau of Elections 2026 precincts and Wayne County community clerk notices; Oakland County Elections; Macomb County Clerk polling locations, November 2026. River Rouge precincts do not appear in a published official list — verify those at Michigan.gov/Vote. Absentee ballots: return to your own clerk&rsquo;s office or a drop box in your community by 8 p.m. today.</p>
-</footer>
-<script src="polling-wayne.js"></script>
-<script src="polling-oakland.js"></script>
-<script src="polling-macomb.js"></script>
+  <h1>Detroit Automation Academy</h1>
+  <p>Under construction.</p>
 </main>
-<script>
-const DATA = {};
-for(const p of (window.__POLLING_PARTS||[])) for(const z in p){ (DATA[z] = DATA[z] || []).push(...p[z]); }
-const out = document.getElementById('out');
-
-document.getElementById('f').addEventListener('submit', function(e){
-  e.preventDefault();
-  const zip = document.getElementById('zip').value.trim();
-  const locs = DATA[zip];
-  if(!/^\d{5}$/.test(zip)){
-    out.innerHTML = '<div class="empty">Enter a 5-digit ZIP code.</div>'; return;
-  }
-  if(!locs){
-    out.innerHTML = '<div class="empty">No polling locations are listed in ZIP ' + zip + '. Check your polling place at <a href="https://michigan.gov/vote">Michigan.gov/Vote</a>.</div>'; return;
-  }
-  let h = '<p class="count">' + locs.length + ' polling location' + (locs.length===1?'':'s') + ' in ' + zip + '</p>';
-  for(const l of locs){
-    h += '<div class="card"><h2>' + l.name + '</h2>'
-      + '<p class="addr">' + l.address + ', ' + l.city + ', MI ' + zip + '</p>'
-      + (l.cross ? '<p class="meta">' + l.cross + '</p>' : '')
-      + '<p class="meta">Precinct' + (l.precincts.length===1?'':'s') + ' ' + l.precincts.join(', ') + ' &middot; ' + l.community + ' &middot; ' + l.county + ' County</p>' + (l.extra ? '<p class="meta">' + l.extra + '</p>' : '') + '</div>';
-  }
-  out.innerHTML = h;
-});
-</script>
 </body>
 </html>
