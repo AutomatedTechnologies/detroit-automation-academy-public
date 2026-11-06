@@ -2,38 +2,17 @@
 	"bustime-response": {
 		"vehicle": [
 			{
-				"vid": "2006",
-				"tmstmp": "20261105 22:55",
-				"lat": "42.33286499999999",
-				"lon": "-83.05256666666668",
-				"hdg": "12",
-				"pid": 502481,
-				"rt": "52",
-				"des": "Rosa Parks Transit Center",
-				"pdist": 67582,
-				"dly": false,
-				"spd": 0,
-				"tatripid": "1203",
-				"origtatripno": "1325793",
-				"tablockid": "52-200",
-				"zone": "",
-				"mode": 1,
-				"psgld": "N/A",
-				"stst": 79200,
-				"stsd": "2026-11-05"
-			},
-			{
 				"vid": "2217",
-				"tmstmp": "20261105 22:56",
-				"lat": "42.40416529001778",
-				"lon": "-83.2376029431178",
+				"tmstmp": "20261105 23:00",
+				"lat": "42.420329043377286",
+				"lon": "-83.23845346423076",
 				"hdg": "358",
 				"pid": 1188,
 				"rt": "60",
 				"des": "Northwestern & 10 Mile",
-				"pdist": 39211,
+				"pdist": 45108,
 				"dly": false,
-				"spd": 37,
+				"spd": 38,
 				"tatripid": "5824",
 				"origtatripno": "1323257",
 				"tablockid": "60-204",
@@ -45,16 +24,16 @@
 			},
 			{
 				"vid": "2304",
-				"tmstmp": "20261105 22:56",
-				"lat": "42.370863162526554",
-				"lon": "-83.23624656104023",
+				"tmstmp": "20261105 23:00",
+				"lat": "42.35024777194372",
+				"lon": "-83.23568517097225",
 				"hdg": "178",
 				"pid": 1197,
 				"rt": "60",
 				"des": "Fairlane",
-				"pdist": 37587,
+				"pdist": 45169,
 				"dly": false,
-				"spd": 24,
+				"spd": 18,
 				"tatripid": "5661",
 				"origtatripno": "1323271",
 				"tablockid": "60-1",
@@ -66,7 +45,7 @@
 			},
 			{
 				"vid": "2230",
-				"tmstmp": "20261105 22:55",
+				"tmstmp": "20261105 23:00",
 				"lat": "42.333089",
 				"lon": "-83.052407",
 				"hdg": "359",
@@ -84,6 +63,27 @@
 				"psgld": "N/A",
 				"stst": 82800,
 				"stsd": "2026-11-05"
+			},
+			{
+				"vid": "1415",
+				"tmstmp": "20261105 23:00",
+				"lat": "42.41827",
+				"lon": "-82.913",
+				"hdg": "286",
+				"pid": 502477,
+				"rt": "67",
+				"des": "Rosa Parks Transit Center",
+				"pdist": 0,
+				"dly": false,
+				"spd": 0,
+				"tatripid": "1158",
+				"origtatripno": "1325250",
+				"tablockid": "900-4",
+				"zone": "",
+				"mode": 1,
+				"psgld": "N/A",
+				"stst": 82800,
+				"stsd": "2026-11-05"
 			}
 		],
 		"error": [
@@ -93,6 +93,10 @@
 			},
 			{
 				"rt": "47",
+				"msg": "No data found for parameter"
+			},
+			{
+				"rt": "52",
 				"msg": "No data found for parameter"
 			},
 			{
