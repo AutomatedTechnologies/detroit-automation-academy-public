@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Machine That Corrects Itself — The Signal · Detroit Automation Academy</title>
+<meta name="description" content="The Signal, Edition 8: A quadcopter is never still. The new module in our Drones track teaches the loop that keeps it honest — error, named, estimated, and corrected, hundreds of times a second.">
+<meta property="og:title" content="The Machine That Corrects Itself">
+<meta property="og:description" content="The Signal, Edition 8: error, named, estimated, and corrected — hundreds of times a second, and all of it taught on the bench.">
+<meta property="og:type" content="article">
+<link rel="icon" type="image/webp" href="../../assets/logo.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../styles.css?v=20261102-1818">
+<style>
+.signal-pager{display:flex;gap:12px;flex-wrap:wrap;margin:2rem 0 1rem;}
+</style>
+<link rel="canonical" href="https://www.detroitautomationacademy.com/signal/edition-08/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="The Machine That Corrects Itself — The Signal · Detroit Automation Academy">
+<meta name="twitter:description" content="The Signal, Edition 8: the loop that keeps a quadcopter honest, taught as a lesson.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "The Machine That Corrects Itself — The Signal · Detroit Automation Academy",
+  "description": "The Signal, Edition 8 (November 6, 2026): the Academy's Drones track adds a new module, Autopilot Error Correction — five named sources of sensor error (gyro drift, accelerometer vibration noise, magnetometer interference from steel and motor current, GPS multipath near downtown towers, barometric drift), estimation before correction, and the bench method: flight logs read as evidence, one variable changed at a time and written down. The Drones track is a design-and-build track; the module claims no flight instruction, no missions, and no taught cohort — it is new material, presented as new.",
+  "url": "https://www.detroitautomationacademy.com/signal/edition-08/",
+  "datePublished": "2026-11-06",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Detroit Automation Academy",
+    "url": "https://www.detroitautomationacademy.com/",
+    "logo": "https://www.detroitautomationacademy.com/assets/logo.webp"
+  }
+}
+</script>
+</head>
+<body>
+
+<div id="daa-nav"></div>
+<script src="../../nav.js?v=20261102-1618"></script>
+
+<main id="top">
+
+  <article class="section">
+    <div class="wrap">
+      <p class="kicker"><a href="../">The Signal</a> · Edition 8 · November 2026</p>
+      <h2>The Machine That <span class="accent">Corrects</span> Itself</h2>
+      <p class="fine">Published Friday, November 6, 2026 · By Justin Spencer Smith · <a href="https://www.linkedin.com/newsletters/7508391258638311424/" target="_blank" rel="noopener">Also on LinkedIn</a></p>
+      <div class="prose">
+        <p>A quadcopter is never still. Set one in the air and it is tipping, drifting, and yawing a little in every fraction of a second — pushed by a motor that pulls harder than its neighbor, a battery that sits a gram off center, the weather off the river. What holds it level is not balance. It is a loop: measure how far off you are, correct, measure again. Hundreds of times a second. This week, that loop became a lesson. The Academy&#x27;s Drones track has a new module, and its subject is the least visible and most honest part of the machine: error, and what a well-built system does about it.</p>
+        <h3>Where the error lives</h3>
+        <p>Every sensor on a drone tells the truth with an accent. The gyroscope knows how fast the craft is rotating and slowly forgets which way is level. The accelerometer knows which way is down and hears it through the buzz of four motors. The compass reads a magnetic field so faint that the steel in the building — and the current in the drone&#x27;s own wires — can bend it. GPS near downtown towers reports a position that can step sideways on its own. The new module starts there, not with the fix but with the faults: five named sources of error, each with its own signature, each one a thing a student can learn to recognize in a flight log the way a mechanic learns an engine by its noise.</p>
+        <h3>Estimate first, then correct</h3>
+        <p>The autopilot&#x27;s real job is not correction. It is estimation — building one believable picture of the craft out of several sensors that each lie a little, trusting each for the thing it is good at, for exactly as long as it is good at it. Only then does correction start, and the module teaches it the way the bench teaches it: by symptom. A fast, nervous wobble that grows instead of settling is one kind of error. A slow, stubborn drift in the same direction on a calm day is another. A craft that circles in a widening spiral is usually not a tuning problem at all — it is a compass being lied to, and no amount of tuning fixes a sensor that is wrong. Students learn to name the layer before they touch the layer. That habit is the curriculum. The gains are just where it gets practiced.</p>
+        <h3>The bench is the classroom</h3>
+        <p>None of this module needs an aircraft in the air, and that is deliberate. The Drones track is a design-and-build track: students design and build quadcopters — frames, flight stacks, and the engineering behind the rotors — and this module runs where that engineering actually gets verified. On the bench, propellers off, reading flight logs like evidence. In the simulator, breaking a good tune three deliberate ways and learning what each failure feels like in the hands. At the bench again, with a steel plate and a powered airframe, watching a compass heading wander while nothing in the room has moved. The method is the same one our robotics students use on the FTC payload work: read the log, form a hypothesis, change one variable, check the result against the envelope, and write it down. One variable. Written down. Every step.</p>
+        <h3>Why this is the lesson</h3>
+        <p>Anyone can bolt a frame together; the parts are patient and the screws do not argue. Teaching a machine to notice that it is wrong — and to fix itself, hundreds of times a second, without being told — is a different order of problem, and it is the one that transfers. The engineer who can look at a misbehaving system, separate a bad measurement from a bad correction, and change exactly one thing is not a drone skill. It is the whole trade, taught on a machine small enough to hold in two hands and honest enough to show its working in the log. Detroit builds things that have to correct themselves: vehicles, lines, systems that run while nobody is watching. Our students might as well learn on one.</p>
+        <h3>The close</h3>
+        <p>The module is new this season, and it is presented as exactly that — new material, added to the Drones track after the build guide, where a finished aircraft stops being a project and starts being an instrument. Frames and flight stacks got our students a machine. This gets them the machine&#x27;s judgment, such as it is: measured, estimated, corrected, and logged. The Signal publishes on Fridays.</p>
+        <p>Canonical record: <a href="https://www.detroitautomationacademy.com/signal/">detroitautomationacademy.com/signal/</a></p>
+        <hr>
+        <p><em>The Signal is the newsletter of Detroit Automation Academy — where Detroit builds what's next. If you know a young builder who should be in the room, send them our way.</em></p>
+      </div>
+      <div class="signal-pager">
+        <a href="../" class="btn btn-ghost">← All editions</a>
+      </div>
+      <div class="signal-cta">
+        <a href="https://www.linkedin.com/newsletters/7508391258638311424/" class="btn btn-primary" target="_blank" rel="noopener">Subscribe to The Signal</a>
+      </div>
+    </div>
+  </article>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <img src="../../assets/logo.webp" alt="" class="brand-mark">
+      <span>Detroit Automation Academy</span>
+    </div>
+    <p class="footer-fine">Southfield, Michigan · <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a></p>
+    <nav class="footer-groups" aria-label="Site">
+      <div class="footer-group">
+        <h3>Ride</h3>
+        <p class="footer-fine"><a href="../../live-transit.html">Live Map</a> · <a href="../../board/">Departure Board</a> · <a href="../../live-transit/">Cities</a></p>
+        <p class="footer-fine"><a href="../../live-transit.html">Detroit</a> · <a href="../../live-transit/philadelphia/">Philadelphia</a> · <a href="../../live-transit/cincinnati/">Cincinnati</a> · <a href="../../live-transit/denver/">Denver</a> · <a href="../../live-transit/austin/">Austin</a> · <a href="../../live-transit/sacramento/">Sacramento</a> · <a href="../../live-transit/san-diego/">San Diego</a> · <a href="../../live-transit/columbus/">Columbus</a></p>
+      </div>
+      <div class="footer-group">
+        <h3>Read</h3>
+        <p class="footer-fine"><a href="../../signal/">The Signal</a> · <a href="../../live-transit-detroit/">Live Transit Detroit stories</a> · <a href="../../notes/">Notes</a> · <a href="../../press/">The Press</a> · <a href="../../the-index/">The Index</a> · <a href="../../feed/">Latest</a> · <a href="../../watch/">Watch</a></p>
+      </div>
+      <div class="footer-group">
+        <h3>Learn &amp; work</h3>
+        <p class="footer-fine"><a href="../../programs.html">Programs</a> · <a href="../../curriculum/online-safety/">Online Safety</a> · <a href="../../partners.html">Partners</a> · <a href="../../api.html">API</a> · <a href="../../inquire.html">Contact</a> · <a href="../../apple-learning-coach/">Coach Profile</a> · <a href="../../press/media-kit.html">Media Kit</a></p>
+      </div>
+      <div class="footer-group">
+        <h3>Trust</h3>
+        <p class="footer-fine"><a href="../../dashboard.html">Status</a> · <a href="../../terms.html">Terms of Service</a> · <a href="../../privacy.html">Privacy Policy</a> · <a href="../../live-transit/terms/">Live Transit Terms</a></p>
+      </div>
+    </nav>
+    <p class="footer-fine"><a href="../../find.html">Find</a> (search) · <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a></p>
+    <p class="footer-fine">© 2026 AutomatedTechnologies d/b/a Detroit Automation Academy</p>
+  </div>
+</footer>
+
+<script src="../../script.js"></script>
+</body>
+</html>
