@@ -1,5 +1,5 @@
 /* Detroit Automation Academy — rebrand v1
-   Palette: Midnight #0C1116 · Forge #E85D1A · Amber #FFB000 · Concrete #9AA0A6 · Paper #F5F2EA
+   Palette (light B/W, The Index token set — conformance 2026-11-02): Page #ffffff · Band #f2f2f2 · Ink #111111 · Body #222222 · Muted #5a5a5a · Faint #8a8a8a
    Type: Space Grotesk (display) · Inter (body) */
 
 /* Self-hosted fonts (2026-10-18, build 20261018-1404): Space Grotesk + Inter, latin subset,
@@ -64,17 +64,31 @@
 
 
 :root {
-  --midnight: #0C1116;
-  --midnight-2: #11171d;
-  --card: #131a21;
-  --forge: #E85D1A;
-  --forge-deep: #c74e14;
-  --amber: #FFB000;
-  --concrete: #9AA0A6;
-  --paper: #F5F2EA;
-  --line: rgba(245, 242, 234, 0.09);
+  --midnight: #ffffff;
+  --midnight-2: #f2f2f2;
+  --card: #ffffff;
+  --forge: #5a5a5a;
+  --forge-deep: #8a8a8a;
+  --amber: #111111;
+  --concrete: #5a5a5a;
+  --paper: #222222;
+  --line: rgba(0,0,0,0.15);
   --radius: 14px;
+  --page-margin: 16px;
+  --panel-pad: 12px;
+  --gap: 12px;
 }
+
+/* Light-theme conformance (2026-11-02): explicit link + form-accent
+   colors in the token grays, so no UA-default blue/purple can surface
+   on any view that loads this sheet; all imagery renders grayscale. */
+a { color: #111111; }
+a:visited { color: #5a5a5a; }
+a:hover { color: #111111; }
+a:active { color: #111111; }
+:root { accent-color: #111111; }
+img, picture, video, svg image { filter: grayscale(1); }
+.cards img, .signal-feature img { filter: grayscale(1); }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -142,7 +156,7 @@ a { color: inherit; }
   position: sticky; top: 0; z-index: 50;
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px 24px;
-  background: rgba(12, 17, 22, 0.88);
+  background: rgba(239,239,239,0.88);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
 }
@@ -151,6 +165,7 @@ a { color: inherit; }
 .brand-word { font-weight: 700; font-size: 1.02rem; }
 .brand-word em { font-style: normal; color: var(--forge); }
 .nav-links { display: flex; align-items: center; gap: 26px; }
+.nav-links a[aria-current="page"] { font-weight: 700; text-decoration: underline; }
 .nav-links a { text-decoration: none; color: var(--concrete); font-weight: 500; font-size: 0.95rem; transition: color 0.2s; }
 .nav-links a:hover { color: var(--paper); }
 .nav-toggle { display: none; background: none; border: 0; cursor: pointer; padding: 8px; }
@@ -163,8 +178,8 @@ a { color: inherit; }
   text-align: center;
   overflow: hidden;
   background-image:
-    linear-gradient(rgba(232, 93, 26, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(232, 93, 26, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(137,137,137,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(137,137,137,0.05) 1px, transparent 1px);
   background-size: 44px 44px;
 }
 .hero::after {
@@ -216,7 +231,7 @@ a { color: inherit; }
 }
 .hero-mark-wrap .hero-mark { position: relative; z-index: 1; }
 
-.hero-mark { width: 132px; height: 132px; border-radius: 26px; box-shadow: 0 0 80px rgba(232, 93, 26, 0.35); }
+.hero-mark { width: 132px; height: 132px; border-radius: 26px; box-shadow: 0 0 80px rgba(137,137,137,0.35); }
 .eyebrow {
   font-family: 'Space Grotesk', sans-serif;
   text-transform: uppercase; letter-spacing: 0.3em; font-size: 0.8rem;
@@ -233,8 +248,9 @@ a { color: inherit; }
 }
 .btn:hover { transform: translateY(-2px); }
 .btn-primary { background: var(--forge); color: var(--midnight); }
+.btn-primary:visited { color: var(--midnight); }
 .btn-primary:hover { background: var(--amber); }
-.btn-ghost { border: 1px solid var(--line); color: var(--paper); background: rgba(245,242,234,0.03); }
+.btn-ghost { border: 1px solid var(--line); color: var(--paper); background: rgba(13,13,13,0.03); }
 .btn-ghost:hover { border-color: var(--forge); color: var(--forge); }
 
 .hero-stats {
@@ -313,7 +329,8 @@ a { color: inherit; }
 .signal-card-points li::marker { color: var(--forge); }
 .signal-card-link { margin-top: auto; font-weight: 600; color: var(--forge); text-decoration: none; }
 .signal-card-link:hover { text-decoration: underline; }
-.signal-card-forthcoming { border-style: dashed; opacity: 0.85; --forthcoming: yes; }
+.signal-card-forthcoming { border-style: dashed; opacity: 0.85; }
+.signal-card-forthcoming .signal-card-kicker { color: var(--amber); }
 
 /* ---------- Partners ---------- */
 .partner-list {
@@ -323,7 +340,7 @@ a { color: inherit; }
 .partner-list li {
   font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 1.02rem;
   border: 1px solid var(--line); border-radius: 999px; padding: 12px 24px;
-  color: var(--paper); background: rgba(245,242,234,0.02);
+  color: var(--paper); background: rgba(13,13,13,0.02);
   transition: border-color 0.2s, color 0.2s;
 }
 .partner-list li:hover { border-color: var(--forge); color: var(--forge); }
@@ -343,8 +360,8 @@ a { color: inherit; }
 .footer-group .footer-fine { margin: 2px 0; }
 
 /* ---------- Reveal on scroll ---------- */
-.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
-.reveal.visible { opacity: 1; transform: none; }
+.reveal { transform: translateY(24px); transition: transform 0.7s ease; }
+.reveal.visible { transform: none; }
 
 /* ---------- State of the art: scroll-driven reveal (no JavaScript) ----------
    Where supported, the reveal is driven by the element's own scroll progress.
@@ -356,7 +373,7 @@ a { color: inherit; }
     animation-range: entry 10% cover 30%;
   }
   @keyframes reveal-in {
-    to { opacity: 1; transform: none; }
+    to { transform: none; }
   }
 }
 
@@ -377,7 +394,7 @@ a { color: inherit; }
   text-underline-offset: 3px;
   margin-left: 10px;
 }
-#daa-commentary {
+#b5b5b5-commentary {
   position: fixed;
   right: 18px;
   bottom: 18px;
@@ -402,7 +419,7 @@ a { color: inherit; }
   color: var(--amber);
   font-size: 0.95rem;
 }
-#daac-close {
+#b5b5b5cc-close {
   background: none;
   border: 0;
   color: var(--concrete);
@@ -410,9 +427,9 @@ a { color: inherit; }
   cursor: pointer;
   line-height: 1;
 }
-#daa-commentary ol { margin: 0; padding: 0; list-style: none; }
-#daa-commentary li { border-top: 1px solid #232c36; }
-#daa-commentary li button {
+#b5b5b5-commentary ol { margin: 0; padding: 0; list-style: none; }
+#b5b5b5-commentary li { border-top: 1px solid #d8d8d8; }
+#b5b5b5-commentary li button {
   display: block;
   width: 100%;
   text-align: left;
@@ -423,9 +440,9 @@ a { color: inherit; }
   padding: 10px 2px;
   font: inherit;
 }
-#daa-commentary li button:hover strong { color: var(--forge); }
-#daa-commentary li strong { display: block; color: var(--amber); font-size: 0.9rem; }
-#daa-commentary li span { display: block; font-size: 0.85rem; color: #cfd4d9; margin-top: 2px; }
+#b5b5b5-commentary li button:hover strong { color: var(--forge); }
+#b5b5b5-commentary li strong { display: block; color: var(--amber); font-size: 0.9rem; }
+#b5b5b5-commentary li span { display: block; font-size: 0.85rem; color: #222222; margin-top: 2px; }
 .daac-flash { outline: 2px solid var(--amber) !important; outline-offset: 6px; }
 
 /* ---------- State of the art II: @property — animatable custom properties -----
@@ -458,7 +475,9 @@ a { color: inherit; }
 }
 
 /* ---------- State of the art III: cross-document view transitions ----------
-   Same-origin page changes crossfade while the brand mark holds its place. */
+   Same-origin page changes use an OPAQUE cover (owner standard 2026-11-03:
+   transitions never render translucent). The old page holds at opacity 1;
+   the new page covers it. The brand mark holds its place, opaque. */
 @media (prefers-reduced-motion: no-preference) {
   @view-transition {
     navigation: auto;
@@ -466,10 +485,27 @@ a { color: inherit; }
   .nav .brand-mark {
     view-transition-name: brand-mark;
   }
+  ::view-transition-old(root) {
+    animation: none;
+    opacity: 1;
+  }
+  ::view-transition-new(root) {
+    animation: vt-cover 0.38s cubic-bezier(.4, 0, .2, 1);
+    opacity: 1;
+  }
+  ::view-transition-old(brand-mark),
+  ::view-transition-new(brand-mark) {
+    animation: none;
+    opacity: 1;
+  }
+  @keyframes vt-cover {
+    from { transform: translateX(100%); }
+    to { transform: none; }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .reveal { opacity: 1; transform: none; transition: none; animation: none; }
+  .reveal { transform: none; transition: none; animation: none; }
   .phase::before { animation: none; }
   .circuit .trace { animation: none; stroke-dashoffset: 0; }
   .circuit .node { animation: none; opacity: .95; }
@@ -479,6 +515,7 @@ a { color: inherit; }
 /* ---------- Mobile ---------- */
 @media (max-width: 760px) {
   .section { padding: 64px 0; }
+  .wrap { padding: 0 var(--page-margin); }
   .nav-links {
     position: absolute; top: 100%; left: 0; right: 0;
     flex-direction: column; align-items: stretch; gap: 0;
@@ -512,8 +549,8 @@ a { color: inherit; }
   border-radius: var(--radius);
   overflow: hidden;
   background-image:
-    linear-gradient(rgba(232, 93, 26, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(232, 93, 26, 0.06) 1px, transparent 1px);
+    linear-gradient(rgba(137,137,137,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(137,137,137,0.06) 1px, transparent 1px);
   background-size: 36px 36px;
 }
 .demo-stage::after {
@@ -526,7 +563,7 @@ a { color: inherit; }
 .demo-fullscreen {
   position: absolute; top: 10px; right: 10px; z-index: 5;
   padding: 6px 12px; font-size: 0.8rem; font-family: inherit; line-height: 1.4;
-  color: var(--paper); background: rgba(12, 17, 22, 0.78);
+  color: var(--paper); background: rgba(239,239,239,0.78);
   border: 1px solid var(--line); border-radius: 8px; cursor: pointer;
 }
 .demo-fullscreen:hover { border-color: var(--forge); color: var(--forge); }
@@ -544,7 +581,7 @@ a { color: inherit; }
 #demoFull.demo-pseudo .demo-term {
   position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 6;
   max-height: 44vh; max-height: 44dvh;
-  background: rgba(10, 14, 18, 0.94);
+  background: rgba(242,242,242,0.94);
   box-shadow: 0 10px 36px rgba(0, 0, 0, 0.55);
 }
 /* Safe-area: keep the floating terminal clear of the home indicator / notch
@@ -601,7 +638,7 @@ body.demo-locked { overflow: hidden; }
 .world-card {
   position: absolute; left: 12px; bottom: 12px; z-index: 3;
   max-width: 240px; padding: 10px 12px;
-  background: rgba(12, 17, 22, 0.88); border: 1px solid var(--line);
+  background: rgba(239,239,239,0.88); border: 1px solid var(--line);
   border-radius: 10px; font-size: 0.85rem; line-height: 1.4;
   pointer-events: none;
 }
@@ -624,7 +661,7 @@ body.demo-locked { overflow: hidden; }
 .bot-eye { fill: var(--amber); }
 .bot-panel { fill: var(--midnight); }
 .bot-light { fill: var(--amber); }
-.bot-wheel { fill: #232b33; stroke: var(--concrete); stroke-width: 2; }
+.bot-wheel { fill: #d5d5d5; stroke: var(--concrete); stroke-width: 2; }
 .bot-arm { fill: var(--forge-deep); }
 .bot-antenna { stroke: var(--concrete); stroke-width: 3; stroke-linecap: round; }
 .scan-beam { fill: var(--amber); opacity: 0; transform-box: fill-box; transform-origin: left center; }
@@ -696,7 +733,7 @@ body.demo-locked { overflow: hidden; }
 /* Terminal */
 .demo-term {
   display: flex; flex-direction: column;
-  background: #0a0e12;
+  background: #f2f2f2;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   overflow: hidden;
@@ -728,7 +765,7 @@ body.demo-locked { overflow: hidden; }
 .demo-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 18px 18px; }
 .demo-chip {
   font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.8rem;
-  background: rgba(245, 242, 234, 0.03);
+  background: rgba(13,13,13,0.03);
   border: 1px solid var(--line); border-radius: 999px;
   color: var(--concrete); padding: 6px 14px; cursor: pointer;
   transition: border-color 0.2s, color 0.2s;
@@ -779,13 +816,13 @@ body.demo-locked { overflow: hidden; }
 .signal-animation { max-width: 620px; margin: 2.5rem auto 0; }
 .signal-animation iframe {
   display: block; width: 100%; aspect-ratio: 1 / 1;
-  border: 0; border-radius: 14px; background: #000;
+  border: 0; border-radius: 14px; background: #ffffff;
 }
 
 /* ---------- Day 3: keyboard focus + VoiceOver ---------- */
 .skip-link {
   position: absolute; left: 16px; top: -64px; z-index: 100;
-  background: var(--amber); color: #000; font-weight: 700;
+  background: var(--amber); color: #ffffff; font-weight: 700;
   padding: 10px 20px; border-radius: 999px; text-decoration: none;
   transition: top 0.15s ease;
 }
@@ -806,7 +843,7 @@ body.demo-locked { overflow: hidden; }
 /* ---------- Platform nav v2: audience lanes (2026-10-10) ----------
  * Lanes: Watch / Read / Do / About / Subscribe. Read and Do expand to
  * dropdowns on desktop; on mobile (<=760px) lanes become compact groups.
- * Rendered by /nav.js into #daa-nav. data-audience hooks are stable for
+ * Rendered by /nav.js into #b5b5b5-nav. data-audience hooks are stable for
  * future subscriber/user-state personalization. */
 .nav-links .lane { text-decoration: none; color: var(--concrete); font-weight: 500; font-size: .95rem; transition: color .2s; }
 .nav-links .lane:hover { color: var(--paper); }
@@ -820,7 +857,7 @@ body.demo-locked { overflow: hidden; }
 .lane-items { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); min-width: 250px; margin: 0; padding: 8px; list-style: none; background: var(--midnight-2); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,.5); z-index: 60; }
 .lane-group:hover .lane-items, .lane-group:focus-within .lane-items, .lane-group.open .lane-items { display: block; }
 .lane-items a { display: block; padding: 11px 16px; border-radius: 8px; white-space: nowrap; text-decoration: none; color: var(--concrete); font-weight: 500; font-size: .95rem; }
-.lane-items a:hover { background: rgba(232,93,26,.12); color: var(--paper); }
+.lane-items a:hover { background: rgba(137,137,137,.12); color: var(--paper); }
 .lane-items a:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; }
 
 @media (max-width: 760px) {
@@ -834,58 +871,4 @@ body.demo-locked { overflow: hidden; }
   .lane-items a:hover { background: none; }
   .nav-links > .lane { display: block; padding: 13px 0; border-top: 1px solid var(--line); }
   .nav-links > .lane:first-child { border-top: 0; }
-}
-
-/* ---------- Approved Feed techniques (2026-11-03) ----------
-   1) interpolate-size: <details> panels animate to height:auto where
-      supported (Chromium); Safari/Firefox keep the instant snap.
-   2) Container style query: the forthcoming Signal card carries its
-      state as --forthcoming; descendants follow the query, no
-      descendant selector (replaces .signal-card-forthcoming .signal-card-kicker).
-   3) sibling-index(): the circuit-animation stagger counts itself;
-      the hand-written nth-child delay tables above stay as fallback
-      (equal specificity + later order lets this win where supported). */
-@media (prefers-reduced-motion: no-preference) {
-  :root { interpolate-size: allow-keywords; }
-  details::details-content {
-    height: 0; overflow: clip;
-    transition: height 0.35s ease, content-visibility 0.35s allow-discrete;
-  }
-  details[open]::details-content { height: auto; }
-}
-@container style(--forthcoming: yes) {
-  .signal-card-kicker { color: var(--amber); }
-}
-@supports (animation-delay: calc(sibling-index() * 1ms)) {
-  .traces .trace:nth-child(n) { animation-delay: calc(0.05s + (sibling-index() - 1) * 0.1s); }
-  .nodes .node:nth-child(n) { animation-delay: calc(1.15s + (sibling-index() - 1) * 0.1s); }
-}
-
-/* ---- Feed techniques, tranche 2 (approved 2026-11-03) ---- */
-/* :open — scroll-lock the page while a native dialog is open. No
-   <dialog> exists on the site yet; this is the guard for the first. */
-html:has(dialog:open) { overflow: hidden; }
-
-/* contrast-color() — the ink on the forge/amber fills computes to
-   whichever of black/white contrasts more (black wins on both:
-   6.1:1 and 11.6:1), replacing the hand-picked midnight. Browsers
-   without support keep the hand pick. */
-.btn-primary { color: contrast-color(var(--forge)); }
-.btn-primary:hover, .btn-primary:focus-visible { color: contrast-color(var(--amber)); }
-
-/* Scroll-driven reading-progress bar on long-form article pages:
-   fixed 3px forge bar, scaleX driven by the root scroll timeline.
-   No markup; pages without an <article> get no bar. */
-@supports (animation-timeline: scroll()) {
-  @media (prefers-reduced-motion: no-preference) {
-    body:has(article)::before {
-      content: ""; position: fixed; top: 0; left: 0; z-index: 60;
-      width: 100%; height: 3px; background: var(--forge);
-      transform-origin: 0 50%; transform: scaleX(0);
-      animation: daa-progress linear both;
-      animation-timeline: scroll(root block);
-      pointer-events: none;
-    }
-    @keyframes daa-progress { to { transform: scaleX(1); } }
-  }
 }

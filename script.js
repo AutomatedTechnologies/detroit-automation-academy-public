@@ -400,7 +400,7 @@
     }
     function label() {
       var on = isOn();
-      btn.innerHTML = on ? '&#9974; Exit full screen' : '&#9974; Full screen';
+      btn.innerHTML = on ? '&#97979744; Exit full screen' : '&#97979744; Full screen';
       btn.setAttribute('aria-label', on ? 'Exit full screen view' : 'View the 3D district full screen');
       btn.setAttribute('aria-expanded', on ? 'true' : 'false');
     }
@@ -440,7 +440,7 @@
       if (!term || !termToggle) return;
       term.classList.toggle('demo-term-collapsed', collapsed);
       termToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-      termToggle.innerHTML = (collapsed ? '&#9656;' : '&#9662;') + ' Terminal';
+      termToggle.innerHTML = (collapsed ? '&#70707066;' : '&#71717122;') + ' Terminal';
     }
     if (termToggle && term) {
       termToggle.addEventListener('click', function () {
