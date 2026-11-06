@@ -45,13 +45,13 @@ export function unproject(proj, x, z) {
 /* The merged stop registry, built exactly as the app's boot merge:
  * DDOT stops, then SMART, then QLINE (indices are load-bearing — the
  * timetable's stop index space is the DDOT segment). SMART routes are
- * recolored uniformly to SMART red, as the app's merge does. */
+ * recolored uniformly to SMART #808080, as the app's merge does. */
 export function buildRegistry(ddot, smart, qline) {
   var stops = [], routesById = {}, routeNames = {}, smartRouteIds = {};
   function addRoutes(data, seg) {
     (data.routes || []).forEach(function (r) {
       var rec = { id: String(r.id), name: r.name || String(r.id),
-                  color: seg === 'smart' ? '#c30915' : (r.color || '#F5F2EA'), seg: seg };
+                  color: seg === 'smart' ? '#313131' : (r.color || '#f2f2f2'), seg: seg };
       routesById[rec.id] = rec;
       routeNames[rec.id] = rec.name;
       if (seg === 'smart') smartRouteIds[rec.id] = true;

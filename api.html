@@ -9,27 +9,27 @@
 <link rel="stylesheet" href="styles.css?v=20261031-0615">
 <style>
   .api-hero { padding: 4.5rem 0 2rem; }
-  .api-hero h1 { font-family: "Space Grotesk", sans-serif; font-size: 2.4rem; margin: .4rem 0 1rem; color: #F5F2EA; letter-spacing: .01em; }
-  .endpoint { background: var(--midnight-2); border: 1px solid rgba(245,242,234,.14); border-radius: 14px; padding: 1.25rem 1.4rem; margin: 1.5rem 0; }
+  .api-hero h1 { font-family: "Space Grotesk", sans-serif; font-size: 2.4rem; margin: .4rem 0 1rem; color: #f2f2f2; letter-spacing: .01em; }
+  .endpoint { background: var(--midnight-2); border: 1px solid rgba(242, 242, 242, .14); border-radius: 14px; padding: 1.25rem 1.4rem; margin: 1.5rem 0; }
   .endpoint-head { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; margin-bottom: .8rem; }
-  .method { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: .8rem; letter-spacing: .06em; background: #2ECC71; color: #0C1116; border-radius: 6px; padding: .3rem .6rem; }
-  .endpoint-path { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1.05rem; color: #F5F2EA; word-break: break-all; }
+  .method { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: .8rem; letter-spacing: .06em; background: #a4a4a4; color: #101010; border-radius: 6px; padding: .3rem .6rem; }
+  .endpoint-path { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1.05rem; color: #f2f2f2; word-break: break-all; }
   .kv { display: grid; grid-template-columns: 11rem 1fr; gap: .4rem 1rem; font-size: .92rem; margin: .6rem 0 0; }
-  .kv dt { color: #9AA0A6; }
-  .kv dd { margin: 0; color: #F5F2EA; }
-  pre.code { background: #080c10; border: 1px solid rgba(245,242,234,.14); border-radius: 12px; padding: 1.1rem 1.25rem; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .82rem; line-height: 1.55; color: #d7dce2; margin: 1rem 0 1.5rem; }
-  pre.code .k { color: #FFB000; }
+  .kv dt { color: #9f9f9f; }
+  .kv dd { margin: 0; color: #f2f2f2; }
+  pre.code { background: #0b0b0b; border: 1px solid rgba(242, 242, 242, .14); border-radius: 12px; padding: 1.1rem 1.25rem; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .82rem; line-height: 1.55; color: #dbdbdb; margin: 1rem 0 1.5rem; }
+  pre.code .k { color: #b4b4b4; }
   table.fields { width: 100%; border-collapse: collapse; font-size: .9rem; margin: 1rem 0 1.75rem; }
-  table.fields th { text-align: left; font-family: "Space Grotesk", sans-serif; font-size: .78rem; letter-spacing: .05em; text-transform: uppercase; color: #9AA0A6; padding: .55rem .7rem; border-bottom: 1px solid rgba(245,242,234,.2); }
-  table.fields td { padding: .55rem .7rem; border-bottom: 1px solid rgba(245,242,234,.08); vertical-align: top; }
-  table.fields td:first-child { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #FFB000; white-space: nowrap; }
-  table.fields td:nth-child(2) { color: #9AA0A6; white-space: nowrap; }
-  .callout { border-left: 3px solid #E85D1A; background: rgba(232,93,26,.07); border-radius: 0 10px 10px 0; padding: .9rem 1.1rem; margin: 1.25rem 0; font-size: .92rem; }
+  table.fields th { text-align: left; font-family: "Space Grotesk", sans-serif; font-size: .78rem; letter-spacing: .05em; text-transform: uppercase; color: #9f9f9f; padding: .55rem .7rem; border-bottom: 1px solid rgba(242, 242, 242, .2); }
+  table.fields td { padding: .55rem .7rem; border-bottom: 1px solid rgba(242, 242, 242, .08); vertical-align: top; }
+  table.fields td:first-child { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #b4b4b4; white-space: nowrap; }
+  table.fields td:nth-child(2) { color: #9f9f9f; white-space: nowrap; }
+  .callout { border-left: 3px solid #767676; background: rgba(118, 118, 118, .07); border-radius: 0 10px 10px 0; padding: .9rem 1.1rem; margin: 1.25rem 0; font-size: .92rem; }
   .callout p { margin: 0; }
-  .api-section { padding: 2.5rem 0; border-top: 1px solid rgba(245,242,234,.1); }
-  .api-section h2 { font-family: "Space Grotesk", sans-serif; font-size: 1.5rem; color: #F5F2EA; margin: 0 0 .8rem; }
-  .api-section h3 { font-family: "Space Grotesk", sans-serif; font-size: 1.05rem; color: #F5F2EA; margin: 1.6rem 0 .4rem; }
-  a code, p code, li code, td code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; background: rgba(245,242,234,.08); border-radius: 5px; padding: .1em .4em; color: #F5F2EA; }
+  .api-section { padding: 2.5rem 0; border-top: 1px solid rgba(242, 242, 242, .1); }
+  .api-section h2 { font-family: "Space Grotesk", sans-serif; font-size: 1.5rem; color: #f2f2f2; margin: 0 0 .8rem; }
+  .api-section h3 { font-family: "Space Grotesk", sans-serif; font-size: 1.05rem; color: #f2f2f2; margin: 1.6rem 0 .4rem; }
+  a code, p code, li code, td code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; background: rgba(242, 242, 242, .08); border-radius: 5px; padding: .1em .4em; color: #f2f2f2; }
   @media (max-width: 640px) {
     .kv { grid-template-columns: 1fr; }
     .api-hero h1 { font-size: 1.9rem; }
@@ -97,7 +97,7 @@
         </dl>
       </div>
 
-      <h3>Example response <span style="color:#9AA0A6;font-weight:400;font-size:.85rem;">(real response, 2026-10-15; trimmed to 1 of 4 vehicles)</span></h3>
+      <h3>Example response <span style="color:#9f9f9f;font-weight:400;font-size:.85rem;">(real response, 2026-10-15; trimmed to 1 of 4 vehicles)</span></h3>
 <pre class="code">{
   "generated_at": "2026-10-16T00:00:29.484Z",
   "count": 4,
@@ -158,7 +158,7 @@
         </dl>
       </div>
 
-      <h3>Example response <span style="color:#9AA0A6;font-weight:400;font-size:.85rem;">(real response, 2026-10-15)</span></h3>
+      <h3>Example response <span style="color:#9f9f9f;font-weight:400;font-size:.85rem;">(real response, 2026-10-15)</span></h3>
 <pre class="code">{
   "generated_at": "2026-10-15T19:51:06.386Z",
   "count": 0,
@@ -276,7 +276,7 @@
           <li>Repository: <a href="https://github.com/smit4786/forge-line-transit-data">github.com/smit4786/forge-line-transit-data</a></li>
           <li>Format: <code>forge-line.telemetry/v1</code>, documented in the repo&rsquo;s <a href="https://github.com/smit4786/forge-line-transit-data/blob/main/SCHEMA.md">SCHEMA.md</a></li>
           <li>Day index: <code>https://raw.githubusercontent.com/smit4786/forge-line-transit-data/main/data/index.json</code></li>
-          <li>One day of polls: <code>https://raw.githubusercontent.com/smit4786/forge-line-transit-data/main/data/2026-10-03.jsonl</code> <span style="color:#9AA0A6;">(replace the date)</span></li>
+          <li>One day of polls: <code>https://raw.githubusercontent.com/smit4786/forge-line-transit-data/main/data/2026-10-03.jsonl</code> <span style="color:#9f9f9f;">(replace the date)</span></li>
         </ul>
         <p>Failed polls are never logged as empty records — a gap in a day&rsquo;s file means that poll failed, not that zero buses were running.</p>
       </div>
