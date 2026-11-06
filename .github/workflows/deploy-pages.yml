@@ -228,6 +228,22 @@ jobs:
             cp -r planner deployment/ || echo "planner copy failed"
           fi
 
+          # Copy The Index (site-wide index; linked from the header nav
+          # and the footer of every page — the directory was never in
+          # the copy list, so /the-index/ 404'd in production despite
+          # the files being in the repo; owner defect report
+          # 2026-11-05, same failure class as voter-guide/planner above)
+          if [ -d "the-index" ]; then
+            cp -r the-index deployment/ || echo "the-index copy failed"
+          fi
+
+          # Copy Forge Keyboard (iOS keyboard page + download, placed
+          # 2026-11-05 — same copy-list omission: promoted to the repo
+          # but never copied into the deployment artifact)
+          if [ -d "ios-keyboard" ]; then
+            cp -r ios-keyboard deployment/ || echo "ios-keyboard copy failed"
+          fi
+
           # Copy The Index + iOS keyboard distribution (V2 launch directories,
           # 2026-11-05 — absent from the list, both served the estate 404)
           if [ -d "the-index" ]; then
