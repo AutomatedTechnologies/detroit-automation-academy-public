@@ -1,0 +1,9 @@
+#!/bin/sh
+# The Index accuracy pre-commit hook (plain-git route).
+# Enforces The Index posture at commit time: the index page exists,
+# is linked from the home page, has no dead entries, and covers every
+# top-level public surface (see tools/check_index_accuracy.py).
+# Enable once per clone:  git config core.hooksPath .githooks
+# (Or use the pre-commit framework: the same check is registered in
+# .pre-commit-config.yaml as the local hook "index-accuracy".)
+exec python3 "$(git rev-parse --show-toplevel)/tools/check_index_accuracy.py" "$(git rev-parse --show-toplevel)"
