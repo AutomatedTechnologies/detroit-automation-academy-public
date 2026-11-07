@@ -115,10 +115,14 @@ jobs:
           # then fail loud. Mirrors build-timing.yml's proven pattern.
           for attempt in 1 2 3; do
             git commit -m "live-data: feed update $(date -u +%Y-%m-%dT%H:%MZ)"
+            # Discard unstaged builder leftovers so the rebase below
+            # never refuses on a dirty tree (runs on every attempt:
+            # the recovery rebuild re-dirties the tree each time).
+            git reset --hard HEAD
             git fetch origin main
             if ! git rebase origin/main; then
               echo "rebase conflict (attempt $attempt): rebuilding on new tip"
-              git rebase --abort
+              git rebase --abort 2>/dev/null || true
               git reset --hard origin/main
               node tools/feed/build-feed.mjs
               git add live-data/vehicles.json live-data/alerts.json
