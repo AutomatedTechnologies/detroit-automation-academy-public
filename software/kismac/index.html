@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KisMac — Test Build · Detroit Automation Academy</title>
+<meta name="description" content="Internal test build of KisMac2, built by CI from the Detroit Automation Academy fork for the macOS Legacy Uplift Program. Not a release.">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<link rel="icon" type="image/webp" href="/assets/logo.webp">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="stylesheet" href="/styles.css?v=20261031-0615">
+<link rel="canonical" href="https://www.detroitautomationacademy.com/software/kismac/">
+<meta name="robots" content="noindex, nofollow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Detroit Automation Academy">
+<meta property="og:title" content="KisMac — Test Build · Detroit Automation Academy">
+<meta property="og:description" content="Internal test build of KisMac2 from the Academy fork. Not a release.">
+<meta property="og:url" content="https://www.detroitautomationacademy.com/software/kismac/">
+<style>
+  .testbuild-banner {
+    border: 3px solid #111;
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: center;
+    font-size: 1.15rem;
+  }
+  .warn-block {
+    border: 2px solid #111;
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
+  }
+  .warn-block h2 { margin-top: 0; }
+  .warn-block ul { margin-bottom: 0; }
+  .dl-facts { margin: 1.5rem 0; }
+  .dl-facts dt { font-weight: 700; margin-top: 0.6rem; }
+  .dl-facts dd { margin-left: 0; }
+  .sha {
+    display: block;
+    word-break: break-all;
+    background: #f2f2f2;
+    border: 1px solid #ccc;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+
+<div id="daa-nav"><header class="nav"><a class="brand" href="/" aria-label="Detroit Automation Academy — home"><img src="/assets/logo.webp" alt="" class="brand-mark"><span class="brand-word">Detroit Automation <em>Academy</em></span></a><nav class="nav-links" id="daaNavLinks" aria-label="Primary"><a class="lane" data-audience="user" href="/live-transit.html">Live Map</a><a class="lane" data-audience="user" href="/live-transit/">Cities</a><a class="lane" data-audience="visitor" href="/programs.html">Programs</a><a class="lane" data-audience="visitor" href="/voter-guide.html">Voter Guide</a><a class="lane" data-audience="reader" href="/signal/">The Signal</a><a class="lane" data-audience="visitor" href="/inquire.html">Contact</a><a class="lane" data-audience="visitor" href="/find.html">Find</a></nav><button class="nav-toggle" id="daaNavToggle" aria-label="Toggle navigation" aria-expanded="false"><span></span><span></span><span></span></button></header></div>
+<script src="/nav.js?v=20261031-0615"></script>
+
+<main id="top">
+
+  <section class="section">
+    <div class="wrap">
+      <p class="kicker">Software · macOS Legacy Uplift Program</p>
+      <h1>KisMac — <span class="accent">Test Build</span></h1>
+
+      <div class="testbuild-banner">Internal test build — not a release</div>
+
+      <div class="prose">
+        <p>This page offers a downloadable test build of <strong>KisMac2</strong>, the Wi-Fi scanner, produced by continuous integration from the Detroit Automation Academy's fork. It exists so the build can be downloaded and tested on macOS High Sierra (10.13) — the floor for the Academy's macOS Legacy Uplift Program. It is <strong>not</strong> a finished, audited, or supported release.</p>
+      </div>
+
+      <div class="signal-cta">
+        <a href="https://github.com/AutomatedTechnologies/KisMac2/releases/download/test-build-14/KisMac-test.zip" class="btn btn-primary">Download KisMac-test.zip</a>
+        <a href="https://github.com/AutomatedTechnologies/KisMac2/releases/tag/test-build-14" class="btn btn-ghost">View the prerelease on GitHub</a>
+      </div>
+
+      <dl class="dl-facts">
+        <dt>File</dt>
+        <dd><code>KisMac-test.zip</code> — contains <code>KisMac2.app</code></dd>
+        <dt>Size</dt>
+        <dd>2,933,642 bytes (2.9 MB)</dd>
+        <dt>SHA-256</dt>
+        <dd><code class="sha">98e31fd896b24d887c2c759f729728e0ad26da3ab94b48f42ddf142740200155</code>
+        Verify after downloading: <code>shasum -a 256 KisMac-test.zip</code> must print exactly this hash.</dd>
+        <dt>Architecture</dt>
+        <dd>x86_64 (Intel) — Mach-O 64-bit executable</dd>
+        <dt>Deployment target</dt>
+        <dd>macOS 10.13 (High Sierra)</dd>
+        <dt>Built by</dt>
+        <dd>GitHub Actions, macos-15 runner, Xcode 16.4 — unsigned CI build (not code-signed, not notarized)</dd>
+        <dt>Source</dt>
+        <dd><a href="https://github.com/AutomatedTechnologies/KisMac2">AutomatedTechnologies/KisMac2</a>, branch <code>build-test</code> @ <code>bec97d2</code>, <a href="https://github.com/AutomatedTechnologies/KisMac2/actions/runs/42411376423">Actions run #14</a>, published as prerelease <code>test-build-14</code></dd>
+        <dt>License</dt>
+        <dd>KisMac is free software under the <strong>GNU General Public License v2.0 (GPL-2.0)</strong>. The complete corresponding source for this build is the fork above, branch <code>build-test</code>.</dd>
+      </dl>
+
+      <div class="warn-block">
+        <h2>Read this before you run it</h2>
+        <ul>
+          <li><strong>Built from unremediated upstream code.</strong> This build comes from the master lineage of the fork. The Academy's security remediation exists on a separate branch and is <em>not</em> in this build.</li>
+          <li><strong>HTTP crash reporter present (finding F-04).</strong> If the app crashes, its built-in crash reporter can send a crash report over plain HTTP. That behavior is removed only on the remediation branch — not here.</li>
+          <li><strong>Privileged-helper findings are open.</strong> The audit's findings about KisMac's privileged helper and device-permissions handling are unresolved in this code.</li>
+          <li><strong>Dead map services:</strong> the removed map-download services are gone only on the remediation branch; this build still contains the upstream code paths.</li>
+          <li><strong>Never runtime-verified.</strong> This app has been compiled, linked, and packaged by CI — it has never been run and verified on a real machine by the Academy.</li>
+          <li><strong>Test on High Sierra, preferably not on a network you care about.</strong> Use a test machine and an isolated network.</li>
+        </ul>
+      </div>
+
+      <div class="prose">
+        <p>KisMac is a Wi-Fi stumbler and scanner originally by Michael Roßberg and contributors, maintained here as part of the Academy's program to keep useful macOS software building and running on High Sierra. Questions: <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a>.</p>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <img src="/assets/logo.webp" alt="" class="brand-mark">
+      <span>Detroit Automation Academy</span>
+    </div>
+    <p class="footer-fine">Southfield, Michigan · <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a></p>
+    <nav class="footer-groups" aria-label="Site">
+      <div class="footer-group">
+        <h3>Ride</h3>
+        <p class="footer-fine"><a href="/live-transit.html">Live Map</a> · <a href="/board/">Departure Board</a> · <a href="/live-transit/">Cities</a></p>
+        <p class="footer-fine"><a href="/live-transit.html">Detroit</a> · <a href="/live-transit/philadelphia/">Philadelphia</a> · <a href="/live-transit/cincinnati/">Cincinnati</a> · <a href="/live-transit/denver/">Denver</a> · <a href="/live-transit/austin/">Austin</a> · <a href="/live-transit/sacramento/">Sacramento</a> · <a href="/live-transit/san-diego/">San Diego</a> · <a href="/live-transit/columbus/">Columbus</a></p>
+      </div>
+      <div class="footer-group">
+        <h3>Read</h3>
+        <p class="footer-fine"><a href="/signal/">The Signal</a> · <a href="/live-transit-detroit/">Live Transit Detroit stories</a> · <a href="/notes/">Notes</a> · <a href="/press/">The Press</a> · <a href="/feed/">Latest</a> · <a href="/watch/">Watch</a></p>
+      </div>
+      <div class="footer-group">
+        <h3>Learn &amp; work</h3>
+        <p class="footer-fine"><a href="/programs.html">Programs</a> · <a href="/curriculum/online-safety/">Online Safety</a> · <a href="/voter-guide.html">Voter Guide</a> · <a href="/partners.html">Partners</a> · <a href="/api.html">API</a> · <a href="/inquire.html">Contact</a> · <a href="/apple-learning-coach/">Coach Profile</a> · <a href="/press/media-kit.html">Media Kit</a></p>
+      </div>
+      <div class="footer-group">
+        <h3>Trust</h3>
+        <p class="footer-fine"><a href="/dashboard.html">Status</a> · <a href="/terms.html">Terms of Service</a> · <a href="/privacy.html">Privacy Policy</a> · <a href="/live-transit/terms/">Live Transit Terms</a></p>
+      </div>
+    </nav>
+    <p class="footer-fine"><a href="/find.html">Find</a> (search) · <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a></p>
+    <p class="footer-fine">© 2026 AutomatedTechnologies d/b/a Detroit Automation Academy</p>
+  </div>
+</footer>
+
+<script src="/script.js?v=20261003-1330"></script>
+<script src="/assets/measure.js?v=20261023-o2" defer></script>
+</body>
+</html>
