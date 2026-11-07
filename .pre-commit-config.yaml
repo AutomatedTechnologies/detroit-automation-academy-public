@@ -73,6 +73,12 @@ repos:
         language: python
         files: \.(md|txt)$
         pass_filenames: true
+      - id: index-accuracy
+        name: The Index accuracy (existence, reachability, dead links, coverage)
+        entry: python3 tools/check_index_accuracy.py
+        language: system
+        pass_filenames: false
+        always_run: true
 
 # Configuration
 default_language_version:
