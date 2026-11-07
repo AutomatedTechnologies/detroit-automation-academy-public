@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Software · Detroit Automation Academy</title>
+<meta name="description" content="Academy-maintained macOS software: abandoned open-source applications audited, remediated, and kept building and running on macOS High Sierra (10.13).">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<link rel="icon" type="image/webp" href="/assets/logo.webp">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="stylesheet" href="/styles.css?v=20261031-0615">
+<link rel="canonical" href="https://www.detroitautomationacademy.com/software/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Detroit Automation Academy">
+<meta property="og:title" content="Software · Detroit Automation Academy">
+<meta property="og:description" content="Academy-maintained macOS software for High Sierra: audited, remediated, verified on real hardware.">
+<meta property="og:url" content="https://www.detroitautomationacademy.com/software/">
+<style>
+  .sw-list { margin: 1.5rem 0; }
+  .sw-item {
+    border: 2px solid #111;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+  }
+  .sw-item h2 { margin-top: 0; margin-bottom: 0.35rem; }
+  .sw-status {
+    display: inline-block;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    border: 2px solid #111;
+    padding: 0.15rem 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .sw-item p { margin-bottom: 0.5rem; }
+  .sw-item p:last-child { margin-bottom: 0; }
+</style>
+</head>
+<body>
+
+<div id="daa-nav"><header class="nav"><a class="brand" href="/" aria-label="Detroit Automation Academy — home"><img src="/assets/logo.webp" alt="" class="brand-mark"><span class="brand-word">Detroit Automation <em>Academy</em></span></a><nav class="nav-links" id="daaNavLinks" aria-label="Primary"><a class="lane" data-audience="user" href="/live-transit.html">Live Map</a><a class="lane" data-audience="user" href="/live-transit/">Cities</a><a class="lane" data-audience="visitor" href="/programs.html">Programs</a><a class="lane" data-audience="visitor" href="/voter-guide.html">Voter Guide</a><a class="lane" data-audience="reader" href="/signal/">The Signal</a><a class="lane" data-audience="visitor" href="/inquire.html">Contact</a><a class="lane" data-audience="visitor" href="/find.html">Find</a></nav><button class="nav-toggle" id="daaNavToggle" aria-label="Toggle navigation" aria-expanded="false"><span></span><span></span><span></span></button></header></div>
+<script src="/nav.js?v=20261031-0615"></script>
+
+<main id="top">
+
+  <section class="section">
+    <div class="wrap">
+      <p class="kicker">Software · macOS Legacy Uplift Program</p>
+      <h1>Academy <span class="accent">Software</span></h1>
+
+      <div class="prose">
+        <p>The Detroit Automation Academy maintains useful open-source Mac software that its original authors no longer do. Each application is audited for security issues, remediated, branded, and verified running on <strong>macOS High Sierra (10.13)</strong> — the floor for every Academy build — before anything is offered for download. Every application is free, ships with its full source under its original open-source license, and contacts no update, crash-report, or telemetry service the Academy does not operate.</p>
+        <p>Statuses below state exactly where each application stands. Nothing is listed as available until a verified build exists.</p>
+      </div>
+
+      <div class="sw-list">
+
+        <div class="sw-item">
+          <span class="sw-status">Test build available</span>
+          <h2>KisMac — Wi-Fi scanner</h2>
+          <p>A Wi-Fi stumbler and scanner (GPL-2.0), archived upstream since 2018. The Academy fork builds again: an internal test build is available for High Sierra, and the engine was verified running a live scan on a real High Sierra machine on November 7, 2026. A remediated test build — with the audit's security fixes incorporated — is in preparation.</p>
+          <p><a href="/software/kismac/">KisMac test build page →</a></p>
+        </div>
+
+        <div class="sw-item">
+          <span class="sw-status">In development</span>
+          <h2>Switchboard — network utility</h2>
+          <p>The Academy's own network utility: Wi-Fi discovery (the KisMac engine), network diagnostics, and management of Apple AirPort base stations in one application. Specification and MVP are filed; the V1 launch began November 7, 2026. No build is available yet.</p>
+        </div>
+
+        <div class="sw-item">
+          <span class="sw-status">In development</span>
+          <h2>Distro — the Academy store for High Sierra</h2>
+          <p>A native application store that delivers Academy-maintained software to High Sierra machines, with every download verified against a published SHA-256 hash before install. Its catalog is live with KisMac as the first listing. No build of Distro itself is available yet.</p>
+        </div>
+
+        <div class="sw-item">
+          <span class="sw-status">In development</span>
+          <h2>Spectacle — window manager</h2>
+          <p>Keyboard-driven window management (MIT). Security audit complete — no critical or high findings — and its updater has been repointed to Academy infrastructure. No build is available yet.</p>
+        </div>
+
+        <div class="sw-item">
+          <span class="sw-status">In development</span>
+          <h2>MacDown — Markdown editor</h2>
+          <p>A Markdown editor (MIT). Security audit complete; a rendering-engine migration to WKWebView is designed and under way. No build is available yet.</p>
+        </div>
+
+        <div class="sw-item">
+          <span class="sw-status">In development</span>
+          <h2>Sequel Pro — database client</h2>
+          <p>A MySQL database client (MIT). Security audit complete; its end-of-life bundled database library is being replaced with MariaDB Connector/C so it can connect to modern servers. No build is available yet.</p>
+        </div>
+
+        <div class="sw-item">
+          <span class="sw-status">In development</span>
+          <h2>SoundDeck — audio editor</h2>
+          <p>An audio editor built on Audacity with libVLC playback and conversion (GPL). License review passed and versions are pinned to the last releases that run on High Sierra. No build is available yet.</p>
+        </div>
+
+        <div class="sw-item">
+          <span class="sw-status">Queued</span>
+          <h2>AutoDMG — system image builder</h2>
+          <p>Builds deployable macOS system images (Apache-2.0). Selected for uplift; work has not begun. No build is available.</p>
+        </div>
+
+      </div>
+
+      <div class="prose">
+        <p>Questions: <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a>.</p>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <img src="/assets/logo.webp" alt="" class="brand-mark">
+      <span>Detroit Automation Academy</span>
+    </div>
+    <p class="footer-fine">Southfield, Michigan · <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a></p>
+    <nav class="footer-groups" aria-label="Site">
+      <div class="footer-group">
+        <h3>Ride</h3>
+        <p class="footer-fine"><a href="/live-transit.html">Live Map</a> · <a href="/board/">Departure Board</a> · <a href="/live-transit/">Cities</a></p>
+        <p class="footer-fine"><a href="/live-transit.html">Detroit</a> · <a href="/live-transit/philadelphia/">Philadelphia</a> · <a href="/live-transit/cincinnati/">Cincinnati</a> · <a href="/live-transit/denver/">Denver</a> · <a href="/live-transit/austin/">Austin</a> · <a href="/live-transit/sacramento/">Sacramento</a> · <a href="/live-transit/san-diego/">San Diego</a> · <a href="/live-transit/columbus/">Columbus</a></p>
+      </div>
+      <div class="footer-group">
+        <h3>Read</h3>
+        <p class="footer-fine"><a href="/signal/">The Signal</a> · <a href="/live-transit-detroit/">Live Transit Detroit stories</a> · <a href="/notes/">Notes</a> · <a href="/press/">The Press</a> · <a href="/feed/">Latest</a> · <a href="/watch/">Watch</a></p>
+      </div>
+      <div class="footer-group">
+        <h3>Learn &amp; work</h3>
+        <p class="footer-fine"><a href="/programs.html">Programs</a> · <a href="/curriculum/online-safety/">Online Safety</a> · <a href="/voter-guide.html">Voter Guide</a> · <a href="/partners.html">Partners</a> · <a href="/api.html">API</a> · <a href="/inquire.html">Contact</a> · <a href="/apple-learning-coach/">Coach Profile</a> · <a href="/press/media-kit.html">Media Kit</a></p>
+      </div>
+      <div class="footer-group">
+        <h3>Trust</h3>
+        <p class="footer-fine"><a href="/dashboard.html">Status</a> · <a href="/terms.html">Terms of Service</a> · <a href="/privacy.html">Privacy Policy</a> · <a href="/live-transit/terms/">Live Transit Terms</a></p>
+      </div>
+    </nav>
+    <p class="footer-fine"><a href="/find.html">Find</a> (search) · <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a></p>
+    <p class="footer-fine">© 2026 AutomatedTechnologies d/b/a Detroit Automation Academy</p>
+  </div>
+</footer>
+
+<script src="/script.js?v=20261003-1330"></script>
+<script src="/assets/measure.js?v=20261023-o2" defer></script>
+</body>
+</html>
