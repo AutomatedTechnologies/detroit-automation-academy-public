@@ -254,6 +254,15 @@ jobs:
             cp -r ios-keyboard deployment/ || echo "ios-keyboard copy failed"
           fi
 
+          # Copy Software (Academy-maintained macOS software pages —
+          # KisMac test-build download page, placed 2026-11-07 — same
+          # copy-list omission class as voter-guide/planner/the-index
+          # above: without this block the directory sits in the repo
+          # but 404s in production)
+          if [ -d "software" ]; then
+            cp -r software deployment/ || echo "software copy failed"
+          fi
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
