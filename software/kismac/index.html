@@ -63,21 +63,21 @@
       <div class="testbuild-banner">INTERNAL TEST BUILD — NOT A RELEASE</div>
 
       <div class="prose">
-        <p>This page offers a downloadable test build of <strong>KisMac2</strong>, the Wi-Fi scanner, produced by continuous integration from the Detroit Automation Academy's fork. It exists so the build can be downloaded and tested on macOS High Sierra (10.13) — the floor for the Academy's macOS Legacy Uplift Program. It is <strong>not</strong> a finished, audited, or supported release.</p>
+        <p>This page offers a downloadable test build of <strong>KisMac2</strong>, the Wi-Fi scanner, produced by continuous integration from the Detroit Automation Academy's fork. It exists so the build can be downloaded and tested on macOS High Sierra (10.13) — the floor for the Academy's macOS Legacy Uplift Program. This build carries the Academy's tranche-1 security remediation (see below). It is <strong>not</strong> a finished, audited, or supported release.</p>
       </div>
 
       <div class="signal-cta">
-        <a href="https://github.com/AutomatedTechnologies/KisMac2/releases/download/test-build-14/KisMac-test.zip" class="btn btn-primary">Download KisMac-test.zip</a>
-        <a href="https://github.com/AutomatedTechnologies/KisMac2/releases/tag/test-build-14" class="btn btn-ghost">View the prerelease on GitHub</a>
+        <a href="https://github.com/AutomatedTechnologies/KisMac2/releases/download/test-build-15/KisMac-test.zip" class="btn btn-primary">Download KisMac-test.zip</a>
+        <a href="https://github.com/AutomatedTechnologies/KisMac2/releases/tag/test-build-15" class="btn btn-ghost">View the prerelease on GitHub</a>
       </div>
 
       <dl class="dl-facts">
         <dt>File</dt>
         <dd><code>KisMac-test.zip</code> — contains <code>KisMac2.app</code></dd>
         <dt>Size</dt>
-        <dd>2,933,642 bytes (2.9 MB)</dd>
+        <dd>2,887,117 bytes (2.9 MB)</dd>
         <dt>SHA-256</dt>
-        <dd><code class="sha">98e31fd896b24d887c2c759f729728e0ad26da3ab94b48f42ddf142740200155</code>
+        <dd><code class="sha">283e9199fa530e36ea4ca79661d497348f7ea131ce8a3bc387f0a29b8a7a48ac</code>
         Verify after downloading: <code>shasum -a 256 KisMac-test.zip</code> must print exactly this hash.</dd>
         <dt>Architecture</dt>
         <dd>x86_64 (Intel) — Mach-O 64-bit executable</dd>
@@ -86,19 +86,19 @@
         <dt>Built by</dt>
         <dd>GitHub Actions, macos-15 runner, Xcode 16.4 — unsigned CI build (not code-signed, not notarized)</dd>
         <dt>Source</dt>
-        <dd><a href="https://github.com/AutomatedTechnologies/KisMac2">AutomatedTechnologies/KisMac2</a>, branch <code>build-test</code> @ <code>bec97d2</code>, <a href="https://github.com/AutomatedTechnologies/KisMac2/actions/runs/42411376423">Actions run #14</a>, published as prerelease <code>test-build-14</code></dd>
+        <dd><a href="https://github.com/AutomatedTechnologies/KisMac2">AutomatedTechnologies/KisMac2</a>, branch <code>build-test-remediated</code> @ <code>7350e76</code>, <a href="https://github.com/AutomatedTechnologies/KisMac2/actions/runs/42414695991">Actions run #15</a>, published as prerelease <code>test-build-15</code></dd>
         <dt>License</dt>
-        <dd>KisMac is free software under the <strong>GNU General Public License v2.0 (GPL-2.0)</strong>. The complete corresponding source for this build is the fork above, branch <code>build-test</code>.</dd>
+        <dd>KisMac is free software under the <strong>GNU General Public License v2.0 (GPL-2.0)</strong>. The complete corresponding source for this build is the fork above, branch <code>build-test-remediated</code>.</dd>
       </dl>
 
       <div class="warn-block">
         <h2>Read this before you run it</h2>
         <ul>
-          <li><strong>Built from unremediated upstream code.</strong> This build comes from the master lineage of the fork. The Academy's security remediation exists on a separate branch and is <em>not</em> in this build.</li>
-          <li><strong>HTTP crash reporter present (finding F-04).</strong> If the app crashes, its built-in crash reporter can send a crash report over plain HTTP. That behavior is removed only on the remediation branch — not here.</li>
-          <li><strong>Privileged-helper findings are open.</strong> The audit's findings about KisMac's privileged helper and device-permissions handling are unresolved in this code.</li>
-          <li><strong>Dead map services:</strong> the removed map-download services are gone only on the remediation branch; this build still contains the upstream code paths.</li>
-          <li><strong>Never runtime-verified.</strong> This app has been compiled, linked, and packaged by CI — it has never been run and verified on a real machine by the Academy.</li>
+          <li><strong>This build incorporates the Academy's tranche-1 security remediation.</strong> F-01: bounded SSID string handling (strlcpy/strlcat) with a 32-octet SSID cap at file ingestion. F-02: the bundled polarssl library is removed — MD4/MD5/SHA1 and HMAC now use the system CommonCrypto. F-11: legacy session files are unarchived through an NSSecureCoding class allowlist on the 10.13-floor API. F-13: the capture-device permission step uses mode 0660 (was 0777) and restores 0600 immediately after the device opens.</li>
+          <li><strong>HTTP crash reporter REMOVED (finding F-04).</strong> The built-in crash reporter that could send crash reports over plain HTTP to a third-party endpoint is deleted in this build, together with its launch-time collection. Verified in the packaged binary: no crash-report code or endpoint strings remain.</li>
+          <li><strong>Dead map services REMOVED; updater material purged (U1).</strong> The map-download feature and all seven of its defunct third-party endpoints (terraserver, Expedia, map24, tiger.census.gov, street-directory) are deleted, as is the orphaned updater public key. Verified absent from the packaged binary. Local map images and saved sessions are unaffected.</li>
+          <li><strong>Runtime status — stated exactly.</strong> The KisMac Discover engine lineage was runtime-verified on macOS High Sierra on 2026-11-07: the previous master-lineage test build (test-build-14) was launched on a real MacBook Air and scanned live networks. <strong>This remediated build is CI-built and awaits its own rig run</strong> — it has not yet been run on hardware by the Academy.</li>
+          <li><strong>One privileged-helper item remains open (findings F-12/F-03).</strong> The audit's privileged-helper finding is not yet remediated in this lineage: the replacement — a fixed-operation, zero-argument helper on the ChmodBPF model — is designed and filed as remediation tranche 2. Until it lands, the /dev/bpf permission step still runs through the audited executor, at the tightened 0660 with immediate restore described above.</li>
           <li><strong>Test on High Sierra, preferably not on a network you care about.</strong> Use a test machine and an isolated network.</li>
         </ul>
       </div>
