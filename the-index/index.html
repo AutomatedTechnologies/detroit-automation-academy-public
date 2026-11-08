@@ -136,26 +136,28 @@
       <ul class="index-list">
         <li><a href="../software/">Software — Academy-maintained macOS software</a><span class="index-path">/software/</span>
           <p class="index-desc">The macOS Legacy Uplift Program: open-source Mac applications the academy audits, remediates, and keeps building and running on macOS High Sierra (10.13) — the floor for every Academy build. Free, full source under each application&rsquo;s original license, no telemetry. Statuses state exactly where each build stands; nothing is listed as available until a verified build exists.</p></li>
-        <li><a href="../software/kismac/">KisMac — Test Build</a><span class="index-path">/software/kismac/</span>
-          <p class="index-desc">Internal test build — not a release. The download, its SHA-256, and install notes for the Academy fork&rsquo;s CI build of the KisMac Wi-Fi scanner (GPL-2.0), carrying the tranche-1 security remediation. The engine was verified running a live scan on a real High Sierra machine on November 7, 2026.</p></li>
-        <li><a href="../software/">Switchboard — network utility</a><span class="index-path">/software/</span>
-          <p class="index-desc">The academy&rsquo;s own network utility (Network Utility V1; the unified tool ships as Workbench) — Wi-Fi discovery on the KisMac engine, Ping, Netstat, Traceroute and Speed Test diagnostics, a read-only view of AirPort base-station configuration, and a local journal. A staged internal test build was CI-built on November 7, 2026.</p></li>
+        <li><a href="../software/kismac/">KisMac — Wi-Fi scanner</a><span class="index-path">/software/kismac/</span>
+          <p class="index-desc">The Academy fork&rsquo;s CI build of the KisMac Wi-Fi scanner (GPL-2.0), carrying the tranche-1 security remediation — the download, its SHA-256, and install notes are on the linked page. The engine was verified running a live scan on a real High Sierra machine on November 7, 2026. Current build test-build-18 is a release candidate in the Distro catalog.</p></li>
+        <li><a href="../software/">Workbench — network utility</a><span class="index-path">/software/</span>
+          <p class="index-desc">The academy&rsquo;s own network utility (Network Utility V1; the unified tool ships as Workbench) — Wi-Fi discovery on the KisMac engine, Ping, Netstat, Traceroute and Speed Test diagnostics, a read-only view of AirPort base-station configuration, and a local journal. Current build staged-v1-8 is a release candidate in the Distro catalog; a staged build was verified installed on a real High Sierra machine on November 8, 2026.</p></li>
         <li><a href="../software/">Distro — the Academy store for High Sierra</a><span class="index-path">/software/</span>
-          <p class="index-desc">A native application store that delivers Academy-maintained software to High Sierra machines, every download verified against a published SHA-256 before install. In development; its catalog is live with KisMac as the first listing.</p></li>
+          <p class="index-desc">A native application store that delivers Academy-maintained software to High Sierra machines, every download verified against a published SHA-256 before install. Its catalog is live with ten listings — eight of them release candidates, including Distro itself (build distro-test-38).</p></li>
         <li><a href="../software/">Spectacle — window manager</a><span class="index-path">/software/</span>
-          <p class="index-desc">Keyboard-driven window management (MIT). Security audit complete — no critical or high findings — and its updater has been repointed to Academy infrastructure. In development; no build available yet.</p></li>
+          <p class="index-desc">Keyboard-driven window management (MIT). Security audit complete — no critical or high findings — and its updater has been repointed to Academy infrastructure. Current build spectacle-test-7 is a release candidate in the Distro catalog.</p></li>
         <li><a href="../software/">MacDown — Markdown editor</a><span class="index-path">/software/</span>
-          <p class="index-desc">A Markdown editor (MIT). Security audit complete; the rendering-engine migration to WKWebView is designed and under way. In development; no build available yet.</p></li>
+          <p class="index-desc">A Markdown editor (MIT). Security audit complete; the rendering-engine migration to WKWebView is designed and under way. Current build macdown-test-11 is a release candidate in the Distro catalog.</p></li>
         <li><a href="../software/">Sequel Pro — database client</a><span class="index-path">/software/</span>
-          <p class="index-desc">A MySQL database client (MIT). Security audit complete; its end-of-life bundled database library is being replaced with MariaDB Connector/C so it can connect to modern servers. In development; no build available yet.</p></li>
+          <p class="index-desc">A MySQL database client (MIT). Security audit complete; its end-of-life bundled database library is being replaced with MariaDB Connector/C so it can connect to modern servers. Current build sequelpro-test-7 is a release candidate in the Distro catalog.</p></li>
         <li><a href="../software/">SoundDeck — audio editor</a><span class="index-path">/software/</span>
           <p class="index-desc">An audio editor built on Audacity with libVLC playback and conversion (GPL). License review passed, and versions are pinned to the last releases that run on High Sierra. In development; no build available yet.</p></li>
         <li><a href="../software/">AutoDMG — system image builder</a><span class="index-path">/software/</span>
           <p class="index-desc">Builds deployable macOS system images (Apache-2.0). Queued for uplift; work has not begun.</p></li>
+        <li><strong>AirPods Max Diagnostics</strong>
+          <p class="index-desc">An Academy-built diagnostic utility for the AirPods Max (Lightning): USB and audio-path probes, a bus-level USB reset, guided restart and factory-reset flows, and a battery status query. In testing through Distro (build apd-test-4).</p></li>
         <li><strong>Chromium Legacy — for High Sierra</strong>
           <p class="index-desc">A current Chromium build (127.0.6494.0) that runs on High Sierra, delivered November 6, 2026 as a direct download — the modern web on the 10.13 floor. Not yet listed on the Software page.</p></li>
         <li><strong>Muse Desktop — for High Sierra</strong>
-          <p class="index-desc">The Muse desktop app packaged for Intel High Sierra machines (Electron 22.3.27), built November 7, 2026. Packaged and bundle-verified; the launch check on a real High Sierra machine is the remaining step. Not yet listed on the Software page.</p></li>
+          <p class="index-desc">The Muse desktop app packaged for Intel High Sierra machines (Electron 22.3.27), built November 7, 2026. Packaged and bundle-verified, and verified opening on first launch on a real High Sierra machine on November 8, 2026. Available through Distro as a release candidate (build 0.3.0-academy3).</p></li>
       </ul>
     </div>
   </section>
