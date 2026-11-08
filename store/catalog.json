@@ -3,7 +3,7 @@
     {
       "category": "Network",
       "datePublished": null,
-      "description": "The Academy's maintained build of KisMac: passive Wi-Fi scanning, hidden-SSID detection, client mapping, and GPS/KML export, remediated and rebuilt for macOS High Sierra. For network education and authorized testing of your own networks only. Installs as KisMac2.app (bundle identity com.igrsoft.kismac) \u2014 a bundle shared with the Switchboard staged build above: installing one replaces the other.",
+      "description": "The Academy's maintained build of KisMac: passive Wi-Fi scanning, hidden-SSID detection, client mapping, and GPS/KML export, remediated and rebuilt for macOS High Sierra. For network education and authorized testing of your own networks only. Installs as KisMac2.app (bundle identity com.igrsoft.kismac) — a bundle shared with the Switchboard staged build above: installing one replaces the other.",
       "downloadURL": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/test-build-15/KisMac-test.zip",
       "iconURL": "https://detroitautomationacademy.com/store/icons/kismac.png",
       "id": "kismac",
@@ -82,13 +82,13 @@
       "sizeBytes": null,
       "sourceURL": null,
       "status": "in-development",
-      "tagline": "Audio editor with VLC-powered playback and conversion \u2014 in development.",
+      "tagline": "Audio editor with VLC-powered playback and conversion — in development.",
       "version": "0.0.0"
     },
     {
       "category": "Network",
       "datePublished": null,
-      "description": "Staged internal build of the Academy's unified network utility (working name Switchboard), CI-built 2026-11-07 and not yet verified on the High Sierra rig: the remediated KisMac discovery engine hosted in a new unified shell, a read-only AirPort base-station configuration view, Ping / Netstat / Traceroute / Speed Test diagnostics, and a local-only journal. Manage is read-only in this build \u2014 there is no configuration write path. The AirPort management pillar also ships as KisMac V2; Switchboard remains the umbrella product and the parity source of truth. Installs as KisMac2.app under the KisMac bundle identity (com.igrsoft.kismac) \u2014 the same installed bundle as the KisMac entry: installing one replaces the other until the unified build ships under its own Workbench bundle identity.",
+      "description": "Staged internal build of the Academy's unified network utility (working name Switchboard), CI-built 2026-11-07 and not yet verified on the High Sierra rig: the remediated KisMac discovery engine hosted in a new unified shell, a read-only AirPort base-station configuration view, Ping / Netstat / Traceroute / Speed Test diagnostics, and a local-only journal. Manage is read-only in this build — there is no configuration write path. The AirPort management pillar also ships as KisMac V2; Switchboard remains the umbrella product and the parity source of truth. Installs as KisMac2.app under the KisMac bundle identity (com.igrsoft.kismac) — the same installed bundle as the KisMac entry: installing one replaces the other until the unified build ships under its own Workbench bundle identity.",
       "downloadURL": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/staged-v1-1/KisMac-test.zip",
       "iconURL": "https://detroitautomationacademy.com/store/icons/switchboard.png",
       "id": "switchboard",
@@ -99,7 +99,7 @@
       "sizeBytes": 2056451,
       "sourceURL": "https://github.com/AutomatedTechnologies/KisMac2",
       "status": "testing",
-      "tagline": "One network utility: discovery, diagnostics, and read-only base-station view \u2014 staged test build.",
+      "tagline": "One network utility: discovery, diagnostics, and read-only base-station view — staged test build.",
       "version": "staged-v1-1"
     },
     {
@@ -116,13 +116,13 @@
       "sizeBytes": null,
       "sourceURL": null,
       "status": "in-development",
-      "tagline": "Live regional transit for the District of Detroit \u2014 native, no browser, built for High Sierra.",
+      "tagline": "Live regional transit for the District of Detroit — native, no browser, built for High Sierra.",
       "version": "0.0.0"
     },
     {
       "category": "Distribution",
       "datePublished": null,
-      "description": "Distro is the Detroit Automation Academy's native application-store app for macOS High Sierra: it browses the Academy catalog, downloads Academy-maintained apps from the AutomatedTechnologies GitHub org, verifies every download by SHA-256 before install, and carries no privileged helper. Prepared at DAADV3 T1 codification (2026-11-07); not yet published \u2014 publication remains gated on Distro tranche D-T5.",
+      "description": "Distro is the Detroit Automation Academy's native application-store app for macOS High Sierra: it browses the Academy catalog, downloads Academy-maintained apps from the AutomatedTechnologies GitHub org, verifies every download by SHA-256 before install, and carries no privileged helper. Prepared at DAADV3 T1 codification (2026-11-07); not yet published — publication remains gated on Distro tranche D-T5.",
       "downloadURL": null,
       "iconURL": "https://detroitautomationacademy.com/store/icons/distro.png",
       "id": "distro",
@@ -133,8 +133,25 @@
       "sizeBytes": null,
       "sourceURL": "https://github.com/AutomatedTechnologies/distro",
       "status": "in-development",
-      "tagline": "The Academy's application store for High Sierra \u2014 browse, install, and update Academy apps.",
+      "tagline": "The Academy's application store for High Sierra — browse, install, and update Academy apps.",
       "version": "0.0.0"
+    },
+    {
+      "category": "Productivity",
+      "datePublished": "2026-11-08",
+      "description": "The Academy's build of the open-source muse-desktop client (MIT, v0.3.0) on Electron 22.3.27 — the last Electron that runs on macOS 10.13 — so Intel High Sierra machines can run a Muse client at all; the official Muse app requires Apple Silicon and a current macOS. Packaged with the Academy monochrome icon. Unofficial build: not a Meta product and not endorsed by Meta. Unsigned test build; it has not yet been launched on the Academy's High Sierra rig — that first launch is the pending verification gate.",
+      "downloadURL": "https://github.com/AutomatedTechnologies/muse-academy/releases/download/muse-academy-0.3.0/Muse-Academy-1013-x64.zip",
+      "iconURL": "https://detroitautomationacademy.com/store/icons/muse-academy.png",
+      "id": "muse-academy",
+      "license": "MIT",
+      "minMacOS": "10.13",
+      "name": "Muse (Academy Build)",
+      "sha256": "e42b9bdb7fe08d5e58a45cdbbfb63aed19afd148650f018542d87bc63d43ba3e",
+      "sizeBytes": 91237649,
+      "sourceURL": "https://github.com/benjaminkitt/muse-desktop",
+      "status": "testing",
+      "tagline": "The Muse desktop client, rebuilt by the Academy for High Sierra.",
+      "version": "0.3.0-academy1"
     }
   ],
   "catalogVersion": 1,
