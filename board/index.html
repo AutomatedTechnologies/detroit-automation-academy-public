@@ -105,6 +105,18 @@
     font-family:inherit;align-items:baseline;gap:.6rem}
   ul#results button:hover{background:var(--card)}
   ul#results .sid{color:var(--concrete);font-size:.82rem;margin-left:auto;flex:none}
+  /* Nearby stops within the board radius */
+  #nearby{margin:0 0 1.1rem}
+  #nearby .nearby-label{color:var(--concrete);font-size:.82rem;text-transform:uppercase;
+    letter-spacing:.1em;margin:0 0 .4rem}
+  ul#nearby-list{list-style:none;margin:0;padding:0}
+  ul#nearby-list li{border-top:1px solid var(--line)}
+  ul#nearby-list button{display:flex;width:100%;text-align:left;background:none;border:0;
+    color:var(--paper);padding:.6rem .2rem;font-size:.98rem;cursor:pointer;
+    font-family:inherit;align-items:baseline;gap:.6rem}
+  ul#nearby-list button:hover{background:var(--card)}
+  ul#nearby-list button[aria-current="true"]{font-weight:700}
+  ul#nearby-list .sid{color:var(--concrete);font-size:.82rem;margin-left:auto;flex:none}
   .state{color:var(--concrete);font-size:1.05rem;padding:1.2rem 0}
   [hidden]{display:none !important}
 </style>
@@ -134,6 +146,10 @@
       <h2 id="stop-name">Stop</h2>
       <p id="stop-meta"></p>
       <div class="chips" id="route-chips"></div>
+      <div id="nearby" hidden>
+        <p class="nearby-label">Stops within 500 m of you</p>
+        <ul id="nearby-list"></ul>
+      </div>
       <div id="alert-line" hidden></div>
       <ol id="deps"></ol>
       <p id="deps-note"></p>
@@ -148,7 +164,7 @@
 
   <p id="feed-status"></p>
   <footer class="fine">
-<div class="wrap"><p class="build-stamp" style="font-size:.78rem;color:#444;border:1px solid #000;padding:.5rem .75rem;margin:1rem 0;">PAGE STAMP — Published: 2026-11-05 21:42 EST · Agent: Forge · Authorized: J. Spencer Smith, directive of 2026-11-07 (enterprise stamp instantiation, 16:48 EST)</p></div>
+<div class="wrap"><p class="build-stamp" style="font-size:.78rem;color:#444;border:1px solid #000;padding:.5rem .75rem;margin:1rem 0;">PAGE STAMP — Published: 2026-11-08 00:47 EST · Agent: Forge · Authorized: J. Spencer Smith, directive of 2026-11-08 (departure board radius expanded to 500 m)</p></div>
 
     Times: DDOT from the published timetable (feed <span id="feed-ver">S1000182</span>);
     SMART live times from Swiftly trip updates, display only. Positions: DDOT via
@@ -170,7 +186,7 @@ var S = {
   R: R, tt: null, feedVersion: 'S1000182', reg: null, proj: null,
   vehicles: null, vehiclesAt: 0, smartDisplay: null,
   alerts: null, tuIndex: null, tuByRoute: new Map(),
-  stop: null, userLatLon: null, pollCount: 0, booted: false
+  stop: null, userLatLon: null, nearby: [], pollCount: 0, booted: false
 };
 
 function fetchJson(url) {
@@ -293,6 +309,7 @@ function renderStop(st, distM, eyebrow) {
   if (distM != null) bits.push(distText(distM));
   $('stop-meta').textContent = bits.join(' · ');
   $('route-chips').innerHTML = st.r.map(chipHtml).join('');
+  renderNearby();
   var ll = core.unproject(S.proj, st.x, st.z);
   $('plan-link').href = '/live-transit.html?plan&to=' +
     ll.lat.toFixed(6) + ',' + ll.lon.toFixed(6) + '&label=' + encodeURIComponent(st.n || 'Stop');
@@ -396,6 +413,29 @@ function renderDepartures() {
   note.textContent = 'QLINE publishes live positions, not arrival times — the nearest reporting streetcars to this stop.';
 }
 
+/* ---------------- nearby stops (board radius) ---------------- */
+/* S.nearby is the located rider's stops within core.BOARD_RADIUS_M,
+ * nearest first. The strip renders only when the rider has located
+ * and at least one other stop is inside the radius. */
+function renderNearby() {
+  var host = $('nearby'), ul = $('nearby-list');
+  if (!S.nearby || S.nearby.length < 2 || !S.stop) { host.hidden = true; ul.innerHTML = ''; return; }
+  ul.innerHTML = '';
+  S.nearby.forEach(function (entry) {
+    var st = entry.stop;
+    var li = document.createElement('li');
+    var b = document.createElement('button');
+    b.type = 'button';
+    if (st === S.stop) b.setAttribute('aria-current', 'true');
+    b.innerHTML = '<span>' + (st.n || 'Stop') + '</span><span class="sid">' +
+      agencyName(st.seg) + ' · ' + distText(entry.distM) + '</span>';
+    b.addEventListener('click', function () { pickStop(st, entry.distM, 'Nearby stop'); });
+    li.appendChild(b);
+    ul.appendChild(li);
+  });
+  host.hidden = false;
+}
+
 /* ---------------- picking a stop ---------------- */
 function pickStop(st, distM, eyebrow) { renderStop(st, distM, eyebrow); }
 
@@ -409,6 +449,8 @@ function locate() {
   navigator.geolocation.getCurrentPosition(function (pos) {
     if (done) return; done = true; clearTimeout(timer);
     S.userLatLon = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+    S.nearby = core.stopsWithinRadius(S.reg.stops, S.proj, pos.coords.latitude, pos.coords.longitude);
+    if (S.nearby.length) { var first = S.nearby[0]; pickStop(first.stop, first.distM, 'Nearest stop'); return; }
     var near = core.nearestStop(S.reg.stops, S.proj, pos.coords.latitude, pos.coords.longitude);
     if (near) pickStop(near.stop, near.distM, 'Nearest stop');
     else showPicker('No stop could be found near that location — search for your stop instead.');
