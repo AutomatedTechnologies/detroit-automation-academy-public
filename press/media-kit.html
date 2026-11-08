@@ -41,6 +41,15 @@
 figure.shot{margin:1rem 0 .4rem;}
 figure.shot img{width:100%;height:auto;border:1px solid #d8d8d8;border-radius:10px;display:block;}
 figure.shot figcaption{font-size:.88rem;color:#5a5a5a;margin-top:.5rem;line-height:1.5;}
+
+/* --- Media-kit uplift 2026-11-08 (candidate, not yet live) --- */
+.kit-card a.btn-primary,.kit-card a.btn-primary:visited,.kit-card a.btn-primary:hover,.kit-card a.btn-primary:focus-visible{color:#ffffff !important;}
+.asset-box.lockup{flex:2 1 340px;}
+.asset-box .icon-previews{display:flex;gap:1.25rem;justify-content:center;align-items:flex-end;margin:0 auto .7rem;}
+.asset-box .icon-previews figure{margin:0;text-align:center;}
+.asset-box .icon-previews img{margin:0 auto .35rem;}
+.asset-box .icon-previews figcaption{font-size:.75rem;color:#5a5a5a;}
+.swatch .chip{border-bottom:1px solid #d8d8d8;}
 </style>
 <link rel="canonical" href="https://www.detroitautomationacademy.com/press/media-kit.html">
 <meta name="robots" content="index, follow, max-image-preview:large">
@@ -126,23 +135,26 @@ figure.shot figcaption{font-size:.88rem;color:#5a5a5a;margin-top:.5rem;line-heig
           <img src="../assets/logo.webp" alt="Detroit Automation Academy — Forge D logo" width="240">
           <p class="dl">Primary mark (&ldquo;Forge D&rdquo;)<br><a href="../assets/logo.webp" download>Download WebP</a></p>
         </div>
-        <div class="asset-box">
+        <div class="asset-box lockup">
           <img src="../assets/DAA_Logo_Horizontal.svg" alt="Detroit Automation Academy — horizontal lockup">
           <p class="dl">Horizontal lockup<br><a href="../assets/DAA_Logo_Horizontal.svg" download>Download SVG</a> · <a href="../branding/DAA_Logo_Horizontal.png" download>Download PNG</a></p>
         </div>
         <div class="asset-box">
-          <img src="../assets/favicon-32.png" alt="Detroit Automation Academy favicon" width="32">
+          <div class="icon-previews">
+            <figure><img src="../assets/favicon-32.png" alt="Detroit Automation Academy favicon, enlarged" width="96" style="image-rendering:pixelated;border:1px solid #d8d8d8;"><figcaption>Favicon, shown at 96px<br>(served at 32px)</figcaption></figure>
+            <figure><img src="../assets/apple-touch-icon.png" alt="Detroit Automation Academy touch icon" width="96"><figcaption>Touch icon, shown at 96px<br>(served at 180px)</figcaption></figure>
+          </div>
           <p class="dl">Favicon / touch icon<br><a href="../assets/favicon-32.png" download>favicon-32.png</a> · <a href="../assets/apple-touch-icon.png" download>apple-touch-icon.png</a></p>
         </div>
       </div>
       <h3>Site colors</h3>
-      <p>The colors defined in this site's own stylesheet:</p>
+      <p>The colors defined in this site's own stylesheet, labeled by the role each one plays there (the stylesheet's Concrete token is the same #5a5a5a as Forge):</p>
       <div class="swatches">
-        <div class="swatch"><div class="chip" style="background:#5a5a5a !important;"></div><div class="lab">Forge<br>#5a5a5a</div></div>
-        <div class="swatch"><div class="chip" style="background:#111111 !important;"></div><div class="lab">Amber<br>#111111</div></div>
-        <div class="swatch"><div class="chip" style="background:#222222 !important;"></div><div class="lab">Paper<br>#222222</div></div>
-        <div class="swatch"><div class="chip" style="background:#ffffff !important;"></div><div class="lab">Midnight<br>#ffffff</div></div>
-        <div class="swatch"><div class="chip" style="background:#5a5a5a !important;"></div><div class="lab">Concrete<br>#5a5a5a</div></div>
+        <div class="swatch"><div class="chip" style="background:#5a5a5a !important;"></div><div class="lab">Forge — accent<br>#5a5a5a</div></div>
+        <div class="swatch"><div class="chip" style="background:#111111 !important;"></div><div class="lab">Ink — headings<br>#111111</div></div>
+        <div class="swatch"><div class="chip" style="background:#222222 !important;"></div><div class="lab">Text<br>#222222</div></div>
+        <div class="swatch"><div class="chip" style="background:#f2f2f2 !important;"></div><div class="lab">Card surface<br>#f2f2f2</div></div>
+        <div class="swatch"><div class="chip" style="background:#ffffff !important;"></div><div class="lab">Background<br>#ffffff</div></div>
       </div>
       <h3>Type</h3>
       <p>Space Grotesk for display type; Inter for text — the typefaces named in this site's stylesheet.</p>
@@ -185,7 +197,7 @@ figure.shot figcaption{font-size:.88rem;color:#5a5a5a;margin-top:.5rem;line-heig
 </main>
 
 <footer class="footer">
-<div class="wrap"><p class="build-stamp" style="font-size:.78rem;color:#444;border:1px solid #000;padding:.5rem .75rem;margin:1rem 0;">PAGE STAMP — Published: 2026-11-05 22:17 EST · Agent: Forge · Authorized: J. Spencer Smith, directive of 2026-11-07 (enterprise stamp instantiation, 16:48 EST)</p></div>
+<div class="wrap"><p class="build-stamp" style="font-size:.78rem;color:#444;border:1px solid #000;padding:.5rem .75rem;margin:1rem 0;">PAGE STAMP — Published: 2026-11-08 00:47 EST · Agent: Forge · Authorized: J. Spencer Smith, directive of 2026-11-08 (media-kit uplift publish — blank button, cutoff lockup, brand assets)</p></div>
 
   <div class="wrap footer-inner">
     <div class="footer-brand">
