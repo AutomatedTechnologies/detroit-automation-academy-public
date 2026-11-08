@@ -61,6 +61,27 @@
     border:1px solid var(--line);border-radius:999px;padding:.28rem .7rem .28rem .5rem;
     font-size:.875rem;font-weight:600}
   .chip i{width:.7rem;height:.7rem;border-radius:3px;display:inline-block;flex:none}
+  button.chip{color:var(--paper);font-family:inherit;cursor:pointer}
+  button.chip:hover{filter:brightness(1.25)}
+  button.chip .go{color:var(--concrete);font-weight:400}
+  #chip-note{color:var(--concrete);font-size:.9rem;line-height:1.5;margin:-.4rem 0 1.1rem}
+  #chip-note .btn{margin-left:.6rem;padding:.35rem .8rem;font-size:.9rem}
+  /* In-place live-map stage: the map rises over the board in the same
+     page; the board underneath is never destroyed or reloaded. */
+  #map-stage{position:fixed;inset:0;z-index:60;background:var(--midnight);
+    transform:translateY(100%);visibility:hidden;
+    transition:transform .26s ease,visibility 0s .26s}
+  #map-stage.open{transform:translateY(0);visibility:visible;
+    transition:transform .26s ease}
+  #map-stage iframe{width:100%;height:100%;border:0;display:block}
+  #map-stage-status{position:absolute;left:0;right:0;bottom:0;margin:0;
+    padding:.7rem 1.1rem;background:rgba(16,16,16,.92);color:var(--paper);
+    font-size:.95rem;border-top:1px solid var(--line)}
+  body.map-open .wrap{transform:scale(.96);opacity:.4}
+  .wrap{transition:transform .26s ease,opacity .26s ease}
+  @media (prefers-reduced-motion: reduce){
+    #map-stage,.wrap{transition:none}
+  }
   #alert-line{background:#222222;border:1px solid #555555;color:#dadada;
     border-radius:var(--radius);padding:.6rem .8rem;font-size:.9rem;margin:0 0 1rem}
   ol#deps{list-style:none;margin:0;padding:0}
@@ -142,6 +163,7 @@
       <h2 id="stop-name">Stop</h2>
       <p id="stop-meta"></p>
       <div class="chips" id="route-chips"></div>
+      <p id="chip-note" hidden></p>
       <div id="nearby" hidden>
         <p class="nearby-label">Stops within 500 m of you</p>
         <ul id="nearby-list"></ul>
@@ -160,7 +182,7 @@
 
   <p id="feed-status"></p>
   <footer class="fine">
-<div class="wrap"><p class="build-stamp" style="font-size:.78rem;color:#444;border:1px solid #000;padding:.5rem .75rem;margin:1rem 0;">PAGE STAMP — Published: 2026-11-08 01:18 EST · Agent: Forge · Authorized: J. Spencer Smith, directive of 2026-11-08 (departure board de-duplication — secondary line only when it adds information)</p></div>
+<div class="wrap"><p class="build-stamp" style="font-size:.78rem;color:#444;border:1px solid #000;padding:.5rem .75rem;margin:1rem 0;">PAGE STAMP — Published: 2026-11-08 03:20 EST · Agent: Forge · Authorized: J. Spencer Smith, directive of 2026-11-08 (Greenfield-10 chip → live bus endpoint, in-place map transition)</p></div>
 
     Times: DDOT from the published timetable (feed <span id="feed-ver">S1000182</span>);
     SMART live times from Swiftly trip updates, display only. Positions: DDOT via
@@ -170,6 +192,11 @@
     <a href="/dashboard.html">dashboard</a>. Positions poll continuously and publish about every five minutes; the map dead-reckons between updates.
   </footer>
 </div>
+
+<section id="map-stage" aria-hidden="true">
+  <iframe id="live-frame" title="Live Transit Detroit — live map" src="about:blank"></iframe>
+  <p id="map-stage-status" role="status" hidden></p>
+</section>
 
 <script type="module">
 import * as R from '/raptor.js';
@@ -182,7 +209,8 @@ var S = {
   R: R, tt: null, feedVersion: 'S1000182', reg: null, proj: null,
   vehicles: null, vehiclesAt: 0, smartDisplay: null,
   alerts: null, tuIndex: null, tuByRoute: new Map(),
-  stop: null, userLatLon: null, nearby: [], pollCount: 0, booted: false
+  stop: null, userLatLon: null, nearby: [], pollCount: 0, booted: false,
+  lastHeads: {}, mapReady: false, mapQueued: null, mapReturnFocus: null, mapMissNote: null
 };
 
 function fetchJson(url) {
@@ -292,8 +320,10 @@ function renderAlertLine(st) {
 function chipHtml(rid) {
   var rec = S.reg.routesById[String(rid)];
   var color = rec ? rec.color : '#f2f2f2';
-  return '<span class="chip"><i style="background:' + color + '"></i>' +
-    core.routeLabel(S.reg.routeNames, String(rid)) + '</span>';
+  var label = core.routeLabel(S.reg.routeNames, String(rid));
+  return '<button type="button" class="chip" data-rid="' + String(rid) + '"' +
+    ' aria-label="See the live ' + label + ' bus on the map">' +
+    '<i style="background:' + color + '"></i>' + label + ' <span class="go">›</span></button>';
 }
 
 function renderStop(st, distM, eyebrow) {
@@ -321,6 +351,115 @@ function renderStop(st, distM, eyebrow) {
     // SMART derivative files may not be in hand yet — fetch, re-render.
     loadLive().then(function () { if (S.stop === st) renderDepartures(); });
   }
+}
+
+/* ---------------- board → live map, in place ----------------
+ * A route chip resolves to one live endpoint (core.liveEndpointForRoute)
+ * and the live map rises as a stage inside this page — no navigation,
+ * no reload; the board underneath keeps its stop, scroll and polls.
+ * Protocol + camera choreography: board-to-map-transition/DESIGN.md. */
+function mapFrame() { return $('live-frame'); }
+
+function preloadMapFrame() {
+  var f = mapFrame();
+  if (!f || f.src !== 'about:blank') return;
+  if (navigator.connection && navigator.connection.saveData) return; // load on first click instead
+  f.src = '/live-transit.html?embed=board';
+}
+
+function postToMap(msg) {
+  var f = mapFrame();
+  if (S.mapReady && f && f.contentWindow) f.contentWindow.postMessage(msg, window.location.origin);
+  else S.mapQueued = msg; // flushed on ltd:ready
+}
+
+function enterMapStage(statusText) {
+  var stage = $('map-stage'), st = $('map-stage-status');
+  st.textContent = statusText || '';
+  st.hidden = !statusText;
+  stage.classList.add('open');
+  stage.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('map-open');
+  preloadMapFrame(); // no-op when already loaded; the on-demand path
+}
+
+function exitMapStage() {
+  var stage = $('map-stage');
+  stage.classList.remove('open');
+  stage.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('map-open');
+  $('map-stage-status').hidden = true;
+  if (S.mapReturnFocus && document.contains(S.mapReturnFocus)) S.mapReturnFocus.focus();
+  S.mapReturnFocus = null;
+  if (S.mapMissNote) { showChipNote(S.mapMissNote, false); S.mapMissNote = null; }
+}
+
+function showChipNote(text, withStopBtn) {
+  var note = $('chip-note');
+  note.innerHTML = '';
+  note.appendChild(document.createTextNode(text));
+  if (withStopBtn && S.stop) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn'; b.textContent = 'Show this stop on the map';
+    b.addEventListener('click', function () {
+      S.mapReturnFocus = b;
+      postToMap({ type: 'ltd:show-stop', intent: { stopId: String(S.stop.id), stopX: S.stop.x, stopZ: S.stop.z } });
+      enterMapStage('Going to ' + (S.stop.n || 'your stop') + ' on the live map…');
+    });
+    note.appendChild(b);
+  }
+  note.hidden = false;
+}
+
+function chipClick(rid, btn) {
+  var st = S.stop;
+  if (!st) return;
+  var label = core.routeLabel(S.reg.routeNames, String(rid));
+  var rec = S.reg.routesById[String(rid)];
+  var ep = S.vehicles ? core.liveEndpointForRoute(
+    S.vehicles.vehicles, S.proj, rec ? rec.paths : null, st, rid,
+    S.lastHeads[String(rid)] || null, Date.now()) : null;
+  if (!ep) {
+    showChipNote(st.seg === 'smart'
+      ? 'SMART publishes live positions only, and no ' + label + ' bus can be picked from the feed right now.'
+      : 'No live ' + label + ' bus is reporting right now.', true);
+    return;
+  }
+  $('chip-note').hidden = true;
+  S.mapReturnFocus = btn;
+  var v = ep.vehicle;
+  postToMap({ type: 'ltd:show-bus', intent: {
+    vehicleId: String(v.vehicle_id), routeId: String(rid),
+    stopId: String(st.id), stopX: st.x, stopZ: st.z, passed: ep.passed } });
+  enterMapStage('Going to live Bus ' + v.vehicle_id + ' · ' + label +
+    (v.destination ? ' to ' + v.destination : '') +
+    (v.speed_mph != null ? ' · ' + Math.round(v.speed_mph) + ' mph' : '') +
+    (ep.passed ? ' · past this stop' : '') + '…');
+}
+
+function wireMapStage() {
+  $('route-chips').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button.chip') : null;
+    if (b) chipClick(b.getAttribute('data-rid'), b);
+  });
+  window.addEventListener('message', function (e) {
+    if (e.origin !== window.location.origin) return;
+    var f = mapFrame();
+    if (!f || e.source !== f.contentWindow) return;
+    var d = e.data || {};
+    if (d.type === 'ltd:ready') {
+      S.mapReady = true;
+      if (S.mapQueued) { var q = S.mapQueued; S.mapQueued = null; postToMap(q); }
+    } else if (d.type === 'ltd:bus-shown') {
+      $('map-stage-status').hidden = true;
+    } else if (d.type === 'ltd:intent-missed') {
+      S.mapMissNote = 'That bus stopped reporting before the map could open it — the map is showing your stop instead.';
+    } else if (d.type === 'ltd:close') {
+      exitMapStage();
+    }
+  });
+  var idle = window.requestIdleCallback || function (fn) { return setTimeout(fn, 1500); };
+  idle(preloadMapFrame);
 }
 
 function depRowHtml(r, cls, timeStr, clockStr, tagLive, extra) {
@@ -360,6 +499,10 @@ function renderDepartures() {
       return;
     }
     var dp = core.detroitParts(nowMs);
+    S.lastHeads = {};
+    res.rows.forEach(function (r) {
+      if (r.head && !S.lastHeads[String(r.rid)]) S.lastHeads[String(r.rid)] = r.head;
+    });
     res.rows.forEach(function (r, i) {
       var dSec = r.eta - dp.sec;
       var clock = R.fmtClockSec(((r.eta % 86400) + 86400) % 86400);
@@ -509,6 +652,7 @@ function startLoops() {
 
 function boot() {
   wirePicker();
+  wireMapStage();
   showState('Loading the board…');
   loadStatics().then(function () {
     return loadLive();
