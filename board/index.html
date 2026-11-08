@@ -160,7 +160,7 @@
 
   <p id="feed-status"></p>
   <footer class="fine">
-<div class="wrap"><p class="build-stamp" style="font-size:.78rem;color:#444;border:1px solid #000;padding:.5rem .75rem;margin:1rem 0;">PAGE STAMP — Published: 2026-11-08 01:04 EST · Agent: Forge · Authorized: J. Spencer Smith, directive of 2026-11-08 (departure board type standardization — Prototype C, time right)</p></div>
+<div class="wrap"><p class="build-stamp" style="font-size:.78rem;color:#444;border:1px solid #000;padding:.5rem .75rem;margin:1rem 0;">PAGE STAMP — Published: 2026-11-08 01:18 EST · Agent: Forge · Authorized: J. Spencer Smith, directive of 2026-11-08 (departure board de-duplication — secondary line only when it adds information)</p></div>
 
     Times: DDOT from the published timetable (feed <span id="feed-ver">S1000182</span>);
     SMART live times from Swiftly trip updates, display only. Positions: DDOT via
@@ -327,13 +327,19 @@ function depRowHtml(r, cls, timeStr, clockStr, tagLive, extra) {
   var rec = S.reg.routesById[String(r.rid)];
   var color = rec ? rec.color : '#f2f2f2';
   if (/AM|PM/.test(timeStr)) cls += ' clocktime';
+  // The secondary line renders only when it adds information: when the
+  // main time already IS the clock time, repeating it underneath is a
+  // duplicate — show only any delay text; otherwise show clock + delay.
+  var sub;
+  if (timeStr === clockStr) sub = extra ? extra.replace(/^\s*—\s*/, '') : '';
+  else sub = clockStr + (extra || '');
   return '<li class="' + cls + '">' +
     '<span class="mins">' + timeStr + '</span>' +
     '<span class="what"><span class="rname"><i class="dot" style="background:' + color + '"></i>' +
     core.routeLabel(S.reg.routeNames, String(r.rid)) +
     (r.head ? ' · ' + r.head : '') +
     ' <span class="tag' + (tagLive ? ' live' : '') + '">' + (tagLive ? 'Live' : 'Scheduled') + '</span></span>' +
-    '<span class="clock">' + clockStr + (extra || '') + '</span></span></li>';
+    (sub ? '<span class="clock">' + sub + '</span>' : '') + '</span></li>';
 }
 
 function renderDepartures() {
