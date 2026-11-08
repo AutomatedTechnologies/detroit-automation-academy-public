@@ -88,19 +88,19 @@
     {
       "category": "Network",
       "datePublished": null,
-      "description": "Staged internal build of the Academy's unified network utility (working name Switchboard), CI-built 2026-11-08 and not yet verified on the High Sierra rig: the remediated KisMac discovery engine hosted in a new unified shell, a read-only AirPort base-station configuration view, Ping / Netstat / Traceroute / Speed Test diagnostics, and a local-only journal. Manage is read-only in this build — there is no configuration write path. The AirPort management pillar also ships as KisMac V2; Switchboard remains the umbrella product and the parity source of truth. Installs as Workbench.app under its own Academy bundle identity (com.detroitautomationacademy.workbench) and carries the Academy audit entry, distinct from KisMac — the two install side by side. (The earlier staged-v1-1 build shared the KisMac bundle identity and installing one replaced the other; corrected in staged-v1-2.)",
-      "downloadURL": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/staged-v1-3/Workbench-test.zip",
+      "description": "Staged internal build of the Academy's unified network utility (working name Switchboard), CI-built 2026-11-08; launched on the High Sierra rig 2026-11-08: the remediated KisMac discovery engine hosted in a new unified shell, a read-only AirPort base-station configuration view, Ping / Netstat / Traceroute / Speed Test diagnostics, and a local-only journal. Manage is read-only in this build — there is no configuration write path. The AirPort management pillar also ships as KisMac V2; Switchboard remains the umbrella product and the parity source of truth. Installs as Workbench.app under its own Academy bundle identity (com.detroitautomationacademy.workbench) and carries the Academy audit entry, distinct from KisMac — the two install side by side. (The earlier staged-v1-1 build shared the KisMac bundle identity and installing one replaced the other; corrected in staged-v1-2.) The Networks header now reads “Workbench” — staged-v1-4 is the surgical repair of the inherited “KisMac v0.3.4” header (ScanController), one line, nothing else changed.",
+      "downloadURL": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/staged-v1-4/Workbench-test.zip",
       "iconURL": "https://detroitautomationacademy.com/store/icons/switchboard.png",
       "id": "switchboard",
       "license": "GPL-2.0",
       "minMacOS": "10.13",
       "name": "Switchboard",
-      "sha256": "7d280a582fc6cec947c26ebcd32a791a2761a9dc6725e9a2ed700f9374164ae7",
-      "sizeBytes": 2070414,
+      "sha256": "69106ae05a95756dbda3f8b88ac35bdb47e4607d9c32fb097adb97616ddf0a65",
+      "sizeBytes": 2070193,
       "sourceURL": "https://github.com/AutomatedTechnologies/KisMac2",
       "status": "release-candidate",
       "tagline": "One network utility: discovery, diagnostics, and read-only base-station view — staged test build.",
-      "version": "staged-v1-3"
+      "version": "staged-v1-4"
     },
     {
       "category": "Transit",
