@@ -91,6 +91,28 @@ export function nearestStop(stops, proj, lat, lon) {
   return best ? { stop: best, distM: bd } : null;
 }
 
+/* The board's catchment radius (J directive, 2026-11-08): when the
+ * rider locates, every stop within this radius of the rider is on
+ * the board — the nearest is shown first, the rest one tap away. */
+export var BOARD_RADIUS_M = 500;
+
+/* All stops within radiusM of a lat/lon (default BOARD_RADIUS_M),
+ * nearest first: [{stop, distM}]. Same projected-metre distance as
+ * nearestStop, so the two always agree on the nearest stop. */
+export function stopsWithinRadius(stops, proj, lat, lon, radiusM) {
+  var r = (radiusM == null ? BOARD_RADIUS_M : radiusM);
+  var p = projectLatLon(proj, lat, lon);
+  var out = [];
+  for (var i = 0; i < stops.length; i++) {
+    var s = stops[i];
+    if (s.x == null || s.z == null) continue;
+    var d = Math.hypot(s.x - p[0], s.z - p[1]);
+    if (d <= r) out.push({ stop: s, distM: d });
+  }
+  out.sort(function (a, b) { return a.distM - b.distM; });
+  return out;
+}
+
 export function searchStops(stops, q, limit) {
   q = String(q || '').trim().toLowerCase();
   if (!q) return [];
