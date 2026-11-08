@@ -5593,6 +5593,94 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     updateTripMarkers();
     maybeReplan();
   }
+  // --- Board handoff (Departure Board → live bus, in place) -----------
+  // The board hosts this page as a stage and posts an intent: open one
+  // live endpoint (a vehicle), starting the camera at the rider's stop.
+  // No new camera code: the stop framing is vantageForStop landed
+  // instantly (the landing glideTo's reduced-motion branch performs),
+  // then the map's own showBus() takes the camera-memory snapshot at
+  // that framing and glides via TransitionEngine to the bus — so
+  // closing the bus card glides back to the stop framing for free.
+  // Protocol: board-to-map-transition/DESIGN.md §6.
+  var boardIntent = null; // {kind:'bus'|'stop', vehicleId, stopX, stopZ, pollsWaited}
+  var boardReadySent = false;
+  var boardEmbed = /(^|[?&])embed=board(&|$)/.test(location.search);
+  function boardPost(msg) {
+    if (!boardEmbed || !window.parent || window.parent === window) return;
+    try { window.parent.postMessage(msg, location.origin); } catch (e) {}
+  }
+  function boardVehicleById(vid) {
+    if (!lastVehicles) return null;
+    for (var i = 0; i < lastVehicles.length; i++) {
+      if (String(lastVehicles[i].vehicle_id) === String(vid)) return lastVehicles[i];
+    }
+    return null;
+  }
+  function boardStopFraming(x, z) {
+    var v = TransitionEngine.vantageForStop(x, 20, z);
+    camera.position.copy(v.pos);
+    controls.target.copy(v.tgt);
+    if (typeof controls.update === 'function') controls.update();
+  }
+  function applyBoardIntent() {
+    if (boardEmbed && !boardReadySent) { boardReadySent = true; boardPost({ type: 'ltd:ready' }); }
+    if (!boardIntent) return;
+    var it = boardIntent;
+    if (it.kind === 'stop') {
+      boardIntent = null;
+      boardStopFraming(it.stopX, it.stopZ);
+      var idx = (stopData && isFinite(it.stopX) && isFinite(it.stopZ)) ? nearestStopIdx(it.stopX, it.stopZ) : -1;
+      if (idx >= 0 && stopData[idx]) showStop(stopData[idx]);
+      return;
+    }
+    var v = boardVehicleById(it.vehicleId);
+    if (!v) {
+      it.pollsWaited = (it.pollsWaited || 0) + 1;
+      if (it.pollsWaited > 2) { // the endpoint left the feed: land on the stop, say so
+        boardIntent = null;
+        boardStopFraming(it.stopX, it.stopZ);
+        boardPost({ type: 'ltd:intent-missed', vehicleId: String(it.vehicleId) });
+      }
+      return;
+    }
+    boardIntent = null;
+    boardStopFraming(it.stopX, it.stopZ);
+    // Brief hold on the stop framing, then the standing bus funnel:
+    // camMemTake snapshots here, TransitionEngine glides to the bus.
+    setTimeout(function () {
+      var vv = boardVehicleById(it.vehicleId);
+      if (vv) { showBus(vv); boardPost({ type: 'ltd:bus-shown', vehicleId: String(it.vehicleId) }); }
+    }, 90);
+  }
+  window.addEventListener('message', function (e) {
+    if (e.origin !== location.origin || e.source !== window.parent) return;
+    var d = e.data || {}, it = d.intent || {};
+    if (d.type === 'ltd:show-bus' && it.vehicleId) {
+      boardIntent = { kind: 'bus', vehicleId: String(it.vehicleId),
+        stopX: +it.stopX, stopZ: +it.stopZ, pollsWaited: 0 };
+      applyBoardIntent();
+    } else if (d.type === 'ltd:show-stop') {
+      boardIntent = { kind: 'stop', stopX: +it.stopX, stopZ: +it.stopZ, pollsWaited: 0 };
+      applyBoardIntent();
+    }
+  });
+  // The same intent as a URL (non-embed arrivals):
+  // ?bus=<vehicle_id>&sx=<stop x>&sz=<stop z>
+  (function () {
+    var bus = planParam('bus');
+    if (!bus) return;
+    var sx = parseFloat(planParam('sx')), sz = parseFloat(planParam('sz'));
+    boardIntent = { kind: 'bus', vehicleId: String(bus),
+      stopX: isFinite(sx) ? sx : 0, stopZ: isFinite(sz) ? sz : 0, pollsWaited: 0 };
+  })();
+  if (boardEmbed) {
+    var boardBackBtn = document.createElement('button');
+    boardBackBtn.type = 'button';
+    boardBackBtn.textContent = '‹ Board';
+    boardBackBtn.style.cssText = 'position:fixed;top:10px;left:10px;z-index:9998;background:#191919;color:#f2f2f2;border:1px solid rgba(242,242,242,.18);border-radius:999px;padding:.5rem 1rem;font:600 .95rem system-ui,sans-serif;cursor:pointer';
+    boardBackBtn.addEventListener('click', function () { boardPost({ type: 'ltd:close' }); });
+    document.body.appendChild(boardBackBtn);
+  }
   function updateTripMarkers() {
     if (tripFrom) {
       var p = tripFrom.kind === 'stop' ? stopData[tripFrom.idx] : tripFrom;
@@ -9995,6 +10083,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         if (typeof window.__setRideVehicles === 'function') window.__setRideVehicles(d.vehicles);
         liveCounts = countByRoute(d.vehicles); // raw counts first: filters must not starve the state engine
         var n = updateBuses(d.vehicles);
+        try { applyBoardIntent(); } catch (e) {}
         if (updateRunningState()) {
           applyFilters();   // re-applies visibility + dimming, re-renders buses
           syncFilterUI();
