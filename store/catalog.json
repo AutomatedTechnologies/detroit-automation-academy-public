@@ -3,7 +3,7 @@
     {
       "category": "Network",
       "datePublished": null,
-      "description": "The Academy's maintained build of KisMac: passive Wi-Fi scanning, hidden-SSID detection, client mapping, and GPS/KML export, remediated and rebuilt for macOS High Sierra. For network education and authorized testing of your own networks only.",
+      "description": "The Academy's maintained build of KisMac: passive Wi-Fi scanning, hidden-SSID detection, client mapping, and GPS/KML export, remediated and rebuilt for macOS High Sierra. For network education and authorized testing of your own networks only. Installs as KisMac2.app (bundle identity com.igrsoft.kismac) \u2014 a bundle shared with the Switchboard staged build above: installing one replaces the other.",
       "downloadURL": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/test-build-15/KisMac-test.zip",
       "iconURL": "https://detroitautomationacademy.com/store/icons/kismac.png",
       "id": "kismac",
@@ -88,7 +88,7 @@
     {
       "category": "Network",
       "datePublished": null,
-      "description": "Staged internal build of the Academy's unified network utility (working name Switchboard), CI-built 2026-11-07 and not yet verified on the High Sierra rig: the remediated KisMac discovery engine hosted in a new unified shell, a read-only AirPort base-station configuration view, Ping / Netstat / Traceroute / Speed Test diagnostics, and a local-only journal. Manage is read-only in this build \u2014 there is no configuration write path. The AirPort management pillar also ships as KisMac V2; Switchboard remains the umbrella product and the parity source of truth.",
+      "description": "Staged internal build of the Academy's unified network utility (working name Switchboard), CI-built 2026-11-07 and not yet verified on the High Sierra rig: the remediated KisMac discovery engine hosted in a new unified shell, a read-only AirPort base-station configuration view, Ping / Netstat / Traceroute / Speed Test diagnostics, and a local-only journal. Manage is read-only in this build \u2014 there is no configuration write path. The AirPort management pillar also ships as KisMac V2; Switchboard remains the umbrella product and the parity source of truth. Installs as KisMac2.app under the KisMac bundle identity (com.igrsoft.kismac) \u2014 the same installed bundle as the KisMac entry: installing one replaces the other until the unified build ships under its own Workbench bundle identity.",
       "downloadURL": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/staged-v1-1/KisMac-test.zip",
       "iconURL": "https://detroitautomationacademy.com/store/icons/switchboard.png",
       "id": "switchboard",
