@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>The Index — Detroit Automation Academy</title>
-<meta name="description" content="The Index: every page on the Detroit Automation Academy site — the map, the stories, the programs, and the fine print — in one place.">
+<meta name="description" content="The Index: every page on the Detroit Automation Academy site — the map, the stories, the software, the programs, and the fine print — in one place.">
 <meta name="author" content="Justin Spencer Smith">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
 <link rel="icon" type="image/webp" href="../assets/logo.webp">
@@ -26,7 +26,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Detroit Automation Academy">
 <meta property="og:title" content="The Index — Detroit Automation Academy">
-<meta property="og:description" content="Every page on the Detroit Automation Academy site — the map, the stories, the programs, and the fine print — in one place.">
+<meta property="og:description" content="Every page on the Detroit Automation Academy site — the map, the stories, the software, the programs, and the fine print — in one place.">
 <meta property="og:url" content="https://www.detroitautomationacademy.com/the-index/">
 <meta property="og:image" content="https://www.detroitautomationacademy.com/assets/logo.webp">
 <meta name="twitter:card" content="summary">
@@ -47,7 +47,7 @@
     <div class="hero-inner">
       <p class="eyebrow">The Index</p>
       <h1 id="index-heading">Everything on this site, <span class="accent">in one place.</span></h1>
-      <p class="lede">Every section and page of the Detroit Automation Academy site, organized the way the footer organizes it — Ride, Read, Learn &amp; work, Trust. If it is listed here, it exists. Start at the <a href="../">home page</a> (the Now Board), or jump straight to what you need.</p>
+      <p class="lede">Every section and page of the Detroit Automation Academy site, organized the way the footer organizes it — Ride, Read, Software, Learn &amp; work, Trust. If it is listed here, it exists. Start at the <a href="../">home page</a> (the Now Board), or jump straight to what you need.</p>
     </div>
   </section>
 
@@ -81,6 +81,7 @@
             <li><a href="../signal/edition-05/">Edition 05 — Every Stop, Counted</a></li>
             <li><a href="../signal/edition-06/">Edition 06 — The Week We Audited Ourselves</a></li>
             <li><a href="../signal/edition-07/">Edition 07 — Detroit Votes This Week</a></li>
+            <li><a href="../signal/edition-08/">Edition 08 — The Machine That Corrects Itself</a></li>
             <li><a href="../signal/detroit-2126-01/">Detroit 2126, 01 — The Ride Is Free</a></li>
             <li><a href="../signal/detroit-2126-02/">Detroit 2126, 02 — Who Is It For?</a></li>
             <li><a href="../signal/special-accessibility/">Special — What the Pictures Say Now</a></li>
@@ -91,6 +92,8 @@
             <li><a href="../signal/special-triumphant-return/">Special — The Triumphant Return</a></li>
             <li><a href="../signal/special-uplift-defined/">Special — Uplift, Defined</a></li>
           </ul></li>
+        <li><a href="../signal-animation.html">The Signal — Forge D Animation</a><span class="index-path">/signal-animation.html</span>
+          <p class="index-desc">The Forge D mark for The Signal, animated — a standalone page.</p></li>
         <li><a href="../live-transit-detroit/">Live Transit Detroit — stories</a><span class="index-path">/live-transit-detroit/</span>
           <p class="index-desc">The story archive behind the live map.</p>
           <ul class="index-sub">
@@ -125,7 +128,38 @@
     </div>
   </section>
 
-  <section class="section" aria-labelledby="learn-heading">
+  <section class="section" aria-labelledby="software-heading">
+    <div class="wrap">
+      <p class="kicker">Software</p>
+      <h2 id="software-heading">Software for the <span class="accent">High Sierra</span> floor.</h2>
+      <ul class="index-list">
+        <li><a href="../software/">Software — Academy-maintained macOS software</a><span class="index-path">/software/</span>
+          <p class="index-desc">The macOS Legacy Uplift Program: open-source Mac applications the academy audits, remediates, and keeps building and running on macOS High Sierra (10.13) — the floor for every Academy build. Free, full source under each application&rsquo;s original license, no telemetry. Statuses state exactly where each build stands; nothing is listed as available until a verified build exists.</p></li>
+        <li><a href="../software/kismac/">KisMac — Test Build</a><span class="index-path">/software/kismac/</span>
+          <p class="index-desc">Internal test build — not a release. The download, its SHA-256, and install notes for the Academy fork&rsquo;s CI build of the KisMac Wi-Fi scanner (GPL-2.0), carrying the tranche-1 security remediation. The engine was verified running a live scan on a real High Sierra machine on November 7, 2026.</p></li>
+        <li><a href="../software/">Switchboard — network utility</a><span class="index-path">/software/</span>
+          <p class="index-desc">The academy&rsquo;s own network utility (Network Utility V1; the unified tool ships as Workbench) — Wi-Fi discovery on the KisMac engine, Ping, Netstat, Traceroute and Speed Test diagnostics, a read-only view of AirPort base-station configuration, and a local journal. A staged internal test build was CI-built on November 7, 2026.</p></li>
+        <li><a href="../software/">Distro — the Academy store for High Sierra</a><span class="index-path">/software/</span>
+          <p class="index-desc">A native application store that delivers Academy-maintained software to High Sierra machines, every download verified against a published SHA-256 before install. In development; its catalog is live with KisMac as the first listing.</p></li>
+        <li><a href="../software/">Spectacle — window manager</a><span class="index-path">/software/</span>
+          <p class="index-desc">Keyboard-driven window management (MIT). Security audit complete — no critical or high findings — and its updater has been repointed to Academy infrastructure. In development; no build available yet.</p></li>
+        <li><a href="../software/">MacDown — Markdown editor</a><span class="index-path">/software/</span>
+          <p class="index-desc">A Markdown editor (MIT). Security audit complete; the rendering-engine migration to WKWebView is designed and under way. In development; no build available yet.</p></li>
+        <li><a href="../software/">Sequel Pro — database client</a><span class="index-path">/software/</span>
+          <p class="index-desc">A MySQL database client (MIT). Security audit complete; its end-of-life bundled database library is being replaced with MariaDB Connector/C so it can connect to modern servers. In development; no build available yet.</p></li>
+        <li><a href="../software/">SoundDeck — audio editor</a><span class="index-path">/software/</span>
+          <p class="index-desc">An audio editor built on Audacity with libVLC playback and conversion (GPL). License review passed, and versions are pinned to the last releases that run on High Sierra. In development; no build available yet.</p></li>
+        <li><a href="../software/">AutoDMG — system image builder</a><span class="index-path">/software/</span>
+          <p class="index-desc">Builds deployable macOS system images (Apache-2.0). Queued for uplift; work has not begun.</p></li>
+        <li><strong>Chromium Legacy — for High Sierra</strong>
+          <p class="index-desc">A current Chromium build (127.0.6494.0) that runs on High Sierra, delivered November 6, 2026 as a direct download — the modern web on the 10.13 floor. Not yet listed on the Software page.</p></li>
+        <li><strong>Muse Desktop — for High Sierra</strong>
+          <p class="index-desc">The Muse desktop app packaged for Intel High Sierra machines (Electron 22.3.27), built November 7, 2026. Packaged and bundle-verified; the launch check on a real High Sierra machine is the remaining step. Not yet listed on the Software page.</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section-alt" aria-labelledby="learn-heading">
     <div class="wrap">
       <p class="kicker">Learn &amp; work</p>
       <h2 id="learn-heading">Programs, partners, <span class="accent">and services.</span></h2>
@@ -160,7 +194,7 @@
     </div>
   </section>
 
-  <section class="section section-alt" aria-labelledby="trust-heading">
+  <section class="section" aria-labelledby="trust-heading">
     <div class="wrap">
       <p class="kicker">Trust</p>
       <h2 id="trust-heading">Status and the <span class="accent">fine print.</span></h2>
@@ -181,6 +215,7 @@
 </main>
 
 <footer class="footer">
+<div class="wrap"><p class="build-stamp" style="font-size:.78rem;color:#444;border:1px solid #000;padding:.5rem .75rem;margin:1rem 0;">PAGE STAMP — Published: 2026-11-07 20:56 EST · Agent: Forge · Authorized: J. Spencer Smith, directive of 2026-11-07 (Index update — DAADv2/v3, Software comprehensive)</p></div>
   <div class="wrap footer-inner">
     <div class="footer-brand">
       <img src="../assets/logo.webp" alt="" class="brand-mark">
