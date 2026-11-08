@@ -152,6 +152,23 @@
       "status": "release-candidate",
       "tagline": "The Muse desktop client, rebuilt by the Academy for High Sierra.",
       "version": "0.3.0-academy3"
+    },
+    {
+      "category": "Utilities",
+      "datePublished": null,
+      "description": "An Academy-original diagnostic utility for a non-responsive AirPods Max (Lightning model), grown from a command-line tool into a native app. Five diagnostic sections — USB enumeration, ioreg device state, CoreAudio routing, Bluetooth state, and system logs — roll up into a plain verdict. Guided actions: Restart and Factory Reset walk-throughs (with the 15-second hold timer), Restart Services (coreaudiod and bluetoothd, administrator prompt), and a Firmware Update panel that reads the device's firmware, compares it against 6F25 (the latest Lightning-model firmware), and evaluates Apple's automatic-delivery conditions live. Save Report writes the full pass to a file. It carries the Academy audit entry, so Distro installs it — first build, testing only, not yet run on the High Sierra rig. Not affiliated with or endorsed by Apple Inc.",
+      "downloadURL": "https://github.com/AutomatedTechnologies/airpods-max-diag/releases/download/apd-test-1/AirPodsMaxDiag-test.zip",
+      "iconURL": "https://detroitautomationacademy.com/store/icons/airpods-max-diag.png",
+      "id": "airpods-max-diag",
+      "license": "Academy License (revocable)",
+      "minMacOS": "10.13",
+      "name": "AirPods Max Diagnostics",
+      "sha256": "438cd44cf246360f3c159e52e4aa60ece005d5cf8c87010e3af3cf36190ff89f",
+      "sizeBytes": 708149,
+      "sourceURL": "https://github.com/AutomatedTechnologies/airpods-max-diag",
+      "status": "testing",
+      "tagline": "Diagnose and recover a non-responsive AirPods Max (Lightning) — USB, Bluetooth, audio, firmware.",
+      "version": "apd-test-1"
     }
   ],
   "catalogVersion": 1,
