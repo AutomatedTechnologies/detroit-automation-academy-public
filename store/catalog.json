@@ -15,7 +15,8 @@
       "sourceURL": "https://github.com/AutomatedTechnologies/KisMac2",
       "status": "release-candidate",
       "tagline": "Wireless network discovery for education and authorized testing.",
-      "version": "test-build-18"
+      "version": "test-build-18",
+      "buildNotes": "Academy identity rebuild: Academy bundle ID (com.detroitautomationacademy.kismac), trimmed monochrome icon, Academy audit entry, bundled IEEE OUI table — no network fetch at build or runtime."
     },
     {
       "category": "Productivity",
@@ -32,7 +33,8 @@
       "sourceURL": "https://github.com/AutomatedTechnologies/spectacle",
       "status": "release-candidate",
       "tagline": "Move and resize windows with the keyboard, maintained for High Sierra.",
-      "version": "spectacle-test-7"
+      "version": "spectacle-test-7",
+      "buildNotes": "Academy rebuild: Academy bundle ID, trimmed monochrome icon, audit entry, Academy appcast (Sparkle 1.22)."
     },
     {
       "category": "Productivity",
@@ -49,7 +51,8 @@
       "sourceURL": "https://github.com/AutomatedTechnologies/macdown",
       "status": "release-candidate",
       "tagline": "Markdown editor with live preview, maintained for High Sierra.",
-      "version": "macdown-test-10"
+      "version": "macdown-test-10",
+      "buildNotes": "Academy rebuild: Academy bundle ID, trimmed monochrome icon, audit entry; Hoedown parser nesting bound (finding F-02 fix)."
     },
     {
       "category": "Utilities",
@@ -66,7 +69,8 @@
       "sourceURL": "https://github.com/AutomatedTechnologies/sequelpro",
       "status": "release-candidate",
       "tagline": "MySQL database client, maintained for High Sierra.",
-      "version": "sequelpro-test-6"
+      "version": "sequelpro-test-6",
+      "buildNotes": "Academy rebuild: Academy bundle ID, trimmed monochrome cylinder icon, audit entry. Bundled MySQL client is 5.5.56 (end-of-life); its replacement is a planned tranche."
     },
     {
       "category": "Audio",
@@ -83,7 +87,8 @@
       "sourceURL": "https://github.com/AutomatedTechnologies/audacity",
       "status": "in-development",
       "tagline": "Audio editor with VLC-powered playback and conversion — in development.",
-      "version": "0.0.0"
+      "version": "0.0.0",
+      "buildNotes": "In development — no installable build yet. Build proof complete 2026-11-08 (SD-T2); D2 audit in progress."
     },
     {
       "category": "Network",
@@ -100,7 +105,8 @@
       "sourceURL": "https://github.com/AutomatedTechnologies/KisMac2",
       "status": "release-candidate",
       "tagline": "One network utility: discovery, diagnostics, and read-only base-station view — staged test build.",
-      "version": "staged-v1-6"
+      "version": "staged-v1-6",
+      "buildNotes": "Adds the Optimizations panel (local scan tuning). Shell, WaveScanner scanning, Manage read view, Diagnose, Journal and Classroom panels."
     },
     {
       "category": "Transit",
@@ -117,24 +123,26 @@
       "sourceURL": null,
       "status": "release-candidate",
       "tagline": "Live regional transit for the District of Detroit — native, no browser, built for High Sierra.",
-      "version": "v0.1.0-rc1"
+      "version": "v0.1.0-rc1",
+      "buildNotes": "Native map and live vehicles for the District of Detroit. Route polylines not yet included."
     },
     {
       "category": "Distribution",
       "datePublished": "2026-11-08",
-      "description": "Distro is the Detroit Automation Academy's native application-store app for macOS High Sierra: it browses the Academy catalog, downloads Academy-maintained apps from the AutomatedTechnologies GitHub org, verifies every download by SHA-256 before install, and carries no privileged helper. Prepared at DAADV3 T1 codification (2026-11-07); not yet published — publication remains gated on Distro tranche D-T5. Disassembled. Scanned. Recompiled. Distro distributes only apps carrying the Academy audit entry in their plist — proof of the Academy pipeline. distro-test-17 applies the SDS-9 liquid-glass cues to the store chrome: layered tint depth, the glass hairline pair on the dividers and sheet edges, capsule state controls, and the status word in a capsule chip — flat tints only, no behavior change.\n\n© 2026 Detroit Automation Academy / Automated Technologies. All rights reserved. Detroit Automation Academy, Automated Technologies, Distro, Workbench, Live Transit Detroit, The Signal, and the Academy monochrome logo are marks of the Academy, used under the founder's permission. Academy-original works are licensed under the Academy License (revocable); upstream open-source components remain under their own licenses. distro-test-22 adds Update All: when updates are pending, one button runs them sequentially — each app still verified by SHA-256 and the audit gate on its own — and ends with a single summary.",
-      "downloadURL": "https://github.com/AutomatedTechnologies/distro/releases/download/distro-test-22/Distro-test.zip",
+      "description": "Distro is the Detroit Automation Academy's native application-store app for macOS High Sierra: it browses the Academy catalog, downloads Academy-maintained apps from the AutomatedTechnologies GitHub org, verifies every download by SHA-256 before install, and carries no privileged helper. Prepared at DAADV3 T1 codification (2026-11-07); not yet published — publication remains gated on Distro tranche D-T5. Disassembled. Scanned. Recompiled. Distro distributes only apps carrying the Academy audit entry in their plist — proof of the Academy pipeline. distro-test-17 applies the SDS-9 liquid-glass cues to the store chrome: layered tint depth, the glass hairline pair on the dividers and sheet edges, capsule state controls, and the status word in a capsule chip — flat tints only, no behavior change.\n\n© 2026 Detroit Automation Academy / Automated Technologies. All rights reserved. Detroit Automation Academy, Automated Technologies, Distro, Workbench, Live Transit Detroit, The Signal, and the Academy monochrome logo are marks of the Academy, used under the founder's permission. Academy-original works are licensed under the Academy License (revocable); upstream open-source components remain under their own licenses. distro-test-22 adds Update All: when updates are pending, one button runs them sequentially — each app still verified by SHA-256 and the audit gate on its own — and ends with a single summary. The detail pane now shows build notes for the catalog version and the installed app's file path.",
+      "downloadURL": "https://github.com/AutomatedTechnologies/distro/releases/download/distro-test-26/Distro-test.zip",
       "iconURL": "https://detroitautomationacademy.com/store/icons/distro.png",
       "id": "distro",
       "license": "Academy License (revocable)",
       "minMacOS": "10.13",
       "name": "Distro",
-      "sha256": "20bdc2c16298ecdf04d421cdf777f6f461f21469f37cdacabb9ee844f2c57303",
-      "sizeBytes": 749113,
+      "sha256": "788cf1dbc638dea2cdb56238948718dda9bebe47c29d6189a23a2c88286969a9",
+      "sizeBytes": 749475,
       "sourceURL": "https://github.com/AutomatedTechnologies/distro",
       "status": "release-candidate",
       "tagline": "The Academy's application store for High Sierra — browse, install, and update Academy apps.",
-      "version": "distro-test-22"
+      "version": "distro-test-26",
+      "buildNotes": "Adds Update All (sequential updates, one summary), build notes in the detail pane, and the Installed at: path line. Bundles the Academy License and IP notice in the app (IP protection T2)."
     },
     {
       "category": "Productivity",
@@ -151,7 +159,8 @@
       "sourceURL": "https://github.com/benjaminkitt/muse-desktop",
       "status": "release-candidate",
       "tagline": "The Muse desktop client, rebuilt by the Academy for High Sierra.",
-      "version": "0.3.0-academy3"
+      "version": "0.3.0-academy3",
+      "buildNotes": "Trimmed-icon refresh. Built from the open-source muse-desktop v0.3.0 (MIT) on Electron 22.3.27."
     },
     {
       "category": "Utilities",
@@ -168,7 +177,8 @@
       "sourceURL": "https://github.com/AutomatedTechnologies/airpods-max-diag",
       "status": "testing",
       "tagline": "Diagnose and recover a non-responsive AirPods Max (Lightning) — USB, Bluetooth, audio, firmware.",
-      "version": "apd-test-1"
+      "version": "apd-test-1",
+      "buildNotes": "First build: five-section diagnostics with branching verdict, guided Restart and Factory Reset sheets, Restart Services, and the Firmware panel (latest for this model: 6F25)."
     }
   ],
   "catalogVersion": 1,
