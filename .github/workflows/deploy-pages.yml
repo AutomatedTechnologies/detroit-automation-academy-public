@@ -263,6 +263,19 @@ jobs:
             cp -r software deployment/ || echo "software copy failed"
           fi
 
+          # Copy Updates + Store (Academy Update Infrastructure
+          # Standard appcasts + Distro catalog — placed 2026-11-07
+          # after the full URL audit found both URL spaces 404 in
+          # production: named in their standards but never created
+          # in the repo and absent from this copy list — same
+          # copy-list omission class as software above)
+          if [ -d "updates" ]; then
+            cp -r updates deployment/ || echo "updates copy failed"
+          fi
+          if [ -d "store" ]; then
+            cp -r store deployment/ || echo "store copy failed"
+          fi
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
