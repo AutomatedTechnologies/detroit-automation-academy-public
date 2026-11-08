@@ -3,7 +3,7 @@
     {
       "category": "Network",
       "datePublished": null,
-      "description": "The Academy's maintained build of KisMac: passive Wi-Fi scanning, hidden-SSID detection, client mapping, and GPS/KML export, remediated and rebuilt for macOS High Sierra. For network education and authorized testing of your own networks only. Installs as KisMac2.app (bundle identity com.igrsoft.kismac) — a bundle shared with the Switchboard staged build above: installing one replaces the other.",
+      "description": "The Academy's maintained build of KisMac: passive Wi-Fi scanning, hidden-SSID detection, client mapping, and GPS/KML export, remediated and rebuilt for macOS High Sierra. For network education and authorized testing of your own networks only. Installs as KisMac2.app (bundle identity com.igrsoft.kismac) — a bundle identity distinct from the Switchboard entry, whose corrected staged-v1-2 build ships as Workbench.app under its own identity; the two now install side by side.",
       "downloadURL": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/test-build-15/KisMac-test.zip",
       "iconURL": "https://detroitautomationacademy.com/store/icons/kismac.png",
       "id": "kismac",
@@ -88,19 +88,19 @@
     {
       "category": "Network",
       "datePublished": null,
-      "description": "Staged internal build of the Academy's unified network utility (working name Switchboard), CI-built 2026-11-07 and not yet verified on the High Sierra rig: the remediated KisMac discovery engine hosted in a new unified shell, a read-only AirPort base-station configuration view, Ping / Netstat / Traceroute / Speed Test diagnostics, and a local-only journal. Manage is read-only in this build — there is no configuration write path. The AirPort management pillar also ships as KisMac V2; Switchboard remains the umbrella product and the parity source of truth. Installs as KisMac2.app under the KisMac bundle identity (com.igrsoft.kismac) — the same installed bundle as the KisMac entry: installing one replaces the other until the unified build ships under its own Workbench bundle identity.",
-      "downloadURL": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/staged-v1-1/KisMac-test.zip",
+      "description": "Staged internal build of the Academy's unified network utility (working name Switchboard), CI-built 2026-11-08 and not yet verified on the High Sierra rig: the remediated KisMac discovery engine hosted in a new unified shell, a read-only AirPort base-station configuration view, Ping / Netstat / Traceroute / Speed Test diagnostics, and a local-only journal. Manage is read-only in this build — there is no configuration write path. The AirPort management pillar also ships as KisMac V2; Switchboard remains the umbrella product and the parity source of truth. Installs as Workbench.app under its own bundle identity (com.detroitautomationacademy.workbench), distinct from KisMac — bundle-collision correction (2026-11-08): this staged-v1-2 build and the KisMac entry now install side by side. The earlier staged-v1-1 build shared the KisMac bundle identity and installing one replaced the other.",
+      "downloadURL": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/staged-v1-2/Workbench-test.zip",
       "iconURL": "https://detroitautomationacademy.com/store/icons/switchboard.png",
       "id": "switchboard",
       "license": "GPL-2.0",
       "minMacOS": "10.13",
       "name": "Switchboard",
-      "sha256": "77440dc6d895c9246bda91459c7145d3c68625862b4325075dfbaaf0122b8e4e",
-      "sizeBytes": 2056451,
+      "sha256": "68d8f1a2a4e4ce96dda83d5c8db59edf8a4686d3bfe096617a729499900dafae",
+      "sizeBytes": 2070328,
       "sourceURL": "https://github.com/AutomatedTechnologies/KisMac2",
       "status": "testing",
       "tagline": "One network utility: discovery, diagnostics, and read-only base-station view — staged test build.",
-      "version": "staged-v1-1"
+      "version": "staged-v1-2"
     },
     {
       "category": "Transit",
