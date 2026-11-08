@@ -121,22 +121,22 @@
     },
     {
       "category": "Distribution",
-      "datePublished": null,
-      "description": "Distro is the Detroit Automation Academy's native application-store app for macOS High Sierra: it browses the Academy catalog, downloads Academy-maintained apps from the AutomatedTechnologies GitHub org, verifies every download by SHA-256 before install, and carries no privileged helper. Prepared at DAADV3 T1 codification (2026-11-07); not yet published \u2014 publication remains gated on Distro tranche D-T5.",
-      "downloadURL": null,
+      "datePublished": "2026-11-08",
+      "description": "Distro is the Detroit Automation Academy's native application-store app for macOS High Sierra: it browses the Academy catalog, downloads Academy-maintained apps from the AutomatedTechnologies GitHub org, verifies every download by SHA-256 before install, and carries no privileged helper. MVP test build distro-test-1 was CI-built on 2026-11-08; it has not yet been verified on the High Sierra rig (first Air run is the D-T3 gate). Publisher: Detroit Automation Academy.",
+      "downloadURL": "https://github.com/AutomatedTechnologies/distro/releases/download/distro-test-1/Distro-test.zip",
       "iconURL": "https://detroitautomationacademy.com/store/icons/distro.png",
       "id": "distro",
       "license": "MIT",
       "minMacOS": "10.13",
       "name": "Distro",
-      "sha256": null,
-      "sizeBytes": null,
+      "sha256": "534e4a1a49b7385923fc72e392b08559e9b8c3ec833256fc9ea368109a6eca97",
+      "sizeBytes": 751867,
       "sourceURL": "https://github.com/AutomatedTechnologies/distro",
-      "status": "in-development",
+      "status": "testing",
       "tagline": "The Academy's application store for High Sierra \u2014 browse, install, and update Academy apps.",
-      "version": "0.0.0"
+      "version": "distro-test-1"
     }
   ],
   "catalogVersion": 1,
-  "generated": "2026-11-07"
+  "generated": "2026-11-08"
 }
