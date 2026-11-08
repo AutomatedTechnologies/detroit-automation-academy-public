@@ -26,6 +26,35 @@ export function detroitParts(whenMs) {
   };
 }
 
+/* Feed `updated_at` stamps are Detroit-local NAIVE strings
+ * ("2026-11-08T06:44:00", no offset). `new Date()` parses those in the
+ * CLIENT's timezone, so a visitor off America/Detroit ages every fix by
+ * their offset from Detroit and fresh buses fail the 15-minute
+ * liveness gate in liveEndpointForRoute. Parse naive stamps as
+ * America/Detroit wall time; stamps carrying an explicit offset or Z
+ * keep native parsing. Detroit's offset for a wall time is resolved
+ * through detroitParts (already pinned to America/Detroit): read the
+ * guess instant's Detroit wall reading back and shift by the
+ * difference; iterating settles ordinary cases in two passes. */
+export function feedStampMs(stamp) {
+  if (stamp == null) return NaN;
+  if (typeof stamp === 'number') return stamp;
+  var s = String(stamp).trim();
+  if (/([zZ]|[+-]\d{2}:?\d{2})$/.test(s)) return new Date(s).getTime();
+  var m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?$/.exec(s);
+  if (!m) return new Date(s).getTime();
+  var wall = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0), +(m[7] || 0));
+  var t = wall;
+  for (var i = 0; i < 3; i++) {
+    var dp = detroitParts(t);
+    var reading = Date.UTC(+dp.ymd.slice(0, 4), +dp.ymd.slice(4, 6) - 1, +dp.ymd.slice(6, 8)) + dp.sec * 1000;
+    var nt = wall - (reading - t);
+    if (nt === t) break;
+    t = nt;
+  }
+  return t;
+}
+
 /* The app's projection (live-transit.js project()): meters about the
  * shared origin carried identically by all three registry files. */
 export function makeProj(projection) {
@@ -236,7 +265,7 @@ export function qlineStreetcars(vehicles, proj, st, nowMs) {
     var p = projectLatLon(proj, v.lat, v.lon);
     out.push({
       vehicleId: v.vehicle_id || '', distM: Math.hypot(p[0] - st.x, p[1] - st.z),
-      ageS: v.updated_at ? Math.max(0, Math.round((nowMs - new Date(v.updated_at).getTime()) / 1000)) : null,
+      ageS: v.updated_at ? Math.max(0, Math.round((nowMs - feedStampMs(v.updated_at)) / 1000)) : null,
       destination: v.destination || ''
     });
   });
@@ -320,7 +349,7 @@ export function liveEndpointForRoute(vehicles, proj, paths, st, rid, wantHead, n
   vehicles.forEach(function (v) {
     if (!v || String(v.route_id) !== String(rid) || v.agency !== st.seg) return;
     if (v.lat == null || v.lon == null) return;
-    var ageMs = v.updated_at ? nowMs - new Date(v.updated_at).getTime() : Infinity;
+    var ageMs = v.updated_at ? nowMs - feedStampMs(v.updated_at) : Infinity;
     if (!(ageMs <= LIVE_ENDPOINT_STALE_MS)) return;
     var p = projectLatLon(proj, v.lat, v.lon);
     var along = spine ? alongLineM(spine, p[0], p[1]) : null;
