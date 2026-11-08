@@ -51,7 +51,8 @@ export function buildRegistry(ddot, smart, qline) {
   function addRoutes(data, seg) {
     (data.routes || []).forEach(function (r) {
       var rec = { id: String(r.id), name: r.name || String(r.id),
-                  color: seg === 'smart' ? '#313131' : (r.color || '#f2f2f2'), seg: seg };
+                  color: seg === 'smart' ? '#313131' : (r.color || '#f2f2f2'), seg: seg,
+                  paths: Array.isArray(r.paths) ? r.paths : null };
       routesById[rec.id] = rec;
       routeNames[rec.id] = rec.name;
       if (seg === 'smart') smartRouteIds[rec.id] = true;
@@ -264,4 +265,83 @@ export function formatClock12Detroit(ms) {
     if (p.type === 'dayPeriod') ap = p.value;
   });
   return h + ':' + m + ' ' + ap;
+}
+
+/* --- Live endpoint selection for a route chip (board → map, §2) --------
+ * A route chip resolves to ONE live endpoint: a vehicle record from
+ * vehicles.json. Pure, deterministic — same feed in, same endpoint out.
+ * Rules in order: route+agency match with a usable fix; fix age within
+ * LIVE_ENDPOINT_STALE_MS; direction match (destination === the next
+ * departure's headsign) outranks proximity; on the direction path, a
+ * vehicle still short of the stop (approaching) outranks one past it;
+ * ties break on fresher fix, then vehicle_id. Returns null when no
+ * vehicle qualifies — SMART display records carry no route_id, so
+ * SMART chips resolve null by construction (positions only, as the
+ * board already states). */
+export var LIVE_ENDPOINT_STALE_MS = 15 * 60 * 1000;
+
+/* Along-line position of a projected point on one path (array of
+ * [x, z] vertices): cumulative metres to the nearest point on the
+ * path, or null for a degenerate path. The First Look line-up's
+ * projection, in board-core's projected-metre space. */
+export function alongLineM(path, x, z) {
+  if (!path || path.length < 2) return null;
+  var best = null, acc = 0;
+  for (var i = 0; i + 1 < path.length; i++) {
+    var ax = path[i][0], az = path[i][1], bx = path[i + 1][0], bz = path[i + 1][1];
+    var dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz);
+    var t = len > 0 ? ((x - ax) * dx + (z - az) * dz) / (len * len) : 0;
+    t = Math.max(0, Math.min(1, t));
+    var d = Math.hypot(x - (ax + dx * t), z - (az + dz * t));
+    if (!best || d < best.d) best = { s: acc + len * t, d: d };
+    acc += len;
+  }
+  return best;
+}
+
+/* The route's longest path — the direction spine the approach test
+ * runs on (a route's paths are its direction shapes). */
+export function longestPath(paths) {
+  if (!paths || !paths.length) return null;
+  var best = null, bl = -1;
+  paths.forEach(function (p) {
+    var l = 0;
+    for (var i = 0; i + 1 < p.length; i++) l += Math.hypot(p[i + 1][0] - p[i][0], p[i + 1][1] - p[i][1]);
+    if (l > bl) { bl = l; best = p; }
+  });
+  return best;
+}
+
+export function liveEndpointForRoute(vehicles, proj, paths, st, rid, wantHead, nowMs) {
+  if (!vehicles || !st) return null;
+  var spine = longestPath(paths);
+  var stopAlong = spine ? alongLineM(spine, st.x, st.z) : null;
+  var cands = [];
+  vehicles.forEach(function (v) {
+    if (!v || String(v.route_id) !== String(rid) || v.agency !== st.seg) return;
+    if (v.lat == null || v.lon == null) return;
+    var ageMs = v.updated_at ? nowMs - new Date(v.updated_at).getTime() : Infinity;
+    if (!(ageMs <= LIVE_ENDPOINT_STALE_MS)) return;
+    var p = projectLatLon(proj, v.lat, v.lon);
+    var along = spine ? alongLineM(spine, p[0], p[1]) : null;
+    cands.push({
+      vehicle: v, ageMs: ageMs,
+      distM: Math.hypot(p[0] - st.x, p[1] - st.z),
+      dirMatch: !!(wantHead && v.destination && String(v.destination) === String(wantHead)),
+      passed: !!(along && stopAlong && along.s > stopAlong.s + 25),
+      remainM: (along && stopAlong) ? stopAlong.s - along.s : null
+    });
+  });
+  if (!cands.length) return null;
+  cands.sort(function (a, b) {
+    if (a.dirMatch !== b.dirMatch) return a.dirMatch ? -1 : 1;
+    if (a.passed !== b.passed) return a.passed ? 1 : -1;
+    if (!a.passed && a.remainM != null && b.remainM != null && a.remainM !== b.remainM) return a.remainM - b.remainM;
+    if (a.distM !== b.distM) return a.distM - b.distM;
+    if (a.ageMs !== b.ageMs) return a.ageMs - b.ageMs;
+    return String(a.vehicle.vehicle_id).localeCompare(String(b.vehicle.vehicle_id));
+  });
+  var c = cands[0];
+  return { vehicle: c.vehicle, distM: c.distM, ageS: Math.round(c.ageMs / 1000),
+           dirMatch: c.dirMatch, passed: c.passed };
 }
