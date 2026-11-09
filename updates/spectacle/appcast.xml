@@ -3,7 +3,15 @@
   <channel>
     <title>Spectacle — Detroit Automation Academy</title>
     <link>https://detroitautomationacademy.com/updates/spectacle/appcast.xml</link>
-    <description>Academy update feed for Spectacle. No releases published yet; this feed carries no items until the app reaches its packaging tranche under the Academy Update Infrastructure Standard.</description>
+    <description>Academy appcast for Spectacle (macOS High Sierra 10.13 floor). Generated from the Singular Reference registry (DAADV4 V4-T3). Interim state per the Update Infrastructure Standard: manual, user-invoked checks only; EdDSA signing enters at packaging.</description>
     <language>en</language>
+    <item>
+      <title>spectacle-test-7</title>
+      <pubDate>Sun, 08 Nov 2026 07:46:44 GMT</pubDate>
+      <sparkle:version>spectacle-test-7</sparkle:version>
+      <sparkle:shortVersionString>spectacle-test-7</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>10.13</sparkle:minimumSystemVersion>
+      <enclosure url="https://github.com/AutomatedTechnologies/spectacle/releases/download/spectacle-test-7/Spectacle-test.zip" length="2126510" type="application/octet-stream" />
+    </item>
   </channel>
 </rss>
