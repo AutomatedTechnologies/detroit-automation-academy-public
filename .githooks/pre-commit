@@ -1,9 +1,73 @@
-#!/bin/sh
-# The Index accuracy pre-commit hook (plain-git route).
-# Enforces The Index posture at commit time: the index page exists,
-# is linked from the home page, has no dead entries, and covers every
-# top-level public surface (see tools/check_index_accuracy.py).
-# Enable once per clone:  git config core.hooksPath .githooks
-# (Or use the pre-commit framework: the same check is registered in
-# .pre-commit-config.yaml as the local hook "index-accuracy".)
-exec python3 "$(git rev-parse --show-toplevel)/tools/check_index_accuracy.py" "$(git rev-parse --show-toplevel)"
+#!/usr/bin/env bash
+# pre-commit — validate a staged store/catalog.json before a local commit.
+#
+# SCOPE LIMIT: API-driven commits bypass local git hooks, so this
+# validator protects local/manual commits only; the operative
+# enforcement is the catalog-index-watch hook (30-min poll,
+# ~/hooks/scripts/catalog_index_watch.sh), which compares the served
+# catalog against the recorded index state and wakes a worker on drift.
+#
+# When store/catalog.json is among the staged files, this hook checks:
+#   1. the staged catalog parses as JSON;
+#   2. every entry in .apps[] carries a non-empty id, name, version,
+#      status, iconURL, downloadURL and sha256;
+#   3. for each iconURL, the corresponding icon file exists in the
+#      index/tree (detroitautomationacademy.com/store/icons/<x>.png
+#      maps to the repo-relative path store/icons/<x>.png).
+# Any failure prints the problem and exits 1. If store/catalog.json is
+# not staged, the hook exits 0 immediately.
+set -uo pipefail
+
+# Exit 0 immediately when the catalog is not staged.
+if ! git diff --cached --name-only | grep -qx 'store/catalog.json'; then
+  exit 0
+fi
+
+fail=0
+err() { printf 'pre-commit: %s\n' "$1" >&2; fail=1; }
+
+staged_catalog="$(mktemp)"
+trap 'rm -f "$staged_catalog"' EXIT
+if ! git show :store/catalog.json > "$staged_catalog"; then
+  err "could not read staged store/catalog.json from the index"
+  exit 1
+fi
+
+# 1. Staged catalog parses as JSON.
+if ! jq -e '.' "$staged_catalog" >/dev/null 2>&1; then
+  err "staged store/catalog.json does not parse as JSON"
+  exit 1
+fi
+
+# 2. Every entry carries the required non-empty fields. (jq reports
+# null and "" alike as missing: test for a non-empty string.)
+missing="$(jq -r '
+  .apps[]? as $app
+  | ["id","name","version","status","iconURL","downloadURL","sha256"][] as $f
+  | select(($app[$f] | type) != "string" or ($app[$f] | length) == 0)
+  | "\($app.id // "<no id>"): missing/empty field \($f)"' "$staged_catalog")"
+if [ -n "$missing" ]; then
+  while IFS= read -r line; do err "$line"; done <<< "$missing"
+fi
+
+# 3. Each iconURL's icon file exists in the index/tree.
+while IFS= read -r icon_url; do
+  [ -z "$icon_url" ] && continue
+  # Derive the repo-relative path: strip scheme+host, keep the path.
+  icon_path="$(printf '%s' "$icon_url" | sed -E 's#^https?://[^/]+/##')"
+  case "$icon_path" in
+    store/icons/*.png) ;;
+    *) err "iconURL does not map to store/icons/<x>.png: $icon_url"; continue ;;
+  esac
+  if git cat-file -e ":$icon_path" 2>/dev/null || [ -f "$icon_path" ]; then
+    :
+  else
+    err "icon file missing from index/tree for iconURL $icon_url (expected $icon_path)"
+  fi
+done < <(jq -r '.apps[]?.iconURL // empty' "$staged_catalog")
+
+if [ "$fail" -ne 0 ]; then
+  printf 'pre-commit: catalog validation FAILED — commit blocked.\n' >&2
+  exit 1
+fi
+exit 0
