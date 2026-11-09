@@ -1,3 +1,62 @@
+# Detroit Automation Academy — robots.txt
+# Human visitors and search indexing are welcome. AI training,
+# model ingestion, and automated duplication of the Academy's
+# infrastructure are NOT permitted (DAADV4 A1; Academy License,
+# revocable — see /LICENSE-ACADEMY.md and /NOTICE).
+# TDM reservation: text and data mining rights over this site's
+# content are reserved by the rights holder.
+
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: Meta-ExternalFetcher
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: ImagesiftBot
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
 User-agent: *
 Allow: /
 
