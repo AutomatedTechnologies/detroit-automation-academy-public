@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:4ca45797c9e50b8e76bfa895190c213e8c1a1e28fe0e81981a0eb9837a37d10e",
+    "stateFingerprint": "sha256:3cd0b45611f8a0450d16cfe0040064a468a83a45b5b22fd5143ad0988c6aef32",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 6,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-07",
   "counts": {
     "apps": 11,
-    "builds": 15,
+    "builds": 16,
     "catalog_state": 10,
     "audits": 1,
     "findings": 17,
@@ -103,23 +103,23 @@
       "description": "The Academy's maintained build of MacDown. Uplift includes the Hoedown recursion-bound fix and the planned migration from legacy WebView to WKWebView; zero telemetry, MathJax bundled locally. Release candidate: first Academy build — Academy bundle identity and the Academy audit entry verified in the shipped bundle. The app icon is cut to the amended SDS-3 construction — white tile, ink glyph, no black field; the earlier color-icon gap is closed. Not yet run on the High Sierra rig. Audit findings F-01/F-02/F-03/F-05/F-06 remain open.",
       "catalogStatus": "release-candidate",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/macdown.png",
-      "buildNotes": "Fixes the launch crash in test-10 (finding F-10): a toolbar index read past the end of an empty array — latent upstream code the modern compiler traps. Academy rebuild: Academy bundle ID, trimmed monochrome icon, audit entry; Hoedown parser nesting bound (finding F-02 fix).",
+      "buildNotes": "SDS-10 conformance build (SDS10-T3): the SDS-8 welcome screen (MPWelcomeController) presents at launch — the AppIcon composition as the welcome mark, the build version read from the bundle Info.plist at runtime, and the standard startup sound, byte-identical to the library master. The bundle stamps the SDS-10 conformance entry beside the audit entry; Academy license and notice files are bundled. Fixes carried: the launch crash in test-10 (finding F-10, toolbar guard from test-11), the Hoedown parser nesting bound (finding F-02 fix). Academy rebuild: Academy bundle ID, trimmed monochrome icon, audit entry.",
       "audits": [],
       "currentBuild": {
-        "tag": "macdown-test-11",
-        "sizeBytes": 7065364,
-        "sha256": "19379c12ca68039f456e9d13cf0a245dca3877d9a7746bbfaf3455e1443fbdb2",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/macdown/releases/download/macdown-test-11/MacDown-test.zip",
+        "tag": "macdown-test-12",
+        "sizeBytes": 7683173,
+        "sha256": "a100f9b21da0d327054bfb83ba0a554f37450aff203ce66f967aa9d9fd6c6bd6",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/macdown/releases/download/macdown-test-12/MacDown-test.zip",
         "floor": "10.13",
-        "builtAt": "2026-11-08",
-        "releasePublishedAt": "2026-11-08T20:22:02Z",
-        "ciRun": null,
+        "builtAt": "2026-11-10",
+        "releasePublishedAt": "2026-11-10T22:36:17Z",
+        "ciRun": "42915870381",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule); shipped-bundle readback: MacDown project files/13 (macdown-test-11)"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (all four clauses true); fresh-download plist readback verified 2026-11-10 for the SDS-10 conformance build (macdown-test-12, SHA-256 a100f9b21da0d327054bfb83ba0a554f37450aff203ce66f967aa9d9fd6c6bd6); bundled startup-sound.wav SHA-256 verified against the SDS-10 master from the built artifact"
         }
       }
     },
