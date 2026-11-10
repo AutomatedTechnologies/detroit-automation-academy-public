@@ -129,7 +129,7 @@ jobs:
           # an internal pre-launch shell script shipped publicly. A new
           # root .json data file must be added here deliberately; root
           # shell scripts are never site content and are not copied.
-          for f in build-manifest.json commentary.json ddot-fleet.json ddot-routes-3d.json ddot-timetable-S1000182.json geometry-manifest.json landmarks.json live.json peoplemover-3d.json places.json planner-timetable-S1000182-S1000147.json qline-3d.json search-index.json smart-routes-3d.json; do
+          for f in build-manifest.json commentary.json ddot-fleet.json ddot-routes-3d.json ddot-timetable-S1000182.json first-look-geo-2d.json geometry-manifest.json landmarks.json live.json peoplemover-3d.json places.json planner-timetable-S1000182-S1000147.json qline-3d.json search-index.json smart-routes-3d.json; do
             cp "$f" deployment/ || echo "allowlisted JSON missing: $f"
           done
           
