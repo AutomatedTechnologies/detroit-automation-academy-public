@@ -1,0 +1,239 @@
+{
+  "source": "AutomatedTechnologies/academy-registry registry.db (Singular Reference) — DAADV4 index inventory",
+  "provenance": {
+    "renderClass": "index-inventory",
+    "generator": "tools/generate_inventory.py",
+    "stateFingerprint": "sha256:175e492b08bb705637f4f204221856225bdd03c08f6c7655324a6e4d58333599",
+    "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
+  },
+  "apps": [
+    {
+      "appId": "kismac",
+      "displayName": "KisMac",
+      "catalogStatus": "release-candidate",
+      "buildTag": "test-build-18",
+      "conformance": {
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": true,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      }
+    },
+    {
+      "appId": "spectacle",
+      "displayName": "Spectacle",
+      "catalogStatus": "release-candidate",
+      "buildTag": "spectacle-test-7",
+      "conformance": {
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": true,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      }
+    },
+    {
+      "appId": "macdown",
+      "displayName": "MacDown",
+      "catalogStatus": "release-candidate",
+      "buildTag": "macdown-test-11",
+      "conformance": {
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": true,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      }
+    },
+    {
+      "appId": "sequelpro",
+      "displayName": "Sequel Pro",
+      "catalogStatus": "release-candidate",
+      "buildTag": "sequelpro-test-7",
+      "conformance": {
+        "gapsDispositioned": true,
+        "depsClear": false,
+        "gateFiled": true,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      }
+    },
+    {
+      "appId": "sounddeck",
+      "displayName": "SoundDeck",
+      "catalogStatus": "in-development",
+      "buildTag": "0.0.0",
+      "conformance": {
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": false,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      }
+    },
+    {
+      "appId": "switchboard",
+      "displayName": "Workbench",
+      "catalogStatus": "release-candidate",
+      "buildTag": "staged-v1-8",
+      "conformance": {
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": true,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      }
+    },
+    {
+      "appId": "live-transit-detroit",
+      "displayName": "Live Transit Detroit",
+      "catalogStatus": "release-candidate",
+      "buildTag": "v0.1.0-rc2",
+      "conformance": {
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": true,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      }
+    },
+    {
+      "appId": "distro",
+      "displayName": "Distro",
+      "catalogStatus": "release-candidate",
+      "buildTag": "distro-test-38",
+      "conformance": {
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": true,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      }
+    },
+    {
+      "appId": "muse-academy",
+      "displayName": "Muse (Academy Build)",
+      "catalogStatus": "release-candidate",
+      "buildTag": "0.3.0-academy3",
+      "conformance": {
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": false,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      }
+    },
+    {
+      "appId": "airpods-max-diag",
+      "displayName": "AirPods Max Diagnostics",
+      "catalogStatus": "testing",
+      "buildTag": "apd-test-4",
+      "conformance": {
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": false,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      }
+    }
+  ],
+  "surfaces": [
+    {
+      "surfaceId": 9,
+      "class": "endpoint",
+      "appId": null,
+      "name": "Distro catalog"
+    },
+    {
+      "surfaceId": 1,
+      "class": "native",
+      "appId": "kismac",
+      "name": "KisMac (P01)"
+    },
+    {
+      "surfaceId": 2,
+      "class": "native",
+      "appId": "spectacle",
+      "name": "Spectacle (P02)"
+    },
+    {
+      "surfaceId": 3,
+      "class": "native",
+      "appId": "macdown",
+      "name": "MacDown (P03)"
+    },
+    {
+      "surfaceId": 4,
+      "class": "native",
+      "appId": "sequelpro",
+      "name": "Sequel Pro (P04)"
+    },
+    {
+      "surfaceId": 5,
+      "class": "native",
+      "appId": "sounddeck",
+      "name": "SoundDeck (P05)"
+    },
+    {
+      "surfaceId": 6,
+      "class": "native",
+      "appId": "switchboard",
+      "name": "Switchboard (P06)"
+    },
+    {
+      "surfaceId": 7,
+      "class": "native",
+      "appId": "distro",
+      "name": "Distro (P07)"
+    },
+    {
+      "surfaceId": 8,
+      "class": "native",
+      "appId": "live-transit-detroit",
+      "name": "Live Transit Detroit native"
+    },
+    {
+      "surfaceId": 10,
+      "class": "standards doc",
+      "appId": "distro",
+      "name": "Distro charter"
+    },
+    {
+      "surfaceId": 11,
+      "class": "standards doc",
+      "appId": null,
+      "name": "Academy Update Infrastructure Standard"
+    },
+    {
+      "surfaceId": 12,
+      "class": "standards doc",
+      "appId": "live-transit-detroit",
+      "name": "Live Transit native design doc"
+    },
+    {
+      "surfaceId": 13,
+      "class": "standards doc",
+      "appId": null,
+      "name": "DAADV3 PRD"
+    },
+    {
+      "surfaceId": 14,
+      "class": "standards doc",
+      "appId": null,
+      "name": "Per-project charters (P01-P05) + Switchboard spec"
+    }
+  ],
+  "canaryEndpoints": {
+    "note": "Decoy endpoint references (DAADV4 A4): no Academy client is pointed at these URLs and they do not exist on the real estate (404, verified 2026-11-09). A copied deployment that serves or answers them has lifted these renders wholesale.",
+    "urls": [
+      "https://detroitautomationacademy.com/updates/sequelpro/appcast.xml",
+      "https://detroitautomationacademy.com/updates/sounddeck/appcast.xml",
+      "https://detroitautomationacademy.com/updates/switchboard/appcast.xml",
+      "https://detroitautomationacademy.com/updates/distro/appcast.xml",
+      "https://detroitautomationacademy.com/updates/live-transit-detroit/appcast.xml",
+      "https://detroitautomationacademy.com/updates/muse-academy/appcast.xml",
+      "https://detroitautomationacademy.com/updates/airpods-max-diag/appcast.xml"
+    ]
+  }
+}

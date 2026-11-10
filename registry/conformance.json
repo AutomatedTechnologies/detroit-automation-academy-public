@@ -1,0 +1,560 @@
+{
+  "source": "AutomatedTechnologies/academy-registry registry.db (Singular Reference)",
+  "provenance": {
+    "renderClass": "conformance",
+    "generator": "tools/generate_conformance.py",
+    "stateFingerprint": "sha256:175e492b08bb705637f4f204221856225bdd03c08f6c7655324a6e4d58333599",
+    "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
+  },
+  "schemaVersion": 5,
+  "catalogVersion": 1,
+  "catalogGenerated": "2026-11-07",
+  "counts": {
+    "apps": 11,
+    "builds": 10,
+    "catalog_state": 10,
+    "audits": 1,
+    "findings": 17,
+    "catalogApps": 10
+  },
+  "apps": [
+    {
+      "id": "kismac",
+      "displayName": "KisMac",
+      "repoUrl": "https://github.com/AutomatedTechnologies/KisMac2",
+      "sourceUrl": "https://github.com/AutomatedTechnologies/KisMac2",
+      "bundleId": null,
+      "category": "Network",
+      "license": "GPL-2.0",
+      "kind": "catalog",
+      "appStatus": "release-candidate",
+      "minMacOS": "10.13",
+      "tagline": "Wireless network discovery for education and authorized testing.",
+      "description": "The Academy's maintained build of KisMac: passive Wi-Fi scanning, hidden-SSID detection, client mapping, and GPS/KML export, remediated and rebuilt for macOS High Sierra. For network education and authorized testing of your own networks only. Installs as KisMac2.app under the Academy's own bundle identity (com.detroitautomationacademy.kismac) and carries the Academy audit entry. The bundle identity changed from the upstream com.igrsoft.kismac in this build, so the first launch is a fresh profile — preferences, Keychain items, and saved state do not carry over. It installs side by side with the Workbench entry (Workbench.app). Its app icon is the Academy re-cut under the amended SDS-3 construction (ink silhouette on the white tile) — the upstream color art no longer ships in the build.",
+      "catalogStatus": "release-candidate",
+      "iconUrl": "https://detroitautomationacademy.com/store/icons/kismac.png",
+      "buildNotes": "Academy identity rebuild: Academy bundle ID (com.detroitautomationacademy.kismac), trimmed monochrome icon, Academy audit entry, bundled IEEE OUI table — no network fetch at build or runtime.",
+      "audits": [],
+      "currentBuild": {
+        "tag": "test-build-18",
+        "sizeBytes": 2081152,
+        "sha256": "b7edb36b7204938dcaf7b99759f00831c48959890e4ef9312b677039960515de",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/test-build-18/KisMac-test.zip",
+        "floor": "10.13",
+        "builtAt": null,
+        "releasePublishedAt": "2026-11-08T08:28:24Z",
+        "ciRun": null,
+        "auditFlags": {
+          "disassembled": true,
+          "scanned": true,
+          "recompiled": true,
+          "complete": true,
+          "ref": "bundle-carried audit entry (Distro files/08 rule); record: KisMac project files/13 (test-build-18)"
+        }
+      }
+    },
+    {
+      "id": "spectacle",
+      "displayName": "Spectacle",
+      "repoUrl": "https://github.com/AutomatedTechnologies/spectacle",
+      "sourceUrl": "https://github.com/AutomatedTechnologies/spectacle",
+      "bundleId": null,
+      "category": "Productivity",
+      "license": "MIT",
+      "kind": "catalog",
+      "appStatus": "release-candidate",
+      "minMacOS": "10.13",
+      "tagline": "Move and resize windows with the keyboard, maintained for High Sierra.",
+      "description": "The Academy's maintained build of Spectacle, the keyboard-driven window manager. The inherited Sparkle 1.22/DSA update channel is replaced under the Academy Update Infrastructure Standard (Sparkle 2.9.6, EdDSA, Academy appcast) at packaging. Release candidate: first Academy build — Academy bundle identity and the Academy audit entry verified in the shipped bundle. The app icon is cut to the amended SDS-3 construction — white tile, ink glyph, no black field; the earlier color-icon gap is closed. Not yet run on the High Sierra rig. The bundled Sparkle updater stays at 1.22.0 in this candidate; the 2.9.6 + EdDSA step is a packaging-tranche decision.",
+      "catalogStatus": "release-candidate",
+      "iconUrl": "https://detroitautomationacademy.com/store/icons/spectacle.png",
+      "buildNotes": "Academy rebuild: Academy bundle ID, trimmed monochrome icon, audit entry, Academy appcast (Sparkle 1.22).",
+      "audits": [],
+      "currentBuild": {
+        "tag": "spectacle-test-7",
+        "sizeBytes": 2126510,
+        "sha256": "b5081dfd645dcd2ca075f95f4f92bddb0bdcb52bef2f454f2a40e4a8f524fc04",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/spectacle/releases/download/spectacle-test-7/Spectacle-test.zip",
+        "floor": "10.13",
+        "builtAt": "2026-11-08",
+        "releasePublishedAt": "2026-11-08T07:46:44Z",
+        "ciRun": null,
+        "auditFlags": {
+          "disassembled": true,
+          "scanned": true,
+          "recompiled": true,
+          "complete": true,
+          "ref": "bundle-carried audit entry (Distro files/08 rule); record: Spectacle project files/05 (spectacle-test-7)"
+        }
+      }
+    },
+    {
+      "id": "macdown",
+      "displayName": "MacDown",
+      "repoUrl": "https://github.com/AutomatedTechnologies/macdown",
+      "sourceUrl": "https://github.com/AutomatedTechnologies/macdown",
+      "bundleId": null,
+      "category": "Productivity",
+      "license": "MIT",
+      "kind": "catalog",
+      "appStatus": "release-candidate",
+      "minMacOS": "10.13",
+      "tagline": "Markdown editor with live preview, maintained for High Sierra.",
+      "description": "The Academy's maintained build of MacDown. Uplift includes the Hoedown recursion-bound fix and the planned migration from legacy WebView to WKWebView; zero telemetry, MathJax bundled locally. Release candidate: first Academy build — Academy bundle identity and the Academy audit entry verified in the shipped bundle. The app icon is cut to the amended SDS-3 construction — white tile, ink glyph, no black field; the earlier color-icon gap is closed. Not yet run on the High Sierra rig. Audit findings F-01/F-02/F-03/F-05/F-06 remain open.",
+      "catalogStatus": "release-candidate",
+      "iconUrl": "https://detroitautomationacademy.com/store/icons/macdown.png",
+      "buildNotes": "Fixes the launch crash in test-10 (finding F-10): a toolbar index read past the end of an empty array — latent upstream code the modern compiler traps. Academy rebuild: Academy bundle ID, trimmed monochrome icon, audit entry; Hoedown parser nesting bound (finding F-02 fix).",
+      "audits": [],
+      "currentBuild": {
+        "tag": "macdown-test-11",
+        "sizeBytes": 7065364,
+        "sha256": "19379c12ca68039f456e9d13cf0a245dca3877d9a7746bbfaf3455e1443fbdb2",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/macdown/releases/download/macdown-test-11/MacDown-test.zip",
+        "floor": "10.13",
+        "builtAt": "2026-11-08",
+        "releasePublishedAt": "2026-11-08T20:22:02Z",
+        "ciRun": null,
+        "auditFlags": {
+          "disassembled": true,
+          "scanned": true,
+          "recompiled": true,
+          "complete": true,
+          "ref": "bundle-carried audit entry (Distro files/08 rule); shipped-bundle readback: MacDown project files/13 (macdown-test-11)"
+        }
+      }
+    },
+    {
+      "id": "sequelpro",
+      "displayName": "Sequel Pro",
+      "repoUrl": "https://github.com/AutomatedTechnologies/sequelpro",
+      "sourceUrl": "https://github.com/AutomatedTechnologies/sequelpro",
+      "bundleId": null,
+      "category": "Utilities",
+      "license": "MIT",
+      "kind": "catalog",
+      "appStatus": "release-candidate",
+      "minMacOS": "10.13",
+      "tagline": "MySQL database client, maintained for High Sierra.",
+      "description": "The Academy's maintained build of Sequel Pro. Passwords stay in the macOS Keychain, as upstream correctly designed; the uplift addresses the MySQL 8 authentication gap left by the bundled MySQL 5.5-era client library. Release candidate: first Academy build — Academy bundle identity and the Academy audit entry verified in the shipped bundle. The app icon is cut to the amended SDS-3 construction — white tile, ink glyph, no black field; the earlier color-icon gap is closed. Not yet run on the High Sierra rig. The bundled MySQL client library is 5.5.56 (end-of-life; the MariaDB swap is a later tranche).",
+      "catalogStatus": "release-candidate",
+      "iconUrl": "https://detroitautomationacademy.com/store/icons/sequelpro.png",
+      "buildNotes": "Academy rebuild: Academy bundle ID, trimmed monochrome cylinder icon, audit entry. Bundled MySQL client is 5.5.56 (end-of-life); its replacement is a planned tranche. New glyph: the Cylinder (branding distinctiveness refresh).",
+      "audits": [],
+      "currentBuild": {
+        "tag": "sequelpro-test-7",
+        "sizeBytes": 4636201,
+        "sha256": "a65c28cdd4e8a4af7f304635923e29de89dc1f81cb4145f18ee460bcefcbee4f",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/sequelpro/releases/download/sequelpro-test-7/SequelPro-test.zip",
+        "floor": "10.13",
+        "builtAt": "2026-11-08",
+        "releasePublishedAt": "2026-11-08T20:21:13Z",
+        "ciRun": null,
+        "auditFlags": {
+          "disassembled": true,
+          "scanned": true,
+          "recompiled": true,
+          "complete": true,
+          "ref": "bundle-carried audit entry (Distro files/08 rule); record: Sequel Pro project files/05 (sequelpro-test-7)"
+        }
+      }
+    },
+    {
+      "id": "sounddeck",
+      "displayName": "SoundDeck",
+      "repoUrl": "https://github.com/AutomatedTechnologies/audacity",
+      "sourceUrl": "https://github.com/AutomatedTechnologies/audacity",
+      "bundleId": null,
+      "category": "Audio",
+      "license": "GPL-3.0",
+      "kind": "catalog",
+      "appStatus": "in-development",
+      "minMacOS": "10.13",
+      "tagline": "Audio editor with VLC-powered playback and conversion — in development.",
+      "description": "An Academy combine-fork: an Audacity-derived editor (pinned Audacity 3.7.9, the last line supporting macOS 10.13) with libVLC (pinned VLC 3.0.24) in a separate helper process for playback, conversion, and video-companion duties. Differentiators: High Sierra floor and a zero-telemetry build, verified by network capture before publication. Ships GPL-3.0 with full source, per the Gate 0 license record. The org fork (AutomatedTechnologies/audacity) is created and its provenance is filed; the first build — a High Sierra build proof of the pinned line — is the open tranche, followed by the bundled-dependency audit. No build exists yet; this entry publishes nothing until a verified build lands.",
+      "catalogStatus": "in-development",
+      "iconUrl": "https://detroitautomationacademy.com/store/icons/sounddeck.png",
+      "buildNotes": "In development — no installable build yet. Build proof complete 2026-11-08 (SD-T2); D2 audit in progress.",
+      "audits": [],
+      "currentBuild": {
+        "tag": "0.0.0",
+        "sizeBytes": null,
+        "sha256": null,
+        "downloadUrl": null,
+        "floor": "10.13",
+        "builtAt": null,
+        "releasePublishedAt": null,
+        "ciRun": null,
+        "auditFlags": {
+          "disassembled": false,
+          "scanned": false,
+          "recompiled": false,
+          "complete": false,
+          "ref": null
+        }
+      }
+    },
+    {
+      "id": "switchboard",
+      "displayName": "Workbench",
+      "repoUrl": "https://github.com/AutomatedTechnologies/KisMac2",
+      "sourceUrl": "https://github.com/AutomatedTechnologies/KisMac2",
+      "bundleId": null,
+      "category": "Network",
+      "license": "GPL-2.0",
+      "kind": "catalog",
+      "appStatus": "release-candidate",
+      "minMacOS": "10.13",
+      "tagline": "One network utility: discovery, diagnostics, and read-only base-station view — staged test build.",
+      "description": "Staged internal build of Workbench, the Academy's unified network utility, CI-built 2026-11-08; launched on the High Sierra rig 2026-11-08: the remediated KisMac discovery engine hosted in a new unified shell, a read-only AirPort base-station configuration view, Ping / Netstat / Traceroute / Speed Test diagnostics, and a local-only journal. Manage is read-only in this build — there is no configuration write path. Installs as Workbench.app under its own Academy bundle identity (com.detroitautomationacademy.workbench) and carries the Academy audit entry, distinct from KisMac — the two install side by side. (The earlier staged-v1-1 build shared the KisMac bundle identity and installing one replaced the other; corrected in staged-v1-2.) The Networks header now reads “Workbench” — staged-v1-4 is the surgical repair of the inherited “KisMac v0.3.4” header (ScanController), one line, nothing else changed. staged-v1-5 additionally re-cuts the app icon to the amended SDS-3 tile construction (the v1-4 header repair is carried in). staged-v1-6 adds the Optimizations panel.",
+      "catalogStatus": "release-candidate",
+      "iconUrl": "https://detroitautomationacademy.com/store/icons/workbench.png",
+      "buildNotes": "Adds the Optimizations panel (local scan tuning). Shell, WaveScanner scanning, Manage read view, Diagnose, Journal and Classroom panels. New glyph: the Wrench (branding distinctiveness refresh). Adds the Academy license and notice to the bundle.",
+      "audits": [],
+      "currentBuild": {
+        "tag": "staged-v1-8",
+        "sizeBytes": 2072514,
+        "sha256": "9fda3ba4f6c739a043b4f1ffe4fef929686b1582507e588b17d8885faaeb0d91",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/staged-v1-8/Workbench-test.zip",
+        "floor": "10.13",
+        "builtAt": null,
+        "releasePublishedAt": "2026-11-08T20:36:10Z",
+        "ciRun": null,
+        "auditFlags": {
+          "disassembled": true,
+          "scanned": true,
+          "recompiled": true,
+          "complete": true,
+          "ref": "bundle-carried audit entry (Distro files/08 rule); shipped-bundle readback: Switchboard project files/14 (staged-v1-8)"
+        }
+      }
+    },
+    {
+      "id": "live-transit-detroit",
+      "displayName": "Live Transit Detroit",
+      "repoUrl": "https://github.com/AutomatedTechnologies/live-transit-detroit",
+      "sourceUrl": null,
+      "bundleId": null,
+      "category": "Transit",
+      "license": "Academy License (revocable)",
+      "kind": "catalog",
+      "appStatus": "release-candidate",
+      "minMacOS": "10.13",
+      "tagline": "Live regional transit for the District of Detroit — native, no browser, built for High Sierra.",
+      "description": "The Academy's native macOS edition of Live Transit Detroit: the whole regional network (DDOT, SMART, QLINE, People Mover) as one live map and vehicle list, rendered in native Core Graphics with no WebView or browser engine. Only the small live vehicle feed is fetched, on a conditional-GET refresh. Release candidate: live merged-network vehicles and alerts on the regional map; GTFS route polylines are not in this build yet. It carries the Academy audit entry and has not yet been launched on the High Sierra rig.",
+      "catalogStatus": "release-candidate",
+      "iconUrl": "https://detroitautomationacademy.com/store/icons/live-transit-detroit.png",
+      "buildNotes": "Native map and live vehicles for the District of Detroit. Route polylines not yet included. New glyph: the Bus (branding distinctiveness refresh).",
+      "audits": [],
+      "currentBuild": {
+        "tag": "v0.1.0-rc2",
+        "sizeBytes": 808126,
+        "sha256": "23440de94ab8e9cb00320e07757b23fe9dd23e759d4db7deed1916bfcfc0dd1c",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/live-transit-detroit/releases/download/v0.1.0-rc2/LiveTransitDetroit-v0.1.0-rc2.zip",
+        "floor": "10.13",
+        "builtAt": "2026-11-08",
+        "releasePublishedAt": "2026-11-08T20:31:29Z",
+        "ciRun": null,
+        "auditFlags": {
+          "disassembled": true,
+          "scanned": true,
+          "recompiled": true,
+          "complete": true,
+          "ref": "bundle-carried audit entry (Distro files/08 rule); shipped-bundle readback: Live Transit project files/04 (v0.1.0-rc2)"
+        }
+      }
+    },
+    {
+      "id": "distro",
+      "displayName": "Distro",
+      "repoUrl": "https://github.com/AutomatedTechnologies/distro",
+      "sourceUrl": "https://github.com/AutomatedTechnologies/distro",
+      "bundleId": null,
+      "category": "Distribution",
+      "license": "Academy License (revocable)",
+      "kind": "catalog",
+      "appStatus": "release-candidate",
+      "minMacOS": "10.13",
+      "tagline": "The Academy's application store for High Sierra — browse, install, and update Academy apps.",
+      "description": "Distro is the Detroit Automation Academy's native application-store app for macOS High Sierra: it browses the Academy catalog, downloads Academy-maintained apps from the AutomatedTechnologies GitHub org, verifies every download by SHA-256 before install, and carries no privileged helper. Prepared at DAADV3 T1 codification (2026-11-07); not yet published — publication remains gated on Distro tranche D-T5. Disassembled. Scanned. Recompiled. Distro distributes only apps carrying the Academy audit entry in their plist — proof of the Academy pipeline. distro-test-17 applies the SDS-9 liquid-glass cues to the store chrome: layered tint depth, the glass hairline pair on the dividers and sheet edges, capsule state controls, and the status word in a capsule chip — flat tints only, no behavior change.\n\n© 2026 Detroit Automation Academy / Automated Technologies. All rights reserved. Detroit Automation Academy, Automated Technologies, Distro, Workbench, Live Transit Detroit, The Signal, and the Academy monochrome logo are marks of the Academy, used under the founder's permission. Academy-original works are licensed under the Academy License (revocable); upstream open-source components remain under their own licenses. distro-test-22 adds Update All: when updates are pending, one button runs them sequentially — each app still verified by SHA-256 and the audit gate on its own — and ends with a single summary. The detail pane now shows build notes for the catalog version and the installed app's file path. Catalog fetches now bypass HTTP caches, so Refresh always returns the current catalog.",
+      "catalogStatus": "release-candidate",
+      "iconUrl": "https://detroitautomationacademy.com/store/icons/distro.png",
+      "buildNotes": "Ships the Package glyph (branding distinctiveness refresh). Fixes catalog refreshes serving a stale cached copy (fresh-fetch request on every load), and gives Distro's own row a Running state — the app in use. Adds Update All (sequential updates, one summary), build notes in the detail pane, and the Installed at: path line. Bundles the Academy License and IP notice in the app (IP protection T2).",
+      "audits": [],
+      "currentBuild": {
+        "tag": "distro-test-38",
+        "sizeBytes": 739996,
+        "sha256": "42d1ad8d46808c554b8203da350a7390358bbe9ce29a980ccaed1bf9a98061ab",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/distro/releases/download/distro-test-38/Distro-test.zip",
+        "floor": "10.13",
+        "builtAt": "2026-11-08",
+        "releasePublishedAt": "2026-11-08T20:36:53Z",
+        "ciRun": null,
+        "auditFlags": {
+          "disassembled": true,
+          "scanned": true,
+          "recompiled": true,
+          "complete": true,
+          "ref": "bundle-carried audit entry (Distro files/08 rule); fresh-download plist readback verified 2026-11-09 in Singular Reference T4 (distro-test-38, SHA-256 42d1ad8d46808c554b8203da350a7390358bbe9ce29a980ccaed1bf9a98061ab)"
+        }
+      }
+    },
+    {
+      "id": "muse-academy",
+      "displayName": "Muse (Academy Build)",
+      "repoUrl": "https://github.com/AutomatedTechnologies/muse-academy",
+      "sourceUrl": "https://github.com/benjaminkitt/muse-desktop",
+      "bundleId": null,
+      "category": "Productivity",
+      "license": "MIT",
+      "kind": "catalog",
+      "appStatus": "release-candidate",
+      "minMacOS": "10.13",
+      "tagline": "The Muse desktop client, rebuilt by the Academy for High Sierra.",
+      "description": "The Academy's build of the open-source muse-desktop client (MIT, v0.3.0) on Electron 22.3.27 — the last Electron that runs on macOS 10.13 — so Intel High Sierra machines can run a Muse client at all; the official Muse app requires Apple Silicon and a current macOS. Packaged with the Academy monochrome icon. Unofficial build: not a Meta product and not endorsed by Meta. Unsigned test build. Runtime verified on the Academy's High Sierra rig: installed through Distro, it opens on first launch (2026-11-08). Its icon is cut to the amended SDS-3 construction — white tile and ink glyph, no black field.",
+      "catalogStatus": "release-candidate",
+      "iconUrl": "https://detroitautomationacademy.com/store/icons/muse-academy.png",
+      "buildNotes": "Trimmed-icon refresh. Built from the open-source muse-desktop v0.3.0 (MIT) on Electron 22.3.27.",
+      "audits": [],
+      "currentBuild": {
+        "tag": "0.3.0-academy3",
+        "sizeBytes": 91262953,
+        "sha256": "bc62fb17e2e9f48259656272eac6953a20994a295d42e7032bd4357c78c04980",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/muse-academy/releases/download/muse-academy-0.3.0/Muse-Academy-1013-x64.zip",
+        "floor": "10.13",
+        "builtAt": "2026-11-08",
+        "releasePublishedAt": "2026-11-08T06:11:32Z",
+        "ciRun": null,
+        "auditFlags": {
+          "disassembled": true,
+          "scanned": true,
+          "recompiled": true,
+          "complete": true,
+          "ref": "bundle-carried audit entry (Distro files/08 rule); fresh-download verified: Distro project files/11 DAADV3 assimilation audit (0.3.0-academy3)"
+        }
+      }
+    },
+    {
+      "id": "airpods-max-diag",
+      "displayName": "AirPods Max Diagnostics",
+      "repoUrl": "https://github.com/AutomatedTechnologies/airpods-max-diag",
+      "sourceUrl": "https://github.com/AutomatedTechnologies/airpods-max-diag",
+      "bundleId": null,
+      "category": "Utilities",
+      "license": "Academy License (revocable)",
+      "kind": "catalog",
+      "appStatus": "testing",
+      "minMacOS": "10.13",
+      "tagline": "Diagnose and recover a non-responsive AirPods Max (Lightning) — USB, Bluetooth, audio, firmware.",
+      "description": "An Academy-original utility for a USB-connected AirPods Max (Lightning generation) that will not respond. Five-section diagnostics — USB enumeration and power, IORegistry device node, CoreAudio device list, Bluetooth pairing and link, recent bluetoothd/coreaudiod log evidence — with a branching verdict; guided Restart and Factory Reset sheets for the headphones (including the 15-second reset hold timer); a Restart Services action for coreaudiod and bluetoothd; and a Firmware panel that reads the device firmware and compares it with the latest for this model (6F25, Apple Support 106340), evaluating Apple's automatic-update conditions live. Installs as AirPodsMaxDiag.app under its own Academy bundle identity (com.detroitautomationacademy.airpodsmaxdiag) and carries the Academy audit entry. AirPods Max is a trademark of Apple Inc.; this utility is not affiliated with or endorsed by Apple Inc.",
+      "catalogStatus": "testing",
+      "iconUrl": "https://detroitautomationacademy.com/store/icons/airpods-max-diag.png",
+      "buildNotes": "New: Force USB Reset — a bus-level reset (re-enumeration) issued to the headphones over USB, two cycles, with the result measured in the report. New: battery status query — the report now states any battery data the device reports over USB, or that none is reported. Also carries the Force Restart Connection and Force Firmware Update actions from test-2.",
+      "audits": [],
+      "currentBuild": {
+        "tag": "apd-test-4",
+        "sizeBytes": 717096,
+        "sha256": "c397b0f8bf10ae080bf67a63bed2d74e13a3ac4b03c0d585de4bc0a38654db30",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/airpods-max-diag/releases/download/apd-test-4/AirPodsMaxDiag-test.zip",
+        "floor": "10.13",
+        "builtAt": null,
+        "releasePublishedAt": "2026-11-08T21:00:57Z",
+        "ciRun": null,
+        "auditFlags": {
+          "disassembled": true,
+          "scanned": true,
+          "recompiled": true,
+          "complete": true,
+          "ref": "bundle-carried audit entry (Distro files/08 rule); record: AirPods Max Diagnostics records/03 (apd-test-4)"
+        }
+      }
+    }
+  ],
+  "pipelineAudits": [
+    {
+      "appId": "tabletool",
+      "displayName": "TableTool",
+      "standardVersion": "Audit and Review Standard D1-D8 (2026-11-08)",
+      "forkPointSha": "066e66d8dab6e821dd7fb1dcbe1967b746693fe0",
+      "filesTotal": 118,
+      "linesTotal": 5283,
+      "linesReviewed": 5283,
+      "verdict": "COMPLETE",
+      "auditedAt": "2026-11-08",
+      "findings": {
+        "total": 17,
+        "critical": 0,
+        "high": 2,
+        "medium": 6,
+        "low": 9
+      }
+    }
+  ],
+  "daadv4": {
+    "unverified": {
+      "estate": 1,
+      "byProject": [
+        {
+          "project": "sequelpro",
+          "unverified": 1
+        }
+      ]
+    },
+    "matrix": {
+      "rows": 27,
+      "distribution": {
+        "guarded": 1,
+        "partial": 2,
+        "supported": 11,
+        "unsupported-core": 2,
+        "unsupported-degraded": 4,
+        "unverified-capability": 5,
+        "zero-exposure": 2
+      }
+    },
+    "conformance": [
+      {
+        "appId": "airpods-max-diag",
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": false,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      },
+      {
+        "appId": "distro",
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": true,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      },
+      {
+        "appId": "kismac",
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": true,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      },
+      {
+        "appId": "live-transit-detroit",
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": true,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      },
+      {
+        "appId": "macdown",
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": true,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      },
+      {
+        "appId": "muse-academy",
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": false,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      },
+      {
+        "appId": "sequelpro",
+        "gapsDispositioned": true,
+        "depsClear": false,
+        "gateFiled": true,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      },
+      {
+        "appId": "sounddeck",
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": false,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      },
+      {
+        "appId": "spectacle",
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": true,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      },
+      {
+        "appId": "switchboard",
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": true,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      },
+      {
+        "appId": "tabletool",
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": false,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      }
+    ],
+    "fixtures": [
+      {
+        "id": "DB-01",
+        "state": "green"
+      },
+      {
+        "id": "HF-01",
+        "state": "green"
+      },
+      {
+        "id": "HF-02",
+        "state": "red"
+      },
+      {
+        "id": "HF-03",
+        "state": "red"
+      },
+      {
+        "id": "HF-04",
+        "state": "red"
+      },
+      {
+        "id": "HF-05",
+        "state": "red"
+      },
+      {
+        "id": "HF-06",
+        "state": "red"
+      },
+      {
+        "id": "HF-07",
+        "state": "green"
+      },
+      {
+        "id": "HF-08",
+        "state": "mixed"
+      }
+    ],
+    "claims": {
+      "total": 26,
+      "traced": 1,
+      "untraced": 25
+    }
+  },
+  "canaryEndpoints": {
+    "note": "Decoy endpoint references (DAADV4 A4): no Academy client is pointed at these URLs and they do not exist on the real estate (404, verified 2026-11-09). A copied deployment that serves or answers them has lifted these renders wholesale.",
+    "urls": [
+      "https://detroitautomationacademy.com/updates/sequelpro/appcast.xml",
+      "https://detroitautomationacademy.com/updates/sounddeck/appcast.xml",
+      "https://detroitautomationacademy.com/updates/switchboard/appcast.xml",
+      "https://detroitautomationacademy.com/updates/distro/appcast.xml",
+      "https://detroitautomationacademy.com/updates/live-transit-detroit/appcast.xml",
+      "https://detroitautomationacademy.com/updates/muse-academy/appcast.xml",
+      "https://detroitautomationacademy.com/updates/airpods-max-diag/appcast.xml"
+    ]
+  }
+}
