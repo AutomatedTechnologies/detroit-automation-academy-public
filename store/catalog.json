@@ -38,21 +38,21 @@
     },
     {
       "category": "Productivity",
-      "datePublished": "2026-11-08",
+      "datePublished": "2026-11-10",
       "description": "The Academy's maintained build of MacDown. Uplift includes the Hoedown recursion-bound fix and the planned migration from legacy WebView to WKWebView; zero telemetry, MathJax bundled locally. Release candidate: first Academy build — Academy bundle identity and the Academy audit entry verified in the shipped bundle. The app icon is cut to the amended SDS-3 construction — white tile, ink glyph, no black field; the earlier color-icon gap is closed. Not yet run on the High Sierra rig. Audit findings F-01/F-02/F-03/F-05/F-06 remain open.",
-      "downloadURL": "https://github.com/AutomatedTechnologies/macdown/releases/download/macdown-test-11/MacDown-test.zip",
+      "downloadURL": "https://github.com/AutomatedTechnologies/macdown/releases/download/macdown-test-12/MacDown-test.zip",
       "iconURL": "https://detroitautomationacademy.com/store/icons/macdown.png",
       "id": "macdown",
       "license": "MIT",
       "minMacOS": "10.13",
       "name": "MacDown",
-      "sha256": "19379c12ca68039f456e9d13cf0a245dca3877d9a7746bbfaf3455e1443fbdb2",
-      "sizeBytes": 7065364,
+      "sha256": "a100f9b21da0d327054bfb83ba0a554f37450aff203ce66f967aa9d9fd6c6bd6",
+      "sizeBytes": 7683173,
       "sourceURL": "https://github.com/AutomatedTechnologies/macdown",
       "status": "release-candidate",
       "tagline": "Markdown editor with live preview, maintained for High Sierra.",
-      "version": "macdown-test-11",
-      "buildNotes": "Fixes the launch crash in test-10 (finding F-10): a toolbar index read past the end of an empty array — latent upstream code the modern compiler traps. Academy rebuild: Academy bundle ID, trimmed monochrome icon, audit entry; Hoedown parser nesting bound (finding F-02 fix)."
+      "version": "macdown-test-12",
+      "buildNotes": "SDS-10 conformance build (SDS10-T3): the SDS-8 welcome screen (MPWelcomeController) presents at launch — the AppIcon composition as the welcome mark, the build version read from the bundle Info.plist at runtime, and the standard startup sound, byte-identical to the library master. The bundle stamps the SDS-10 conformance entry beside the audit entry; Academy license and notice files are bundled. Fixes carried: the launch crash in test-10 (finding F-10, toolbar guard from test-11), the Hoedown parser nesting bound (finding F-02 fix). Academy rebuild: Academy bundle ID, trimmed monochrome icon, audit entry."
     },
     {
       "category": "Utilities",
