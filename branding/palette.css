@@ -12,3 +12,12 @@ Last Modified: October 22, 2026
   --daa-accent: #b4b4b4;    /* Amber */
   --daa-muted: #9f9f9f;     /* Concrete */
 }
+
+/* SDS-9 Liquid Glass cues (V5-T5b, 2026-11-09): token layer only — the
+   specular-edge tint and a one-step-deeper layer tint for this family's
+   surfaces, in its dark ramp (bg #101010 -> layer #1a1a1a). Flat tints;
+   no backdrop-filter dependency. */
+:root {
+  --daa-glass-edge: #ffffff;
+  --daa-glass-layer: #1a1a1a;
+}

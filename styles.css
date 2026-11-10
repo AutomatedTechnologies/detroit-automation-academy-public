@@ -872,3 +872,23 @@ body.demo-locked { overflow: hidden; }
   .nav-links > .lane { display: block; padding: 13px 0; border-top: 1px solid var(--line); }
   .nav-links > .lane:first-child { border-top: 0; }
 }
+
+/* SDS-9 Liquid Glass cues (V5-T5b, 2026-11-09) — the cue set of
+   SOFTWARE-DESIGN-STANDARDS.md SDS-9 translated floor-honestly for
+   Safari 11.1: the glass hairline pair (1px paper-bright top edge +
+   ink hairline beneath) on floating surfaces, layered flat tints,
+   capsule controls. Flat tints only — no surface here depends on
+   backdrop-filter to read correctly; the .nav blur elsewhere in this
+   file remains an enhancement over its flat tint, never the meaning. */
+.card, .principle, #b5b5b5-commentary {
+  border-top: 1px solid #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.18), 0 10px 30px rgba(0,0,0,0.10);
+}
+.lane-items {
+  border-top: 1px solid #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 16px 40px rgba(0,0,0,.5);
+}
+.footer {
+  border-top: 1px solid #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.15);
+}
