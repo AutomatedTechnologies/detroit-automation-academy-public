@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registry — Singular Reference Snapshot · Detroit Automation Academy</title>
+<meta name="description" content="The Detroit Automation Academy Singular Reference, published as a pinned, hash-verified database snapshot. Query the catalog, conformance, domain census, and claims registers in your browser, or read the static renders.">
+<style>
+  :root { --ink:#000; --paper:#fff; --panel:#f4f4f4; --muted:#444; --faint:#999; --line:#d8d8d8; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink);
+         font-family:-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;
+         font-size:16px; line-height:1.5; }
+  header, main, footer { max-width:880px; margin:0 auto; padding:0 20px; }
+  header { padding-top:28px; }
+  .brand { font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+  h1 { font-size:30px; margin:6px 0 4px; font-weight:700; }
+  h2 { font-size:20px; margin:34px 0 8px; border-top:1px solid var(--line); padding-top:18px; }
+  h3 { font-size:16px; margin:20px 0 6px; }
+  p { margin:8px 0; }
+  .lede { color:var(--muted); max-width:65ch; }
+  a { color:var(--ink); }
+  code, .mono { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px 16px; margin:14px 0; }
+  .card dl { display:grid; grid-template-columns:170px 1fr; gap:4px 14px; margin:0; }
+  .card dt { color:var(--muted); }
+  .card dd { margin:0; word-break:break-all; }
+  table { border-collapse:collapse; width:100%; margin:10px 0 4px; font-size:14px; }
+  th, td { border:1px solid var(--line); padding:5px 9px; text-align:left; vertical-align:top; }
+  th { background:var(--panel); font-weight:600; }
+  caption { text-align:left; color:var(--muted); font-size:13px; padding-bottom:4px; }
+  .scroll { overflow-x:auto; }
+  button { font:inherit; font-size:14px; background:var(--ink); color:var(--paper);
+           border:1px solid var(--ink); border-radius:6px; padding:7px 14px; cursor:pointer; margin:2px 4px 2px 0; }
+  button[disabled] { background:var(--paper); color:var(--faint); border-color:var(--faint); cursor:default; }
+  button.secondary { background:var(--paper); color:var(--ink); }
+  textarea { width:100%; min-height:84px; font-family:ui-monospace,Menlo,Consolas,monospace;
+             font-size:13px; padding:9px; border:1px solid var(--line); border-radius:6px; }
+  #status { border-left:4px solid var(--ink); background:var(--panel); padding:10px 14px; margin:16px 0; font-size:14px; }
+  #status.fail { border-left-color:var(--muted); }
+  pre.sql { background:var(--panel); border:1px solid var(--line); border-radius:6px;
+            padding:9px 12px; overflow-x:auto; font-size:12.5px; margin:6px 0 10px; white-space:pre-wrap; }
+  .err { color:var(--muted); font-size:14px; }
+  footer { border-top:1px solid var(--line); margin-top:40px; padding-top:14px; padding-bottom:30px;
+           color:var(--muted); font-size:12.5px; }
+  nav.top a { margin-right:14px; font-size:14px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Detroit Automation Academy</div>
+  <h1>The Registry — Singular Reference, published</h1>
+  <p class="lede">One write model holds every fact about the Academy's software
+  estate — the catalog, the conformance register, the domain census, and the
+  claims register. This page publishes that reference as a pinned,
+  hash-verified database snapshot: your browser can verify the snapshot's
+  SHA-256 and then query the database itself, or you can read the static
+  renders below. The snapshot is read-only; there is no write path.</p>
+  <nav class="top">
+    <a href="/">Home</a>
+    <a href="/store/catalog.json">Catalog (JSON)</a>
+    <a href="/sitemap.xml">Sitemap</a>
+    <a href="/software/">Software</a>
+  </nav>
+</header>
+<main>
+  <div id="status">Static renders are shown below. The live query layer
+  starts by fetching the snapshot manifest and verifying the snapshot
+  before any query runs.</div>
+  <noscript><p class="err">JavaScript is disabled: the static renders below
+  are the complete published state of this snapshot. The live query layer
+  needs JavaScript, WebAssembly, and WebCrypto.</p></noscript>
+
+  <h2>Snapshot of record</h2>
+  <div class="card">
+    <dl>
+      <dt>Version</dt><dd class="mono">v5-0006 (schema v5 · ledger changes/0006)</dd>
+      <dt>SHA-256</dt><dd class="mono">da24de2b341165630a2c87dc0084d3fe1a9e5d902f964d38e6545e3af4e27671</dd>
+      <dt>Size</dt><dd class="mono">811,008 bytes</dd>
+      <dt>State fingerprint</dt><dd class="mono">sha256:175e492b08bb705637f4f204221856225bdd03c08f6c7655324a6e4d58333599</dd>
+      <dt>Source</dt><dd class="mono">AutomatedTechnologies/academy-registry · registry.db @ 246c34801a5c484de3f27287b8e7af991707d047</dd>
+      <dt>Snapshot file</dt><dd><a href="/registry/v5-0006/registry.db">/registry/v5-0006/registry.db</a> (immutable at this versioned URL)</dd>
+      <dt>Manifest</dt><dd><a href="/registry/v5-0006/registry-manifest.json">versioned manifest</a> · <a href="/registry/registry-manifest.json">current-version pointer</a></dd>
+    </dl>
+  </div>
+  <p>The versioned URL never changes bytes. A new registry state publishes
+  at a new versioned URL; the pointer manifest names the current version.
+  Consumers pin a versioned manifest URL and the SHA-256 they expect, and
+  halt on any mismatch — verify, then query.</p>
+
+  <h2>Query the snapshot</h2>
+  <p>The canned queries below run, in your browser, against the verified
+  snapshot — the same predicates the registry's own census tools run.
+  The SQL box accepts a single read-only <span class="mono">SELECT</span>
+  statement.</p>
+  <div>
+    <button id="btn-load">Load + verify snapshot</button>
+    <button class="qbtn secondary" data-q="catalog" disabled>Catalog state</button>
+    <button class="qbtn secondary" data-q="conformance" disabled>Conformance summary</button>
+    <button class="qbtn secondary" data-q="census" disabled>Domain census</button>
+    <button class="qbtn secondary" data-q="claims" disabled>Claims census</button>
+  </div>
+  <h3>Catalog state — <span class="mono">catalog_state ⋈ apps ⋈ builds</span></h3>
+  <pre class="sql">SELECT a.id AS app, cs.status, b.tag AS current_build
+FROM catalog_state cs
+JOIN apps a ON a.id = cs.app_id
+JOIN builds b ON b.id = cs.current_build_id
+ORDER BY a.sort_order;</pre>
+  <h3>Conformance summary — the <span class="mono">conformance</span> view + <span class="mono">v_unverified_count</span></h3>
+  <pre class="sql">SELECT attestation_state, COUNT(*) AS apps FROM conformance
+GROUP BY attestation_state;
+SELECT scope, unverified FROM v_unverified_count WHERE scope = 'ESTATE';</pre>
+  <h3>Domain census — <span class="mono">page_checks</span> (Loop 5 predicates)</h3>
+  <pre class="sql">SELECT (SELECT COUNT(*) FROM page_checks) AS population,
+       (SELECT COUNT(*) FROM page_checks WHERE in_sitemap = 0) AS not_in_sitemap,
+       (SELECT COUNT(*) FROM page_checks WHERE design_observed = 'standalone-inline') AS standalone_inline,
+       (SELECT COUNT(*) FROM page_checks WHERE stamp_present = 1) AS stamped,
+       (SELECT COUNT(*) FROM page_checks WHERE ip_notice_class = 'full') AS ip_full;</pre>
+  <h3>Claims census — <span class="mono">claims</span> (HF-04 predicates)</h3>
+  <pre class="sql">SELECT COUNT(*) AS claims,
+       SUM(evidence_ref IS NOT NULL) AS traced,
+       COUNT(*) - SUM(evidence_ref IS NOT NULL) AS untraced
+FROM claims;</pre>
+  <h3>Your own query (read-only)</h3>
+  <textarea id="sqlbox" spellcheck="false">SELECT id, display_name, kind, status FROM apps ORDER BY sort_order;</textarea>
+  <div><button id="btn-run" disabled>Run query</button></div>
+  <div id="results" aria-live="polite"></div>
+
+  <h2>Static renders of this snapshot</h2>
+  <p>These tables are generated from the same rows the snapshot carries.
+  They are the fallback of record: on a browser without WebAssembly or
+  WebCrypto (including the Academy's macOS High Sierra / Safari 11.1
+  floor), this section is the surface, and it is complete without
+  JavaScript.</p>
+
+  <div class="scroll">
+  <table>
+    <caption>Catalog state — 10 published entries (registry: 11 apps, 10 builds, 62 acquisitions from 400 candidates)</caption>
+    <tr><th>App</th><th>Status</th><th>Current build</th></tr>
+    <tr><td>kismac</td><td>release-candidate</td><td>test-build-18</td></tr>
+    <tr><td>spectacle</td><td>release-candidate</td><td>spectacle-test-7</td></tr>
+    <tr><td>macdown</td><td>release-candidate</td><td>macdown-test-11</td></tr>
+    <tr><td>sequelpro</td><td>release-candidate</td><td>sequelpro-test-7</td></tr>
+    <tr><td>sounddeck</td><td>in-development</td><td>0.0.0</td></tr>
+    <tr><td>switchboard</td><td>release-candidate</td><td>staged-v1-8</td></tr>
+    <tr><td>live-transit-detroit</td><td>release-candidate</td><td>v0.1.0-rc2</td></tr>
+    <tr><td>distro</td><td>release-candidate</td><td>distro-test-38</td></tr>
+    <tr><td>muse-academy</td><td>release-candidate</td><td>0.3.0-academy3</td></tr>
+    <tr><td>airpods-max-diag</td><td>testing</td><td>apd-test-4</td></tr>
+  </table>
+  </div>
+
+  <div class="scroll">
+  <table>
+    <caption>Conformance + registers</caption>
+    <tr><th>Measure</th><th>Value</th></tr>
+    <tr><td>Attestation (conformance view, 11 apps)</td><td>not attested: 11 · attested: 0 (rig evidence is the open gate)</td></tr>
+    <tr><td>Unverified dependencies, estate (v_unverified_count)</td><td>1</td></tr>
+    <tr><td>Claims (HF-04 census)</td><td>26 claims · 1 traced · 25 untraced</td></tr>
+    <tr><td>Pipeline audits on record</td><td>1 complete audit · 17 findings (0 Critical · 2 High · 6 Medium · 9 Low)</td></tr>
+  </table>
+  </div>
+
+  <div class="scroll">
+  <table>
+    <caption>Domain census — page_checks, 2026-11-09 served-byte audit population</caption>
+    <tr><th>Count</th><th>Value</th></tr>
+    <tr><td>Population</td><td>355</td></tr>
+    <tr><td>Not in the (audit-time) sitemap</td><td>296</td></tr>
+    <tr><td>Standalone-inline design</td><td>7</td></tr>
+    <tr><td>Carrying the enterprise stamp</td><td>60</td></tr>
+    <tr><td>Full IP notice</td><td>62</td></tr>
+    <tr><td>Sitemap (generated from these rows)</td><td>65 URLs — <a href="/sitemap.xml">sitemap.xml</a></td></tr>
+  </table>
+  </div>
+  <p>The full generated renders also serve as files:
+  <a href="/store/catalog.json">the catalog</a> and
+  <a href="/sitemap.xml">the sitemap</a> are renders of this same
+  reference; the snapshot above is the reference itself.</p>
+</main>
+<footer>
+  <p>Read-only published surface. Snapshot publication: DAADV5 plan
+  section 3(a) — the registry published as a static file, queried in the
+  browser (SQLite via WebAssembly, vendored sql.js 1.8.0, MIT —
+  <a href="/registry/vendor/SQLJS-LICENSE.txt">license</a>). Fallback of
+  record: the static renders on this page.</p>
+  <p>PAGE STAMP — Built: 2026-11-09 21:50 EST · Build: V5-T2 · Agent: Forge · Authorized: J. Spencer Smith, directive of 2026-11-09 (DAADV5 Priority 0 sequence — published database query surface)</p>
+</footer>
+<script src="vendor/sql-wasm.js"></script>
+<script>
+(function () {
+  "use strict";
+  var statusEl = document.getElementById("status");
+  var resultsEl = document.getElementById("results");
+  var loadBtn = document.getElementById("btn-load");
+  var runBtn = document.getElementById("btn-run");
+  var qbtns = document.querySelectorAll(".qbtn");
+  var db = null;
+
+  var CANNED = {
+    catalog: "SELECT a.id AS app, cs.status, b.tag AS current_build FROM catalog_state cs JOIN apps a ON a.id = cs.app_id JOIN builds b ON b.id = cs.current_build_id ORDER BY a.sort_order;",
+    conformance: "SELECT attestation_state, COUNT(*) AS apps FROM conformance GROUP BY attestation_state;",
+    census: "SELECT (SELECT COUNT(*) FROM page_checks) AS population, (SELECT COUNT(*) FROM page_checks WHERE in_sitemap = 0) AS not_in_sitemap, (SELECT COUNT(*) FROM page_checks WHERE design_observed = 'standalone-inline') AS standalone_inline, (SELECT COUNT(*) FROM page_checks WHERE stamp_present = 1) AS stamped, (SELECT COUNT(*) FROM page_checks WHERE ip_notice_class = 'full') AS ip_full;",
+    claims: "SELECT COUNT(*) AS claims, SUM(evidence_ref IS NOT NULL) AS traced, COUNT(*) - SUM(evidence_ref IS NOT NULL) AS untraced FROM claims;"
+  };
+
+  function setStatus(msg, fail) {
+    statusEl.textContent = msg;
+    statusEl.className = fail ? "fail" : "";
+    statusEl.id = "status";
+  }
+  function fail(msg) {
+    setStatus(msg + " The static renders below remain the complete published state of this snapshot.", true);
+    loadBtn.disabled = false;
+  }
+
+  function renderResults(sets, title) {
+    resultsEl.innerHTML = "";
+    var h = document.createElement("h3");
+    h.textContent = title;
+    resultsEl.appendChild(h);
+    sets.forEach(function (set) {
+      var wrap = document.createElement("div");
+      wrap.className = "scroll";
+      var table = document.createElement("table");
+      var head = document.createElement("tr");
+      set.columns.forEach(function (c) {
+        var th = document.createElement("th");
+        th.textContent = c;
+        head.appendChild(th);
+      });
+      table.appendChild(head);
+      set.values.slice(0, 200).forEach(function (row) {
+        var tr = document.createElement("tr");
+        row.forEach(function (v) {
+          var td = document.createElement("td");
+          td.textContent = v === null ? "NULL" : String(v);
+          tr.appendChild(td);
+        });
+        table.appendChild(tr);
+      });
+      wrap.appendChild(table);
+      resultsEl.appendChild(wrap);
+      if (set.values.length > 200) {
+        var note = document.createElement("p");
+        note.className = "err";
+        note.textContent = "Showing the first 200 of " + set.values.length + " rows.";
+        resultsEl.appendChild(note);
+      }
+    });
+  }
+
+  function hexOf(buf) {
+    var bytes = new Uint8Array(buf), out = "";
+    for (var i = 0; i < bytes.length; i++) {
+      out += ("0" + bytes[i].toString(16)).slice(-2);
+    }
+    return out;
+  }
+
+  function enableQueries() {
+    for (var i = 0; i < qbtns.length; i++) { qbtns[i].disabled = false; }
+    runBtn.disabled = false;
+  }
+
+  loadBtn.addEventListener("click", function () {
+    loadBtn.disabled = true;
+    if (typeof WebAssembly !== "object" || typeof fetch !== "function" ||
+        !window.crypto || !crypto.subtle || typeof initSqlJs !== "function") {
+      fail("This browser lacks one of the APIs the live layer needs (WebAssembly, fetch, or WebCrypto).");
+      return;
+    }
+    setStatus("Fetching the snapshot manifest…");
+    fetch("/registry/registry-manifest.json?cb=" + Date.now())
+      .then(function (r) { if (!r.ok) { throw new Error("manifest HTTP " + r.status); } return r.json(); })
+      .then(function (manifest) {
+        setStatus("Manifest names snapshot " + manifest.version + " · expected SHA-256 " +
+                  manifest.sha256.slice(0, 16) + "… · fetching " + manifest.size_bytes + " bytes…");
+        return fetch(manifest.snapshot_url).then(function (r) {
+          if (!r.ok) { throw new Error("snapshot HTTP " + r.status); }
+          return r.arrayBuffer();
+        }).then(function (buf) {
+          if (buf.byteLength !== manifest.size_bytes) {
+            throw new Error("size mismatch: manifest " + manifest.size_bytes + ", fetched " + buf.byteLength);
+          }
+          return crypto.subtle.digest("SHA-256", buf).then(function (digest) {
+            var got = hexOf(digest);
+            if (got !== manifest.sha256) {
+              throw new Error("SHA-256 mismatch — refusing to query an unverified snapshot.");
+            }
+            setStatus("Snapshot verified: SHA-256 matches the manifest (" + got.slice(0, 16) +
+                      "…, " + buf.byteLength + " bytes, version " + manifest.version +
+                      "). Loading the database…");
+            return initSqlJs({ locateFile: function (f) { return "vendor/" + f; } })
+              .then(function (SQL) {
+                db = new SQL.Database(new Uint8Array(buf));
+                setStatus("Snapshot verified and loaded (version " + manifest.version +
+                          "). Run a canned query, or write a read-only SELECT below.");
+                enableQueries();
+              });
+          });
+        });
+      })
+      .catch(function (e) { fail("Live layer stopped: " + e.message + "."); });
+  });
+
+  for (var i = 0; i < qbtns.length; i++) {
+    qbtns[i].addEventListener("click", function () {
+      if (!db) { return; }
+      var key = this.getAttribute("data-q");
+      try {
+        renderResults(db.exec(CANNED[key]), "Result — " + key);
+      } catch (e) {
+        fail("Query failed: " + e.message);
+      }
+    });
+  }
+
+  var FORBIDDEN = /\b(insert|update|delete|drop|alter|create|pragma|attach|detach|vacuum|replace|truncate|grant|revoke|reindex)\b/i;
+  runBtn.addEventListener("click", function () {
+    if (!db) { return; }
+    var sql = document.getElementById("sqlbox").value.trim();
+    var body = sql.replace(/;\s*$/, "");
+    if (!body || body.indexOf(";") !== -1) {
+      setStatus("The SQL box takes exactly one statement.", true); return;
+    }
+    if (!/^(select|with)\b/i.test(body)) {
+      setStatus("Read-only: the statement must start with SELECT (or WITH … SELECT).", true); return;
+    }
+    if (FORBIDDEN.test(body)) {
+      setStatus("Read-only: that statement contains a forbidden keyword.", true); return;
+    }
+    if (body.length > 2000) {
+      setStatus("Query too long (2,000 characters maximum).", true); return;
+    }
+    try {
+      renderResults(db.exec(body), "Result — your query");
+      setStatus("Query ran against the verified snapshot.");
+    } catch (e) {
+      setStatus("Query error: " + e.message, true);
+    }
+  });
+})();
+</script>
+</body>
+</html>
