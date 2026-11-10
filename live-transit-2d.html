@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live Transit Detroit — Floor view (2D map)</title>
+<style>
+  html, body { margin:0; padding:0; height:100%; background:#0b0b0b; color:#f2f2f2;
+    font-family:-apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; overflow:hidden; }
+  #bar { position:absolute; top:0; left:0; right:0; height:52px; background:#111; border-bottom:1px solid #2a2a2a; z-index:5; }
+  #bar .brand { position:absolute; left:16px; top:8px; font-size:17px; font-weight:600; }
+  #bar .brand span { color:#9a9a9a; font-weight:400; }
+  #bar .live { position:absolute; left:16px; top:30px; font-size:12px; color:#bdbdbd; }
+  #bar .live b { color:#fff; }
+  #bar .dot { display:inline-block; width:7px; height:7px; border-radius:4px; background:#e8e8e8; margin-right:6px; }
+  #map { position:absolute; top:52px; left:0; right:0; bottom:96px; display:block; cursor:grab; }
+  #rail { position:absolute; left:14px; top:66px; z-index:6; width:168px; }
+  #rail button { display:block; width:100%; text-align:left; margin-bottom:7px; padding:9px 12px; border-radius:9px;
+    border:1px solid #3a3a3a; background:rgba(18,18,18,0.92); color:#e8e8e8; font-size:13px; cursor:pointer; }
+  #rail button.sel { background:#e8e8e8; color:#111; border-color:#e8e8e8; font-weight:600; }
+  #rail .hd { font-size:10px; letter-spacing:2px; color:#8f8f8f; margin:2px 0 7px 2px; }
+  #navCard { position:absolute; right:14px; top:66px; z-index:6; width:238px; background:rgba(15,15,15,0.94);
+    border:1px solid #333; border-radius:10px; padding:13px 15px; }
+  #navCard .k { font-size:10px; letter-spacing:2px; color:#8f8f8f; }
+  #navCard h2 { margin:4px 0 8px 0; font-size:18px; font-weight:600; }
+  #navCard table { border-collapse:collapse; font-size:13px; }
+  #navCard td { padding:3px 0; vertical-align:top; }
+  #navCard td.k2 { color:#9a9a9a; padding-right:12px; white-space:nowrap; }
+  #navCard button { margin-top:10px; padding:7px 12px; border-radius:8px; border:1px solid #3a3a3a;
+    background:#1d1d1d; color:#f2f2f2; font-size:12px; cursor:pointer; }
+  #compass { position:absolute; right:14px; top:290px; z-index:6; background:rgba(15,15,15,0.85);
+    border:1px solid #333; border-radius:32px; }
+  #lineupWrap { position:absolute; left:0; right:0; bottom:26px; height:70px; background:#101010; border-top:1px solid #2a2a2a; z-index:5; }
+  #lineupTitle { font-size:11px; letter-spacing:1px; color:#9a9a9a; padding:7px 16px 0 16px; }
+  #lineup { position:relative; margin:10px 22px 0 22px; height:26px; border-top:2px solid #3d3d3d; }
+  #lineup .stop { position:absolute; top:-5px; width:8px; height:8px; border-radius:4px; background:#5a5a5a; margin-left:-4px; }
+  #lineup .bus { position:absolute; top:-8px; width:14px; height:14px; border-radius:7px; background:#fff; margin-left:-7px;
+    border:2px solid #0b0b0b; }
+  #notice { position:absolute; top:66px; left:50%; margin-left:-210px; width:420px; z-index:7;
+    background:rgba(16,16,16,0.95); border:1px solid #444; border-radius:10px; padding:14px 18px; font-size:14px; display:none; }
+  #foot { position:absolute; left:0; right:0; bottom:0; height:26px; background:#111; border-top:1px solid #2a2a2a;
+    color:#8f8f8f; font-size:11px; line-height:26px; padding:0 14px; white-space:nowrap; overflow:hidden; }
+</style>
+</head>
+<body>
+<div id="bar">
+  <div class="brand">Live transit <span>&middot; Detroit &mdash; Floor view &middot; 2D map</span></div>
+  <div class="live" id="liveLine"><span class="dot"></span>Loading live vehicles&hellip;</div>
+</div>
+<canvas id="map"></canvas>
+<div id="rail"><div class="hd">NAVIGATE</div><div id="railBtns"></div></div>
+<div id="navCard"><div class="k">NAVIGATION</div><h2>Overview</h2></div>
+<canvas id="compass" width="64" height="64"></canvas>
+<div id="lineupWrap">
+  <div id="lineupTitle">LINE-UP</div>
+  <div id="lineup"></div>
+</div>
+<div id="notice"></div>
+<div id="foot">Live Transit Detroit floor view &mdash; the 2D map for browsers without the 3D view (People Mover loop drawn from the derived 2D path) &mdash; opens on the overview; navigation cuts and locks, no camera animation. Rail or label picks a route, tap a bus to follow it, drag hands control back. High Sierra floor build (Safari 11.1): Canvas 2D, one network.</div>
+
+<script>
+/* First Look E2-T2 - E2 with its three 3D geometry files replaced by the
+   single distilled 2D geometry file (first-look-geo-2d.json, format v1:
+   DP-simplified integer-meter paths, delta-encoded; stops as arrays).
+   People Mover: the distilled file carries its raw source loop verbatim
+   (a 3D ribbon buffer, not a 2D path) plus a derived 2D path (pathShape
+   derived-2d-even-subsequence-first-closure; DAADV3 files/18) - the loop
+   IS drawn from that derived path and registers as route peoplemover|PM
+   with its 13 stations. No PM live feed exists; none is implied.
+   First Look E2 - E iterated on Justin's review: opens at the overview, and
+   the camera animation is gone (his word: superfluous) - navigation cuts
+   directly to the framed route and follow locks straight onto the bus, no
+   fly-to tween, no elastic chase, no zoom drift. Dynamic navigation stays:
+   rail + map labels, follow-a-bus with a live navigation card (destination,
+   speed, compass bearing, distance along the line, nearest stop), compass
+   dial, line-up strip. Same floor discipline: ES5, Canvas 2D, XHR. */
+(function () {
+  var ORIGIN = 'https://www.detroitautomationacademy.com';
+  var FEED = ORIGIN + '/live-data/vehicles.json';
+  var GEO_URL = 'first-look-geo-2d.json';
+  var NAV_ROUTES = ['3', '4', '6', '8'];
+  var POLL_MS = 15000;
+  var canvas = document.getElementById('map');
+  var ctx = canvas.getContext('2d');
+  var compass = document.getElementById('compass');
+  var cctx = compass.getContext('2d');
+  var liveLine = document.getElementById('liveLine');
+  var railBtns = document.getElementById('railBtns');
+  var navCard = document.getElementById('navCard');
+  var lineup = document.getElementById('lineup');
+  var lineupTitle = document.getElementById('lineupTitle');
+  var notice = document.getElementById('notice');
+  var proj = { lat0: 42.381161, lon0: -83.148531, mLat: 111320, mLon: 111320 * Math.cos(42.381161 * Math.PI / 180) };
+  var routes = [], routeById = {}, ddotExtent = null, labelRects = [];
+  var vehicles = {}, feedCount = 0;
+  var selected = '';            /* '' = overview, the opening state */
+  var followKey = null;         /* vehicle key being followed (rider's choice only) */
+  var view = { cx: 3900, cy: 2100, scale: 0.030 };
+  var HOME = { cx: 3900, cy: 2100, scale: 0.030 };
+  var frame = 0;
+
+  function xhr(url, ok, err) {
+    var r = new XMLHttpRequest();
+    r.open('GET', url, true);
+    r.onreadystatechange = function () {
+      if (r.readyState !== 4) return;
+      if (r.status >= 200 && r.status < 300) { try { ok(JSON.parse(r.responseText)); } catch (e) { err(e); } }
+      else err(new Error('HTTP ' + r.status));
+    };
+    r.onerror = function () { err(new Error('network')); };
+    r.send(null);
+  }
+  function project(lat, lon) { return [ (lon - proj.lon0) * proj.mLon, -(lat - proj.lat0) * proj.mLat ]; }
+  function toScreen(x, y) { return [ (x - view.cx) * view.scale + canvas.width / 2, (y - view.cy) * view.scale + canvas.height / 2 ]; }
+  function pathLen(p) { var L = 0, i; for (i = 1; i < p.length; i++) { var dx = p[i][0]-p[i-1][0], dy = p[i][1]-p[i-1][1]; L += Math.sqrt(dx*dx + dy*dy); } return L; }
+  function longestPath(rec) {
+    var best = rec.paths[0], bl = 0, i;
+    for (i = 0; i < rec.paths.length; i++) { var L = pathLen(rec.paths[i]); if (L > bl) { bl = L; best = rec.paths[i]; } }
+    return best;
+  }
+  function cumLens(p) {
+    var c = [0], i;
+    for (i = 1; i < p.length; i++) { var dx = p[i][0]-p[i-1][0], dy = p[i][1]-p[i-1][1]; c.push(c[i-1] + Math.sqrt(dx*dx + dy*dy)); }
+    return c;
+  }
+  /* distance of a point along the route's longest path, and its 0..1 fraction */
+  function alongLine(rec, x, y) {
+    var p = longestPath(rec), c = cumLens(p), bi = 0, bd = 1e18, i;
+    for (i = 0; i < p.length; i++) {
+      var dx = p[i][0] - x, dy = p[i][1] - y, d = dx * dx + dy * dy;
+      if (d < bd) { bd = d; bi = i; }
+    }
+    var total = c[c.length - 1];
+    return { km: c[bi] / 1000, frac: total ? c[bi] / total : 0, totalKm: total / 1000 };
+  }
+  function compassPoint(b) {
+    var pts = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    return pts[Math.round(((b % 360) / 45)) % 8];
+  }
+
+  function addGeo(key, data) {
+    if (key === 'ddot' && data.extent) ddotExtent = data.extent;
+    var stops = data.stops || [], stopCount = {}, byRoute = {}, i, j;
+    for (i = 0; i < stops.length; i++) {
+      var rl = stops[i].r || [];
+      for (j = 0; j < rl.length; j++) {
+        stopCount[rl[j]] = (stopCount[rl[j]] || 0) + 1;
+        if (!byRoute[rl[j]]) byRoute[rl[j]] = [];
+        byRoute[rl[j]].push(stops[i]);
+      }
+    }
+    var list = data.routes || [];
+    for (i = 0; i < list.length; i++) {
+      var src = list[i], total = 0;
+      for (j = 0; j < src.paths.length; j++) total += pathLen(src.paths[j]);
+      var rec = { id: src.id, name: src.name, agency: key, paths: src.paths, stops: stopCount[src.id] || 0,
+        stopList: byRoute[src.id] || [], lenKm: src.paths.length ? (total / src.paths.length) / 1000 : 0 };
+      routes.push(rec); routeById[key + '|' + src.id] = rec;
+    }
+    if (data.path) {
+      var pmRec = { id: 'PM', name: 'People Mover', agency: key, paths: [data.path],
+        stops: stopCount['PM'] || 0, stopList: byRoute['PM'] || [], lenKm: pathLen(data.path) / 1000 };
+      routes.push(pmRec); routeById[key + '|PM'] = pmRec;
+    }
+  }
+  function decodePath(flat) {
+    var pts = [[flat[0], flat[1]]], i;
+    for (i = 2; i < flat.length; i += 2) pts.push([pts[pts.length - 1][0] + flat[i], pts[pts.length - 1][1] + flat[i + 1]]);
+    return pts;
+  }
+  function decodeSource(s) {
+    var data = { routes: [], stops: [], extent: s.extent }, i, j;
+    if (s.path) data.path = decodePath(s.path);
+    var rs = s.routes || [];
+    for (i = 0; i < rs.length; i++) {
+      var paths = [];
+      for (j = 0; j < rs[i].paths.length; j++) paths.push(decodePath(rs[i].paths[j]));
+      data.routes.push({ id: rs[i].id, name: rs[i].name, paths: paths });
+    }
+    var ss = s.stops || [];
+    for (i = 0; i < ss.length; i++) data.stops.push({ n: ss[i][0], x: ss[i][1], z: ss[i][2], r: ss[i][3] ? ss[i][3].split(',') : [] });
+    return data;
+  }
+  function loadGeo(done) {
+    xhr(GEO_URL, function (doc) {
+      var list = doc.sources || [], i;
+      for (i = 0; i < list.length; i++) addGeo(list[i].key, decodeSource(list[i]));
+      done(0);
+    }, function () { done(1); });
+  }
+  function fmtTime(d) {
+    var h = d.getHours(), m = d.getMinutes(), s = d.getSeconds(), ap = h >= 12 ? 'PM' : 'AM';
+    h = h % 12; if (h === 0) h = 12;
+    function p(n) { return (n < 10 ? '0' : '') + n; }
+    return h + ':' + p(m) + ':' + p(s) + ' ' + ap;
+  }
+  function interp(v, now) {
+    var t = (now - v.t0) / POLL_MS; if (t > 1) t = 1; if (t < 0) t = 0;
+    return [ v.fx + (v.tx - v.fx) * t, v.fy + (v.ty - v.fy) * t ];
+  }
+
+  /* ---- camera: direct cuts only, no animation ---- */
+  function setView(cx, cy, scale) { view.cx = cx; view.cy = cy; view.scale = scale; }
+  function fitExtent(x0, x1, y0, y1) {
+    var sx = canvas.width / Math.max(1, (x1 - x0) * 1.08), sy = canvas.height / Math.max(1, (y1 - y0) * 1.12);
+    setView((x0 + x1) / 2, (y0 + y1) / 2, Math.min(sx, sy));
+  }
+  function goOverview() {
+    if (ddotExtent) fitExtent(ddotExtent.xMin, ddotExtent.xMax, ddotExtent.zMin, ddotExtent.zMax);
+    else setView(HOME.cx, HOME.cy, HOME.scale * (canvas.width / 1440));
+  }
+  function fitRoute(rec) {
+    var p = longestPath(rec), x0 = 1e12, x1 = -1e12, y0 = 1e12, y1 = -1e12, i;
+    for (i = 0; i < p.length; i++) {
+      if (p[i][0] < x0) x0 = p[i][0]; if (p[i][0] > x1) x1 = p[i][0];
+      if (p[i][1] < y0) y0 = p[i][1]; if (p[i][1] > y1) y1 = p[i][1];
+    }
+    fitExtent(x0, x1, y0, y1);
+  }
+  function nearestStop(rec, x, y) {
+    var best = null, bd = 1e18, i;
+    for (i = 0; i < rec.stopList.length; i++) {
+      var st = rec.stopList[i], dx = st.x - x, dy = st.z - y, d = dx * dx + dy * dy;
+      if (d < bd) { bd = d; best = st; }
+    }
+    return best ? { n: best.n, m: Math.round(Math.sqrt(bd)) } : null;
+  }
+
+  /* ---- navigation rail ---- */
+  function renderRail() {
+    var html = '<button data-k="" class="' + (selected === '' ? 'sel' : '') + '">Overview</button>';
+    for (var i = 0; i < NAV_ROUTES.length; i++) {
+      var rec = routeById['ddot|' + NAV_ROUTES[i]];
+      if (!rec) continue;
+      var k = 'ddot|' + rec.id;
+      html += '<button data-k="' + k + '" class="' + (selected === k ? 'sel' : '') + '">' + rec.name + ' - ' + rec.id + '</button>';
+    }
+    var q = routeById['qline|QLINE'];
+    if (q) html += '<button data-k="qline|QLINE" class="' + (selected === 'qline|QLINE' ? 'sel' : '') + '">QLINE</button>';
+    var pm = routeById['peoplemover|PM'];
+    if (pm) html += '<button data-k="peoplemover|PM" class="' + (selected === 'peoplemover|PM' ? 'sel' : '') + '">People Mover</button>';
+    railBtns.innerHTML = html;
+    var bs = railBtns.getElementsByTagName('button');
+    for (var j = 0; j < bs.length; j++) (function (b) {
+      b.onclick = function () { navigate(b.getAttribute('data-k')); };
+    })(bs[j]);
+  }
+  function navigate(k) {
+    followKey = null;
+    selected = k;
+    renderRail();
+    if (!k) { goOverview(); renderNavCard(); renderLineup(); return; }
+    var rec = routeById[k];
+    if (rec) fitRoute(rec);
+    renderNavCard();
+    renderLineup();
+  }
+  function firstBusOn(rk) {
+    for (var k in vehicles) if (vehicles[k].agency + '|' + vehicles[k].routeId === rk) return k;
+    return null;
+  }
+
+  /* ---- navigation card + compass ---- */
+  function renderNavCard() {
+    var v = followKey ? vehicles[followKey] : null;
+    if (!v) {
+      var rec = routeById[selected];
+      var canFollow = selected ? !!firstBusOn(selected) : feedCount > 0;
+      navCard.innerHTML = '<div class="k">NAVIGATION</div><h2>' + (rec ? rec.name + ' - ' + rec.id : 'Overview') + '</h2>' +
+        '<div style="font-size:13px;color:#cfcfcf;line-height:1.55">No bus is being followed.<br>Tap any bus on the map, or:</div>' +
+        (canFollow ? '<button id="followBtn">Follow a bus' + (rec ? ' on this route' : '') + '</button>' : '');
+      var fb = document.getElementById('followBtn');
+      if (fb) fb.onclick = function () {
+        var key = selected ? firstBusOn(selected) : null;
+        if (!key) for (var k in vehicles) { key = k; break; }
+        if (!key) return;
+        followKey = key;
+        selected = vehicles[key].agency + '|' + vehicles[key].routeId;
+        renderRail(); renderNavCard(); renderLineup();
+      };
+      drawCompass(null);
+      return;
+    }
+    var rec2 = routeById[v.agency + '|' + v.routeId];
+    var now = new Date().getTime(), pos = interp(v, now);
+    var al = rec2 ? alongLine(rec2, pos[0], pos[1]) : { km: 0, totalKm: 0 };
+    var ns = rec2 ? nearestStop(rec2, pos[0], pos[1]) : null;
+    navCard.innerHTML = '<div class="k">NAVIGATION &middot; FOLLOWING</div><h2>Bus ' + v.vid + '</h2>' +
+      '<table>' +
+      '<tr><td class="k2">Route</td><td>' + (rec2 ? rec2.name + ' - ' + rec2.id : v.routeId) + '</td></tr>' +
+      '<tr><td class="k2">Heading to</td><td>' + (v.dest || '—') + '</td></tr>' +
+      '<tr><td class="k2">Speed</td><td>' + (v.speed != null ? v.speed + ' mph' : 'not reported') + '</td></tr>' +
+      '<tr><td class="k2">Bearing</td><td>' + v.bearing + '&deg; ' + compassPoint(v.bearing) + '</td></tr>' +
+      '<tr><td class="k2">Along line</td><td>' + (Math.round(al.km * 10) / 10) + ' of ' + (Math.round(al.totalKm * 10) / 10) + ' km</td></tr>' +
+      (ns ? '<tr><td class="k2">Nearest stop</td><td>' + ns.n + ' &middot; ~' + ns.m + ' m</td></tr>' : '') +
+      '</table><button id="unfollow">Stop following</button>';
+    var btn = document.getElementById('unfollow');
+    if (btn) btn.onclick = function () { followKey = null; renderNavCard(); };
+    drawCompass(v.bearing);
+  }
+  function drawCompass(bearing) {
+    cctx.clearRect(0, 0, 64, 64);
+    cctx.beginPath(); cctx.fillStyle = 'rgba(20,20,20,0.4)';
+    cctx.arc(32, 32, 30, 0, 6.2832); cctx.fill();
+    cctx.fillStyle = '#9a9a9a'; cctx.font = '10px Helvetica, Arial, sans-serif';
+    cctx.fillText('N', 29, 13);
+    if (bearing == null) return;
+    var r = (bearing - 90) * Math.PI / 180;
+    cctx.beginPath();
+    cctx.strokeStyle = '#fff'; cctx.lineWidth = 2.5;
+    cctx.moveTo(32, 32);
+    cctx.lineTo(32 + 21 * Math.cos(r), 32 + 21 * Math.sin(r));
+    cctx.stroke();
+    cctx.beginPath(); cctx.fillStyle = '#fff';
+    cctx.arc(32 + 21 * Math.cos(r), 32 + 21 * Math.sin(r), 3, 0, 6.2832); cctx.fill();
+  }
+
+  /* ---- line-up strip ---- */
+  function renderLineup() {
+    var rec = routeById[selected];
+    if (!rec) { lineupTitle.innerHTML = 'LINE-UP &middot; OVERVIEW'; lineup.innerHTML = ''; return; }
+    lineupTitle.innerHTML = 'LINE-UP &middot; ' + (rec.name + ' - ' + rec.id).toUpperCase() + ' &middot; STOPS AND BUSES ALONG THE LINE, LIVE';
+    var html = '', i;
+    var placed = [];
+    for (i = 0; i < rec.stopList.length; i++) {
+      var st = rec.stopList[i];
+      placed.push({ n: st.n, f: alongLine(rec, st.x, st.z).frac });
+    }
+    placed.sort(function (a, b) { return a.f - b.f; });
+    var step = Math.max(1, Math.floor(placed.length / 60));
+    for (i = 0; i < placed.length; i += step) {
+      html += '<div class="stop" style="left:' + (placed[i].f * 100) + '%" title="' + placed[i].n + '"></div>';
+    }
+    var now = new Date().getTime();
+    for (var k in vehicles) {
+      var v = vehicles[k];
+      if (v.agency + '|' + v.routeId !== selected) continue;
+      var pos = interp(v, now), f = alongLine(rec, pos[0], pos[1]).frac;
+      html += '<div class="bus" style="left:' + (f * 100) + '%" title="Bus ' + v.vid + '"></div>';
+    }
+    lineup.innerHTML = html;
+  }
+
+  function poll() {
+    xhr(FEED, function (d) {
+      var now = new Date().getTime();
+      var feedTime = d.generated_at ? new Date(d.generated_at) : new Date();
+      feedCount = d.count != null ? d.count : (d.vehicles || []).length;
+      var seen = {}, list = d.vehicles || [], i;
+      for (i = 0; i < list.length; i++) {
+        var v = list[i], key = v.agency + '|' + v.vehicle_id, p = project(v.lat, v.lon);
+        var cx = p[0], cy = p[1], cur = vehicles[key];
+        if (cur) { var pos = interp(cur, now); cx = pos[0]; cy = pos[1]; }
+        vehicles[key] = { fx: cx, fy: cy, tx: p[0], ty: p[1], t0: now, agency: v.agency, routeId: String(v.route_id),
+          vid: v.vehicle_id, dest: v.destination || '', speed: (v.speed_mph != null ? v.speed_mph : null), bearing: v.bearing || 0 };
+        seen[key] = true;
+      }
+      for (var k in vehicles) if (!seen[k]) delete vehicles[k];
+      if (followKey && !vehicles[followKey]) { followKey = null; }
+      var stale = (now - feedTime.getTime()) > 120000;
+      liveLine.innerHTML = '<span class="dot"></span><b>' + feedCount + ' buses</b> on the road &nbsp;updated ' + fmtTime(feedTime) + (stale ? ' &nbsp;(stale)' : '');
+      renderNavCard();
+      renderLineup();
+    }, function () {
+      liveLine.innerHTML = '<span class="dot"></span>Live feed unreachable — retrying.';
+    });
+    setTimeout(poll, POLL_MS);
+  }
+
+  function drawPath(rec, style, width) {
+    ctx.beginPath();
+    for (var j = 0; j < rec.paths.length; j++) { var p = rec.paths[j];
+      for (var q = 0; q < p.length; q++) { var s = toScreen(p[q][0], p[q][1]); if (q === 0) ctx.moveTo(s[0], s[1]); else ctx.lineTo(s[0], s[1]); } }
+    ctx.strokeStyle = style; ctx.lineWidth = width; ctx.stroke();
+  }
+  function drawLabels() {
+    labelRects = [];
+    if (view.scale > 0.045) return;
+    ctx.font = '600 12px -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    var keys = [];
+    for (var i = 0; i < NAV_ROUTES.length; i++) keys.push('ddot|' + NAV_ROUTES[i]);
+    keys.push('qline|QLINE');
+    keys.push('peoplemover|PM');
+    for (var j = 0; j < keys.length; j++) {
+      var rec = routeById[keys[j]];
+      if (!rec) continue;
+      var p = longestPath(rec), mid = p[Math.floor(p.length * 0.55)], s = toScreen(mid[0], mid[1]);
+      if (s[0] < 0 || s[1] < 0 || s[0] > canvas.width || s[1] > canvas.height) continue;
+      var text = rec.id === 'PM' ? rec.name : rec.name + ' - ' + rec.id, w = ctx.measureText(text).width + 16;
+      ctx.beginPath(); ctx.fillStyle = 'rgba(12,12,12,0.88)';
+      ctx.fillRect(s[0] - w / 2, s[1] - 11, w, 22);
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1;
+      ctx.strokeRect(s[0] - w / 2, s[1] - 11, w, 22);
+      ctx.fillStyle = '#f2f2f2';
+      ctx.fillText(text, s[0] - w / 2 + 8, s[1] + 1);
+      labelRects.push({ x: s[0] - w / 2, y: s[1] - 11, w: w, h: 22, key: keys[j] });
+    }
+  }
+  function draw() {
+    frame++;
+    var now = new Date().getTime();
+    var fv = followKey ? vehicles[followKey] : null;
+    if (fv) {
+      var pos = interp(fv, now);
+      view.cx = pos[0]; view.cy = pos[1];   /* locked: direct position, no chase, no drift */
+    }
+    ctx.fillStyle = '#0b0b0b'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    var i;
+    for (i = 0; i < routes.length; i++) {
+      if (selected && routes[i].agency + '|' + routes[i].id === selected) continue;
+      drawPath(routes[i], routes[i].agency === 'ddot' ? 'rgba(205,205,205,0.30)' : 'rgba(165,165,165,0.16)', 1.1);
+    }
+    var rec = routeById[selected];
+    if (rec) drawPath(rec, 'rgba(255,255,255,0.92)', 2.6);
+    drawLabels();
+    for (var k in vehicles) {
+      var v = vehicles[k], p2 = interp(v, now), s = toScreen(p2[0], p2[1]);
+      if (s[0] < -20 || s[1] < -20 || s[0] > canvas.width + 20 || s[1] > canvas.height + 20) continue;
+      var isF = (k === followKey);
+      ctx.beginPath();
+      ctx.fillStyle = isF ? '#fff' : ((selected && selected !== v.agency + '|' + v.routeId) ? 'rgba(200,200,200,0.35)' : 'rgba(240,240,240,0.9)');
+      ctx.arc(s[0], s[1], isF ? 6 : 3.2, 0, 6.2832); ctx.fill();
+      if (isF) {
+        ctx.beginPath(); ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 1.5;
+        ctx.arc(s[0], s[1], 11, 0, 6.2832); ctx.stroke();
+        var r = (v.bearing - 90) * Math.PI / 180;
+        ctx.beginPath(); ctx.moveTo(s[0], s[1]);
+        ctx.lineTo(s[0] + 17 * Math.cos(r), s[1] + 17 * Math.sin(r)); ctx.stroke();
+      }
+    }
+    if (frame % 30 === 0 && fv) renderNavCard();
+    window.requestAnimationFrame(draw);
+  }
+
+  /* manual control hands the camera back to the rider */
+  var drag = null;
+  canvas.addEventListener('mousedown', function (e) { drag = { x: e.clientX, y: e.clientY, moved: false }; });
+  window.addEventListener('mousemove', function (e) {
+    if (!drag) return;
+    var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (Math.abs(dx) + Math.abs(dy) > 3) { drag.moved = true; if (followKey) { followKey = null; renderNavCard(); } }
+    view.cx -= dx / view.scale; view.cy -= dy / view.scale;
+    drag.x = e.clientX; drag.y = e.clientY;
+  });
+  window.addEventListener('mouseup', function (e) {
+    if (drag && !drag.moved) {
+      /* tap: follow the nearest bus */
+      var rect = canvas.getBoundingClientRect(), sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+      var now = new Date().getTime(), bd = 18, bk = null;
+      for (var k in vehicles) {
+        var pos = interp(vehicles[k], now), s = toScreen(pos[0], pos[1]);
+        var d = Math.sqrt((s[0] - sx) * (s[0] - sx) + (s[1] - sy) * (s[1] - sy));
+        if (d < bd) { bd = d; bk = k; }
+      }
+      if (bk) {
+        followKey = bk;
+        selected = vehicles[bk].agency + '|' + vehicles[bk].routeId;
+        renderRail(); renderNavCard(); renderLineup();
+        drag = null;
+        return;
+      }
+      /* label tap navigates */
+      for (var li = 0; li < labelRects.length; li++) {
+        var r = labelRects[li];
+        if (sx >= r.x && sx <= r.x + r.w && sy >= r.y && sy <= r.y + r.h) { navigate(r.key); break; }
+      }
+    }
+    drag = null;
+  });
+  canvas.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    view.scale *= (e.deltaY < 0 ? 1.12 : 0.89);
+    if (view.scale < 0.004) view.scale = 0.004;
+    if (view.scale > 0.6) view.scale = 0.6;
+  });
+  window.addEventListener('keydown', function (e) {
+    var step = 900 / view.scale * 0.06;
+    if (e.key === 'ArrowLeft') { followKey = null; view.cx -= step; renderNavCard(); }
+    if (e.key === 'ArrowRight') { followKey = null; view.cx += step; renderNavCard(); }
+    if (e.key === 'ArrowUp') { followKey = null; view.cy -= step; renderNavCard(); }
+    if (e.key === 'ArrowDown') { followKey = null; view.cy += step; renderNavCard(); }
+    if (e.key === '+' || e.key === '=') view.scale *= 1.15;
+    if (e.key === '-') view.scale *= 0.87;
+  });
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight - 148;
+    HOME.scale = 0.030 * (canvas.width / 1440);
+    if (!resize.done) { view.scale = HOME.scale; resize.done = true; }
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  loadGeo(function (failed) {
+    if (failed) {
+      notice.innerHTML = 'The route network could not be loaded, so there is no map to navigate. Check the connection and reload.';
+      notice.style.display = 'block'; return;
+    }
+    renderRail();
+    goOverview();
+    poll();
+    window.requestAnimationFrame(draw);
+  });
+})();
+/* PAGE STAMP — Built: 2026-11-09 21:14 America/Detroit · Agent: Forge · Authorized: J. Spencer Smith, directive of 2026-11-09 (LTD High Sierra floor fix) */
+</script>
+</body>
+</html>
