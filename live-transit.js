@@ -7,8 +7,8 @@
  * honest live/retry badge states. Route filters by group (ConnectTen /
  * Primary / Neighborhood) plus per-route chips.
  */
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import * as THREE from './assets/three.module.min.js?v=20261019-1228';
+import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
 
 (function () {
   'use strict';
