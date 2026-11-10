@@ -3,15 +3,15 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:a670889f70977b1e39b7b7c5c8f6e78f7db2610dcde283b7fb71b235ec994d85",
+    "stateFingerprint": "sha256:a547290f08400b07958d54e3a0a41964eae147cc0634a819a2e3aa647999685c",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "catalogVersion": 1,
   "catalogGenerated": "2026-11-07",
   "counts": {
     "apps": 11,
-    "builds": 21,
+    "builds": 22,
     "catalog_state": 10,
     "audits": 1,
     "findings": 17,
@@ -313,23 +313,23 @@
       "description": "The Academy's build of the open-source muse-desktop client (MIT, v0.3.0) on Electron 22.3.27 — the last Electron that runs on macOS 10.13 — so Intel High Sierra machines can run a Muse client at all; the official Muse app requires Apple Silicon and a current macOS. Packaged with the Academy monochrome icon. Version 0.4.0 adds the Academy feature layer: repaired window management (no window opens partially off-screen; your window arrangement is restored), up-arrow sent-message history in the message box, and a monochrome Terminal Skin. Unofficial build: not a Meta product and not endorsed by Meta. Unsigned test build. Its icon is cut to the amended SDS-3 construction — white tile and ink glyph, no black field.",
       "catalogStatus": "testing",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/muse-academy.png",
-      "buildNotes": "Terminal skin rebuilt under a whitelist discipline after 0.4.0-academy1's skin failed on the real hosted UI (owner screenshot 2026-11-10: blacked-out sidebar rows, black blocks over panels, profile controls as black rectangles). The new sheet styles only the message stream, the composer, and a painted left rule on the composer shell — typography and matched tints only, no layout properties, every rule gated on the skin class, so toggling it off restores the stock UI without restart; a persisted academy1 ON does not carry into this build. Window repair (no off-screen windows, validated bounds restore, clamped popups, Dock activation), up-arrow message history, SDS-8 welcome and SDS-10 identity stand from academy1. Runtime verdict is the owner's, at the Air sitting.",
+      "buildNotes": "Markdown downloads now open in MacDown by default (owner directive 2026-11-10; design Distro files/24, tranche MD-T1). A completed in-app download the classifier calls markdown (.md/.markdown, binary payloads vetoed by MIME) opens in the Academy's markdown editor; the file itself stays in Downloads. The routing is main-process only — preload and the terminal skin sheet are byte-identical to academy2 — and opens only files the app itself downloaded this session. A View-menu preference (MacDown / Ask Each Time / System Default) controls it; files over 10 MiB ask first; if MacDown is not installed, a dialog offers Distro, the system default, or keeping the file. Window repair, up-arrow history, the whitelist terminal skin, SDS-8 welcome and SDS-10 identity stand from academy2. Runtime verdict is the owner's, at the Air sitting.",
       "audits": [],
       "currentBuild": {
-        "tag": "0.4.0-academy2",
-        "sizeBytes": 91901792,
-        "sha256": "22b8deacfd1d113ea310e5ca9ae6ca8449615f2d84cb38a444cc057017039387",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/muse-academy/releases/download/muse-academy-0.4.0-academy2/Muse-Academy-1013-x64.zip",
+        "tag": "0.4.0-academy3",
+        "sizeBytes": 91907575,
+        "sha256": "ca7b27ef7f5b60ae29f2be050d71838d3b7af232b66e79328d332811d280dd02",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/muse-academy/releases/download/muse-academy-0.4.0-academy3/Muse-Academy-1013-x64.zip",
         "floor": "10.13",
         "builtAt": "2026-11-10",
-        "releasePublishedAt": "2026-11-10T22:17:53Z",
-        "ciRun": "42913171956",
+        "releasePublishedAt": "2026-11-10T23:39:30Z",
+        "ciRun": "42925106774",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry; fresh-download plist readback verified 2026-11-10 (ai.muse.desktop, 0.4.0, floor 10.13, audit + conformance complete, all four conformance clauses true); skin sheet inside the artifact byte-identical to the repo sheet; build label 0.4.0-academy2 in shipped main.cjs; Mach-O census 15; startup sound byte-identical to the estate master"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry; fresh-download plist readback verified 2026-11-10 (ai.muse.desktop, 0.4.0, floor 10.13, audit + conformance complete, all four conformance clauses true); preload.cjs and terminal-skin.css inside the artifact byte-identical to academy2; build label 0.4.0-academy3 in shipped main.cjs; Mach-O census 15; startup sound byte-identical to the estate master"
         }
       }
     },
