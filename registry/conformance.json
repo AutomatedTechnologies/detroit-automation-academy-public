@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:ee5301edb9fede7679ca0cdd3812f1df7c682fd0148d3f9c52f6a645e036daba",
+    "stateFingerprint": "sha256:a670889f70977b1e39b7b7c5c8f6e78f7db2610dcde283b7fb71b235ec994d85",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 6,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-07",
   "counts": {
     "apps": 11,
-    "builds": 20,
+    "builds": 21,
     "catalog_state": 10,
     "audits": 1,
     "findings": 17,
@@ -68,23 +68,23 @@
       "description": "The Academy's maintained build of Spectacle, the keyboard-driven window manager. The inherited Sparkle 1.22/DSA update channel is replaced under the Academy Update Infrastructure Standard (Sparkle 2.9.6, EdDSA, Academy appcast) at packaging. Release candidate: first Academy build — Academy bundle identity and the Academy audit entry verified in the shipped bundle. The app icon is cut to the amended SDS-3 construction — white tile, ink glyph, no black field; the earlier color-icon gap is closed. Not yet run on the High Sierra rig. The bundled Sparkle updater stays at 1.22.0 in this candidate; the 2.9.6 + EdDSA step is a packaging-tranche decision.",
       "catalogStatus": "release-candidate",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/spectacle.png",
-      "buildNotes": "Academy rebuild: Academy bundle ID, trimmed monochrome icon, audit entry, Academy appcast (Sparkle 1.22).",
+      "buildNotes": "SDS-10 conformance build (tranche SDS10-T2, adapted form per SDS-10 10.4.5): the build identifier is read from the bundle's own Info.plist at runtime (SpectacleUtilities.applicationBuildVersion, CFBundleVersion) and shown in the About panel (SpectacleAppDelegate showAboutPanel:, About action rewired in Spectacle.xib) and in the status-item menu (installVersionMenuItem); the standard startup sound plays once at first presentation (playStartupSound; bundled startup-sound.wav byte-identical to the SDS-10 master). Conformance attested in the bundle beside the audit entry. LICENSE-ACADEMY.txt + NOTICE.txt bundled (Academy layer only). Runtime verification at the owner's next Air sitting.",
       "audits": [],
       "currentBuild": {
-        "tag": "spectacle-test-7",
-        "sizeBytes": 2126510,
-        "sha256": "b5081dfd645dcd2ca075f95f4f92bddb0bdcb52bef2f454f2a40e4a8f524fc04",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/spectacle/releases/download/spectacle-test-7/Spectacle-test.zip",
+        "tag": "spectacle-test-8",
+        "sizeBytes": 2740542,
+        "sha256": "c84593142ffc5278ea20f45e849d43da5c408e7e8950095ed742c7350462f8a0",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/spectacle/releases/download/spectacle-test-8/Spectacle-test.zip",
         "floor": "10.13",
-        "builtAt": "2026-11-08",
-        "releasePublishedAt": "2026-11-08T07:46:44Z",
-        "ciRun": null,
+        "builtAt": "2026-11-10",
+        "releasePublishedAt": "2026-11-10T22:39:13Z",
+        "ciRun": "42915646327",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule); record: Spectacle project files/05 (spectacle-test-7)"
+          "ref": "bundle-carried audit entry (Distro files/08 rule); fresh-download plist readback verified 2026-11-10 for the SDS-10 conformance build (spectacle-test-8, SHA-256 c84593142ffc5278ea20f45e849d43da5c408e7e8950095ed742c7350462f8a0); conformance key com.detroitautomationacademy.conformance (SDS-10, all four clauses true, Date 2026-11-10) read back from the same bundle; bundled startup-sound.wav hash-identical to the SDS-10 master"
         }
       }
     },
