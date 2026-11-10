@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:e450bb8ec51b3a47e6ff5b677c7a9f24cec703598393759fca88c5805ac66ce5",
+    "stateFingerprint": "sha256:6c58ba877514592f9cd62fd0b539266008e33ebfe3bde8a5a793c11d406505c6",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 6,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-07",
   "counts": {
     "apps": 11,
-    "builds": 18,
+    "builds": 17,
     "catalog_state": 10,
     "audits": 1,
     "findings": 17,
@@ -138,23 +138,23 @@
       "description": "The Academy's maintained build of Sequel Pro. Passwords stay in the macOS Keychain, as upstream correctly designed; the uplift addresses the MySQL 8 authentication gap left by the bundled MySQL 5.5-era client library. Release candidate: first Academy build — Academy bundle identity and the Academy audit entry verified in the shipped bundle. The app icon is cut to the amended SDS-3 construction — white tile, ink glyph, no black field; the earlier color-icon gap is closed. Not yet run on the High Sierra rig. The bundled MySQL client library is 5.5.56 (end-of-life; the MariaDB swap is a later tranche).",
       "catalogStatus": "release-candidate",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/sequelpro.png",
-      "buildNotes": "SDS10-T4 conformance build: the SDS-8 welcome screen (`SPWelcomeController`, presented at launch) draws the bundle AppIcon composition, displays the build's version read from the bundle's Info.plist at runtime, and plays the standard startup sound — `startup-sound.wav` in Resources, byte-identical to the Academy master. The bundle carries the SDS-10 conformance entry beside the Academy audit entry (all four clauses true). Academy bundle ID, trimmed monochrome cylinder icon, audit entry stand. Bundled MySQL client is 5.5.56 (end-of-life), unchanged in this tranche; its replacement is a separate owner decision. New glyph: the Cylinder (branding distinctiveness refresh).",
+      "buildNotes": "Academy rebuild: Academy bundle ID, trimmed monochrome cylinder icon, audit entry. Bundled MySQL client is 5.5.56 (end-of-life); its replacement is a planned tranche. New glyph: the Cylinder (branding distinctiveness refresh).",
       "audits": [],
       "currentBuild": {
-        "tag": "sequelpro-test-8",
-        "sizeBytes": 5250480,
-        "sha256": "0868ab558a94324f2f8afb198e4e717f5e00392039a4f9c89697367221ff732a",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/sequelpro/releases/download/sequelpro-test-8/SequelPro-test.zip",
+        "tag": "sequelpro-test-7",
+        "sizeBytes": 4636201,
+        "sha256": "a65c28cdd4e8a4af7f304635923e29de89dc1f81cb4145f18ee460bcefcbee4f",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/sequelpro/releases/download/sequelpro-test-7/SequelPro-test.zip",
         "floor": "10.13",
-        "builtAt": "2026-11-10",
-        "releasePublishedAt": "2026-11-10T22:34:41Z",
-        "ciRun": "42915501259",
+        "builtAt": "2026-11-08",
+        "releasePublishedAt": "2026-11-08T20:21:13Z",
+        "ciRun": null,
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10, Logo/VersionAtStartup/StartupSound/MenuBar all true, Date 2026-11-10); fresh-download plist readback verified 2026-11-10 for the SDS10-T4 conformance build (sequelpro-test-8, SHA-256 0868ab558a94324f2f8afb198e4e717f5e00392039a4f9c89697367221ff732a); bundled startup-sound.wav SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a = the SDS-10 master"
+          "ref": "bundle-carried audit entry (Distro files/08 rule); record: Sequel Pro project files/05 (sequelpro-test-7)"
         }
       }
     },
