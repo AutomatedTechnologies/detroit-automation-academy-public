@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:3cd0b45611f8a0450d16cfe0040064a468a83a45b5b22fd5143ad0988c6aef32",
+    "stateFingerprint": "sha256:e450bb8ec51b3a47e6ff5b677c7a9f24cec703598393759fca88c5805ac66ce5",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 6,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-07",
   "counts": {
     "apps": 11,
-    "builds": 16,
+    "builds": 18,
     "catalog_state": 10,
     "audits": 1,
     "findings": 17,
@@ -138,23 +138,23 @@
       "description": "The Academy's maintained build of Sequel Pro. Passwords stay in the macOS Keychain, as upstream correctly designed; the uplift addresses the MySQL 8 authentication gap left by the bundled MySQL 5.5-era client library. Release candidate: first Academy build — Academy bundle identity and the Academy audit entry verified in the shipped bundle. The app icon is cut to the amended SDS-3 construction — white tile, ink glyph, no black field; the earlier color-icon gap is closed. Not yet run on the High Sierra rig. The bundled MySQL client library is 5.5.56 (end-of-life; the MariaDB swap is a later tranche).",
       "catalogStatus": "release-candidate",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/sequelpro.png",
-      "buildNotes": "Academy rebuild: Academy bundle ID, trimmed monochrome cylinder icon, audit entry. Bundled MySQL client is 5.5.56 (end-of-life); its replacement is a planned tranche. New glyph: the Cylinder (branding distinctiveness refresh).",
+      "buildNotes": "SDS10-T4 conformance build: the SDS-8 welcome screen (`SPWelcomeController`, presented at launch) draws the bundle AppIcon composition, displays the build's version read from the bundle's Info.plist at runtime, and plays the standard startup sound — `startup-sound.wav` in Resources, byte-identical to the Academy master. The bundle carries the SDS-10 conformance entry beside the Academy audit entry (all four clauses true). Academy bundle ID, trimmed monochrome cylinder icon, audit entry stand. Bundled MySQL client is 5.5.56 (end-of-life), unchanged in this tranche; its replacement is a separate owner decision. New glyph: the Cylinder (branding distinctiveness refresh).",
       "audits": [],
       "currentBuild": {
-        "tag": "sequelpro-test-7",
-        "sizeBytes": 4636201,
-        "sha256": "a65c28cdd4e8a4af7f304635923e29de89dc1f81cb4145f18ee460bcefcbee4f",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/sequelpro/releases/download/sequelpro-test-7/SequelPro-test.zip",
+        "tag": "sequelpro-test-8",
+        "sizeBytes": 5250480,
+        "sha256": "0868ab558a94324f2f8afb198e4e717f5e00392039a4f9c89697367221ff732a",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/sequelpro/releases/download/sequelpro-test-8/SequelPro-test.zip",
         "floor": "10.13",
-        "builtAt": "2026-11-08",
-        "releasePublishedAt": "2026-11-08T20:21:13Z",
-        "ciRun": null,
+        "builtAt": "2026-11-10",
+        "releasePublishedAt": "2026-11-10T22:34:41Z",
+        "ciRun": "42915501259",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule); record: Sequel Pro project files/05 (sequelpro-test-7)"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10, Logo/VersionAtStartup/StartupSound/MenuBar all true, Date 2026-11-10); fresh-download plist readback verified 2026-11-10 for the SDS10-T4 conformance build (sequelpro-test-8, SHA-256 0868ab558a94324f2f8afb198e4e717f5e00392039a4f9c89697367221ff732a); bundled startup-sound.wav SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a = the SDS-10 master"
         }
       }
     },
@@ -233,7 +233,7 @@
       "displayName": "Live Transit Detroit",
       "repoUrl": "https://github.com/AutomatedTechnologies/live-transit-detroit",
       "sourceUrl": null,
-      "bundleId": null,
+      "bundleId": "com.detroitautomationacademy.livetransit",
       "category": "Transit",
       "license": "Academy License (revocable)",
       "kind": "catalog",
@@ -243,23 +243,23 @@
       "description": "The Academy's native macOS edition of Live Transit Detroit: the whole regional network (DDOT, SMART, QLINE, People Mover) as one live map and vehicle list, rendered in native Core Graphics with no WebView or browser engine. Only the small live vehicle feed is fetched, on a conditional-GET refresh. Release candidate: live merged-network vehicles and alerts on the regional map; GTFS route polylines are not in this build yet. It carries the Academy audit entry and has not yet been launched on the High Sierra rig.",
       "catalogStatus": "release-candidate",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/live-transit-detroit.png",
-      "buildNotes": "Native map and live vehicles for the District of Detroit. Route polylines not yet included. New glyph: the Bus (branding distinctiveness refresh).",
+      "buildNotes": "Native map and live vehicles for the District of Detroit. Route polylines not yet included. New glyph: the Bus (branding distinctiveness refresh). v0.1.0-rc3 adds the SDS-10 conformance surface: a code-constructed menu bar (About with the version, Refresh Now, Quit) and an SDS-8 welcome sheet whose version line is read from the bundle's own Info.plist at runtime; the standard startup sound plays as the welcome presents.",
       "audits": [],
       "currentBuild": {
-        "tag": "v0.1.0-rc2",
-        "sizeBytes": 808126,
-        "sha256": "23440de94ab8e9cb00320e07757b23fe9dd23e759d4db7deed1916bfcfc0dd1c",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/live-transit-detroit/releases/download/v0.1.0-rc2/LiveTransitDetroit-v0.1.0-rc2.zip",
+        "tag": "v0.1.0-rc3",
+        "sizeBytes": 811904,
+        "sha256": "30236d2f0939c86b85057c553b7088505fa700df08384acc6f112014fe3e8181",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/live-transit-detroit/releases/download/v0.1.0-rc3/LiveTransitDetroit-v0.1.0-rc3.zip",
         "floor": "10.13",
-        "builtAt": "2026-11-08",
-        "releasePublishedAt": "2026-11-08T20:31:29Z",
-        "ciRun": null,
+        "builtAt": "2026-11-10",
+        "releasePublishedAt": "2026-11-10T22:35:11Z",
+        "ciRun": "42915834003",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule); shipped-bundle readback: Live Transit project files/04 (v0.1.0-rc2)"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10; Logo / VersionAtStartup / StartupSound / MenuBar all true; Date 2026-11-10); fresh-download plist readback verified 2026-11-10 for the SDS10-T5 conformance build (v0.1.0-rc3, SHA-256 30236d2f0939c86b85057c553b7088505fa700df08384acc6f112014fe3e8181); bundled startup-sound.wav byte-identical to the SDS-10 master (SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a)"
         }
       }
     },
