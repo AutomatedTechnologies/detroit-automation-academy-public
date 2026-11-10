@@ -164,21 +164,21 @@
     },
     {
       "category": "Utilities",
-      "datePublished": null,
+      "datePublished": "2026-11-10",
       "description": "An Academy-original utility for a USB-connected AirPods Max (Lightning generation) that will not respond. Five-section diagnostics — USB enumeration and power, IORegistry device node, CoreAudio device list, Bluetooth pairing and link, recent bluetoothd/coreaudiod log evidence — with a branching verdict; guided Restart and Factory Reset sheets for the headphones (including the 15-second reset hold timer); a Restart Services action for coreaudiod and bluetoothd; and a Firmware panel that reads the device firmware and compares it with the latest for this model (6F25, Apple Support 106340), evaluating Apple's automatic-update conditions live. Installs as AirPodsMaxDiag.app under its own Academy bundle identity (com.detroitautomationacademy.airpodsmaxdiag) and carries the Academy audit entry. AirPods Max is a trademark of Apple Inc.; this utility is not affiliated with or endorsed by Apple Inc.",
-      "downloadURL": "https://github.com/AutomatedTechnologies/airpods-max-diag/releases/download/apd-test-4/AirPodsMaxDiag-test.zip",
+      "downloadURL": "https://github.com/AutomatedTechnologies/airpods-max-diag/releases/download/apd-test-5/AirPodsMaxDiag-test.zip",
       "iconURL": "https://detroitautomationacademy.com/store/icons/airpods-max-diag.png",
       "id": "airpods-max-diag",
       "license": "Academy License (revocable)",
       "minMacOS": "10.13",
       "name": "AirPods Max Diagnostics",
-      "sha256": "c397b0f8bf10ae080bf67a63bed2d74e13a3ac4b03c0d585de4bc0a38654db30",
-      "sizeBytes": 717096,
+      "sha256": "a32e34eec2cb5a06991da539666abc93cbd9a3b7ee332474d4426ab5515da8cd",
+      "sizeBytes": 719776,
       "sourceURL": "https://github.com/AutomatedTechnologies/airpods-max-diag",
       "status": "testing",
       "tagline": "Diagnose and recover a non-responsive AirPods Max (Lightning) — USB, Bluetooth, audio, firmware.",
-      "version": "apd-test-4",
-      "buildNotes": "New: Force USB Reset — a bus-level reset (re-enumeration) issued to the headphones over USB, two cycles, with the result measured in the report. New: battery status query — the report now states any battery data the device reports over USB, or that none is reported. Also carries the Force Restart Connection and Force Firmware Update actions from test-2."
+      "version": "apd-test-5",
+      "buildNotes": "Defect fix: the app shipped with no menu bar — the programmatic UI never built a main menu (no nib, and no code called setMainMenu:). The main menu is now constructed in code and installed at launch: app menu (About, Quit), File (Save Report…, Close Window), Edit (standard editing for the report view), Diagnostics (the window's nine actions, on the menu bar), Window, Help. No diagnostic behavior changes. Runtime verification at the owner's Air sitting, evening of 2026-11-10."
     }
   ],
   "catalogVersion": 1,
