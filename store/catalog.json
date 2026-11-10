@@ -136,13 +136,13 @@
       "license": "Academy License (revocable)",
       "minMacOS": "10.13",
       "name": "Distro",
-      "sha256": "6c98bdfc5cf1d1a55dfa3debda88b71b25c8c0d68e57e1a204e830fc1508f839",
-      "sizeBytes": 739428,
+      "sha256": "7d801bdf5da802399d46ea89ff4cb1be81400cd9e1da2d3c178930f0495df9b0",
+      "sizeBytes": 740313,
       "sourceURL": "https://github.com/AutomatedTechnologies/distro",
       "status": "release-candidate",
       "tagline": "The Academy's application store for High Sierra — browse, install, and update Academy apps.",
       "version": "distro-test-40",
-      "buildNotes": "Icon unification build under the build-query contract: the pipeline fetched the pinned registry snapshot v6-0014 (pin advanced from v6-0011 as a reviewed change), verified its SHA-256 against the manifest before querying, and took its version assignment, branding metadata, catalog status and audit state from the snapshot; the release body is composed from the query results and cites the snapshot. One source change from the superseded build: `DistroLogoView` now draws the AppIcon download-arrow composition on the welcome screen, About window and store sidebar, so the icon the Dock shows is the icon the app shows; the bundle AppIcon and the catalog artwork already carried the arrow."
+      "buildNotes": "Superseding build under the build-query contract with the owner-directed version override: same tag as the build it supersedes, full three-item spec — the AppIcon download-arrow composition drawn by `DistroLogoView` on the welcome screen, About window and store sidebar; the build's version displayed on the SDS-8 welcome screen, read from the bundle's Info.plist at runtime; and a functional menu bar (app menu with About and Reload Catalog, Window, Help). The pipeline fetched the pinned registry snapshot v6-0016, verified its SHA-256 against the manifest before querying, and took branding metadata, catalog status and audit state from the snapshot; the release body is composed from the query results and cites the snapshot."
     },
     {
       "category": "Productivity",
