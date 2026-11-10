@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:a547290f08400b07958d54e3a0a41964eae147cc0634a819a2e3aa647999685c",
+    "stateFingerprint": "sha256:5a2d25e850c30fe35c3bb641f1f2c05dbe69eddbde577b7acb37f3dba8fc1477",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 7,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-07",
   "counts": {
     "apps": 11,
-    "builds": 22,
+    "builds": 23,
     "catalog_state": 10,
     "audits": 1,
     "findings": 17,
@@ -103,23 +103,23 @@
       "description": "The Academy's maintained build of MacDown. Uplift includes the Hoedown recursion-bound fix and the planned migration from legacy WebView to WKWebView; zero telemetry, MathJax bundled locally. Release candidate: first Academy build — Academy bundle identity and the Academy audit entry verified in the shipped bundle. The app icon is cut to the amended SDS-3 construction — white tile, ink glyph, no black field; the earlier color-icon gap is closed. Not yet run on the High Sierra rig. Audit findings F-01/F-02/F-03/F-05/F-06 remain open.",
       "catalogStatus": "release-candidate",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/macdown.png",
-      "buildNotes": "SDS-10 conformance build (SDS10-T3): the SDS-8 welcome screen (MPWelcomeController) presents at launch — the AppIcon composition as the welcome mark, the build version read from the bundle Info.plist at runtime, and the standard startup sound, byte-identical to the library master. The bundle stamps the SDS-10 conformance entry beside the audit entry; Academy license and notice files are bundled. Fixes carried: the launch crash in test-10 (finding F-10, toolbar guard from test-11), the Hoedown parser nesting bound (finding F-02 fix). Academy rebuild: Academy bundle ID, trimmed monochrome icon, audit entry.",
+      "buildNotes": "Handler-rank build (MD-T5, Distro files/24): the Markdown document type now declares LSHandlerRank Alternate — MacDown presents itself as an alternate handler for markdown, deliberately not the system default and not the owner. Routing from Muse (Academy Build) opens files in MacDown explicitly; any system-default change is the owner's consented act in Muse, never something MacDown claims by installing. The plain-text and catch-all document entries are unchanged and carry no rank. Everything else stands from the SDS-10 conformance build: SDS-8 welcome screen (MPWelcomeController), SDS-10 conformance entry, Academy audit entry, Academy bundle ID, trimmed monochrome icon.",
       "audits": [],
       "currentBuild": {
-        "tag": "macdown-test-12",
-        "sizeBytes": 7683173,
-        "sha256": "a100f9b21da0d327054bfb83ba0a554f37450aff203ce66f967aa9d9fd6c6bd6",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/macdown/releases/download/macdown-test-12/MacDown-test.zip",
+        "tag": "macdown-test-13",
+        "sizeBytes": 7683178,
+        "sha256": "b28cb3794dd8ac275a67a79c0ba8dd0144e5ba52c8acb983aa73652c92cdb590",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/macdown/releases/download/macdown-test-13/MacDown-test.zip",
         "floor": "10.13",
         "builtAt": "2026-11-10",
-        "releasePublishedAt": "2026-11-10T22:36:17Z",
-        "ciRun": "42915870381",
+        "releasePublishedAt": "2026-11-10T23:42:45Z",
+        "ciRun": "42925432651",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (all four clauses true); fresh-download plist readback verified 2026-11-10 for the SDS-10 conformance build (macdown-test-12, SHA-256 a100f9b21da0d327054bfb83ba0a554f37450aff203ce66f967aa9d9fd6c6bd6); bundled startup-sound.wav SHA-256 verified against the SDS-10 master from the built artifact"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (all four clauses true); fresh-download plist readback verified 2026-11-10: Markdown document type carries LSHandlerRank Alternate, plain-text and public.data entries carry no rank (Distro files/24 section 6, gap G1)"
         }
       }
     },
