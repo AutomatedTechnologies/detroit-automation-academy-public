@@ -14,7 +14,19 @@
   #bar .live b { color:#fff; }
   #bar .dot { display:inline-block; width:7px; height:7px; border-radius:4px; background:#e8e8e8; margin-right:6px; }
   #map { position:absolute; top:52px; left:0; right:0; bottom:96px; display:block; cursor:grab; }
-  #rail { position:absolute; left:14px; top:66px; z-index:6; width:168px; }
+  #rail { position:absolute; left:14px; top:66px; z-index:6; width:208px; }
+  #routeSearch { display:block; width:100%; box-sizing:border-box; margin-bottom:7px; padding:8px 11px; border-radius:9px;
+    border:1px solid #3a3a3a; background:rgba(18,18,18,0.92); color:#e8e8e8; font-size:13px; }
+  #runRow { display:block; font-size:12px; color:#bdbdbd; margin:0 0 8px 2px; cursor:pointer; }
+  #runRow input { margin-right:6px; }
+  #railBtns { overflow-y:auto; max-height:calc(100vh - 330px); padding-right:2px; }
+  #rail button .rc { float:right; font-size:11px; color:#9a9a9a; font-weight:600; }
+  #rail button.sel .rc { color:#333; }
+  #rail .none { font-size:12px; color:#8f8f8f; padding:6px 2px; }
+  #alertStrip { position:absolute; top:52px; left:0; right:0; z-index:7; background:#1c1c1c; border-bottom:1px solid #444;
+    color:#e8e8e8; font-size:13px; padding:8px 44px 8px 16px; display:none; }
+  #alertClose { position:absolute; right:10px; top:5px; width:26px; height:26px; border-radius:13px; border:1px solid #3a3a3a;
+    background:#262626; color:#f2f2f2; font-size:14px; cursor:pointer; }
   #rail button { display:block; width:100%; text-align:left; margin-bottom:7px; padding:9px 12px; border-radius:9px;
     border:1px solid #3a3a3a; background:rgba(18,18,18,0.92); color:#e8e8e8; font-size:13px; cursor:pointer; }
   #rail button.sel { background:#e8e8e8; color:#111; border-color:#e8e8e8; font-weight:600; }
@@ -48,7 +60,8 @@
   <div class="live" id="liveLine"><span class="dot"></span>Loading live vehicles&hellip;</div>
 </div>
 <canvas id="map"></canvas>
-<div id="rail"><div class="hd">NAVIGATE</div><div id="railBtns"></div></div>
+<div id="rail"><div class="hd">NAVIGATE &middot; EVERY ROUTE</div><input id="routeSearch" type="text" placeholder="Search routes&hellip;" autocomplete="off"><label id="runRow"><input id="runOnly" type="checkbox">Running now</label><div id="railBtns"></div></div>
+<div id="alertStrip"><span id="alertText"></span><button id="alertClose" aria-label="Dismiss alerts">&times;</button></div>
 <div id="navCard"><div class="k">NAVIGATION</div><h2>Overview</h2></div>
 <canvas id="compass" width="64" height="64"></canvas>
 <div id="lineupWrap">
@@ -73,12 +86,28 @@
    fly-to tween, no elastic chase, no zoom drift. Dynamic navigation stays:
    rail + map labels, follow-a-bus with a live navigation card (destination,
    speed, compass bearing, distance along the line, nearest stop), compass
-   dial, line-up strip. Same floor discipline: ES5, Canvas 2D, XHR. */
+   dial, line-up strip. Same floor discipline: ES5, Canvas 2D, XHR.
+   Route-browser tranche (2026-11-09, J directive "Build the full route
+   browser into the 2D view now"): the NAVIGATE rail is a full browser -
+   every route in the geometry (83 routes + People Mover) with live bus
+   counts, substring search and a Running-now filter; selecting any route
+   opens its route card (status / live buses / stops / length per
+   direction, computed from the same files); QLINE and People Mover map
+   labels de-collided (QLINE on Woodward north of the loop, People Mover
+   on the loop's north-east arc, plus a priority de-collision pass);
+   stale threshold is 12 min (the feed publishes on a ~5-min cadence, so
+   the old 2-min flag read stale almost permanently); a dismissible
+   service-alerts strip polls live-data/alerts.json with the feed cycle.
+   One network in presentation: no agency grouping or labels in the UI;
+   agency ids stay in the data layer only. */
 (function () {
   var ORIGIN = 'https://www.detroitautomationacademy.com';
   var FEED = ORIGIN + '/live-data/vehicles.json';
   var GEO_URL = 'first-look-geo-2d.json';
   var NAV_ROUTES = ['3', '4', '6', '8'];
+  var ALERTS = ORIGIN + '/live-data/alerts.json';
+  var STALE_MS = 720000;   /* feed publishes ~every 5 min: stale only after two missed cycles + margin */
+  var CORRIDOR_KEYS = ['ddot|3', 'ddot|4', 'ddot|6', 'ddot|8', 'qline|QLINE', 'peoplemover|PM'];
   var POLL_MS = 15000;
   var canvas = document.getElementById('map');
   var ctx = canvas.getContext('2d');
@@ -90,6 +119,12 @@
   var lineup = document.getElementById('lineup');
   var lineupTitle = document.getElementById('lineupTitle');
   var notice = document.getElementById('notice');
+  var railEl = document.getElementById('rail');
+  var searchEl = document.getElementById('routeSearch');
+  var runEl = document.getElementById('runOnly');
+  var alertStrip = document.getElementById('alertStrip');
+  var alertText = document.getElementById('alertText');
+  var alertClose = document.getElementById('alertClose');
   var proj = { lat0: 42.381161, lon0: -83.148531, mLat: 111320, mLon: 111320 * Math.cos(42.381161 * Math.PI / 180) };
   var routes = [], routeById = {}, ddotExtent = null, labelRects = [];
   var vehicles = {}, feedCount = 0;
@@ -98,6 +133,9 @@
   var view = { cx: 3900, cy: 2100, scale: 0.030 };
   var HOME = { cx: 3900, cy: 2100, scale: 0.030 };
   var frame = 0;
+  var liveCounts = {};          /* route key -> buses on the road, from the latest poll */
+  var routeOrder = [];          /* browser order, built once geometry loads */
+  var alertsSig = '', alertsDismissed = '';
 
   function xhr(url, ok, err) {
     var r = new XMLHttpRequest();
@@ -226,20 +264,47 @@
     return best ? { n: best.n, m: Math.round(Math.sqrt(bd)) } : null;
   }
 
-  /* ---- navigation rail ---- */
+  function liveCount(k) { return liveCounts[k] || 0; }
+  function routeLabel(rec) {
+    return (rec.id === 'PM' || rec.id === rec.name) ? rec.name : rec.name + ' - ' + rec.id;
+  }
+  function naturalCmp(a, b) {
+    var an = /^\d+$/.test(a.id), bn = /^\d+$/.test(b.id);
+    if (an && bn) { var d = parseInt(a.id, 10) - parseInt(b.id, 10); if (d) return d; }
+    else if (an) return -1;
+    else if (bn) return 1;
+    if (a.name !== b.name) return a.name < b.name ? -1 : 1;
+    return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
+  }
+  function buildRouteOrder() {
+    var byKey = {}, i, rec, k;
+    for (i = 0; i < routes.length; i++) byKey[routes[i].agency + '|' + routes[i].id] = routes[i];
+    routeOrder = [];
+    var used = {};
+    for (i = 0; i < CORRIDOR_KEYS.length; i++) { rec = byKey[CORRIDOR_KEYS[i]]; if (rec) { routeOrder.push(rec); used[CORRIDOR_KEYS[i]] = true; } }
+    var rest = [];
+    for (i = 0; i < routes.length; i++) { k = routes[i].agency + '|' + routes[i].id; if (!used[k]) rest.push(routes[i]); }
+    rest.sort(naturalCmp);
+    for (i = 0; i < rest.length; i++) routeOrder.push(rest[i]);
+  }
+
+  /* ---- navigation rail: full route browser ---- */
   function renderRail() {
+    var st = railBtns.scrollTop || 0;
+    var q = searchEl && searchEl.value ? String(searchEl.value).toLowerCase() : '';
+    var runOnly = !!(runEl && runEl.checked);
     var html = '<button data-k="" class="' + (selected === '' ? 'sel' : '') + '">Overview</button>';
-    for (var i = 0; i < NAV_ROUTES.length; i++) {
-      var rec = routeById['ddot|' + NAV_ROUTES[i]];
-      if (!rec) continue;
-      var k = 'ddot|' + rec.id;
-      html += '<button data-k="' + k + '" class="' + (selected === k ? 'sel' : '') + '">' + rec.name + ' - ' + rec.id + '</button>';
+    var shown = 0;
+    for (var i = 0; i < routeOrder.length; i++) {
+      var rec = routeOrder[i], k = rec.agency + '|' + rec.id, n = liveCount(k);
+      if (runOnly && !n) continue;
+      if (q && (rec.id + ' ' + rec.name).toLowerCase().indexOf(q) < 0) continue;
+      shown++;
+      html += '<button data-k="' + k + '" class="' + (selected === k ? 'sel' : '') + '">' + routeLabel(rec) + '<span class="rc">' + n + '</span></button>';
     }
-    var q = routeById['qline|QLINE'];
-    if (q) html += '<button data-k="qline|QLINE" class="' + (selected === 'qline|QLINE' ? 'sel' : '') + '">QLINE</button>';
-    var pm = routeById['peoplemover|PM'];
-    if (pm) html += '<button data-k="peoplemover|PM" class="' + (selected === 'peoplemover|PM' ? 'sel' : '') + '">People Mover</button>';
+    if (!shown) html += '<div class="none">No routes match.</div>';
     railBtns.innerHTML = html;
+    railBtns.scrollTop = st;
     var bs = railBtns.getElementsByTagName('button');
     for (var j = 0; j < bs.length; j++) (function (b) {
       b.onclick = function () { navigate(b.getAttribute('data-k')); };
@@ -266,9 +331,22 @@
     if (!v) {
       var rec = routeById[selected];
       var canFollow = selected ? !!firstBusOn(selected) : feedCount > 0;
-      navCard.innerHTML = '<div class="k">NAVIGATION</div><h2>' + (rec ? rec.name + ' - ' + rec.id : 'Overview') + '</h2>' +
-        '<div style="font-size:13px;color:#cfcfcf;line-height:1.55">No bus is being followed.<br>Tap any bus on the map, or:</div>' +
-        (canFollow ? '<button id="followBtn">Follow a bus' + (rec ? ' on this route' : '') + '</button>' : '');
+      if (rec) {
+        var n = liveCount(selected);
+        navCard.innerHTML = '<div class="k">ROUTE</div><h2>' + routeLabel(rec) + '</h2>' +
+          '<table>' +
+          '<tr><td class="k2">Status</td><td>' + (n ? 'Running now' : 'Not running') + '</td></tr>' +
+          '<tr><td class="k2">Live buses</td><td>' + n + ' on the road now</td></tr>' +
+          '<tr><td class="k2">Stops</td><td>' + rec.stops + '</td></tr>' +
+          '<tr><td class="k2">Length</td><td>' + (Math.round(rec.lenKm * 10) / 10) + ' km per direction</td></tr>' +
+          '</table>' +
+          '<div style="font-size:13px;color:#cfcfcf;line-height:1.55;margin-top:8px">Tap any bus on the map, or:</div>' +
+          (canFollow ? '<button id="followBtn">Follow a bus on this route</button>' : '');
+      } else {
+        navCard.innerHTML = '<div class="k">NAVIGATION</div><h2>Overview</h2>' +
+          '<div style="font-size:13px;color:#cfcfcf;line-height:1.55">No bus is being followed.<br>Tap any bus on the map, or:</div>' +
+          (canFollow ? '<button id="followBtn">Follow a bus</button>' : '');
+      }
       var fb = document.getElementById('followBtn');
       if (fb) fb.onclick = function () {
         var key = selected ? firstBusOn(selected) : null;
@@ -341,6 +419,28 @@
     lineup.innerHTML = html;
   }
 
+  /* ---- service alerts strip ---- */
+  function layoutShift() {
+    var open = alertStrip.style.display === 'block';
+    var h = open ? (alertStrip.offsetHeight || 36) : 0;
+    railEl.style.top = (66 + h) + 'px';
+    navCard.style.top = (66 + h) + 'px';
+    compass.style.top = (290 + h) + 'px';
+  }
+  function pollAlerts() {
+    xhr(ALERTS, function (d) {
+      var list = d.alerts || [], n = d.count != null ? d.count : list.length, i;
+      if (!n) { alertStrip.style.display = 'none'; alertsSig = ''; layoutShift(); return; }
+      var heads = [], sig = '' + n;
+      for (i = 0; i < list.length; i++) { heads.push(list[i].header || list[i].description || 'Service alert'); sig += '|' + (list[i].id || list[i].header || ''); }
+      alertsSig = sig;
+      if (sig === alertsDismissed) { alertStrip.style.display = 'none'; layoutShift(); return; }
+      alertText.innerHTML = '<b>Service alert' + (n > 1 ? 's' : '') + ':</b> ' + heads.join(' &middot; ');
+      alertStrip.style.display = 'block';
+      layoutShift();
+    }, function () { /* alerts unreachable: leave the strip as it is */ });
+  }
+
   function poll() {
     xhr(FEED, function (d) {
       var now = new Date().getTime();
@@ -356,14 +456,18 @@
         seen[key] = true;
       }
       for (var k in vehicles) if (!seen[k]) delete vehicles[k];
+      liveCounts = {};
+      for (var kk in vehicles) { var rk = vehicles[kk].agency + '|' + vehicles[kk].routeId; liveCounts[rk] = (liveCounts[rk] || 0) + 1; }
       if (followKey && !vehicles[followKey]) { followKey = null; }
-      var stale = (now - feedTime.getTime()) > 120000;
+      var stale = (now - feedTime.getTime()) > STALE_MS;
       liveLine.innerHTML = '<span class="dot"></span><b>' + feedCount + ' buses</b> on the road &nbsp;updated ' + fmtTime(feedTime) + (stale ? ' &nbsp;(stale)' : '');
+      renderRail();
       renderNavCard();
       renderLineup();
     }, function () {
       liveLine.innerHTML = '<span class="dot"></span>Live feed unreachable — retrying.';
     });
+    pollAlerts();
     setTimeout(poll, POLL_MS);
   }
 
@@ -382,19 +486,49 @@
     for (var i = 0; i < NAV_ROUTES.length; i++) keys.push('ddot|' + NAV_ROUTES[i]);
     keys.push('qline|QLINE');
     keys.push('peoplemover|PM');
-    for (var j = 0; j < keys.length; j++) {
+    var boxes = [], j;
+    for (j = 0; j < keys.length; j++) {
       var rec = routeById[keys[j]];
       if (!rec) continue;
-      var p = longestPath(rec), mid = p[Math.floor(p.length * 0.55)], s = toScreen(mid[0], mid[1]);
+      var p = longestPath(rec), mid, pi, pv;
+      if (keys[j] === 'peoplemover|PM') {
+        /* anchor on the loop's north-east arc (its max x-y vertex), not the loop middle */
+        mid = p[0]; var bestV = -1e18;
+        for (pi = 0; pi < p.length; pi++) { pv = p[pi][0] - p[pi][1]; if (pv > bestV) { bestV = pv; mid = p[pi]; } }
+      } else if (keys[j] === 'qline|QLINE') {
+        mid = p[Math.floor(p.length * 0.42)];   /* on Woodward, north of the People Mover loop */
+      } else {
+        mid = p[Math.floor(p.length * 0.55)];
+      }
+      var s = toScreen(mid[0], mid[1]);
       if (s[0] < 0 || s[1] < 0 || s[0] > canvas.width || s[1] > canvas.height) continue;
-      var text = rec.id === 'PM' ? rec.name : rec.name + ' - ' + rec.id, w = ctx.measureText(text).width + 16;
+      var text = routeLabel(rec), w = ctx.measureText(text).width + 16;
+      boxes.push({ x: s[0] - w / 2, y: s[1] - 11, w: w, h: 22, text: text, key: keys[j] });
+    }
+    /* de-collide in priority order: earlier labels keep their anchor;
+       a colliding later label steps down until it clears */
+    var placed = [], bi, bj, bk;
+    for (bi = 0; bi < boxes.length; bi++) {
+      var b = boxes[bi], tries = 0, hit = true;
+      while (hit && tries < 4) {
+        hit = false;
+        for (bj = 0; bj < placed.length; bj++) {
+          var o = placed[bj];
+          if (b.x < o.x + o.w && o.x < b.x + b.w && b.y < o.y + o.h && o.y < b.y + b.h) { hit = true; break; }
+        }
+        if (hit) { b.y += 24; tries++; }
+      }
+      placed.push(b);
+    }
+    for (bk = 0; bk < placed.length; bk++) {
+      var L = placed[bk];
       ctx.beginPath(); ctx.fillStyle = 'rgba(12,12,12,0.88)';
-      ctx.fillRect(s[0] - w / 2, s[1] - 11, w, 22);
+      ctx.fillRect(L.x, L.y, L.w, L.h);
       ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1;
-      ctx.strokeRect(s[0] - w / 2, s[1] - 11, w, 22);
+      ctx.strokeRect(L.x, L.y, L.w, L.h);
       ctx.fillStyle = '#f2f2f2';
-      ctx.fillText(text, s[0] - w / 2 + 8, s[1] + 1);
-      labelRects.push({ x: s[0] - w / 2, y: s[1] - 11, w: w, h: 22, key: keys[j] });
+      ctx.fillText(L.text, L.x + 8, L.y + 12);
+      labelRects.push({ x: L.x, y: L.y, w: L.w, h: L.h, key: L.key });
     }
   }
   function draw() {
@@ -490,6 +624,9 @@
     HOME.scale = 0.030 * (canvas.width / 1440);
     if (!resize.done) { view.scale = HOME.scale; resize.done = true; }
   }
+  if (searchEl) { searchEl.oninput = function () { renderRail(); }; searchEl.onkeyup = function () { renderRail(); }; }
+  if (runEl) runEl.onchange = function () { renderRail(); };
+  if (alertClose) alertClose.onclick = function () { alertsDismissed = alertsSig; alertStrip.style.display = 'none'; layoutShift(); };
   window.addEventListener('resize', resize);
   resize();
   loadGeo(function (failed) {
@@ -497,13 +634,14 @@
       notice.innerHTML = 'The route network could not be loaded, so there is no map to navigate. Check the connection and reload.';
       notice.style.display = 'block'; return;
     }
+    buildRouteOrder();
     renderRail();
     goOverview();
     poll();
     window.requestAnimationFrame(draw);
   });
 })();
-/* PAGE STAMP — Built: 2026-11-09 21:14 America/Detroit · Agent: Forge · Authorized: J. Spencer Smith, directive of 2026-11-09 (LTD High Sierra floor fix) */
+/* PAGE STAMP — Built: 2026-11-09 21:57 America/Detroit · Agent: Forge · Authorized: J. Spencer Smith, directive of 2026-11-09 (full route browser for the 2D floor view) */
 </script>
 </body>
 </html>
