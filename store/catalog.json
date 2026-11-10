@@ -56,21 +56,21 @@
     },
     {
       "category": "Utilities",
-      "datePublished": "2026-11-08",
+      "datePublished": "2026-11-10",
       "description": "The Academy's maintained build of Sequel Pro. Passwords stay in the macOS Keychain, as upstream correctly designed; the uplift addresses the MySQL 8 authentication gap left by the bundled MySQL 5.5-era client library. Release candidate: first Academy build — Academy bundle identity and the Academy audit entry verified in the shipped bundle. The app icon is cut to the amended SDS-3 construction — white tile, ink glyph, no black field; the earlier color-icon gap is closed. Not yet run on the High Sierra rig. The bundled MySQL client library is 5.5.56 (end-of-life; the MariaDB swap is a later tranche).",
-      "downloadURL": "https://github.com/AutomatedTechnologies/sequelpro/releases/download/sequelpro-test-7/SequelPro-test.zip",
+      "downloadURL": "https://github.com/AutomatedTechnologies/sequelpro/releases/download/sequelpro-test-8/SequelPro-test.zip",
       "iconURL": "https://detroitautomationacademy.com/store/icons/sequelpro.png",
       "id": "sequelpro",
       "license": "MIT",
       "minMacOS": "10.13",
       "name": "Sequel Pro",
-      "sha256": "a65c28cdd4e8a4af7f304635923e29de89dc1f81cb4145f18ee460bcefcbee4f",
-      "sizeBytes": 4636201,
+      "sha256": "0868ab558a94324f2f8afb198e4e717f5e00392039a4f9c89697367221ff732a",
+      "sizeBytes": 5250480,
       "sourceURL": "https://github.com/AutomatedTechnologies/sequelpro",
       "status": "release-candidate",
       "tagline": "MySQL database client, maintained for High Sierra.",
-      "version": "sequelpro-test-7",
-      "buildNotes": "Academy rebuild: Academy bundle ID, trimmed monochrome cylinder icon, audit entry. Bundled MySQL client is 5.5.56 (end-of-life); its replacement is a planned tranche. New glyph: the Cylinder (branding distinctiveness refresh)."
+      "version": "sequelpro-test-8",
+      "buildNotes": "SDS10-T4 conformance build: the SDS-8 welcome screen (`SPWelcomeController`, presented at launch) draws the bundle AppIcon composition, displays the build's version read from the bundle's Info.plist at runtime, and plays the standard startup sound — `startup-sound.wav` in Resources, byte-identical to the Academy master. The bundle carries the SDS-10 conformance entry beside the Academy audit entry (all four clauses true). Academy bundle ID, trimmed monochrome cylinder icon, audit entry stand. Bundled MySQL client is 5.5.56 (end-of-life), unchanged in this tranche; its replacement is a separate owner decision. New glyph: the Cylinder (branding distinctiveness refresh)."
     },
     {
       "category": "Audio",
