@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:19f380e93e1ab684a5167a31cd30f17dd4fd97ecc1b5007d3df0107f93927fb6",
+    "stateFingerprint": "sha256:4ca45797c9e50b8e76bfa895190c213e8c1a1e28fe0e81981a0eb9837a37d10e",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 6,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-07",
   "counts": {
     "apps": 11,
-    "builds": 14,
+    "builds": 15,
     "catalog_state": 10,
     "audits": 1,
     "findings": 17,
@@ -313,23 +313,23 @@
       "description": "The Academy's build of the open-source muse-desktop client (MIT, v0.3.0) on Electron 22.3.27 — the last Electron that runs on macOS 10.13 — so Intel High Sierra machines can run a Muse client at all; the official Muse app requires Apple Silicon and a current macOS. Packaged with the Academy monochrome icon. Version 0.4.0 adds the Academy feature layer: repaired window management (no window opens partially off-screen; your window arrangement is restored), up-arrow sent-message history in the message box, and a monochrome Terminal Skin. Unofficial build: not a Meta product and not endorsed by Meta. Unsigned test build. Its icon is cut to the amended SDS-3 construction — white tile and ink glyph, no black field.",
       "catalogStatus": "testing",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/muse-academy.png",
-      "buildNotes": "Window-management repair (owner escalation 2026-11-10) + the v0.4 feature layer. Windows now open fully on-screen with computed placement, saved bounds restore only when they still land on a connected display, sign-in popups get clamped on-screen bounds, and Dock activation restores a minimized window. New: up-arrow message history — the up arrow recalls sent messages per conversation, your draft is preserved, history is stored only on this Mac; and a Terminal Skin (View menu, Shift-Cmd-T) — a functional monochrome terminal interface. SDS-8 welcome on first launch with the library startup sound; SDS-10 conformance entry stamped beside the audit entry. Runtime verification at the owner's Air sitting, evening of 2026-11-10.",
+      "buildNotes": "Terminal skin rebuilt under a whitelist discipline after 0.4.0-academy1's skin failed on the real hosted UI (owner screenshot 2026-11-10: blacked-out sidebar rows, black blocks over panels, profile controls as black rectangles). The new sheet styles only the message stream, the composer, and a painted left rule on the composer shell — typography and matched tints only, no layout properties, every rule gated on the skin class, so toggling it off restores the stock UI without restart; a persisted academy1 ON does not carry into this build. Window repair (no off-screen windows, validated bounds restore, clamped popups, Dock activation), up-arrow message history, SDS-8 welcome and SDS-10 identity stand from academy1. Runtime verdict is the owner's, at the Air sitting.",
       "audits": [],
       "currentBuild": {
-        "tag": "0.4.0-academy1",
-        "sizeBytes": 91899575,
-        "sha256": "9929a8c272b0a1a8b6eee6651c7d8bd43f3e9c9d0a619cc9c3d02fde60abff3e",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/muse-academy/releases/download/muse-academy-0.4.0/Muse-Academy-1013-x64.zip",
+        "tag": "0.4.0-academy2",
+        "sizeBytes": 91901792,
+        "sha256": "22b8deacfd1d113ea310e5ca9ae6ca8449615f2d84cb38a444cc057017039387",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/muse-academy/releases/download/muse-academy-0.4.0-academy2/Muse-Academy-1013-x64.zip",
         "floor": "10.13",
         "builtAt": "2026-11-10",
-        "releasePublishedAt": "2026-11-10T21:43:31Z",
-        "ciRun": "42907741947",
+        "releasePublishedAt": "2026-11-10T22:17:53Z",
+        "ciRun": "42913171956",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (all four clauses true); fresh-download plist readback verified 2026-11-10 for the window-repair + feature build (0.4.0-academy1, SHA-256 9929a8c272b0a1a8b6eee6651c7d8bd43f3e9c9d0a619cc9c3d02fde60abff3e)"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry; fresh-download plist readback verified 2026-11-10 (ai.muse.desktop, 0.4.0, floor 10.13, audit + conformance complete, all four conformance clauses true); skin sheet inside the artifact byte-identical to the repo sheet; build label 0.4.0-academy2 in shipped main.cjs; Mach-O census 15; startup sound byte-identical to the estate master"
         }
       }
     },
