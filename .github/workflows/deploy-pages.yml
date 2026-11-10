@@ -114,179 +114,54 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      - name: Verify deploy manifest against checkout (V5-T5c)
+        run: |
+          python3 - <<'PY'
+          import os, sys
+          dirs, excludes = set(), set()
+          for line in open("deploy-manifest.txt", encoding="utf-8"):
+              parts = line.split()
+              if len(parts) == 2 and parts[0] == "dir":
+                  dirs.add(parts[1])
+              elif len(parts) == 2 and parts[0] == "exclude":
+                  excludes.add(parts[1])
+          actual = {e.name for e in os.scandir(".")
+                    if e.is_dir(follow_symlinks=False)} - {"deployment"}
+          for d in sorted(dirs - actual):
+              print(f"::warning title=Deploy manifest::directory in manifest but absent from checkout (copy will skip): {d}")
+          unclassified = actual - dirs - excludes
+          if unclassified:
+              for d in sorted(unclassified):
+                  print(f"::error title=Deploy manifest::checkout directory classified by neither the manifest deploy set nor its exclude set: {d}")
+              sys.exit("deploy manifest drift: classify the new directory via the registry generator "
+                       "(academy-registry tools/generate_deploy_manifest.py), regenerate, and republish deploy-manifest.txt")
+          print(f"deploy manifest check OK: {len(dirs)} deploy directories, {len(excludes)} excluded, checkout fully classified")
+          PY
+
       - name: Prepare Deployment Directory
         run: |
-          echo "Preparing deployment directory..."
-          mkdir -p deployment/curriculum
-
-          # Copy all root HTML, CSS, JS, and shell scripts (dynamic collection)
-          cp *.html deployment/ || echo "No HTML files found"
-          cp *.css deployment/ || echo "No CSS files found"
-          cp *.js deployment/ || echo "No JS files found"
-          # Root JSON is an explicit allowlist (security remediation R2,
-          # 2026-10-23): the previous `cp *.json` / `cp *.sh` globs
-          # published any root data/script file by default — that is how
-          # an internal pre-launch shell script shipped publicly. A new
-          # root .json data file must be added here deliberately; root
-          # shell scripts are never site content and are not copied.
-          for f in build-manifest.json commentary.json ddot-fleet.json ddot-routes-3d.json ddot-timetable-S1000182.json first-look-geo-2d.json geometry-manifest.json landmarks.json live.json peoplemover-3d.json places.json planner-timetable-S1000182-S1000147.json qline-3d.json search-index.json smart-routes-3d.json; do
-            cp "$f" deployment/ || echo "allowlisted JSON missing: $f"
-          done
-          
-          # Copy system metadata
-          cp CNAME deployment/               || echo "CNAME not found"
-          cp .nojekyll deployment/           || echo ".nojekyll not found"
-          cp -r .well-known deployment/     || echo ".well-known not found"
-          cp robots.txt deployment/          || echo "robots.txt not found"
-          cp ai.txt deployment/             || echo "ai.txt not found"
-          cp sitemap.xml deployment/         || echo "sitemap.xml not found"
-          cp feed.xml deployment/            || echo "feed.xml not found"
-          cp feed.xsl deployment/            || echo "feed.xsl not found"
-          cp -r feed deployment/             || echo "feed/ not found"
-
-          # Copy curriculum silo
-          if [ -d "curriculum" ]; then
-            cp -r curriculum/* deployment/curriculum/
-          fi
-
-          # Copy Signal newsletter archive
-          if [ -d "signal" ]; then
-            cp -r signal deployment/ || echo "signal copy failed"
-          fi
-
-          # Copy Engineering series
-          if [ -d "engineering" ]; then
-            cp -r engineering deployment/ || echo "engineering copy failed"
-            cp -r live-transit-detroit deployment/ || echo "live-transit-detroit copy failed"
-          fi
-
-          # Copy The Press (Just the Facts)
-          if [ -d "press" ]; then
-            cp -r press deployment/ || echo "press copy failed"
-            cp -r apple-learning-coach deployment/ || echo "apple-learning-coach copy failed"
-          fi
-
-          if [ -d "watch" ]; then
-            cp -r watch deployment/ || echo "watch copy failed"
-          fi
-
-          # Copy live transit feed data (static JSON published by the
-          # live-feed workflow; consumed by live-transit.html)
-          if [ -d "live-data" ]; then
-            cp -r live-data deployment/ || echo "live-data copy failed"
-          fi
-
-          # Copy asset directories
-          cp -r assets deployment/   || (mkdir -p deployment/assets   && echo "assets dir created empty")
-          cp -r branding deployment/ || (mkdir -p deployment/branding && echo "branding dir created empty")
-          cp -r qr_codes deployment/ || (mkdir -p deployment/qr_codes && echo "qr_codes dir created empty")
-
-          # Copy Notes (technical notes, migrated from retired blog)
-          if [ -d "notes" ]; then
-            cp -r notes deployment/ || echo "notes copy failed"
-          fi
-
-          # Copy blog redirect stubs (old /blog/ URLs -> /notes/)
-          if [ -d "blog" ]; then
-            cp -r blog deployment/ || echo "blog stubs copy failed"
-          fi
-
-          # Copy Find redirect (/find/ -> /find.html)
-          if [ -d "find" ]; then
-            cp -r find deployment/ || echo "find copy failed"
-          fi
-
-          # Copy Departure Board (Project 29 successor — watch-parity board)
-          if [ -d "board" ]; then
-            cp -r board deployment/ || echo "board copy failed"
-          fi
-
-          # Copy Releases (Project 42 — public releases page)
-          if [ -d "releases" ]; then
-            cp -r releases deployment/ || echo "releases copy failed"
-          fi
-
-          # Copy Live Transit cities (hub + per-city pages/assets;
-          # Philadelphia MVP, 2026-10-23)
-          if [ -d "live-transit" ]; then
-            cp -r live-transit deployment/ || echo "live-transit copy failed"
-          fi
-
-          # Copy Voter Guide (app shell + geography surface;
-          # Board 62 Integration 1 promotion, 2026-10-26 — the
-          # directory was never in the copy list, so /voter-guide/*
-          # 404'd despite the files being in the repo)
-          if [ -d "voter-guide" ]; then
-            cp -r voter-guide deployment/ || echo "voter-guide copy failed"
-          fi
-
-          # Copy planner assets (Cities V2 Detroit bundle, T6.6,
-          # 2026-10-31 — the modular Detroit page loads its planner
-          # timetable from planner/assets/; the directory was never
-          # in the copy list, so the files 404'd despite being in
-          # the repo — same failure class as voter-guide above)
-          if [ -d "planner" ]; then
-            cp -r planner deployment/ || echo "planner copy failed"
-          fi
-
-          # Copy The Index (site-wide index; linked from the header nav
-          # and the footer of every page — the directory was never in
-          # the copy list, so /the-index/ 404'd in production despite
-          # the files being in the repo; owner defect report
-          # 2026-11-05, same failure class as voter-guide/planner above)
-          if [ -d "the-index" ]; then
-            cp -r the-index deployment/ || echo "the-index copy failed"
-          fi
-
-          # Copy Forge Keyboard (iOS keyboard page + download, placed
-          # 2026-11-05 — same copy-list omission: promoted to the repo
-          # but never copied into the deployment artifact)
-          if [ -d "ios-keyboard" ]; then
-            cp -r ios-keyboard deployment/ || echo "ios-keyboard copy failed"
-          fi
-
-          # Copy The Index + iOS keyboard distribution (V2 launch directories,
-          # 2026-11-05 — absent from the list, both served the estate 404)
-          if [ -d "the-index" ]; then
-            cp -r the-index deployment/ || echo "the-index copy failed"
-          fi
-
-          if [ -d "ios-keyboard" ]; then
-            cp -r ios-keyboard deployment/ || echo "ios-keyboard copy failed"
-          fi
-
-          # Copy Software (Academy-maintained macOS software pages —
-          # KisMac test-build download page, placed 2026-11-07 — same
-          # copy-list omission class as voter-guide/planner/the-index
-          # above: without this block the directory sits in the repo
-          # but 404s in production)
-          if [ -d "software" ]; then
-            cp -r software deployment/ || echo "software copy failed"
-          fi
-
-          # Copy Updates + Store (Academy Update Infrastructure
-          # Standard appcasts + Distro catalog — placed 2026-11-07
-          # after the full URL audit found both URL spaces 404 in
-          # production: named in their standards but never created
-          # in the repo and absent from this copy list — same
-          # copy-list omission class as software above)
-          if [ -d "updates" ]; then
-            cp -r updates deployment/ || echo "updates copy failed"
-          fi
-          if [ -d "store" ]; then
-            cp -r store deployment/ || echo "store copy failed"
-          fi
-
-          # Copy Registry (Singular Reference published snapshot +
-          # query surface — DAADV5 V5-T2, 2026-11-09: the versioned
-          # registry.db snapshots under registry/v<version>/, their
-          # manifests, the /registry/ query page, and its vendored
-          # SQLite-WASM assets — same copy-list omission class as
-          # software/updates/store above: without this block the
-          # directory sits in the repo but 404s in production)
-          if [ -d "registry" ]; then
-            cp -r registry deployment/ || echo "registry copy failed"
-          fi
+          # The copy list is a GENERATED manifest (DAADV5 V5-T5c, absorbs
+          # V4-T8 R6): deploy-manifest.txt at the repo root is the render
+          # of record, generated registry-side from the page census +
+          # the site tree (academy-registry tools/generate_deploy_manifest.py,
+          # CI diff-gated there). It replaces the hand-kept copy blocks
+          # whose omission class repeatedly left repo directories
+          # undeployed (voter-guide, planner, the-index, software,
+          # updates/store, registry). Root .json stays an explicit
+          # allowlist inside the manifest (security remediation R2,
+          # 2026-10-23). To change what deploys: change the registry
+          # generator's rule, regenerate, republish the manifest here.
+          echo "Preparing deployment directory from deploy-manifest.txt..."
+          mkdir -p deployment
+          while read -r kind arg _rest || [ -n "$kind" ]; do
+            case "$kind" in
+              glob) cp $arg deployment/ || echo "manifest glob matched nothing: $arg" ;;
+              file) cp "$arg" deployment/ || echo "manifest file missing: $arg" ;;
+              dir) if [ -d "$arg" ]; then cp -r "$arg" deployment/ || echo "manifest dir copy failed: $arg"; fi ;;
+              exclude|'#'*|'') : ;;
+              *) echo "unknown deploy-manifest entry: $kind $arg"; exit 1 ;;
+            esac
+          done < deploy-manifest.txt
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3

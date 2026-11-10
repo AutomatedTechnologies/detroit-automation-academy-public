@@ -1,0 +1,71 @@
+# deploy-manifest.txt — GENERATED render of the Singular Reference (DAADV5 V5-T5c; absorbs V4-T8 R6).
+# Source: AutomatedTechnologies/academy-registry registry.db (page_checks census) + site tree snapshot (tools/site_tree_snapshot.json),
+# via tools/generate_deploy_manifest.py. Do not hand-edit; regenerate.
+# Registry state: schema v6 · census pages 355 · page-bearing directories 18 (computed from page_checks).
+# Site state: AutomatedTechnologies/detroit-automation-academy-public @ 08a487e517ed353bf235e669e0a0d26a84bb9c2f · tree entries 1061 · tree directories 37 = deploy 27 + excluded 10.
+# Rule: root *.html/*.css/*.js by glob; root .json by the reviewed allowlist (security class, R2 2026-10-23); named root files;
+# directories = page-bearing (computed) + named non-page classes (metadata / shared assets / feed data / generated endpoints).
+# A tree directory in neither the deploy set nor the exclude set fails generation and fails the deploy check — no silent drift.
+glob *.html
+glob *.css
+glob *.js
+file build-manifest.json
+file commentary.json
+file ddot-fleet.json
+file ddot-routes-3d.json
+file ddot-timetable-S1000182.json
+file first-look-geo-2d.json
+file geometry-manifest.json
+file landmarks.json
+file live.json
+file peoplemover-3d.json
+file places.json
+file planner-timetable-S1000182-S1000147.json
+file qline-3d.json
+file search-index.json
+file smart-routes-3d.json
+file CNAME
+file .nojekyll
+file robots.txt
+file ai.txt
+file sitemap.xml
+file feed.xml
+file feed.xsl
+dir .well-known
+dir apple-learning-coach
+dir assets
+dir blog
+dir board
+dir branding
+dir curriculum
+dir engineering
+dir feed
+dir find
+dir ios-keyboard
+dir live-data
+dir live-transit
+dir live-transit-detroit
+dir notes
+dir planner
+dir press
+dir qr_codes
+dir registry
+dir releases
+dir signal
+dir software
+dir store
+dir the-index
+dir updates
+dir voter-guide
+dir watch
+exclude .git
+exclude .githooks
+exclude .github
+exclude cad
+exclude docs
+exclude mobile-portal
+exclude plans
+exclude proposals
+exclude scripts
+exclude specs
+exclude tools
