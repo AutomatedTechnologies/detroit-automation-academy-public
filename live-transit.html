@@ -1135,6 +1135,64 @@
   window.FORGE_LIVE_DATA_URL = "https://www.detroitautomationacademy.com/live-data";
 </script>
 <script src="ride-along.js?v=20261019-1228"></script>
+<script>
+/* Live Transit Detroit floor gate (2026-11-09, DAADV3 REC-1). Capability
+   tests only, no user-agent reading: a browser without a WebGL2 canvas
+   context or without import-map support can never start the 3D module
+   app on this page, so it is sent to the Canvas 2D floor view instead.
+   On a capable browser this script changes nothing: no redirect, and
+   the watchdog below stands down the moment the app boots. Boot marker:
+   live-transit.js adds the app-lock class to the html and body elements
+   when it runs. If that marker never appears within 10 seconds, the
+   silent black stage is replaced with the page fallback notice, which
+   links to the same floor view. ES5 classic script by design. */
+(function () {
+  var FLOOR_URL = 'live-transit-2d.html';
+  var IM_PROBE = 'import' + 'map';
+  function webgl2Missing() {
+    try {
+      var c = document.createElement('canvas');
+      if (!c || !c.getContext) return true;
+      var gl = null;
+      try { gl = c.getContext('webgl2'); } catch (e) { gl = null; }
+      return !gl;
+    } catch (e2) { return true; }
+  }
+  function importMapMissing() {
+    try {
+      if (typeof HTMLScriptElement === 'undefined') return true;
+      if (!HTMLScriptElement.supports) return true;
+      return !HTMLScriptElement.supports(IM_PROBE);
+    } catch (e) { return true; }
+  }
+  function ltdFloorNeedsFallback() {
+    return webgl2Missing() || importMapMissing();
+  }
+  window.__ltdFloorNeedsFallback = ltdFloorNeedsFallback;
+  if (ltdFloorNeedsFallback()) {
+    window.location.replace(FLOOR_URL);
+    return;
+  }
+  function hasClass(el, name) {
+    if (!el) return false;
+    if (el.classList && el.classList.contains) return el.classList.contains(name);
+    var cn = el.className;
+    if (typeof cn !== 'string') return false;
+    return (' ' + cn + ' ').indexOf(' ' + name + ' ') >= 0;
+  }
+  function appBooted() {
+    return hasClass(document.documentElement, 'app-lock') || hasClass(document.body, 'app-lock');
+  }
+  window.setTimeout(function () {
+    if (appBooted()) return;
+    var container = document.getElementById('live-map');
+    if (!container) return;
+    if (container.getElementsByTagName && container.getElementsByTagName('canvas').length > 0) return;
+    if (container.innerHTML && container.innerHTML.indexOf('map-fallback') >= 0) return;
+    container.innerHTML = '<div class="map-fallback"><p>The 3D map did not start in this browser. You can still see every bus live on the <a href="live-transit-2d.html">2D floor view of Live Transit Detroit</a>.</p></div>';
+  }, 10000);
+})();
+</script>
 <script type="module" src="live-transit.js?v=20261108-0320"></script>
 <script src="assets/measure.js?v=20261023-o2" defer></script>
 </body>
