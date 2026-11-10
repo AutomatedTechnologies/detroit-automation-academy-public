@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:8b990341c2f6b18e4631c24ed496bcaafaa6531eed332febb1448dc7ebbc48b6",
+    "stateFingerprint": "sha256:df5f7b8ead0ed97a24765a4262c0ff347b53783531de169b79b39a7481dfcb49",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 6,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-07",
   "counts": {
     "apps": 11,
-    "builds": 12,
+    "builds": 13,
     "catalog_state": 10,
     "audits": 1,
     "findings": 17,
@@ -338,7 +338,7 @@
       "displayName": "AirPods Max Diagnostics",
       "repoUrl": "https://github.com/AutomatedTechnologies/airpods-max-diag",
       "sourceUrl": "https://github.com/AutomatedTechnologies/airpods-max-diag",
-      "bundleId": null,
+      "bundleId": "com.detroitautomationacademy.airpodsmaxdiag",
       "category": "Utilities",
       "license": "Academy License (revocable)",
       "kind": "catalog",
@@ -348,23 +348,23 @@
       "description": "An Academy-original utility for a USB-connected AirPods Max (Lightning generation) that will not respond. Five-section diagnostics — USB enumeration and power, IORegistry device node, CoreAudio device list, Bluetooth pairing and link, recent bluetoothd/coreaudiod log evidence — with a branching verdict; guided Restart and Factory Reset sheets for the headphones (including the 15-second reset hold timer); a Restart Services action for coreaudiod and bluetoothd; and a Firmware panel that reads the device firmware and compares it with the latest for this model (6F25, Apple Support 106340), evaluating Apple's automatic-update conditions live. Installs as AirPodsMaxDiag.app under its own Academy bundle identity (com.detroitautomationacademy.airpodsmaxdiag) and carries the Academy audit entry. AirPods Max is a trademark of Apple Inc.; this utility is not affiliated with or endorsed by Apple Inc.",
       "catalogStatus": "testing",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/airpods-max-diag.png",
-      "buildNotes": "New: Force USB Reset — a bus-level reset (re-enumeration) issued to the headphones over USB, two cycles, with the result measured in the report. New: battery status query — the report now states any battery data the device reports over USB, or that none is reported. Also carries the Force Restart Connection and Force Firmware Update actions from test-2.",
+      "buildNotes": "Defect fix: the app shipped with no menu bar — the programmatic UI never built a main menu (no nib, and no code called setMainMenu:). The main menu is now constructed in code and installed at launch: app menu (About, Quit), File (Save Report…, Close Window), Edit (standard editing for the report view), Diagnostics (the window's nine actions, on the menu bar), Window, Help. No diagnostic behavior changes. Runtime verification at the owner's Air sitting, evening of 2026-11-10.",
       "audits": [],
       "currentBuild": {
-        "tag": "apd-test-4",
-        "sizeBytes": 717096,
-        "sha256": "c397b0f8bf10ae080bf67a63bed2d74e13a3ac4b03c0d585de4bc0a38654db30",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/airpods-max-diag/releases/download/apd-test-4/AirPodsMaxDiag-test.zip",
+        "tag": "apd-test-5",
+        "sizeBytes": 719776,
+        "sha256": "a32e34eec2cb5a06991da539666abc93cbd9a3b7ee332474d4426ab5515da8cd",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/airpods-max-diag/releases/download/apd-test-5/AirPodsMaxDiag-test.zip",
         "floor": "10.13",
-        "builtAt": null,
-        "releasePublishedAt": "2026-11-08T21:00:57Z",
-        "ciRun": null,
+        "builtAt": "2026-11-10",
+        "releasePublishedAt": "2026-11-10T21:20:24Z",
+        "ciRun": "42904015656",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule); record: AirPods Max Diagnostics records/03 (apd-test-4)"
+          "ref": "bundle-carried audit entry (Distro files/08 rule); fresh-download plist readback verified 2026-11-10 for the menu-bar defect-fix build (apd-test-5, SHA-256 a32e34eec2cb5a06991da539666abc93cbd9a3b7ee332474d4426ab5515da8cd)"
         }
       }
     }
