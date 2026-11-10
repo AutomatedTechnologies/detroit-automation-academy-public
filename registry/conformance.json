@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:df5f7b8ead0ed97a24765a4262c0ff347b53783531de169b79b39a7481dfcb49",
+    "stateFingerprint": "sha256:19f380e93e1ab684a5167a31cd30f17dd4fd97ecc1b5007d3df0107f93927fb6",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 6,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-07",
   "counts": {
     "apps": 11,
-    "builds": 13,
+    "builds": 14,
     "catalog_state": 10,
     "audits": 1,
     "findings": 17,
@@ -278,23 +278,23 @@
       "description": "Distro is the Detroit Automation Academy's native application-store app for macOS High Sierra: it browses the Academy catalog, downloads Academy-maintained apps from the AutomatedTechnologies GitHub org, verifies every download by SHA-256 before install, and carries no privileged helper. Prepared at DAADV3 T1 codification (2026-11-07); not yet published — publication remains gated on Distro tranche D-T5. Disassembled. Scanned. Recompiled. Distro distributes only apps carrying the Academy audit entry in their plist — proof of the Academy pipeline. distro-test-17 applies the SDS-9 liquid-glass cues to the store chrome: layered tint depth, the glass hairline pair on the dividers and sheet edges, capsule state controls, and the status word in a capsule chip — flat tints only, no behavior change.\n\n© 2026 Detroit Automation Academy / Automated Technologies. All rights reserved. Detroit Automation Academy, Automated Technologies, Distro, Workbench, Live Transit Detroit, The Signal, and the Academy monochrome logo are marks of the Academy, used under the founder's permission. Academy-original works are licensed under the Academy License (revocable); upstream open-source components remain under their own licenses. distro-test-22 adds Update All: when updates are pending, one button runs them sequentially — each app still verified by SHA-256 and the audit gate on its own — and ends with a single summary. The detail pane now shows build notes for the catalog version and the installed app's file path. Catalog fetches now bypass HTTP caches, so Refresh always returns the current catalog.",
       "catalogStatus": "release-candidate",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/distro.png",
-      "buildNotes": "Icon unification build under the build-query contract: the pipeline fetched the pinned registry snapshot v6-0014 (pin advanced from v6-0011 as a reviewed change), verified its SHA-256 against the manifest before querying, and took its version assignment, branding metadata, catalog status and audit state from the snapshot; the release body is composed from the query results and cites the snapshot. One source change from the superseded build: `DistroLogoView` now draws the AppIcon download-arrow composition on the welcome screen, About window and store sidebar, so the icon the Dock shows is the icon the app shows; the bundle AppIcon and the catalog artwork already carried the arrow.",
+      "buildNotes": "Superseding build under the build-query contract with the owner-directed version override: same tag as the build it supersedes, full three-item spec — the AppIcon download-arrow composition drawn by `DistroLogoView` on the welcome screen, About window and store sidebar; the build's version displayed on the SDS-8 welcome screen, read from the bundle's Info.plist at runtime; and a functional menu bar (app menu with About and Reload Catalog, Window, Help). The pipeline fetched the pinned registry snapshot v6-0016, verified its SHA-256 against the manifest before querying, and took branding metadata, catalog status and audit state from the snapshot; the release body is composed from the query results and cites the snapshot.",
       "audits": [],
       "currentBuild": {
         "tag": "distro-test-40",
-        "sizeBytes": 739428,
-        "sha256": "6c98bdfc5cf1d1a55dfa3debda88b71b25c8c0d68e57e1a204e830fc1508f839",
+        "sizeBytes": 740313,
+        "sha256": "7d801bdf5da802399d46ea89ff4cb1be81400cd9e1da2d3c178930f0495df9b0",
         "downloadUrl": "https://github.com/AutomatedTechnologies/distro/releases/download/distro-test-40/Distro-test.zip",
         "floor": "10.13",
         "builtAt": "2026-11-10",
-        "releasePublishedAt": "2026-11-10T21:16:57Z",
-        "ciRun": "42903426748",
+        "releasePublishedAt": "2026-11-10T21:54:27Z",
+        "ciRun": "42909401856",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule); fresh-download plist readback verified 2026-11-10 for the icon-unification build (distro-test-40, SHA-256 6c98bdfc5cf1d1a55dfa3debda88b71b25c8c0d68e57e1a204e830fc1508f839)"
+          "ref": "bundle-carried audit entry (Distro files/08 rule); fresh-download plist readback verified 2026-11-10 for the superseding three-item build (distro-test-40, SHA-256 7d801bdf5da802399d46ea89ff4cb1be81400cd9e1da2d3c178930f0495df9b0); supersedes the icon-only artifact registered by changes/0015 (739,428 B, SHA-256 6c98bdfc5cf1d1a55dfa3debda88b71b25c8c0d68e57e1a204e830fc1508f839)"
         }
       }
     },
@@ -307,29 +307,29 @@
       "category": "Productivity",
       "license": "MIT",
       "kind": "catalog",
-      "appStatus": "release-candidate",
+      "appStatus": "testing",
       "minMacOS": "10.13",
       "tagline": "The Muse desktop client, rebuilt by the Academy for High Sierra.",
-      "description": "The Academy's build of the open-source muse-desktop client (MIT, v0.3.0) on Electron 22.3.27 — the last Electron that runs on macOS 10.13 — so Intel High Sierra machines can run a Muse client at all; the official Muse app requires Apple Silicon and a current macOS. Packaged with the Academy monochrome icon. Unofficial build: not a Meta product and not endorsed by Meta. Unsigned test build. Runtime verified on the Academy's High Sierra rig: installed through Distro, it opens on first launch (2026-11-08). Its icon is cut to the amended SDS-3 construction — white tile and ink glyph, no black field.",
-      "catalogStatus": "release-candidate",
+      "description": "The Academy's build of the open-source muse-desktop client (MIT, v0.3.0) on Electron 22.3.27 — the last Electron that runs on macOS 10.13 — so Intel High Sierra machines can run a Muse client at all; the official Muse app requires Apple Silicon and a current macOS. Packaged with the Academy monochrome icon. Version 0.4.0 adds the Academy feature layer: repaired window management (no window opens partially off-screen; your window arrangement is restored), up-arrow sent-message history in the message box, and a monochrome Terminal Skin. Unofficial build: not a Meta product and not endorsed by Meta. Unsigned test build. Its icon is cut to the amended SDS-3 construction — white tile and ink glyph, no black field.",
+      "catalogStatus": "testing",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/muse-academy.png",
-      "buildNotes": "Trimmed-icon refresh. Built from the open-source muse-desktop v0.3.0 (MIT) on Electron 22.3.27.",
+      "buildNotes": "Window-management repair (owner escalation 2026-11-10) + the v0.4 feature layer. Windows now open fully on-screen with computed placement, saved bounds restore only when they still land on a connected display, sign-in popups get clamped on-screen bounds, and Dock activation restores a minimized window. New: up-arrow message history — the up arrow recalls sent messages per conversation, your draft is preserved, history is stored only on this Mac; and a Terminal Skin (View menu, Shift-Cmd-T) — a functional monochrome terminal interface. SDS-8 welcome on first launch with the library startup sound; SDS-10 conformance entry stamped beside the audit entry. Runtime verification at the owner's Air sitting, evening of 2026-11-10.",
       "audits": [],
       "currentBuild": {
-        "tag": "0.3.0-academy3",
-        "sizeBytes": 91262953,
-        "sha256": "bc62fb17e2e9f48259656272eac6953a20994a295d42e7032bd4357c78c04980",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/muse-academy/releases/download/muse-academy-0.3.0/Muse-Academy-1013-x64.zip",
+        "tag": "0.4.0-academy1",
+        "sizeBytes": 91899575,
+        "sha256": "9929a8c272b0a1a8b6eee6651c7d8bd43f3e9c9d0a619cc9c3d02fde60abff3e",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/muse-academy/releases/download/muse-academy-0.4.0/Muse-Academy-1013-x64.zip",
         "floor": "10.13",
-        "builtAt": "2026-11-08",
-        "releasePublishedAt": "2026-11-08T06:11:32Z",
-        "ciRun": null,
+        "builtAt": "2026-11-10",
+        "releasePublishedAt": "2026-11-10T21:43:31Z",
+        "ciRun": "42907741947",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule); fresh-download verified: Distro project files/11 DAADV3 assimilation audit (0.3.0-academy3)"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (all four clauses true); fresh-download plist readback verified 2026-11-10 for the window-repair + feature build (0.4.0-academy1, SHA-256 9929a8c272b0a1a8b6eee6651c7d8bd43f3e9c9d0a619cc9c3d02fde60abff3e)"
         }
       }
     },
