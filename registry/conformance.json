@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:6c58ba877514592f9cd62fd0b539266008e33ebfe3bde8a5a793c11d406505c6",
+    "stateFingerprint": "sha256:ee5301edb9fede7679ca0cdd3812f1df7c682fd0148d3f9c52f6a645e036daba",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 6,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-07",
   "counts": {
     "apps": 11,
-    "builds": 17,
+    "builds": 20,
     "catalog_state": 10,
     "audits": 1,
     "findings": 17,
@@ -23,7 +23,7 @@
       "displayName": "KisMac",
       "repoUrl": "https://github.com/AutomatedTechnologies/KisMac2",
       "sourceUrl": "https://github.com/AutomatedTechnologies/KisMac2",
-      "bundleId": null,
+      "bundleId": "com.detroitautomationacademy.kismac",
       "category": "Network",
       "license": "GPL-2.0",
       "kind": "catalog",
@@ -33,23 +33,23 @@
       "description": "The Academy's maintained build of KisMac: passive Wi-Fi scanning, hidden-SSID detection, client mapping, and GPS/KML export, remediated and rebuilt for macOS High Sierra. For network education and authorized testing of your own networks only. Installs as KisMac2.app under the Academy's own bundle identity (com.detroitautomationacademy.kismac) and carries the Academy audit entry. The bundle identity changed from the upstream com.igrsoft.kismac in this build, so the first launch is a fresh profile — preferences, Keychain items, and saved state do not carry over. It installs side by side with the Workbench entry (Workbench.app). Its app icon is the Academy re-cut under the amended SDS-3 construction (ink silhouette on the white tile) — the upstream color art no longer ships in the build.",
       "catalogStatus": "release-candidate",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/kismac.png",
-      "buildNotes": "Academy identity rebuild: Academy bundle ID (com.detroitautomationacademy.kismac), trimmed monochrome icon, Academy audit entry, bundled IEEE OUI table — no network fetch at build or runtime.",
+      "buildNotes": "Adds the SDS-8 welcome screen via the shared Academy component (AcademyWelcomeController + AcademyAppIconView): the welcome draws the bundle AppIcon composition, displays the build version read from the bundle's own Info.plist at runtime, and plays the standard startup sound (byte-identical in the bundle). The bundle stamps the SDS-10 conformance entry beside the Academy audit entry. Also adds the Academy license and notice to the bundle. Runtime verification at the owner's next Air sitting.",
       "audits": [],
       "currentBuild": {
-        "tag": "test-build-18",
-        "sizeBytes": 2081152,
-        "sha256": "b7edb36b7204938dcaf7b99759f00831c48959890e4ef9312b677039960515de",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/test-build-18/KisMac-test.zip",
+        "tag": "test-build-19",
+        "sizeBytes": 2699372,
+        "sha256": "8d4f70ac74605ce11ecac018a2ebd08f8fbd8f65738561393c90963a4ee390a6",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/test-build-19/KisMac-test.zip",
         "floor": "10.13",
-        "builtAt": null,
-        "releasePublishedAt": "2026-11-08T08:28:24Z",
-        "ciRun": null,
+        "builtAt": "2026-11-10",
+        "releasePublishedAt": "2026-11-10T22:39:52Z",
+        "ciRun": "42915974025",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule); record: KisMac project files/13 (test-build-18)"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10; Logo / VersionAtStartup / StartupSound / MenuBar all true; Date 2026-11-10); fresh-download plist readback verified 2026-11-10 for the SDS10-T1 shared-welcome build (test-build-19, SHA-256 8d4f70ac74605ce11ecac018a2ebd08f8fbd8f65738561393c90963a4ee390a6); bundled startup-sound.wav byte-identical to the SDS-10 master (SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a)"
         }
       }
     },
@@ -138,23 +138,23 @@
       "description": "The Academy's maintained build of Sequel Pro. Passwords stay in the macOS Keychain, as upstream correctly designed; the uplift addresses the MySQL 8 authentication gap left by the bundled MySQL 5.5-era client library. Release candidate: first Academy build — Academy bundle identity and the Academy audit entry verified in the shipped bundle. The app icon is cut to the amended SDS-3 construction — white tile, ink glyph, no black field; the earlier color-icon gap is closed. Not yet run on the High Sierra rig. The bundled MySQL client library is 5.5.56 (end-of-life; the MariaDB swap is a later tranche).",
       "catalogStatus": "release-candidate",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/sequelpro.png",
-      "buildNotes": "Academy rebuild: Academy bundle ID, trimmed monochrome cylinder icon, audit entry. Bundled MySQL client is 5.5.56 (end-of-life); its replacement is a planned tranche. New glyph: the Cylinder (branding distinctiveness refresh).",
+      "buildNotes": "SDS10-T4 conformance build: the SDS-8 welcome screen (`SPWelcomeController`, presented at launch) draws the bundle AppIcon composition, displays the build's version read from the bundle's Info.plist at runtime, and plays the standard startup sound — `startup-sound.wav` in Resources, byte-identical to the Academy master. The bundle carries the SDS-10 conformance entry beside the Academy audit entry (all four clauses true). Academy bundle ID, trimmed monochrome cylinder icon, audit entry stand. Bundled MySQL client is 5.5.56 (end-of-life), unchanged in this tranche; its replacement is a separate owner decision. New glyph: the Cylinder (branding distinctiveness refresh).",
       "audits": [],
       "currentBuild": {
-        "tag": "sequelpro-test-7",
-        "sizeBytes": 4636201,
-        "sha256": "a65c28cdd4e8a4af7f304635923e29de89dc1f81cb4145f18ee460bcefcbee4f",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/sequelpro/releases/download/sequelpro-test-7/SequelPro-test.zip",
+        "tag": "sequelpro-test-8",
+        "sizeBytes": 5250480,
+        "sha256": "0868ab558a94324f2f8afb198e4e717f5e00392039a4f9c89697367221ff732a",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/sequelpro/releases/download/sequelpro-test-8/SequelPro-test.zip",
         "floor": "10.13",
-        "builtAt": "2026-11-08",
-        "releasePublishedAt": "2026-11-08T20:21:13Z",
-        "ciRun": null,
+        "builtAt": "2026-11-10",
+        "releasePublishedAt": "2026-11-10T22:34:41Z",
+        "ciRun": "42915501259",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule); record: Sequel Pro project files/05 (sequelpro-test-7)"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10, Logo/VersionAtStartup/StartupSound/MenuBar all true, Date 2026-11-10); fresh-download plist readback verified 2026-11-10 for the SDS10-T4 conformance build (sequelpro-test-8, SHA-256 0868ab558a94324f2f8afb198e4e717f5e00392039a4f9c89697367221ff732a); bundled startup-sound.wav SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a = the SDS-10 master"
         }
       }
     },
@@ -198,7 +198,7 @@
       "displayName": "Workbench",
       "repoUrl": "https://github.com/AutomatedTechnologies/KisMac2",
       "sourceUrl": "https://github.com/AutomatedTechnologies/KisMac2",
-      "bundleId": null,
+      "bundleId": "com.detroitautomationacademy.workbench",
       "category": "Network",
       "license": "GPL-2.0",
       "kind": "catalog",
@@ -208,23 +208,23 @@
       "description": "Staged internal build of Workbench, the Academy's unified network utility, CI-built 2026-11-08; launched on the High Sierra rig 2026-11-08: the remediated KisMac discovery engine hosted in a new unified shell, a read-only AirPort base-station configuration view, Ping / Netstat / Traceroute / Speed Test diagnostics, and a local-only journal. Manage is read-only in this build — there is no configuration write path. Installs as Workbench.app under its own Academy bundle identity (com.detroitautomationacademy.workbench) and carries the Academy audit entry, distinct from KisMac — the two install side by side. (The earlier staged-v1-1 build shared the KisMac bundle identity and installing one replaced the other; corrected in staged-v1-2.) The Networks header now reads “Workbench” — staged-v1-4 is the surgical repair of the inherited “KisMac v0.3.4” header (ScanController), one line, nothing else changed. staged-v1-5 additionally re-cuts the app icon to the amended SDS-3 tile construction (the v1-4 header repair is carried in). staged-v1-6 adds the Optimizations panel.",
       "catalogStatus": "release-candidate",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/workbench.png",
-      "buildNotes": "Adds the Optimizations panel (local scan tuning). Shell, WaveScanner scanning, Manage read view, Diagnose, Journal and Classroom panels. New glyph: the Wrench (branding distinctiveness refresh). Adds the Academy license and notice to the bundle.",
+      "buildNotes": "Adds the SDS-8 welcome screen via the shared Academy component (AcademyWelcomeController + AcademyAppIconView — the same component as the KisMac build): the welcome draws the bundle AppIcon composition, displays the build version read from the bundle's own Info.plist at runtime, and plays the standard startup sound (byte-identical in the bundle). The bundle stamps the SDS-10 conformance entry beside the Academy audit entry. Runtime verification at the owner's next Air sitting.",
       "audits": [],
       "currentBuild": {
-        "tag": "staged-v1-8",
-        "sizeBytes": 2072514,
-        "sha256": "9fda3ba4f6c739a043b4f1ffe4fef929686b1582507e588b17d8885faaeb0d91",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/staged-v1-8/Workbench-test.zip",
+        "tag": "staged-v1-9",
+        "sizeBytes": 2690451,
+        "sha256": "58349820dcd1a59d937beb0cea649d4803f404a2338ab9fb3bdaec1348945f18",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/staged-v1-9/Workbench-test.zip",
         "floor": "10.13",
-        "builtAt": null,
-        "releasePublishedAt": "2026-11-08T20:36:10Z",
-        "ciRun": null,
+        "builtAt": "2026-11-10",
+        "releasePublishedAt": "2026-11-10T22:38:50Z",
+        "ciRun": "42916244473",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule); shipped-bundle readback: Switchboard project files/14 (staged-v1-8)"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10; Logo / VersionAtStartup / StartupSound / MenuBar all true; Date 2026-11-10); fresh-download plist readback verified 2026-11-10 for the SDS10-T1 shared-welcome build (staged-v1-9, SHA-256 58349820dcd1a59d937beb0cea649d4803f404a2338ab9fb3bdaec1348945f18); bundled startup-sound.wav byte-identical to the SDS-10 master (SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a)"
         }
       }
     },
