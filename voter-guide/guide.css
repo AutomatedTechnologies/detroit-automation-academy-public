@@ -11,11 +11,11 @@
   --paper: #F5F2EA;
   --line: rgba(245, 242, 234, 0.09);
   --radius: 14px;
-  --step--1: clamp(0.83rem, 0.81rem + 0.12vw, 0.9rem);
-  --step-0: clamp(1rem, 0.97rem + 0.18vw, 1.06rem);
-  --step-1: clamp(1.22rem, 1.12rem + 0.5vw, 1.44rem);
-  --step-2: clamp(1.75rem, 1.42rem + 1.65vw, 2.9rem);
-  --step-3: clamp(2.6rem, 1.85rem + 3.75vw, 4.8rem);
+  --step--1: 0.83rem; --step--1: clamp(0.83rem, 0.81rem + 0.12vw, 0.9rem);
+  --step-0: 1rem; --step-0: clamp(1rem, 0.97rem + 0.18vw, 1.06rem);
+  --step-1: 1.22rem; --step-1: clamp(1.22rem, 1.12rem + 0.5vw, 1.44rem);
+  --step-2: 1.75rem; --step-2: clamp(1.75rem, 1.42rem + 1.65vw, 2.9rem);
+  --step-3: 2.6rem; --step-3: clamp(2.6rem, 1.85rem + 3.75vw, 4.8rem);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -42,7 +42,7 @@ a { color: inherit; }
   color: var(--amber);
   margin-bottom: 12px;
 }
-.lede { font-size: clamp(1.1rem, 1.04rem + 0.35vw, 1.25rem); color: var(--concrete); max-width: 62ch; }
+.lede { font-size: 1.1rem; font-size: clamp(1.1rem, 1.04rem + 0.35vw, 1.25rem); color: var(--concrete); max-width: 62ch; }
 .fine { font-size: var(--step--1); color: var(--concrete); }
 
 /* ---------- nav ---------- */
@@ -51,7 +51,7 @@ a { color: inherit; }
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px 24px;
   background: rgba(12, 17, 22, 0.92);
-  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
 }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
