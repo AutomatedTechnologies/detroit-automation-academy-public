@@ -138,6 +138,16 @@
  *      fixture harness). With neither var set, behavior is the
  *      original live build, unchanged — live-feed.yml remains the
  *      manual fallback on exactly this code path.
+ *
+ * FULL INTEGRATION (2026-11-11, owner directive 12:26 EST): SMART is
+ * fully integrated — the display-only posture narrated above is
+ * superseded. SMART vehicles merge into vehicles.json with full
+ * attribution (route, trip, direction, destination); SMART trip
+ * updates feed computation (adherence.json, delay estimates); an
+ * accuracy layer (track state, filters, stop-serving detection)
+ * covers every agency. See the FULL INTEGRATION section in the body.
+ * smart-display.json keeps publishing through the consumer migration
+ * as a compatibility copy; its removal is a later, verified step.
  */
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
@@ -577,14 +587,15 @@ function mapGtfsRtTripUpdates(buffer, nowIso) {
 const SMART_TU_WINDOW_AHEAD_S = 120 * 60;
 const SMART_TU_WINDOW_BEHIND_S = 300;
 
-function trimSmartTuTrip(t, genSec) {
+function trimSmartTuTrip(t, genSec, delayMap) {
   const ups = [];
   for (const u of t.stop_time_updates || []) {
     if (!u.stop_id || u.schedule_relationship === 'SKIPPED') continue;
     const ts = u.departure_time ?? u.arrival_time;
     if (ts === null || ts === undefined) continue;
     if (ts < genSec - SMART_TU_WINDOW_BEHIND_S || ts > genSec + SMART_TU_WINDOW_AHEAD_S) continue;
-    const delay = u.departure_delay_sec ?? u.arrival_delay_sec ?? null;
+    const delay = u.departure_delay_sec ?? u.arrival_delay_sec
+      ?? (delayMap && delayMap.has(String(u.stop_id)) ? delayMap.get(String(u.stop_id)) : null);
     ups.push([String(u.stop_id), ts, delay]);
   }
   if (!ups.length) return null;
@@ -595,13 +606,13 @@ function trimSmartTuTrip(t, genSec) {
 
 /** route_id -> windowed trimmed trip tuples (possibly an empty list
  *  for a route present in the payload with no in-window updates). */
-function buildSmartTuDerivative(trips, genSec) {
+function buildSmartTuDerivative(trips, genSec, delaysByTrip) {
   const byRoute = new Map();
   for (const t of trips) {
     const rid = String(t.route_id || '');
     if (!rid) continue;
     if (!byRoute.has(rid)) byRoute.set(rid, []);
-    const tuple = trimSmartTuTrip(t, genSec);
+    const tuple = trimSmartTuTrip(t, genSec, delaysByTrip ? delaysByTrip.get(t.trip_id) : null);
     if (tuple) byRoute.get(rid).push(tuple);
   }
   return byRoute;
@@ -658,6 +669,407 @@ function writeSmartTuDerivative(dir, byRoute, genSec) {
   const indexBody = { v: 1, gen: genSec, source_ok: true, routes: indexRoutes };
   fs.writeFileSync(path.join(dir, 'index.json'), JSON.stringify(indexBody) + '\n');
   return { routes: routeIds.length, trips: totalTrips, bytes: totalBytes };
+}
+
+/* ------------- FULL INTEGRATION + ACCURACY REFINEMENT -------------
+ * Owner directive 2026-11-11 12:26 EST ("FULL INTEGRATION"),
+ * superseding the 2026-11-07 display-only fence and the §4(vi)
+ * display-only posture recorded in the sections above: SMART vehicles
+ * are merged into vehicles.json with full attribution, SMART trip
+ * updates become a computation input (adherence + estimates), and an
+ * accuracy layer (per-vehicle track state, filters, smoothing inputs,
+ * stop-serving detection) applies to every agency.
+ *
+ * Static extracts (seeded files in OUT_DIR, built by
+ * tools/feed/build-extracts.py from the agencies' published GTFS;
+ * provenance + feed versions recorded inside each file):
+ *   smart-headsigns.json        trip_id -> headsign (+ route|dir fallback)
+ *   smart-schedule-extract.json trip_id -> scheduled departure seconds
+ *   ddot-patterns.json          route+direction -> ordered stop geometry
+ * Every join degrades independently when its extract is absent: no
+ * destination, no delay, no detection — never a failed build.
+ *
+ * Track state (live-data/track-state.json, seeded + rewritten each
+ * cycle): the builder is otherwise stateless per cycle; the state
+ * file carries each vehicle's recent samples so filters judge motion
+ * across samples, never from a single snapshot. Filters ANNOTATE
+ * (quality, age_sec) — a vehicle's published position is the feed's
+ * own; only the adherence/detection computations consume the cleaned
+ * track. Quality values: ok | held-teleport | speed-mismatch |
+ * stale-sample | stale-ts.
+ *
+ * Adherence (live-data/adherence.json):
+ *   SMART — delay computed exactly: Swiftly TU predicted departure
+ *     minus the GTFS-static scheduled departure for the same
+ *     (trip_id, stop_id), anchored on the TU start_date. Method
+ *     'tu-static-join' — a computation, not an inference.
+ *   DDOT — the BusTime feed carries no trip_id, so delay is NOT
+ *     computed here; the board (which holds the full timetable)
+ *     labels inferred delay. This layer contributes what only a
+ *     track can prove: stop-serving detection. A stop bracketed by a
+ *     vehicle's on-pattern samples with no dwell sample inside the
+ *     dwell radius is recorded as a missed stop (method
+ *     'track-dwell', explicitly inferred) with the vehicle's run key.
+ *     The acceptance case is DDOT 10 vehicle 2224 passing
+ *     Greenfield & Warren unserved on 2026-11-11 (~12:11 EST).
+ */
+
+const DETROIT_TZ = 'America/Detroit';
+const _detroitDtf = new Intl.DateTimeFormat('en-US', {
+  timeZone: DETROIT_TZ, hourCycle: 'h23',
+  year: 'numeric', month: '2-digit', day: '2-digit',
+  hour: '2-digit', minute: '2-digit', second: '2-digit',
+});
+
+function detroitOffsetSec(epochSec) {
+  const parts = {};
+  for (const p of _detroitDtf.formatToParts(new Date(epochSec * 1000))) parts[p.type] = p.value;
+  const asUTC = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second) / 1000;
+  return asUTC - epochSec;
+}
+
+/** Epoch seconds of Detroit-local midnight on a GTFS date (YYYYMMDD). */
+function detroitMidnightEpochSec(ymd) {
+  const y = +ymd.slice(0, 4), m = +ymd.slice(4, 6), d = +ymd.slice(6, 8);
+  let guess = Date.UTC(y, m - 1, d) / 1000;
+  for (let i = 0; i < 3; i++) guess = Date.UTC(y, m - 1, d) / 1000 - detroitOffsetSec(guess);
+  return guess;
+}
+
+/** Epoch seconds for a feed updated_at. GTFS-RT legs carry Z-suffixed
+ * ISO (true epochs). The DDOT BusTime mapper emits NAIVE Detroit-local
+ * ISO (toIsoBusTime: "agency local, America/Detroit", no designator) —
+ * parsing that as UTC would age every DDOT sample by the zone offset
+ * (~5 h). Naive values are therefore read as Detroit wall time. */
+function feedEpochSec(s) {
+  if (!s) return NaN;
+  const str = String(s);
+  if (/([zZ]|[+-]\d{2}:?\d{2})$/.test(str)) return Math.floor(Date.parse(str) / 1000);
+  const ms = Date.parse(str);
+  if (!Number.isFinite(ms)) return NaN;
+  const naiveSec = Math.floor(ms / 1000);
+  return naiveSec - detroitOffsetSec(naiveSec);
+}
+
+function haversineM(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const p1 = (lat1 * Math.PI) / 180, p2 = (lat2 * Math.PI) / 180;
+  const dp = ((lat2 - lat1) * Math.PI) / 180, dl = ((lon2 - lon1) * Math.PI) / 180;
+  const a = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+/* SMART vehicle finalization: destination from the headsign extract
+ * (VP trip first, then the vehicle's TU trip, then the route|direction
+ * dominant headsign); missing VP attribution is adopted from the
+ * vehicle's TU trip where the TU carries it. VP route wins over TU
+ * route on disagreement (the position's own descriptor is primary;
+ * disagreements are counted in the run log by the caller). */
+function finalizeSmartVehicles(smartVehicles, smartTrips, headsigns) {
+  const byTrip = (headsigns && headsigns.by_trip) || {};
+  const byRouteDir = (headsigns && headsigns.by_route_dir) || {};
+  const tuByVehicle = new Map();
+  for (const t of smartTrips || []) {
+    if (!t.vehicle_id) continue;
+    const ex = tuByVehicle.get(t.vehicle_id);
+    if (!ex || String(t.updated_at) > String(ex.updated_at)) tuByVehicle.set(t.vehicle_id, t);
+  }
+  return smartVehicles.map((v) => {
+    const out = { ...v };
+    const tu = tuByVehicle.get(v.vehicle_id);
+    if (tu) {
+      if (!out.trip_id && tu.trip_id) out.trip_id = tu.trip_id;
+      if (!out.route_id && tu.route_id) out.route_id = tu.route_id;
+      if ((out.direction_id === null || out.direction_id === undefined)
+        && tu.direction_id !== null && tu.direction_id !== undefined) {
+        out.direction_id = tu.direction_id;
+      }
+    }
+    let hs = out.trip_id ? byTrip[out.trip_id] : null;
+    if (!hs && out.route_id) {
+      hs = byRouteDir[`${out.route_id}|${out.direction_id === null || out.direction_id === undefined ? '' : out.direction_id}`];
+    }
+    if (hs) out.destination = hs;
+    return out;
+  });
+}
+
+/* SMART delay per (trip, stop): TU predicted departure epoch minus
+ * (Detroit midnight of the TU start_date + GTFS scheduled departure
+ * seconds). Returns Map trip_id -> Map stop_id -> delay seconds.
+ * Trips the extract does not know, or without a start_date, are
+ * absent — unknown, never zero-filled. */
+function computeSmartTripDelays(smartTrips, sched) {
+  const out = new Map();
+  if (!sched || !sched.trips) return out;
+  const midnightCache = new Map();
+  for (const t of smartTrips || []) {
+    const sTrip = sched.trips[t.trip_id];
+    if (!sTrip || !t.start_date) continue;
+    const ymd = String(t.start_date);
+    if (!midnightCache.has(ymd)) midnightCache.set(ymd, detroitMidnightEpochSec(ymd));
+    const mid = midnightCache.get(ymd);
+    const byStop = new Map(sTrip[3].map(([sid, dep]) => [String(sid), dep]));
+    const delays = new Map();
+    for (const u of t.stop_time_updates || []) {
+      const schedSec = byStop.get(String(u.stop_id));
+      if (schedSec === undefined) continue;
+      const pred = u.departure_time ?? u.arrival_time;
+      if (pred === null || pred === undefined) continue;
+      delays.set(String(u.stop_id), pred - (mid + schedSec));
+    }
+    if (delays.size) out.set(t.trip_id, delays);
+  }
+  return out;
+}
+
+/* ---------------- track state + filters + detection ---------------- */
+
+const TRACK_MAX_SAMPLES = 10;
+const TRACK_PRUNE_SEC = 20 * 60;
+const TRACK_RUN_GAP_SEC = 10 * 60;
+const TELEPORT_MPS = 45;              // ~100 mph: impossible for this fleet
+const TELEPORT_MIN_DIST_M = 300;
+const SPEED_MISMATCH_MPS = 12;
+const STALE_SAMPLE_SEC = 300;
+const DWELL_RADIUS_M = 60;
+const DWELL_MAX_SPEED_MPH = 2;
+const SLOWDOWN_RADIUS_M = 150;
+const SLOWDOWN_MAX_SPEED_MPH = 3;
+const BRACKET_MAX_M = 250;
+const MIN_PASS_MPS = 6;
+const PATTERN_SNAP_M = 400;
+const MISSED_EVENTS_CAP = 100;
+const MISSED_EVENT_TTL_SEC = 12 * 3600;
+
+function loadTrackState() {
+  const s = readExisting(path.join(OUT_DIR, 'track-state.json'));
+  if (s && s.v === 1 && s.vehicles && typeof s.vehicles === 'object') {
+    if (!Array.isArray(s.missed_events)) s.missed_events = [];
+    return s;
+  }
+  return { v: 1, generated_at: null, vehicles: {}, missed_events: [] };
+}
+
+/** Cumulative arc lengths (m) along a pattern polyline. */
+function patternArcs(pattern) {
+  const arcs = [0];
+  for (let i = 1; i < pattern.length; i++) {
+    arcs.push(arcs[i - 1] + haversineM(pattern[i - 1][1], pattern[i - 1][2], pattern[i][1], pattern[i][2]));
+  }
+  return arcs;
+}
+
+/** Project a point onto the pattern polyline: returns {arc, perp} —
+ *  distance along the path and perpendicular distance to it. Arc
+ *  length (not nearest-stop index) is the progress measure: samples
+ *  near a stop quantize to that stop's index, which defeats
+ *  index-bracket logic; arc position is continuous. */
+function projectToPattern(pattern, arcs, lat, lon) {
+  let best = { arc: 0, perp: Infinity };
+  for (let i = 0; i < pattern.length - 1; i++) {
+    const aLat = pattern[i][1], aLon = pattern[i][2];
+    const bLat = pattern[i + 1][1], bLon = pattern[i + 1][2];
+    const segLen = arcs[i + 1] - arcs[i];
+    // Local equirectangular projection around the segment.
+    const kx = 111320 * Math.cos((aLat * Math.PI) / 180), ky = 110540;
+    const ax = 0, ay = 0;
+    const bx = (bLon - aLon) * kx, by = (bLat - aLat) * ky;
+    const px = (lon - aLon) * kx, py = (lat - aLat) * ky;
+    const bb = bx * bx + by * by || 1;
+    let f = ((px - ax) * bx + (py - ay) * by) / bb;
+    f = Math.max(0, Math.min(1, f));
+    const dx = px - (ax + f * bx), dy = py - (ay + f * by);
+    const perp = Math.sqrt(dx * dx + dy * dy);
+    if (perp < best.perp) best = { arc: arcs[i] + f * segLen, perp };
+  }
+  return best;
+}
+
+/** Detect stops a DDOT vehicle passed without dwelling. Mutates the
+ *  track entry (emitted set) and returns new event objects. */
+function detectMissedStops(entry, vehicle, patterns, nowIso) {
+  if (!patterns || !patterns.routes || vehicle.agency !== 'ddot') return [];
+  const routePats = patterns.routes[vehicle.route_id];
+  if (!routePats || entry.samples.length < 3) return [];
+  // Direction: the pattern direction whose along-path arc sequence is
+  // the more monotonic-increasing over the on-pattern samples.
+  let chosen = null;
+  for (const dir of Object.keys(routePats)) {
+    const pattern = routePats[dir];
+    const arcs = patternArcs(pattern);
+    const seq = [];
+    for (const s of entry.samples) {
+      const pr = projectToPattern(pattern, arcs, s[1], s[2]);
+      if (pr.perp <= PATTERN_SNAP_M) seq.push({ t: s[0], arc: pr.arc, lat: s[1], lon: s[2], spd: s[3] });
+    }
+    if (seq.length < 3) continue;
+    let inc = 0;
+    for (let j = 1; j < seq.length; j++) if (seq[j].arc >= seq[j - 1].arc - 5) inc++;
+    const score = inc / (seq.length - 1);
+    if (!chosen || score > chosen.score) chosen = { dir, pattern, arcs, seq, score };
+  }
+  if (!chosen || chosen.score < 0.8) return [];
+  const { pattern, arcs, seq } = chosen;
+  const firstArc = seq[0].arc;
+  const lastArc = seq[seq.length - 1].arc;
+  if (lastArc - firstArc < 200) return [];
+  if (!entry.emitted || typeof entry.emitted !== 'object') entry.emitted = {};
+  const events = [];
+  for (let i = 0; i < pattern.length; i++) {
+    const stopArc = arcs[i];
+    if (stopArc <= firstArc + 20 || stopArc >= lastArc - 20) continue;
+    const stopId = String(pattern[i][0]);
+    if (entry.emitted[stopId]) continue;
+    const stopLat = pattern[i][1], stopLon = pattern[i][2];
+    // Served evidence: a dwell sample close in, or any clear slowdown
+    // near the stop. Sampling is ~30 s, so absence of a dwell sample
+    // alone proves nothing — a miss is only claimed when the samples
+    // bracket the stop DENSELY and the vehicle held speed through it.
+    let served = false;
+    for (const s of seq) {
+      const dStop = haversineM(s.lat, s.lon, stopLat, stopLon);
+      if (dStop <= DWELL_RADIUS_M && (s.spd === null || s.spd === undefined || s.spd <= DWELL_MAX_SPEED_MPH)) served = true;
+      if (Math.abs(s.arc - stopArc) <= SLOWDOWN_RADIUS_M && s.spd !== null && s.spd !== undefined && s.spd <= SLOWDOWN_MAX_SPEED_MPH) served = true;
+    }
+    let bracketed = false;
+    if (!served) {
+      for (let j = 1; j < seq.length; j++) {
+        const a = seq[j - 1], b = seq[j];
+        // Crossing pair: the stop's arc falls between the two samples
+        // (a sample landing ON the stop at speed is itself the
+        // pass-through evidence, so no deadband around stopArc).
+        if (!(a.arc <= stopArc + 1 && b.arc >= stopArc - 1 && b.arc > a.arc)) continue;
+        if (stopArc - a.arc > BRACKET_MAX_M || b.arc - stopArc > BRACKET_MAX_M) continue;
+        const dt = b.t - a.t;
+        if (dt > 0 && (b.arc - a.arc) / dt >= MIN_PASS_MPS) bracketed = true;
+      }
+    }
+    if (!served && bracketed) {
+      entry.emitted[stopId] = nowIso;
+      events.push({
+        agency: 'ddot',
+        route_id: vehicle.route_id,
+        direction_id: Number(chosen.dir),
+        stop_id: stopId,
+        vehicle_id: vehicle.vehicle_id,
+        detected_at: nowIso,
+        method: 'track-dwell',
+        inference: true,
+      });
+    }
+  }
+  return events;
+}
+
+/** Apply the accuracy layer to one cycle's merged vehicles: annotate
+ *  quality/age, update track state, run stop-serving detection.
+ *  Mutates `vehicles` records and `state`; returns run statistics. */
+function processTracks(vehicles, state, nowSec, nowIso, patterns) {
+  const stats = { tracked: 0, teleport: 0, mismatch: 0, stale: 0, missed: 0 };
+  const seenKeys = new Set();
+  for (const v of vehicles) {
+    const key = `${v.agency}:${v.vehicle_id}`;
+    seenKeys.add(key);
+    const tSec = feedEpochSec(v.updated_at);
+    v.age_sec = Number.isFinite(tSec) ? Math.max(0, nowSec - tSec) : null;
+    let quality = 'ok';
+    let entry = state.vehicles[key];
+    if (!entry || entry.route_id !== v.route_id || (Number.isFinite(tSec) && tSec - entry.run_start > TRACK_RUN_GAP_SEC && tSec - (entry.samples.length ? entry.samples[entry.samples.length - 1][0] : 0) > TRACK_RUN_GAP_SEC)) {
+      entry = { route_id: v.route_id, trip_id: v.trip_id || null, run_start: Number.isFinite(tSec) ? tSec : nowSec, samples: [], emitted: {} };
+      state.vehicles[key] = entry;
+    }
+    const prev = entry.samples.length ? entry.samples[entry.samples.length - 1] : null;
+    if (prev && Number.isFinite(tSec)) {
+      const dt = tSec - prev[0];
+      if (dt <= 0) {
+        quality = 'stale-ts';
+      } else {
+        const dist = haversineM(prev[1], prev[2], v.lat, v.lon);
+        const implied = dist / dt;
+        if (implied > TELEPORT_MPS && dist > TELEPORT_MIN_DIST_M) {
+          quality = 'held-teleport';
+          stats.teleport++;
+        } else {
+          if (v.speed_mph !== null && v.speed_mph !== undefined) {
+            const reported = v.speed_mph / MS_PER_S;
+            if (Math.abs(implied - reported) > SPEED_MISMATCH_MPS && dist > 150) {
+              quality = 'speed-mismatch';
+              stats.mismatch++;
+            }
+          }
+          entry.samples.push([tSec, v.lat, v.lon, v.speed_mph ?? null]);
+        }
+      }
+    } else if (Number.isFinite(tSec)) {
+      entry.samples.push([tSec, v.lat, v.lon, v.speed_mph ?? null]);
+    }
+    if (quality === 'ok' && v.age_sec !== null && v.age_sec > STALE_SAMPLE_SEC) quality = 'stale-sample';
+    if (quality === 'stale-sample') stats.stale++;
+    entry.samples = entry.samples.filter((s) => nowSec - s[0] <= TRACK_PRUNE_SEC).slice(-TRACK_MAX_SAMPLES);
+    entry.trip_id = v.trip_id || entry.trip_id || null;
+    v.quality = quality;
+    stats.tracked++;
+    if (v.agency === 'ddot' && quality !== 'held-teleport') {
+      const ev = detectMissedStops(entry, v, patterns, nowIso);
+      for (const e of ev) {
+        state.missed_events.push(e);
+        stats.missed++;
+      }
+    }
+  }
+  // Prune vehicles not seen this cycle once their samples all expire.
+  for (const key of Object.keys(state.vehicles)) {
+    const e = state.vehicles[key];
+    if (!seenKeys.has(key) && (!e.samples.length || nowSec - e.samples[e.samples.length - 1][0] > TRACK_PRUNE_SEC)) {
+      delete state.vehicles[key];
+    }
+  }
+  state.missed_events = state.missed_events
+    .filter((e) => nowSec - Math.floor(Date.parse(e.detected_at) / 1000) <= MISSED_EVENT_TTL_SEC)
+    .slice(-MISSED_EVENTS_CAP);
+  state.generated_at = nowIso;
+  return stats;
+}
+
+/** SMART adherence entries from the TU x static delay computation. */
+function buildSmartAdherence(smartTrips, delaysByTrip, headsigns, nowSec, nowIso) {
+  const byTrip = (headsigns && headsigns.by_trip) || {};
+  const byRouteDir = (headsigns && headsigns.by_route_dir) || {};
+  const trips = {};
+  for (const t of smartTrips || []) {
+    const delays = delaysByTrip ? delaysByTrip.get(t.trip_id) : null;
+    let next = null;
+    for (const u of t.stop_time_updates || []) {
+      const pred = u.departure_time ?? u.arrival_time;
+      if (pred === null || pred === undefined) continue;
+      if (pred >= nowSec - 120 && (!next || pred < next.pred)) {
+        next = { stop_id: String(u.stop_id), pred, rel: u.schedule_relationship || 'SCHEDULED' };
+      }
+    }
+    if (!next) continue;
+    const inService = Boolean(t.vehicle_id);
+    const delay = delays && next ? (delays.get(next.stop_id) ?? null) : null;
+    let stateLabel = 'untracked';
+    if (next.rel === 'SKIPPED') stateLabel = 'skipped';
+    else if (delay !== null) stateLabel = delay > 60 ? 'late' : delay < -60 ? 'early' : 'on-time';
+    trips[t.trip_id] = {
+      route_id: t.route_id,
+      direction_id: t.direction_id,
+      vehicle_id: t.vehicle_id || null,
+      headsign: byTrip[t.trip_id]
+        || byRouteDir[`${t.route_id}|${t.direction_id === null || t.direction_id === undefined ? '' : t.direction_id}`]
+        || null,
+      state: stateLabel,
+      delay_sec: delay,
+      next_stop_id: next.stop_id,
+      next_stop_eta: new Date(next.pred * 1000).toISOString(),
+      in_service: inService,
+      method: delay !== null ? 'tu-static-join' : 'tu-prediction',
+      updated_at: t.updated_at || nowIso,
+    };
+  }
+  return trips;
 }
 
 /* ---------------- vehicle legs (vehicles.js port) ---------------- */
@@ -1191,16 +1603,29 @@ async function main() {
     smartActive ? pollSmartTripUpdates(nowIso) : Promise.resolve(null),
   ]);
 
+  /* FULL INTEGRATION prep (2026-11-11) — static extracts + track
+   * state are seeded files in OUT_DIR (publisher FEED_FILES). Absent
+   * extracts degrade their joins independently, never the build. */
+  const smartHeadsigns = readExisting(path.join(OUT_DIR, 'smart-headsigns.json')) || { by_trip: {}, by_route_dir: {} };
+  const smartSched = readExisting(path.join(OUT_DIR, 'smart-schedule-extract.json'));
+  const ddotPatterns = readExisting(path.join(OUT_DIR, 'ddot-patterns.json'));
+  const trackState = loadTrackState();
+  const nowSec = Math.floor(Date.parse(nowIso) / 1000);
+  const smartTripList = smartActive && smartTu ? smartTu.trips : [];
+  const smartFinal = smartActive && smart ? finalizeSmartVehicles(smart.vehicles, smartTripList, smartHeadsigns) : [];
+  const delaysByTrip = computeSmartTripDelays(smartTripList, smartSched);
+  const allVehicles = [...ddot.vehicles, ...qline.vehicles, ...smartFinal];
+
   const vehiclesBody = {
     generated_at: nowIso,
-    count: ddot.vehicles.length + qline.vehicles.length,
-    vehicles: [...ddot.vehicles, ...qline.vehicles],
+    count: allVehicles.length,
+    vehicles: allVehicles,
     sources: {
       ddot: ddot.state,
-      // Display-only (§4(vi)): SMART vehicles are NEVER merged into
-      // this file. With a key present, sources.smart reports the
-      // display leg's own state (same shape family as the other legs);
-      // without one it is the removed state, byte-identical to before.
+      // FULL INTEGRATION (2026-11-11): SMART vehicles are merged into
+      // this file with attribution, same as DDOT/QLINE. With a key
+      // present, sources.smart reports the leg's own state; without
+      // one it is the removed state, byte-identical to before.
       smart: smartActive
         ? smart.state
         : { ok: false, removed: true, at: nowIso, reason: SMART_REMOVED_REASON },
@@ -1216,6 +1641,7 @@ async function main() {
         sources: [ddotAlerts.state],
       };
 
+  const trackStats = processTracks(allVehicles, trackState, nowSec, nowIso, ddotPatterns);
   const v = writeIfChanged(path.join(OUT_DIR, 'vehicles.json'), vehiclesBody);
   const a = reuse.reuse ? 'unchanged' : writeIfChanged(alertsPath, alertsBody);
 
@@ -1307,7 +1733,7 @@ async function main() {
   let smartTuDerivNote;
   if (smartActive && smartTu.state.ok) {
     const genSec = Math.floor(Date.parse(nowIso) / 1000);
-    const summary = writeSmartTuDerivative(smartTuDir, buildSmartTuDerivative(smartTu.trips, genSec), genSec);
+    const summary = writeSmartTuDerivative(smartTuDir, buildSmartTuDerivative(smartTu.trips, genSec, delaysByTrip), genSec);
     smartTuDerivNote = `smart-tu/: ${summary.routes} route files (${summary.trips} windowed trips, ${summary.bytes} B) + index.json`;
   } else if (smartActive) {
     smartTuDerivNote = 'smart-tu/: left unchanged (Swiftly trip-updates leg failed this cycle)';
@@ -1316,7 +1742,23 @@ async function main() {
     smartTuDerivNote = 'smart-tu/: not written (SWIFTLY_KEY not set; leg dormant)';
   }
 
-  console.log(`vehicles.json: ${v} (ddot=${ddot.vehicles.length} ok=${ddot.state.ok}, qline=${qline.vehicles.length} ok=${qline.state.ok})`);
+  const adhBody = {
+    generated_at: nowIso,
+    smart: {
+      method: 'tu-static-join',
+      static_feed: smartSched ? smartSched.feed_version : null,
+      trips: buildSmartAdherence(smartTripList, delaysByTrip, smartHeadsigns, nowSec, nowIso),
+    },
+    ddot: {
+      method: 'track-dwell',
+      missed_stops: trackState.missed_events,
+    },
+  };
+  const adh = writeIfChanged(path.join(OUT_DIR, 'adherence.json'), adhBody);
+  fs.writeFileSync(path.join(OUT_DIR, 'track-state.json'), JSON.stringify(trackState) + '\n');
+  console.log(`adherence.json: ${adh} (smart trips=${Object.keys(adhBody.smart.trips).length}, missed stops retained=${trackState.missed_events.length})`);
+  console.log(`track-state: ${trackStats.tracked} vehicles (teleport=${trackStats.teleport}, speed-mismatch=${trackStats.mismatch}, stale=${trackStats.stale}, missed-detected=${trackStats.missed})`);
+  console.log(`vehicles.json: ${v} (ddot=${ddot.vehicles.length} ok=${ddot.state.ok}, qline=${qline.vehicles.length} ok=${qline.state.ok}, smart=${smartFinal.length} ok=${smartActive ? smart.state.ok : false})`);
   console.log(`alerts.json: ${a} (ddot alerts=${ddotAlerts.alerts.length} ok=${ddotAlerts.state.ok})`);
   console.log(`trip-updates.json: ${t} (canonical TU: no source; honest empty envelope)`);
   console.log(smartNote);
@@ -1456,7 +1898,7 @@ async function collectMain() {
   );
 }
 
-export { collectDdotBulletins, ddotBulletinsReusable, gtfsRtFeedShape, pollSmart, pollSmartTripUpdates, mapGtfsRtTripUpdates, trimSmartTuTrip, buildSmartTuDerivative, writeSmartTuDerivative, main, collectMain };
+export { collectDdotBulletins, ddotBulletinsReusable, gtfsRtFeedShape, pollSmart, pollSmartTripUpdates, mapGtfsRtTripUpdates, trimSmartTuTrip, buildSmartTuDerivative, writeSmartTuDerivative, main, collectMain, finalizeSmartVehicles, computeSmartTripDelays, processTracks, loadTrackState, buildSmartAdherence, detroitMidnightEpochSec, feedEpochSec, haversineM };
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const run = COLLECT_DIR ? collectMain : main;
