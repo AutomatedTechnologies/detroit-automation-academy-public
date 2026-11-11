@@ -105,12 +105,14 @@
   /* Data-plane split (2026-11-10): primary = the detroit-live-data
      repo's Pages origin (publisher-mirrored every cycle; its deploys
      never queue behind the site build); fallback = this site's own
-     live-data/ archive. xhrFresh picks the fresher copy by
-     generated_at whenever the primary fails or passes the 20-minute
-     freshness bound. Rollback: swap FEED/ALERTS back to the ORIGIN
-     forms below. */
+     live-data/ archive. xhrFresh fetches BOTH origins and picks the
+     copy with the later generated_at (fresher-copy rule, 2026-11-11;
+     the original 20-minute threshold rule returned a laggard primary
+     unchecked). Live-data XHRs are cache-busted: Pages serves
+     max-age=600, which otherwise hands back copies up to 10 minutes
+     old before the rule ever runs. Rollback: swap FEED/ALERTS back to
+     the ORIGIN forms below. Build 20261111-1119. */
   var DATA_ORIGIN = 'https://automatedtechnologies.github.io/detroit-live-data';
-  var FRESH_MS = 20 * 60 * 1000;
   var FEED = DATA_ORIGIN + '/live-data/vehicles.json';
   var FEED_FALLBACK = ORIGIN + '/live-data/vehicles.json';
   var GEO_URL = 'first-look-geo-2d.json';
@@ -149,18 +151,33 @@
   var alertsSig = '', alertsDismissed = '';
 
   function xhrFresh(primary, fallback, ok, err) {
-    xhr(primary, function (d) {
-      var g = d && d.generated_at ? new Date(d.generated_at).getTime() : null;
-      if (g === null || (new Date().getTime() - g) <= FRESH_MS) { ok(d); return; }
-      xhr(fallback, function (d2) {
-        var g2 = d2 && d2.generated_at ? new Date(d2.generated_at).getTime() : null;
-        ok(g2 !== null && g2 > g ? d2 : d);
-      }, function () { ok(d); });
-    }, function () { xhr(fallback, ok, err); });
+    var gotP = null, gotF = null, errP = null, errF = null, settled = false;
+    function finish() {
+      if (settled) return;
+      var pDone = gotP !== null || errP !== null;
+      var fDone = gotF !== null || errF !== null;
+      if (!pDone || !fDone) return;
+      settled = true;
+      if (gotP !== null && gotF !== null) {
+        var g = gotP.generated_at ? new Date(gotP.generated_at).getTime() : null;
+        var g2 = gotF.generated_at ? new Date(gotF.generated_at).getTime() : null;
+        if (g === null && g2 === null) ok(gotP);
+        else if (g === null) ok(gotF);
+        else if (g2 === null) ok(gotP);
+        else ok(g2 > g ? gotF : gotP);
+      } else if (gotP !== null) ok(gotP);
+      else if (gotF !== null) ok(gotF);
+      else err(errP || errF);
+    }
+    xhr(primary, function (d) { gotP = d; finish(); }, function (e) { errP = e; finish(); });
+    xhr(fallback, function (d) { gotF = d; finish(); }, function (e) { errF = e; finish(); });
   }
   function xhr(url, ok, err) {
     var r = new XMLHttpRequest();
-    r.open('GET', url, true);
+    var u = url.indexOf('/live-data/') >= 0
+      ? url + (url.indexOf('?') >= 0 ? '&' : '?') + '_=' + new Date().getTime()
+      : url;
+    r.open('GET', u, true);
     r.onreadystatechange = function () {
       if (r.readyState !== 4) return;
       if (r.status >= 200 && r.status < 300) { try { ok(JSON.parse(r.responseText)); } catch (e) { err(e); } }
