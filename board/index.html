@@ -4,23 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Departure Board — Live Transit Detroit</title>
-<meta name="description" content="Next departures at your nearest Detroit bus stop — DDOT scheduled times and SMART live times, one glance, no map.">
+<meta name="description" content="Next departures at your nearest Detroit bus stop — DDOT scheduled times and SMART scheduled times, one glance, no map.">
 <link rel="canonical" href="https://www.detroitautomationacademy.com/board/">
 <meta property="og:title" content="Departure Board — Live Transit Detroit">
-<meta property="og:description" content="Next departures at your nearest Detroit bus stop — DDOT scheduled times and SMART live times, one glance, no map.">
+<meta property="og:description" content="Next departures at your nearest Detroit bus stop — DDOT scheduled times and SMART scheduled times, one glance, no map.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.detroitautomationacademy.com/board/">
 <meta property="og:image" content="https://www.detroitautomationacademy.com/assets/logo.webp">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Departure Board — Live Transit Detroit">
-<meta name="twitter:description" content="Next departures at your nearest Detroit bus stop — DDOT scheduled times and SMART live times, one glance, no map.">
+<meta name="twitter:description" content="Next departures at your nearest Detroit bus stop — DDOT scheduled times and SMART scheduled times, one glance, no map.">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "WebPage",
   "name": "Departure Board — Live Transit Detroit",
   "url": "https://www.detroitautomationacademy.com/board/",
-  "description": "Next departures at your nearest Detroit bus stop — DDOT scheduled times and SMART live times, one glance, no map.",
+  "description": "Next departures at your nearest Detroit bus stop — DDOT scheduled times and SMART scheduled times, one glance, no map.",
   "publisher": {
     "@type": "Organization",
     "name": "Detroit Automation Academy",
@@ -59,7 +59,7 @@
   .chips{display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 1.1rem}
   .chip{display:inline-flex;align-items:center;gap:.45rem;background:var(--card);
     border:1px solid var(--line);border-radius:999px;padding:.28rem .7rem .28rem .5rem;
-    font-size:.875rem;font-weight:600}
+    font-size:.875rem;font-weight:600;min-height:40px}
   .chip i{width:.7rem;height:.7rem;border-radius:3px;display:inline-block;flex:none}
   button.chip{color:var(--paper);font-family:inherit;cursor:pointer}
   button.chip:hover{filter:brightness(1.25)}
@@ -95,8 +95,8 @@
   ol#deps li .rname{font-weight:600;font-size:1rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
   ol#deps li .clock{color:var(--concrete);font-size:.875rem;font-variant-numeric:tabular-nums}
   ol#deps li i.dot{width:.7rem;height:.7rem;border-radius:3px;display:inline-block;flex:none}
-  .tag{flex:none;font-size:.72rem;font-weight:700;letter-spacing:.08em;
-    text-transform:uppercase;padding:.12rem .4rem;border:1px solid #434343;
+  .tag{flex:none;font-size:.85rem;font-weight:700;letter-spacing:.08em;
+    text-transform:uppercase;padding:.25rem .55rem;border:1px solid #434343;
     border-radius:999px;color:var(--concrete)}
   .tag.live{background:var(--live);border-color:transparent;color:#101010}
   #deps-note{color:var(--concrete);font-size:.875rem;line-height:1.5;margin:1rem 0 0}
@@ -106,8 +106,8 @@
     text-decoration:none;cursor:pointer;font-family:inherit}
   .btn.primary{background:var(--forge);border-color:var(--forge);color:#fff;font-weight:600}
   .btn:hover{filter:brightness(1.15)}
-  #feed-status{color:var(--concrete);font-size:.875rem;margin:2rem 0 0;
-    border-top:1px solid var(--line);padding-top:.8rem;font-variant-numeric:tabular-nums}
+  #feed-status{color:var(--concrete);font-size:.875rem;margin:0 0 .6rem;
+    padding-top:.2rem;font-variant-numeric:tabular-nums}
   footer.fine{color:var(--concrete);font-size:.75rem;line-height:1.55;margin:.6rem 0 0}
   /* Picker */
   #picker h1{font-size:1.7rem;margin:.4rem 0 .4rem}
@@ -119,7 +119,14 @@
   ul#results li{border-top:1px solid var(--line)}
   ul#results button{display:flex;width:100%;text-align:left;background:none;border:0;
     color:var(--paper);padding:.8rem .2rem;font-size:1.02rem;cursor:pointer;
-    font-family:inherit;align-items:baseline;gap:.6rem}
+    font-family:inherit;align-items:baseline;gap:.6rem;min-height:44px}
+  ul#results .rmain{display:flex;flex-direction:column;gap:.15rem;min-width:0}
+  ul#results .rsub{color:var(--concrete);font-size:.85rem}
+  ul#results li.route-head{border-top:1px solid var(--line);padding:.9rem .2rem .3rem;
+    color:var(--concrete);font-size:.85rem;text-transform:uppercase;letter-spacing:.08em}
+  .empty-state{color:var(--concrete);font-size:1rem;padding:1rem 0;margin:0}
+  #delay-banner{background:#222222;border:1px solid #777777;color:#f2f2f2;
+    border-radius:var(--radius);padding:.7rem .9rem;font-size:1rem;font-weight:600;margin:0 0 1rem}
   ul#results button:hover{background:var(--card)}
   ul#results .sid{color:var(--concrete);font-size:.82rem;margin-left:auto;flex:none}
   /* Nearby stops within the board radius */
@@ -130,7 +137,7 @@
   ul#nearby-list li{border-top:1px solid var(--line)}
   ul#nearby-list button{display:flex;width:100%;text-align:left;background:none;border:0;
     color:var(--paper);padding:.6rem .2rem;font-size:1rem;cursor:pointer;
-    font-family:inherit;align-items:baseline;gap:.6rem}
+    font-family:inherit;align-items:baseline;gap:.6rem;min-height:44px}
   ul#nearby-list button:hover{background:var(--card)}
   ul#nearby-list button[aria-current="true"]{font-weight:700}
   ul#nearby-list .sid{color:var(--concrete);font-size:.875rem;margin-left:auto;flex:none}
@@ -148,6 +155,9 @@
     </nav>
   </header>
 
+  <p id="feed-status"></p>
+  <div id="delay-banner" role="status" hidden></div>
+
   <main>
     <section id="picker" hidden>
       <p class="eyebrow">Departure Board</p>
@@ -156,6 +166,7 @@
       <button class="btn primary" id="locate-btn" type="button">Use my location</button>
       <input id="stop-search" type="search" autocomplete="off" placeholder="Search stops — try “Woodward”, “Rosa Parks”, a stop number…" aria-label="Search stops">
       <ul id="results"></ul>
+      <p id="search-empty" class="empty-state" hidden>No stops match — try a street or intersection name.</p>
     </section>
 
     <section id="board" hidden>
@@ -180,12 +191,11 @@
     <section id="state" class="state">Loading the board…</section>
   </main>
 
-  <p id="feed-status"></p>
   <footer class="fine">
 <div class="wrap"><p class="build-stamp" style="font-size:.78rem;color:#444;border:1px solid #000;padding:.5rem .75rem;margin:1rem 0;">PAGE STAMP — Published: 2026-11-08 13:03 EST · Agent: Forge · Authorized: J. Spencer Smith, directive of 2026-11-08 (Branch A timezone fix — board-core parses naive DDOT updated_at stamps as America/Detroit)</p></div>
 
     Times: DDOT from the published timetable (feed <span id="feed-ver">S1000182</span>);
-    SMART live times from Swiftly trip updates, display only. Positions: DDOT via
+    SMART scheduled times from Swiftly trip updates, display only. Positions: DDOT via
     Clever Devices BusTime, SMART via Swiftly, QLINE via its public GTFS-RT feed.
     Route shapes &amp; stops: DDOT, SMART, and QLINE GTFS. A page of
     <a href="/">Detroit Automation Academy</a>. Platform status:
@@ -230,10 +240,10 @@ function genMs(d) {
   var t = d ? Date.parse(d.generated_at || '') : NaN;
   return isNaN(t) ? null : t;
 }
-function fetchJson(url) {
+function fetchJson(url, defaultCache) {
   var eligible = DATA_ORIGIN && url.indexOf('/live-data/') === 0 && url.indexOf('/live-data/watch/') !== 0;
   if (!eligible) {
-    return fetch(url, { cache: 'no-store' }).then(function (r) {
+    return fetch(url, defaultCache ? {} : { cache: 'no-store' }).then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status + ' for ' + url);
       return r.json();
     });
@@ -261,7 +271,7 @@ function fetchJson(url) {
     throw r1.e || r2.e || new Error('fetch failed for ' + url);
   });
 }
-function fetchJsonOrNull(url) { return fetchJson(url).catch(function () { return null; }); }
+function fetchJsonOrNull(url, defaultCache) { return fetchJson(url, defaultCache).catch(function () { return null; }); }
 
 function showState(msg) {
   $('state').hidden = false; $('state').textContent = msg;
@@ -283,9 +293,9 @@ function loadStatics() {
     return R.loadTimetable('/ddot-timetable-' + S.feedVersion + '.json');
   });
   var regP = Promise.all([
-    fetchJson('/ddot-routes-3d.json'),
-    fetchJsonOrNull('/smart-routes-3d.json'),
-    fetchJsonOrNull('/qline-3d.json')
+    fetchJson('/ddot-routes-3d.json', true),
+    fetchJsonOrNull('/smart-routes-3d.json', true),
+    fetchJsonOrNull('/qline-3d.json', true)
   ]).then(function (all) {
     S.proj = core.makeProj(all[0].projection);
     S.reg = core.buildRegistry(all[0], all[1], all[2]);
@@ -333,14 +343,27 @@ function distText(m) {
 }
 
 function renderFeedStatus() {
-  var el = $('feed-status');
-  if (!S.vehicles) { el.textContent = 'Live positions are unavailable right now; scheduled times still show.'; return; }
+  var el = $('feed-status'), banner = $('delay-banner');
+  if (!S.vehicles) {
+    el.textContent = 'Positions are unavailable right now; scheduled times still show.';
+    if (banner) banner.hidden = true;
+    return;
+  }
   var counts = { ddot: 0, smart: 0, qline: 0 };
   (S.vehicles.vehicles || []).forEach(function (v) { if (counts[v.agency] != null) counts[v.agency]++; });
   var smartN = S.smartDisplay && Array.isArray(S.smartDisplay.vehicles) ? S.smartDisplay.vehicles.length : 0;
   var when = S.vehicles.generated_at ? core.formatClock12Detroit(new Date(S.vehicles.generated_at).getTime()) : '';
-  el.textContent = 'Live positions as of ' + when + ' · ' + counts.ddot + ' DDOT · ' +
-    smartN + ' SMART · ' + counts.qline + ' QLINE out now';
+  /* FIX-B D1+U1: the count line reports positions as of a clock —
+     it never folds SMART into a "live … out now" claim — and an age
+     past the delayed band raises the visible banner (the map's
+     degradation wording) at the top of the page. */
+  el.textContent = 'Positions as of ' + when + ' · ' + counts.ddot + ' DDOT · ' +
+    smartN + ' SMART · ' + counts.qline + ' QLINE reporting';
+  var age = core.positionsAge(S.vehicles.generated_at, Date.now());
+  if (banner) {
+    if (age && age.delayed) { banner.textContent = core.delayedPositionsText(age); banner.hidden = false; }
+    else banner.hidden = true;
+  }
 }
 
 function renderAlertLine(st) {
@@ -364,7 +387,7 @@ function chipHtml(rid) {
   var color = rec ? rec.color : '#f2f2f2';
   var label = core.routeLabel(S.reg.routeNames, String(rid));
   return '<button type="button" class="chip" data-rid="' + String(rid) + '"' +
-    ' aria-label="See the live ' + label + ' bus on the map">' +
+    ' aria-label="See the ' + label + ' bus on the map">' +
     '<i style="background:' + color + '"></i>' + label + ' <span class="go">›</span></button>';
 }
 
@@ -463,7 +486,7 @@ function chipClick(rid, btn) {
     S.lastHeads[String(rid)] || null, Date.now()) : null;
   if (!ep) {
     showChipNote(st.seg === 'smart'
-      ? 'SMART publishes live positions only, and no ' + label + ' bus can be picked from the feed right now.'
+      ? 'SMART publishes positions only, and no ' + label + ' bus can be picked from the feed right now.'
       : 'No live ' + label + ' bus is reporting right now.', true);
     return;
   }
@@ -500,8 +523,8 @@ function wireMapStage() {
       exitMapStage();
     }
   });
-  var idle = window.requestIdleCallback || function (fn) { return setTimeout(fn, 1500); };
-  idle(preloadMapFrame);
+  /* FIX-B U9: no idle preload — the full live map loads only when
+     the rider opens it (enterMapStage calls preloadMapFrame). */
 }
 
 function depRowHtml(r, cls, timeStr, clockStr, tagLive, extra) {
@@ -560,11 +583,11 @@ function renderDepartures() {
     var gen = S.tuIndex && S.tuIndex.gen != null ? S.tuIndex.gen : null;
     var rows = core.smartDepartures(S.tuByRoute, S.reg.smartRouteIds, st, gen, nowMs);
     if (rows === null) {
-      note.textContent = 'Arrival times are published for DDOT stops. SMART and QLINE publish live positions only — see the live map.';
+      note.textContent = 'Arrival times are published for DDOT stops. SMART and QLINE publish positions only — see the live map.';
       return;
     }
     if (!rows.length) {
-      note.textContent = 'SMART live times are published when a bus is on its way; no SMART trip is reporting times for this stop right now — see the live map.';
+      note.textContent = 'SMART scheduled times are published when a bus is on its way; no SMART trip is reporting times for this stop right now — see the live map.';
       return;
     }
     rows.forEach(function (r, i) {
@@ -575,9 +598,9 @@ function renderDepartures() {
         extra = ' — running ' + Math.round(Math.abs(r.delay) / 60) + ' min ' + (r.delay > 0 ? 'late' : 'early');
       }
       list.innerHTML += depRowHtml(r, i === 0 ? 'first' : (i < 3 ? 'big' : 'small'),
-        core.timeText(dSec, clock), clock, true, extra);
+        core.timeText(dSec, clock), clock, false, extra);
     });
-    note.textContent = 'Live times from SMART trip updates (Swiftly); the feed rebuilds every few minutes.';
+    note.textContent = 'Scheduled times from SMART trip updates (Swiftly); the feed rebuilds every few minutes.';
     return;
   }
 
@@ -649,28 +672,90 @@ function locate() {
 
 function wirePicker() {
   $('locate-btn').addEventListener('click', locate);
-  var inp = $('stop-search'), ul = $('results');
-  inp.addEventListener('input', function () {
-    var hits = core.searchStops(S.reg.stops, inp.value, 12);
+  var inp = $('stop-search'), ul = $('results'), emptyEl = $('search-empty');
+  /* FIX-B U6: every result row carries the stop's routes, so twin
+     stops on the same corner in opposite directions (e.g. route 10's
+     stops 151 and 777) can be told apart before the tap. */
+  function stopButton(st) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    var main = document.createElement('span'); main.className = 'rmain';
+    var nm = document.createElement('span'); nm.textContent = st.n || 'Stop';
+    var sub = document.createElement('span'); sub.className = 'rsub';
+    sub.textContent = (st.r || []).map(function (rid) {
+      return core.routeLabel(S.reg.routeNames, String(rid));
+    }).join(' · ');
+    main.appendChild(nm); if (sub.textContent) main.appendChild(sub);
+    var sid = document.createElement('span'); sid.className = 'sid';
+    sid.textContent = agencyName(st.seg) + ' · Stop ' + st.id;
+    b.appendChild(main); b.appendChild(sid);
+    b.addEventListener('click', function () {
+      var d = null;
+      if (S.userLatLon) {
+        var pp = core.projectLatLon(S.proj, S.userLatLon.lat, S.userLatLon.lon);
+        d = Math.hypot(st.x - pp[0], st.z - pp[1]);
+      }
+      pickStop(st, d, 'Your stop');
+    });
+    return b;
+  }
+  function renderResults() {
+    var q = inp.value;
     ul.innerHTML = '';
-    hits.forEach(function (st) {
+    if (emptyEl) emptyEl.hidden = true;
+    if (!String(q || '').trim()) return;
+    var n = 0;
+    /* FIX-B U4: a query that names a route offers the route first —
+       its stops in pattern order — above the stop matches. */
+    core.searchRoutes(S.reg, q, 3).forEach(function (rt) {
       var li = document.createElement('li');
       var b = document.createElement('button');
       b.type = 'button';
-      b.innerHTML = '<span>' + (st.n || 'Stop') + '</span><span class="sid">' +
-        agencyName(st.seg) + ' · Stop ' + st.id + '</span>';
-      b.addEventListener('click', function () {
-        var d = null;
-        if (S.userLatLon) {
-          var p = core.projectLatLon(S.proj, S.userLatLon.lat, S.userLatLon.lon);
-          d = Math.hypot(st.x - p[0], st.z - p[1]);
-        }
-        pickStop(st, d, 'Your stop');
-      });
-      li.appendChild(b);
-      ul.appendChild(li);
+      var main = document.createElement('span'); main.className = 'rmain';
+      var nm = document.createElement('span');
+      nm.textContent = 'Route ' + rt.label;
+      var sub = document.createElement('span'); sub.className = 'rsub';
+      sub.textContent = 'See every stop on this route, in order';
+      main.appendChild(nm); main.appendChild(sub);
+      var sid = document.createElement('span'); sid.className = 'sid';
+      sid.textContent = agencyName(rt.seg) + ' · Route';
+      b.appendChild(main); b.appendChild(sid);
+      b.addEventListener('click', function () { renderRouteStops(rt); });
+      li.appendChild(b); ul.appendChild(li); n++;
     });
-  });
+    core.searchStops(S.reg.stops, q, 12).forEach(function (st) {
+      var li = document.createElement('li');
+      li.appendChild(stopButton(st));
+      ul.appendChild(li); n++;
+    });
+    /* FIX-B U2: a zero-hit search says so — never a silent blank. */
+    if (!n && emptyEl) emptyEl.hidden = false;
+  }
+  function renderRouteStops(rt) {
+    ul.innerHTML = '';
+    if (emptyEl) emptyEl.hidden = true;
+    var back = document.createElement('li');
+    var bb = document.createElement('button');
+    bb.type = 'button'; bb.textContent = '← Back to search results';
+    bb.addEventListener('click', renderResults);
+    back.appendChild(bb); ul.appendChild(back);
+    var groups = core.routeStopGroups(S.reg, S.tt, rt.id);
+    if (!groups.length) { if (emptyEl) emptyEl.hidden = false; return; }
+    groups.forEach(function (g) {
+      if (g.head) {
+        var h = document.createElement('li');
+        h.className = 'route-head';
+        h.textContent = rt.label + ' · to ' + g.head;
+        ul.appendChild(h);
+      }
+      g.stops.forEach(function (st) {
+        var li = document.createElement('li');
+        li.appendChild(stopButton(st));
+        ul.appendChild(li);
+      });
+    });
+  }
+  inp.addEventListener('input', renderResults);
   $('change-stop').addEventListener('click', function (e) { e.preventDefault(); showPicker(); });
   $('recenter').addEventListener('click', function (e) { e.preventDefault(); locate(); });
 }
@@ -708,7 +793,10 @@ function boot() {
       showPicker('That stop link did not match a stop on file — search for your stop instead.');
       return;
     }
-    locate();
+    /* FIX-B U5: the picker paints immediately; geolocation runs
+       only from the picker's "Use my location" button (or the
+       board's "Nearest stop" link) — never as a boot gate. */
+    showPicker();
   }).catch(function (e) {
     showState('The board could not load its schedule data. Check your connection and reload.');
   });
