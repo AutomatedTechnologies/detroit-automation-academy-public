@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:5a2d25e850c30fe35c3bb641f1f2c05dbe69eddbde577b7acb37f3dba8fc1477",
+    "stateFingerprint": "sha256:15f54ccffc91e35da3cdc5181311529b37b2907a18a2a9a9f9f3e8b889b3b2d8",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 7,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-07",
   "counts": {
     "apps": 11,
-    "builds": 23,
+    "builds": 25,
     "catalog_state": 10,
     "audits": 1,
     "findings": 17,
@@ -278,23 +278,23 @@
       "description": "Distro is the Detroit Automation Academy's native application-store app for macOS High Sierra: it browses the Academy catalog, downloads Academy-maintained apps from the AutomatedTechnologies GitHub org, verifies every download by SHA-256 before install, and carries no privileged helper. Prepared at DAADV3 T1 codification (2026-11-07); not yet published — publication remains gated on Distro tranche D-T5. Disassembled. Scanned. Recompiled. Distro distributes only apps carrying the Academy audit entry in their plist — proof of the Academy pipeline. distro-test-17 applies the SDS-9 liquid-glass cues to the store chrome: layered tint depth, the glass hairline pair on the dividers and sheet edges, capsule state controls, and the status word in a capsule chip — flat tints only, no behavior change.\n\n© 2026 Detroit Automation Academy / Automated Technologies. All rights reserved. Detroit Automation Academy, Automated Technologies, Distro, Workbench, Live Transit Detroit, The Signal, and the Academy monochrome logo are marks of the Academy, used under the founder's permission. Academy-original works are licensed under the Academy License (revocable); upstream open-source components remain under their own licenses. distro-test-22 adds Update All: when updates are pending, one button runs them sequentially — each app still verified by SHA-256 and the audit gate on its own — and ends with a single summary. The detail pane now shows build notes for the catalog version and the installed app's file path. Catalog fetches now bypass HTTP caches, so Refresh always returns the current catalog.",
       "catalogStatus": "release-candidate",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/distro.png",
-      "buildNotes": "Superseding build under the build-query contract with the owner-directed version override: same tag as the build it supersedes, full three-item spec — the AppIcon download-arrow composition drawn by `DistroLogoView` on the welcome screen, About window and store sidebar; the build's version displayed on the SDS-8 welcome screen, read from the bundle's Info.plist at runtime; and a functional menu bar (app menu with About and Reload Catalog, Window, Help). The pipeline fetched the pinned registry snapshot v6-0016, verified its SHA-256 against the manifest before querying, and took branding metadata, catalog status and audit state from the snapshot; the release body is composed from the query results and cites the snapshot.",
+      "buildNotes": "Deep links (DISTRO-DL1, Distro files/24): Distro now answers academy-distro://app/<catalog-id> links by opening that app's detail pane — the route Muse's markdown fallback dialog uses to offer MacDown. A link only selects: it starts no download or install, and an in-flight operation continues undisturbed; an unknown id lands on a status line. A link that arrives at launch is held behind the SDS-8 welcome and applied when the store opens. Everything else stands: the unified registered logo on every surface, the version read from the bundle on the welcome screen, the functional menu bar, SHA-256 verification and the audit gate in DistroInstaller.",
       "audits": [],
       "currentBuild": {
-        "tag": "distro-test-40",
-        "sizeBytes": 740313,
-        "sha256": "7d801bdf5da802399d46ea89ff4cb1be81400cd9e1da2d3c178930f0495df9b0",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/distro/releases/download/distro-test-40/Distro-test.zip",
+        "tag": "distro-test-41",
+        "sizeBytes": 740428,
+        "sha256": "4dde07d3d793bce45844e516e885de536a490b703d468e800987b16135816c5a",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/distro/releases/download/distro-test-41/Distro-test.zip",
         "floor": "10.13",
         "builtAt": "2026-11-10",
-        "releasePublishedAt": "2026-11-10T21:54:27Z",
-        "ciRun": "42909401856",
+        "releasePublishedAt": "2026-11-11T00:01:51Z",
+        "ciRun": "42928016709",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule); fresh-download plist readback verified 2026-11-10 for the superseding three-item build (distro-test-40, SHA-256 7d801bdf5da802399d46ea89ff4cb1be81400cd9e1da2d3c178930f0495df9b0); supersedes the icon-only artifact registered by changes/0015 (739,428 B, SHA-256 6c98bdfc5cf1d1a55dfa3debda88b71b25c8c0d68e57e1a204e830fc1508f839)"
+          "ref": "bundle-carried audit entry (Distro files/08 rule); fresh-download plist readback verified 2026-11-10: CFBundleURLTypes declares the academy-distro scheme; shipped binary carries the DL1 routing selectors; startup-sound.wav byte-identical to the SDS-10 master (distro-test-41, SHA-256 4dde07d3d793bce45844e516e885de536a490b703d468e800987b16135816c5a)"
         }
       }
     },
@@ -313,23 +313,23 @@
       "description": "The Academy's build of the open-source muse-desktop client (MIT, v0.3.0) on Electron 22.3.27 — the last Electron that runs on macOS 10.13 — so Intel High Sierra machines can run a Muse client at all; the official Muse app requires Apple Silicon and a current macOS. Packaged with the Academy monochrome icon. Version 0.4.0 adds the Academy feature layer: repaired window management (no window opens partially off-screen; your window arrangement is restored), up-arrow sent-message history in the message box, and a monochrome Terminal Skin. Unofficial build: not a Meta product and not endorsed by Meta. Unsigned test build. Its icon is cut to the amended SDS-3 construction — white tile and ink glyph, no black field.",
       "catalogStatus": "testing",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/muse-academy.png",
-      "buildNotes": "Markdown downloads now open in MacDown by default (owner directive 2026-11-10; design Distro files/24, tranche MD-T1). A completed in-app download the classifier calls markdown (.md/.markdown, binary payloads vetoed by MIME) opens in the Academy's markdown editor; the file itself stays in Downloads. The routing is main-process only — preload and the terminal skin sheet are byte-identical to academy2 — and opens only files the app itself downloaded this session. A View-menu preference (MacDown / Ask Each Time / System Default) controls it; files over 10 MiB ask first; if MacDown is not installed, a dialog offers Distro, the system default, or keeping the file. Window repair, up-arrow history, the whitelist terminal skin, SDS-8 welcome and SDS-10 identity stand from academy2. Runtime verdict is the owner's, at the Air sitting.",
+      "buildNotes": "Markdown routing completes its design (Distro files/24). After the first successful route to MacDown, Muse offers once — Make Default / Not Now / Never Ask — to make MacDown the default app for markdown files everywhere on the Mac; the change is made only on an explicit yes, by the bundled AcademyLSDefault helper, for markdown files only (plain text is never touched), with the previous default recorded first and restored if the standing View-menu checkbox is later unchecked. The fallback dialog's Get MacDown in Distro button now deep-links straight to MacDown's page in Distro. Download routing, the View-menu preference, the whitelist terminal skin, window repair, up-arrow history, SDS-8 welcome and SDS-10 identity stand from academy3; preload and the skin sheet remain byte-identical to academy2. Runtime verdict is the owner's, at the Air sitting.",
       "audits": [],
       "currentBuild": {
-        "tag": "0.4.0-academy3",
-        "sizeBytes": 91907575,
-        "sha256": "ca7b27ef7f5b60ae29f2be050d71838d3b7af232b66e79328d332811d280dd02",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/muse-academy/releases/download/muse-academy-0.4.0-academy3/Muse-Academy-1013-x64.zip",
+        "tag": "0.4.0-academy4",
+        "sizeBytes": 91911848,
+        "sha256": "23b550f93796e85f70c77170dd926a9ac0fe0215989c867f03e1030ab24acc17",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/muse-academy/releases/download/muse-academy-0.4.0-academy4/Muse-Academy-1013-x64.zip",
         "floor": "10.13",
         "builtAt": "2026-11-10",
-        "releasePublishedAt": "2026-11-10T23:39:30Z",
-        "ciRun": "42925106774",
+        "releasePublishedAt": "2026-11-11T00:15:53Z",
+        "ciRun": "42929882291",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry; fresh-download plist readback verified 2026-11-10 (ai.muse.desktop, 0.4.0, floor 10.13, audit + conformance complete, all four conformance clauses true); preload.cjs and terminal-skin.css inside the artifact byte-identical to academy2; build label 0.4.0-academy3 in shipped main.cjs; Mach-O census 15; startup sound byte-identical to the estate master"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry; fresh-download plist readback verified 2026-11-10 (ai.muse.desktop, 0.4.0, floor 10.13, audit + conformance complete, all four conformance clauses true); preload.cjs and terminal-skin.css inside the artifact byte-identical to academy2; AcademyLSDefault helper in Contents/Resources (Mach-O x86_64, 0755, markdown UTI + MacDown id only); build label 0.4.0-academy4 in shipped main.cjs; Mach-O census 16; startup sound byte-identical to the estate master"
         }
       }
     },
