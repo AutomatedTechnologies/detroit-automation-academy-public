@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:15f54ccffc91e35da3cdc5181311529b37b2907a18a2a9a9f9f3e8b889b3b2d8",
+    "stateFingerprint": "sha256:e4ccd07eb84905c077cc6c06eb9643bd38f8d9afb9a856113f04f217929e75f9",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 7,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-07",
   "counts": {
     "apps": 11,
-    "builds": 25,
+    "builds": 26,
     "catalog_state": 10,
     "audits": 1,
     "findings": 17,
@@ -303,33 +303,33 @@
       "displayName": "Muse (Academy Build)",
       "repoUrl": "https://github.com/AutomatedTechnologies/muse-academy",
       "sourceUrl": "https://github.com/benjaminkitt/muse-desktop",
-      "bundleId": null,
+      "bundleId": "com.detroitautomationacademy.muse",
       "category": "Productivity",
       "license": "MIT",
       "kind": "catalog",
       "appStatus": "testing",
       "minMacOS": "10.13",
       "tagline": "The Muse desktop client, rebuilt by the Academy for High Sierra.",
-      "description": "The Academy's build of the open-source muse-desktop client (MIT, v0.3.0) on Electron 22.3.27 — the last Electron that runs on macOS 10.13 — so Intel High Sierra machines can run a Muse client at all; the official Muse app requires Apple Silicon and a current macOS. Packaged with the Academy monochrome icon. Version 0.4.0 adds the Academy feature layer: repaired window management (no window opens partially off-screen; your window arrangement is restored), up-arrow sent-message history in the message box, and a monochrome Terminal Skin. Unofficial build: not a Meta product and not endorsed by Meta. Unsigned test build. Its icon is cut to the amended SDS-3 construction — white tile and ink glyph, no black field.",
+      "description": "The Academy's build of the open-source muse-desktop client (MIT, v0.3.0) on Electron 22.3.27 — the last Electron that runs on macOS 10.13 — so Intel High Sierra machines can run a Muse client at all; the official Muse app requires Apple Silicon and a current macOS. Packaged with the Academy monochrome icon. Version 0.4.0 adds the Academy feature layer: repaired window management (no window opens partially off-screen; your window arrangement is restored), up-arrow sent-message history in the message box, markdown downloads that open in MacDown with a consented system-default offer, and — in 0.4.0-academy5 — a genuine Terminal view (View menu, Command-T): the app's own terminal window over the live hosted session. The earlier stylesheet Terminal Skin was rejected by the owner and is deleted outright. academy5 is also the first build under the Academy bundle identity, com.detroitautomationacademy.muse. Unofficial build: not a Meta product and not endorsed by Meta. Unsigned test build. Its icon is cut to the amended SDS-3 construction — white tile and ink glyph, no black field.",
       "catalogStatus": "testing",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/muse-academy.png",
-      "buildNotes": "Markdown routing completes its design (Distro files/24). After the first successful route to MacDown, Muse offers once — Make Default / Not Now / Never Ask — to make MacDown the default app for markdown files everywhere on the Mac; the change is made only on an explicit yes, by the bundled AcademyLSDefault helper, for markdown files only (plain text is never touched), with the previous default recorded first and restored if the standing View-menu checkbox is later unchecked. The fallback dialog's Get MacDown in Distro button now deep-links straight to MacDown's page in Distro. Download routing, the View-menu preference, the whitelist terminal skin, window repair, up-arrow history, SDS-8 welcome and SDS-10 identity stand from academy3; preload and the skin sheet remain byte-identical to academy2. Runtime verdict is the owner's, at the Air sitting.",
+      "buildNotes": "The genuine Terminal build. The rejected Terminal Skin is deleted outright — no stylesheet, no toggle, stock hosted UI untouched — and in its place a real Terminal view (View menu, Command-T): the app's own terminal window, with a scrollback and a proper text field on the minion ❯ prompt line. What you type is sent to Minion through the app's live hosted session and the reply streams back as the hosted conversation renders it. Local commands: /clear, /help, /view. This is also the first build under the Academy bundle identity (com.detroitautomationacademy.muse) — the owner revoked the old upstream-ID carve-out — so macOS treats it as a new app and a fresh sign-in is expected on first launch; your message history and preferences carry over. Markdown routing, the consented system default, window repair, up-arrow history, SDS-8 welcome and SDS-10 identity stand from academy4. Runtime verdict is the owner's, at the Air sitting.",
       "audits": [],
       "currentBuild": {
-        "tag": "0.4.0-academy4",
-        "sizeBytes": 91911848,
-        "sha256": "23b550f93796e85f70c77170dd926a9ac0fe0215989c867f03e1030ab24acc17",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/muse-academy/releases/download/muse-academy-0.4.0-academy4/Muse-Academy-1013-x64.zip",
+        "tag": "0.4.0-academy5",
+        "sizeBytes": 91916219,
+        "sha256": "1edf456f6e9d5061b369276803cd24c689f233b18e2b970970cc9a6b5ae1d670",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/muse-academy/releases/download/muse-academy-0.4.0-academy5/Muse-Academy-1013-x64.zip",
         "floor": "10.13",
         "builtAt": "2026-11-10",
-        "releasePublishedAt": "2026-11-11T00:15:53Z",
-        "ciRun": "42929882291",
+        "releasePublishedAt": "2026-11-11T02:31:11Z",
+        "ciRun": "42946493382",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry; fresh-download plist readback verified 2026-11-10 (ai.muse.desktop, 0.4.0, floor 10.13, audit + conformance complete, all four conformance clauses true); preload.cjs and terminal-skin.css inside the artifact byte-identical to academy2; AcademyLSDefault helper in Contents/Resources (Mach-O x86_64, 0755, markdown UTI + MacDown id only); build label 0.4.0-academy4 in shipped main.cjs; Mach-O census 16; startup sound byte-identical to the estate master"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) earned on the line's actual provenance: upstream muse-desktop v0.3.0 layer + stock Electron 22.3.27 distribution disassembled and scanned (files/19 sections 2-9), app recompiled in CI from the pinned distribution + Academy layer; fresh-download plist readback verified 2026-11-10 (com.detroitautomationacademy.muse, 0.4.0, floor 10.13, audit + SDS-10 conformance complete, all four clauses true); NO terminal-skin.css in the artifact; terminal.html + terminal-preload.cjs present; build label 0.4.0-academy5 in shipped main.cjs; Mach-O census 16; startup sound byte-identical to the estate master"
         }
       }
     },
