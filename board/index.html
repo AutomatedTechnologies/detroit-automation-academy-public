@@ -215,14 +215,17 @@ var S = {
   lastHeads: {}, mapReady: false, mapQueued: null, mapReturnFocus: null, mapMissNote: null
 };
 
-/* Data-plane split (2026-11-10): /live-data/ paths (except the
-   watch/ subtree, a separate pipeline) are fetched from the
-   detroit-live-data repo's Pages origin first, falling back to this
-   site's own copy on failure or when the primary's generated_at
-   passes the 20-minute freshness bound; the fresher copy wins.
+/* Data-plane split (2026-11-10; fresher-copy rule 2026-11-11):
+   /live-data/ paths (except the watch/ subtree, a separate pipeline)
+   are fetched from BOTH the detroit-live-data repo's Pages origin and
+   this site's own copy on every call; the copy with the later
+   generated_at wins, and a failure on either side degrades to the
+   other. (The original 20-minute threshold rule returned the primary
+   unchecked whenever it was under the bound — field report
+   2026-11-11: board showed ~14-minute-old positions while the data
+   origin served ~2-minute-old data.) Board build 20261111-1119.
    Rollback: empty DATA_ORIGIN. */
 var DATA_ORIGIN = 'https://automatedtechnologies.github.io/detroit-live-data';
-var LIVE_FRESH_MS = 20 * 60 * 1000;
 function genMs(d) {
   var t = d ? Date.parse(d.generated_at || '') : NaN;
   return isNaN(t) ? null : t;
@@ -241,14 +244,22 @@ function fetchJson(url) {
       return r.json();
     });
   }
-  return get(DATA_ORIGIN + url).then(function (d1) {
-    var g1 = genMs(d1);
-    if (g1 === null || (Date.now() - g1) <= LIVE_FRESH_MS) return d1;
-    return get(url).then(function (d2) {
-      var g2 = genMs(d2);
-      return (g2 !== null && g2 > g1) ? d2 : d1;
-    }, function () { return d1; });
-  }, function () { return get(url); });
+  function wrap(p) {
+    return p.then(function (d) { return { d: d }; }, function (e) { return { e: e }; });
+  }
+  return Promise.all([wrap(get(DATA_ORIGIN + url)), wrap(get(url))]).then(function (rs) {
+    var r1 = rs[0], r2 = rs[1];
+    if (r1.d && r2.d) {
+      var g1 = genMs(r1.d), g2 = genMs(r2.d);
+      if (g1 === null && g2 === null) return r1.d;
+      if (g1 === null) return r2.d;
+      if (g2 === null) return r1.d;
+      return g2 > g1 ? r2.d : r1.d;
+    }
+    if (r1.d) return r1.d;
+    if (r2.d) return r2.d;
+    throw r1.e || r2.e || new Error('fetch failed for ' + url);
+  });
 }
 function fetchJsonOrNull(url) { return fetchJson(url).catch(function () { return null; }); }
 
