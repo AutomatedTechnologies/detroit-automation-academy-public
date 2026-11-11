@@ -458,8 +458,8 @@ aria-expanded="false"><span></span><span></span><span></span></button></header><
 <footer class="footer"> <div class="wrap footer-inner"> <div class="footer-brand">
 <img src="/assets/logo.webp" alt="" class="brand-mark"> <span>
 Detroit Automation Academy</span> </div> <p class="footer-fine">
-Southfield, Michigan · <a href="mailto:justin@detroitautomationacademy.com">
-justin@detroitautomationacademy.com</a></p>
+Southfield, Michigan · <a href="mailto:detroit@muse.ai">
+detroit@muse.ai</a></p>
 <nav class="footer-groups" aria-label="Site"> <div class="footer-group"> <h3>Ride
 </h3> <p class="footer-fine"><a href="/live-transit.html">Live Map</a> ·
 <a href="/board/">Departure Board</a> · <a href="/live-transit/">Cities</a></p>
@@ -484,8 +484,8 @@ Learn &amp; work</h3> <p class="footer-fine"><a href="/programs.html">Programs</
 <a href="/terms.html">Terms of Service</a> · <a href="/privacy.html">Privacy Policy
 </a> · <a href="/live-transit/terms/">Live Transit Terms</a></p> </div> </nav>
 <p class="footer-fine"><a href="/find.html">Find</a> (search) ·
-<a href="mailto:justin@detroitautomationacademy.com">
-justin@detroitautomationacademy.com</a></p> <p class="footer-fine">
+<a href="mailto:detroit@muse.ai">
+detroit@muse.ai</a></p> <p class="footer-fine">
 © 2026 AutomatedTechnologies d/b/a Detroit Automation Academy</p> </div> </footer>
 
 </body>
