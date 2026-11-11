@@ -1126,9 +1126,11 @@
   // a healthy chain, 7th episode). The VM feed-publisher mirrors the
   // identical payload set there every cycle; this site's own
   // live-data/ copy remains the archive and the fallback. The JS
-  // fetch layer (fetchLiveJson in live-transit.js) takes the primary
-  // first and, when it fails or runs stale past 20 minutes, the
-  // fresher of the two copies by generated_at. Rollback: point
+  // fetch layer (fetchLiveJson in live-transit.js) fetches both
+  // origins on every call and takes the fresher of the two copies by
+  // generated_at (fresher-copy rule, 2026-11-11; the split's original
+  // 20-minute threshold rule let a laggard primary win unchecked).
+  // Rollback: point
   // FORGE_LIVE_DATA_URL back at the fallback base below.
   // The variable name is retained from the Netlify proxy era; that
   // proxy was quota-paused on 2026-10-15 and is no longer consumed.
@@ -1194,7 +1196,7 @@
   }, 10000);
 })();
 </script>
-<script type="module" src="live-transit.js?v=20261110-1233"></script>
+<script type="module" src="live-transit.js?v=20261111-1119"></script>
 <script src="assets/measure.js?v=20261023-o2" defer></script>
 </body>
 </html>
