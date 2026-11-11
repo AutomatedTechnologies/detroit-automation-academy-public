@@ -102,10 +102,21 @@
    agency ids stay in the data layer only. */
 (function () {
   var ORIGIN = 'https://www.detroitautomationacademy.com';
-  var FEED = ORIGIN + '/live-data/vehicles.json';
+  /* Data-plane split (2026-11-10): primary = the detroit-live-data
+     repo's Pages origin (publisher-mirrored every cycle; its deploys
+     never queue behind the site build); fallback = this site's own
+     live-data/ archive. xhrFresh picks the fresher copy by
+     generated_at whenever the primary fails or passes the 20-minute
+     freshness bound. Rollback: swap FEED/ALERTS back to the ORIGIN
+     forms below. */
+  var DATA_ORIGIN = 'https://automatedtechnologies.github.io/detroit-live-data';
+  var FRESH_MS = 20 * 60 * 1000;
+  var FEED = DATA_ORIGIN + '/live-data/vehicles.json';
+  var FEED_FALLBACK = ORIGIN + '/live-data/vehicles.json';
   var GEO_URL = 'first-look-geo-2d.json';
   var NAV_ROUTES = ['3', '4', '6', '8'];
-  var ALERTS = ORIGIN + '/live-data/alerts.json';
+  var ALERTS = DATA_ORIGIN + '/live-data/alerts.json';
+  var ALERTS_FALLBACK = ORIGIN + '/live-data/alerts.json';
   var STALE_MS = 720000;   /* feed publishes ~every 5 min: stale only after two missed cycles + margin */
   var CORRIDOR_KEYS = ['ddot|3', 'ddot|4', 'ddot|6', 'ddot|8', 'qline|QLINE', 'peoplemover|PM'];
   var POLL_MS = 15000;
@@ -137,6 +148,16 @@
   var routeOrder = [];          /* browser order, built once geometry loads */
   var alertsSig = '', alertsDismissed = '';
 
+  function xhrFresh(primary, fallback, ok, err) {
+    xhr(primary, function (d) {
+      var g = d && d.generated_at ? new Date(d.generated_at).getTime() : null;
+      if (g === null || (new Date().getTime() - g) <= FRESH_MS) { ok(d); return; }
+      xhr(fallback, function (d2) {
+        var g2 = d2 && d2.generated_at ? new Date(d2.generated_at).getTime() : null;
+        ok(g2 !== null && g2 > g ? d2 : d);
+      }, function () { ok(d); });
+    }, function () { xhr(fallback, ok, err); });
+  }
   function xhr(url, ok, err) {
     var r = new XMLHttpRequest();
     r.open('GET', url, true);
@@ -428,7 +449,7 @@
     compass.style.top = (290 + h) + 'px';
   }
   function pollAlerts() {
-    xhr(ALERTS, function (d) {
+    xhrFresh(ALERTS, ALERTS_FALLBACK, function (d) {
       var list = d.alerts || [], n = d.count != null ? d.count : list.length, i;
       if (!n) { alertStrip.style.display = 'none'; alertsSig = ''; layoutShift(); return; }
       var heads = [], sig = '' + n;
@@ -442,7 +463,7 @@
   }
 
   function poll() {
-    xhr(FEED, function (d) {
+    xhrFresh(FEED, FEED_FALLBACK, function (d) {
       var now = new Date().getTime();
       var feedTime = d.generated_at ? new Date(d.generated_at) : new Date();
       feedCount = d.count != null ? d.count : (d.vehicles || []).length;
