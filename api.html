@@ -76,7 +76,9 @@
       <h1>The transit <span class="accent">API.</span></h1>
       <div class="prose">
         <p>This is the live data feed behind the academy&rsquo;s <a href="live-transit.html">Live Transit map</a> and the bus count on the <a href="live-transit.html">Live Transit page</a>: Detroit Department of Transportation (DDOT) bus positions, QLINE streetcar positions, and DDOT service alerts, published as static JSON files on this site. A GitHub Actions workflow collects the agency feeds — the keys never leave Actions — and the academy&rsquo;s publisher turns the collected feeds into the finished files on this site. Positions poll continuously and publish about every five minutes; the map dead-reckons between updates. No key required.</p>
-        <p>Base URL: <code>https://detroitautomationacademy.com</code></p>
+        <p>Base URL: <code>https://automatedtechnologies.github.io/detroit-live-data</code></p>
+        <p>Fallback base URL: <code>https://www.detroitautomationacademy.com</code></p>
+        <p>Both origins serve identical files. The data origin publishes in about 30 seconds; this site&rsquo;s copy can lag during deploys. Fetch the data origin first, and if you check both, use the copy with the later <code>generated_at</code>.</p>
       </div>
     </div>
   </section>
@@ -87,9 +89,10 @@
       <div class="endpoint">
         <div class="endpoint-head">
           <span class="method">GET</span>
-          <span class="endpoint-path">/live-data/vehicles.json</span>
+          <span class="endpoint-path">https://automatedtechnologies.github.io/detroit-live-data/live-data/vehicles.json</span>
         </div>
         <dl class="kv">
+          <dt>Fallback</dt><dd><code>https://www.detroitautomationacademy.com/live-data/vehicles.json</code> — the same file on this site; it can lag during deploys, so prefer the data origin above and use the copy with the later <code>generated_at</code>.</dd>
           <dt>Parameters</dt><dd>None.</dd>
           <dt>Refresh</dt><dd>The publisher runs about every 5 minutes and republishes the file when the underlying data has changed (and at least every 30 minutes as a liveness heartbeat). GitHub Pages may serve a cached copy for up to 10 minutes. Judge freshness by <code>generated_at</code>, never by fetch time.</dd>
           <dt>CORS</dt><dd>Served by GitHub Pages with <code>Access-Control-Allow-Origin: *</code> — call it directly from browser JavaScript.</dd>
@@ -148,9 +151,10 @@
       <div class="endpoint">
         <div class="endpoint-head">
           <span class="method">GET</span>
-          <span class="endpoint-path">/live-data/alerts.json</span>
+          <span class="endpoint-path">https://automatedtechnologies.github.io/detroit-live-data/live-data/alerts.json</span>
         </div>
         <dl class="kv">
+          <dt>Fallback</dt><dd><code>https://www.detroitautomationacademy.com/live-data/alerts.json</code> — the same file on this site; it can lag during deploys, so prefer the data origin above and use the copy with the later <code>generated_at</code>.</dd>
           <dt>Parameters</dt><dd>None.</dd>
           <dt>Refresh</dt><dd>Rebuilt on the same schedule as <code>vehicles.json</code>: about every 5 minutes when the alert set or a source state changes, with the same 30-minute heartbeat.</dd>
           <dt>CORS</dt><dd>Served by GitHub Pages with <code>Access-Control-Allow-Origin: *</code>.</dd>
@@ -230,8 +234,8 @@
       <div class="prose">
         <p>The live data used to be served by a proxy at <code>forge-line-live-proxy.netlify.app</code>. <strong>Those endpoints were retired on 2026-10-15</strong> — the proxy&rsquo;s hosting quota was exhausted (it returned HTTP 503 <code>usage_exceeded</code> on every path) and the feed moved to the static files above. Do not build against them:</p>
         <ul>
-          <li><code>GET https://forge-line-live-proxy.netlify.app/api/vehicles</code> — retired 2026-10-15; use <code>/live-data/vehicles.json</code> instead.</li>
-          <li><code>GET https://forge-line-live-proxy.netlify.app/api/alerts</code> — retired 2026-10-15; use <code>/live-data/alerts.json</code> instead.</li>
+          <li><code>GET https://forge-line-live-proxy.netlify.app/api/vehicles</code> — retired 2026-10-15; use <code>https://automatedtechnologies.github.io/detroit-live-data/live-data/vehicles.json</code> instead.</li>
+          <li><code>GET https://forge-line-live-proxy.netlify.app/api/alerts</code> — retired 2026-10-15; use <code>https://automatedtechnologies.github.io/detroit-live-data/live-data/alerts.json</code> instead.</li>
           <li><code>GET https://forge-line-live-proxy.netlify.app/healthz</code> — retired 2026-10-15; the static files need no health endpoint — check <code>generated_at</code>.</li>
         </ul>
       </div>
@@ -311,7 +315,7 @@
 </main>
 
 <footer class="footer">
-<div class="wrap"><p class="build-stamp" style="font-size:.78rem;color:#444;border:1px solid #000;padding:.5rem .75rem;margin:1rem 0;">PAGE STAMP — Published: 2026-11-05 21:42 EST · Agent: Forge · Authorized: J. Spencer Smith, directive of 2026-11-07 (enterprise stamp instantiation, 16:48 EST)</p></div>
+<div class="wrap"><p class="build-stamp" style="font-size:.78rem;color:#444;border:1px solid #000;padding:.5rem .75rem;margin:1rem 0;">PAGE STAMP — Published: 2026-11-11 11:20 EST · Agent: Forge · Authorized: J. Spencer Smith, directive of 2026-11-10 (henchman — LTD usability FIX-A, data-origin endpoints)</p></div>
 
   <div class="wrap footer-inner">
     <div class="footer-brand">
