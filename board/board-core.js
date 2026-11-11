@@ -143,15 +143,115 @@ export function stopsWithinRadius(stops, proj, lat, lon, radiusM) {
   return out;
 }
 
+/* FIX-B U2 (2026-11-11): tokenised stop search. The query and stop
+ * names are normalised the same way (case, punctuation, and street
+ * suffixes — Dr/Drive, St/Street, Ave/Avenue, …), split into tokens,
+ * and a stop matches when EVERY query token appears in its name, in
+ * any order — so "North Park & Providence", "Providence & North Park"
+ * and "North Park Providence Dr" all find the same stop. An exact
+ * stop-id match (full id or the part after the agency prefix) also
+ * qualifies. Registry order and the caller's cap are preserved. */
+var SUFFIX_EXPAND = { dr: 'drive', st: 'street', ave: 'avenue', av: 'avenue',
+  blvd: 'boulevard', rd: 'road', ln: 'lane', ct: 'court', pl: 'place',
+  hwy: 'highway', ter: 'terrace', cir: 'circle', sq: 'square' };
+export function normalizeSearchText(v) {
+  return String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').split(/\s+/)
+    .filter(Boolean).map(function (t) { return SUFFIX_EXPAND[t] || t; }).join(' ');
+}
 export function searchStops(stops, q, limit) {
-  q = String(q || '').trim().toLowerCase();
-  if (!q) return [];
+  var raw = String(q || '').trim().toLowerCase();
+  if (!raw) return [];
+  var tokens = normalizeSearchText(raw).split(' ').filter(Boolean);
+  if (!tokens.length) return [];
   var out = [];
   for (var i = 0; i < stops.length && out.length < (limit || 12); i++) {
     var s = stops[i];
-    if (String(s.id).toLowerCase() === q || (s.n && s.n.toLowerCase().indexOf(q) >= 0)) out.push(s);
+    if (String(s.id).toLowerCase() === raw || smartStopKey(s.id).toLowerCase() === raw) { out.push(s); continue; }
+    if (!s.n) continue;
+    var name = ' ' + normalizeSearchText(s.n) + ' ';
+    var ok = true;
+    for (var t = 0; t < tokens.length; t++) if (name.indexOf(tokens[t]) < 0) { ok = false; break; }
+    if (ok) out.push(s);
   }
   return out;
+}
+
+/* FIX-B U4 (2026-11-11): route-first search. A query matches a route
+ * when it IS the route id, or when every query token appears in the
+ * route's name (same normalisation as stop search). Exact-id matches
+ * sort first. Returns [{id, name, seg, label}]. */
+export function searchRoutes(reg, q, limit) {
+  var raw = String(q || '').trim().toLowerCase();
+  if (!raw || !reg || !reg.routesById) return [];
+  var tokens = normalizeSearchText(raw).split(' ').filter(Boolean);
+  var exact = [], named = [];
+  Object.keys(reg.routesById).forEach(function (id) {
+    var rec = reg.routesById[id];
+    var item = { id: rec.id, name: rec.name, seg: rec.seg, label: routeLabel(reg.routeNames, rec.id) };
+    if (String(rec.id).toLowerCase() === raw) { exact.push(item); return; }
+    if (!tokens.length) return;
+    var name = ' ' + normalizeSearchText(rec.name) + ' ';
+    var ok = true;
+    for (var t = 0; t < tokens.length; t++) if (name.indexOf(tokens[t]) < 0) { ok = false; break; }
+    if (ok) named.push(item);
+  });
+  return exact.concat(named).slice(0, limit || 3);
+}
+
+/* FIX-B U4: a route's stops in pattern order. With a loaded DDOT
+ * timetable, stops come from the route's patterns (one group per
+ * direction, headsign from the pattern's trips, longest pattern kept
+ * per direction); without one (SMART/QLINE), registry order filtered
+ * to the route. Returns [{head, stops:[stopRec]}]. */
+export function routeStopGroups(reg, tt, rid) {
+  if (!reg || !reg.stops) return [];
+  rid = String(rid);
+  var groups = [];
+  if (tt && Array.isArray(tt.patterns) && Array.isArray(tt.routes)) {
+    var byHead = {};
+    tt.patterns.forEach(function (pat) {
+      var rec = tt.routes[pat.route];
+      if (!rec || String(rec.id) !== rid) return;
+      var head = '';
+      for (var i = 0; i < (pat.trips || []).length && !head; i++) head = pat.trips[i].h || '';
+      if (!head && pat.stops && pat.stops.length) {
+        var term = reg.stops[pat.stops[pat.stops.length - 1]];
+        head = term ? (term.n || '') : '';
+      }
+      if (!byHead[head] || pat.stops.length > byHead[head].length) byHead[head] = pat.stops;
+    });
+    Object.keys(byHead).forEach(function (head) {
+      var stops = byHead[head].map(function (idx) { return reg.stops[idx]; }).filter(Boolean);
+      if (stops.length) groups.push({ head: head, stops: stops });
+    });
+    if (groups.length) return groups;
+  }
+  var stops = reg.stops.filter(function (s) { return (s.r || []).map(String).indexOf(rid) >= 0; });
+  return stops.length ? [{ head: '', stops: stops }] : [];
+}
+
+/* FIX-B U1 (2026-11-11): positions age from the consumed file's
+ * generated_at. Bands mirror the task spec for the board: fresh at
+ * or under 7.5 minutes, delayed beyond it. (SMART's separate 15-min
+ * drop lives in smartDepartures / SMART_TU_STALE_MS, unchanged.)
+ * Returns null when generated_at is missing or unparseable — a
+ * delayed claim is never fabricated without a last-update time. */
+export var POSITIONS_DELAYED_MS = 7.5 * 60 * 1000;
+export function positionsAge(generatedAt, nowMs) {
+  var genMs = generatedAt == null ? NaN
+    : (typeof generatedAt === 'number' ? generatedAt : new Date(generatedAt).getTime());
+  if (isNaN(genMs)) return null;
+  var ageMs = Math.max(0, nowMs - genMs);
+  return { genMs: genMs, ageMs: ageMs, ageMin: Math.floor(ageMs / 60000),
+           delayed: ageMs > POSITIONS_DELAYED_MS };
+}
+/* The map's degradation headline, verbatim form (live-transit.js
+ * svcHeadline 'stale'): "Live positions delayed — last update
+ * {time}, {N} minutes ago." */
+export function delayedPositionsText(age) {
+  if (!age) return '';
+  return 'Live positions delayed — last update ' + formatClock12Detroit(age.genMs) +
+    ', ' + age.ageMin + (age.ageMin === 1 ? ' minute' : ' minutes') + ' ago.';
 }
 
 export function findStopById(stops, id) {
