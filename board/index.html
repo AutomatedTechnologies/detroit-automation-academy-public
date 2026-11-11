@@ -4,23 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Departure Board — Live Transit Detroit</title>
-<meta name="description" content="Next departures at your nearest Detroit bus stop — DDOT scheduled times and SMART scheduled times, one glance, no map.">
+<meta name="description" content="Next departures at your nearest Detroit bus stop — DDOT scheduled times and SMART live times, one glance, no map.">
 <link rel="canonical" href="https://www.detroitautomationacademy.com/board/">
 <meta property="og:title" content="Departure Board — Live Transit Detroit">
-<meta property="og:description" content="Next departures at your nearest Detroit bus stop — DDOT scheduled times and SMART scheduled times, one glance, no map.">
+<meta property="og:description" content="Next departures at your nearest Detroit bus stop — DDOT scheduled times and SMART live times, one glance, no map.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.detroitautomationacademy.com/board/">
 <meta property="og:image" content="https://www.detroitautomationacademy.com/assets/logo.webp">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Departure Board — Live Transit Detroit">
-<meta name="twitter:description" content="Next departures at your nearest Detroit bus stop — DDOT scheduled times and SMART scheduled times, one glance, no map.">
+<meta name="twitter:description" content="Next departures at your nearest Detroit bus stop — DDOT scheduled times and SMART live times, one glance, no map.">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "WebPage",
   "name": "Departure Board — Live Transit Detroit",
   "url": "https://www.detroitautomationacademy.com/board/",
-  "description": "Next departures at your nearest Detroit bus stop — DDOT scheduled times and SMART scheduled times, one glance, no map.",
+  "description": "Next departures at your nearest Detroit bus stop — DDOT scheduled times and SMART live times, one glance, no map.",
   "publisher": {
     "@type": "Organization",
     "name": "Detroit Automation Academy",
@@ -195,7 +195,7 @@
 <div class="wrap"><p class="build-stamp" style="font-size:.78rem;color:#444;border:1px solid #000;padding:.5rem .75rem;margin:1rem 0;">PAGE STAMP — Published: 2026-11-08 13:03 EST · Agent: Forge · Authorized: J. Spencer Smith, directive of 2026-11-08 (Branch A timezone fix — board-core parses naive DDOT updated_at stamps as America/Detroit)</p></div>
 
     Times: DDOT from the published timetable (feed <span id="feed-ver">S1000182</span>);
-    SMART scheduled times from Swiftly trip updates, display only. Positions: DDOT via
+    SMART live estimates from Swiftly trip updates, checked against the published SMART schedule. Positions: DDOT via
     Clever Devices BusTime, SMART via Swiftly, QLINE via its public GTFS-RT feed.
     Route shapes &amp; stops: DDOT, SMART, and QLINE GTFS. A page of
     <a href="/">Detroit Automation Academy</a>. Platform status:
@@ -351,14 +351,13 @@ function renderFeedStatus() {
   }
   var counts = { ddot: 0, smart: 0, qline: 0 };
   (S.vehicles.vehicles || []).forEach(function (v) { if (counts[v.agency] != null) counts[v.agency]++; });
-  var smartN = S.smartDisplay && Array.isArray(S.smartDisplay.vehicles) ? S.smartDisplay.vehicles.length : 0;
   var when = S.vehicles.generated_at ? core.formatClock12Detroit(new Date(S.vehicles.generated_at).getTime()) : '';
-  /* FIX-B D1+U1: the count line reports positions as of a clock —
-     it never folds SMART into a "live … out now" claim — and an age
-     past the delayed band raises the visible banner (the map's
+  /* FULL INTEGRATION (2026-11-11): SMART positions ride vehicles.json
+     like every other agency, so the count reads the merged feed — and
+     an age past the delayed band raises the visible banner (the map's
      degradation wording) at the top of the page. */
   el.textContent = 'Positions as of ' + when + ' · ' + counts.ddot + ' DDOT · ' +
-    smartN + ' SMART · ' + counts.qline + ' QLINE reporting';
+    counts.smart + ' SMART · ' + counts.qline + ' QLINE reporting';
   var age = core.positionsAge(S.vehicles.generated_at, Date.now());
   if (banner) {
     if (age && age.delayed) { banner.textContent = core.delayedPositionsText(age); banner.hidden = false; }
@@ -485,9 +484,7 @@ function chipClick(rid, btn) {
     S.vehicles.vehicles, S.proj, rec ? rec.paths : null, st, rid,
     S.lastHeads[String(rid)] || null, Date.now()) : null;
   if (!ep) {
-    showChipNote(st.seg === 'smart'
-      ? 'SMART publishes positions only, and no ' + label + ' bus can be picked from the feed right now.'
-      : 'No live ' + label + ' bus is reporting right now.', true);
+    showChipNote('No live ' + label + ' bus is reporting right now.', true);
     return;
   }
   $('chip-note').hidden = true;
@@ -583,11 +580,11 @@ function renderDepartures() {
     var gen = S.tuIndex && S.tuIndex.gen != null ? S.tuIndex.gen : null;
     var rows = core.smartDepartures(S.tuByRoute, S.reg.smartRouteIds, st, gen, nowMs);
     if (rows === null) {
-      note.textContent = 'Arrival times are published for DDOT stops. SMART and QLINE publish positions only — see the live map.';
+      note.textContent = 'SMART arrival times are temporarily unavailable — see the live map.';
       return;
     }
     if (!rows.length) {
-      note.textContent = 'SMART scheduled times are published when a bus is on its way; no SMART trip is reporting times for this stop right now — see the live map.';
+      note.textContent = 'SMART live times are published when a bus is on its way; no SMART trip is reporting times for this stop right now — see the live map.';
       return;
     }
     rows.forEach(function (r, i) {
@@ -598,9 +595,9 @@ function renderDepartures() {
         extra = ' — running ' + Math.round(Math.abs(r.delay) / 60) + ' min ' + (r.delay > 0 ? 'late' : 'early');
       }
       list.innerHTML += depRowHtml(r, i === 0 ? 'first' : (i < 3 ? 'big' : 'small'),
-        core.timeText(dSec, clock), clock, false, extra);
+        core.timeText(dSec, clock), clock, true, extra);
     });
-    note.textContent = 'Scheduled times from SMART trip updates (Swiftly); the feed rebuilds every few minutes.';
+    note.textContent = 'Live estimates from SMART trip updates (Swiftly), checked against the published SMART schedule; the feed rebuilds every few minutes.';
     return;
   }
 

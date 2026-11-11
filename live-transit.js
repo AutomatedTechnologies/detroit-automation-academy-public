@@ -265,7 +265,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     });
   }
   // === Error handling block end ============================================
-  var POLL_MS = 60000;
+  var POLL_MS = 20000; // #18: was 60000 — the 3D view could paint a generation up to 4x older than 2D's 15 s poll
 
   var BUS_MAX = 400;
   var DETAIL_MAX = 48;
@@ -1252,6 +1252,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   // the stop card falls back to the positions-only note rather than
   // present old times as current.
   var smartTuByStop = {};   // bare stop id -> [{rid, trip, bus, time, delay}]
+  var smartAdherenceTrips = null;   // trip_id -> adherence entry (FULL INTEGRATION 2026-11-11: computed delay from live-data/adherence.json)
   var smartTuAtMs = null;   // generated_at of the ingested payload
   var SMART_TU_STALE_MS = 15 * 60 * 1000;
   function smartTuStopKey(id) {
@@ -1306,6 +1307,17 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
       // arrivals: a TU row whose route is switched off (directly or
       // by its group header) or near-me-excluded does not present.
       if (!routeIsOn(r.rid) || !routeNearOk(r.rid)) continue;
+      // FULL INTEGRATION: the Swiftly payload's own delay fields are
+      // null; the builder's computed delay (TU prediction vs the
+      // published SMART schedule) rides adherence.json — fill it here
+      // so the stop card's running-late/early title fires.
+      if (r.delay == null && r.trip && smartAdherenceTrips) {
+        var ae = smartAdherenceTrips[r.trip];
+        if (ae && ae.delay_sec != null) {
+          rows.push({ rid: r.rid, trip: r.trip, bus: r.bus, time: r.time, delay: ae.delay_sec });
+          continue;
+        }
+      }
       rows.push(r);
     }
     rows.sort(function (a, b) { return a.time - b.time; });
@@ -5100,7 +5112,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     note.hidden = true;
     var idx = (stopData && selectedStop) ? stopData.indexOf(selectedStop) : -1;
     if (selectedStop.pm) {
-      note.textContent = 'Arrival times are published for DDOT stops. The People Mover, SMART, and QLINE publish live positions only — see the live vehicles below.';
+      note.textContent = 'Arrival times are published for DDOT stops. The People Mover and QLINE publish live positions only — see the live vehicles below.';
       note.hidden = false;
       return;
     }
@@ -5148,7 +5160,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
         note.hidden = false;
         return;
       }
-      note.textContent = 'Arrival times are published for DDOT stops. SMART and QLINE publish live positions only — see the live vehicles below.';
+      note.textContent = 'SMART live times are not reporting for this stop right now — see the live vehicles below.';
       note.hidden = false;
       return;
     }
@@ -10021,10 +10033,11 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     return busSlots.length;
   }
 
-  // SMART display payload (reactivation, 2026-10-15): the builder
-  // publishes SMART vehicles separately (live-data/smart-display.json)
-  // because the Swiftly license is display-only — SMART vehicles are
-  // never part of the vehicles.json contract. Fetched on the same poll
+  // SMART display payload (reactivation, 2026-10-15; FULL INTEGRATION
+  // superseded the split 2026-11-11): SMART vehicles are part of the
+  // vehicles.json contract now, merged by the builder with full
+  // attribution; smart-display.json keeps publishing as the age-UI
+  // source and the pre-integration fallback merge. Fetched on the same poll
   // cycle as the main envelope; resolves null on any failure so a SMART
   // outage can never fail or delay-mark the DDOT/QLINE poll.
   // === DATA-PLANE-BEGIN (split 2026-11-10; fresher-copy rule 2026-11-11) ===
@@ -10058,7 +10071,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     function attempt(base) {
       var ctrl = new AbortController();
       var timer = setTimeout(function () { ctrl.abort(); }, timeoutMs);
-      return fetch(base + '/' + name, { cache: 'no-store', signal: ctrl.signal })
+      return fetch(base + '/' + name + '?_=' + Date.now(), { cache: 'no-store', signal: ctrl.signal }) // #18: cache-bust parity with 2D — Pages max-age=600 otherwise serves stale copies ahead of the fresher-copy rule
         .then(function (r) { clearTimeout(timer); if (!r.ok) throw new Error('http ' + r.status); return r.json(); },
               function (e) { clearTimeout(timer); throw e; });
     }
@@ -10118,16 +10131,24 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
         return fetchSmartDisplay(proxy).then(function (s) {
           smartAge = computeSmartAge(s, Date.now());
           ensureSmartHeadsigns(proxy);
-          var sv = smartDisplayVehicles(s, Date.now());
+          // FULL INTEGRATION (2026-11-11): vehicles.json carries SMART
+          // merged by the builder, with attribution. The display-payload
+          // merge remains ONLY as the fallback for a pre-integration
+          // payload — never both (no double-count).
+          var smartIntegrated = d.vehicles.some(function (v) { return v && v.agency === 'smart'; });
+          var sv = smartIntegrated ? [] : smartDisplayVehicles(s, Date.now());
           if (sv.length) d.vehicles = d.vehicles.concat(sv);
-          // SMART trip updates ride the same cycle (deployed
-          // 2026-10-17). Display-only ingest for SMART stop cards;
-          // the result is never merged into d.vehicles or any state
-          // the planner reads.
-          return fetchSmartTripUpdates(proxy).then(function (t) {
+          // Trip updates + adherence feed stop cards only; they no
+          // longer gate this poll's paint (#18 — the 3.6 MB TU leg
+          // used to hold the DDOT/QLINE paint hostage). Both ingest
+          // in the background; a failure leaves the prior state.
+          fetchSmartTripUpdates(proxy).then(function (t) {
             ingestSmartTripUpdates(t, Date.now());
-            return d;
           });
+          fetchLiveJsonOrNull('adherence.json', 8000).then(function (a) {
+            if (a && a.smart && a.smart.trips) smartAdherenceTrips = a.smart.trips;
+          });
+          return d;
         });
       })
       .then(function (d) {

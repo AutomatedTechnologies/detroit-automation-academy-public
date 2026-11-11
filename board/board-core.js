@@ -91,6 +91,13 @@ export function buildRegistry(ddot, smart, qline) {
     (data.stops || []).forEach(function (s) {
       var rec = { id: s.id, n: s.n || '', x: s.x, z: s.z, r: (s.r || []).map(String),
                   pm: !!s.pm, seg: seg, idx: stops.length };
+      /* FULL INTEGRATION #13 (2026-11-11): the 46 SMARTGTFS stops the
+         2026-11-05 registry tranche appended to the QLINE file are
+         SMART stops — segment follows the record, not the source
+         file, so they take the SMART branch (live times) instead of
+         presenting as QLINE. No index moves: idx is assigned in the
+         same merge order as before. */
+      if (seg !== 'smart' && typeof s.id === 'string' && s.id.indexOf('SMARTGTFS:') === 0) rec.seg = 'smart';
       stops.push(rec);
     });
   }
@@ -404,9 +411,9 @@ export function formatClock12Detroit(ms) {
  * departure's headsign) outranks proximity; on the direction path, a
  * vehicle still short of the stop (approaching) outranks one past it;
  * ties break on fresher fix, then vehicle_id. Returns null when no
- * vehicle qualifies — SMART display records carry no route_id, so
- * SMART chips resolve null by construction (positions only, as the
- * board already states). */
+ * vehicle qualifies. (FULL INTEGRATION, 2026-11-11: SMART vehicles
+ * ride vehicles.json with route_id + destination, so SMART chips
+ * resolve through this same path.) */
 export var LIVE_ENDPOINT_STALE_MS = 15 * 60 * 1000;
 
 /* Along-line position of a projected point on one path (array of
