@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:b1204fb30ae80e70d2319f65a9763a3a0eabd3270c0076753dca0c0fc0b79798",
+    "stateFingerprint": "sha256:5c6bd53c1c5ae1c70c45afd7557b445e525a6576b0d610df08e33b1914a3b980",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 7,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-07",
   "counts": {
     "apps": 11,
-    "builds": 28,
+    "builds": 29,
     "catalog_state": 10,
     "audits": 1,
     "findings": 17,
@@ -278,23 +278,23 @@
       "description": "Distro is the Detroit Automation Academy's native application-store app for macOS High Sierra: it browses the Academy catalog, downloads Academy-maintained apps from the AutomatedTechnologies GitHub org, verifies every download by SHA-256 before install, and carries no privileged helper. Prepared at DAADV3 T1 codification (2026-11-07); not yet published — publication remains gated on Distro tranche D-T5. Disassembled. Scanned. Recompiled. Distro distributes only apps carrying the Academy audit entry in their plist — proof of the Academy pipeline. distro-test-17 applies the SDS-9 liquid-glass cues to the store chrome: layered tint depth, the glass hairline pair on the dividers and sheet edges, capsule state controls, and the status word in a capsule chip — flat tints only, no behavior change.\n\n© 2026 Detroit Automation Academy / Automated Technologies. All rights reserved. Detroit Automation Academy, Automated Technologies, Distro, Workbench, Live Transit Detroit, The Signal, and the Academy monochrome logo are marks of the Academy, used under the founder's permission. Academy-original works are licensed under the Academy License (revocable); upstream open-source components remain under their own licenses. distro-test-22 adds Update All: when updates are pending, one button runs them sequentially — each app still verified by SHA-256 and the audit gate on its own — and ends with a single summary. The detail pane now shows build notes for the catalog version and the installed app's file path. Catalog fetches now bypass HTTP caches, so Refresh always returns the current catalog.",
       "catalogStatus": "release-candidate",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/distro.png",
-      "buildNotes": "Deep links (DISTRO-DL1, Distro files/24): Distro now answers academy-distro://app/<catalog-id> links by opening that app's detail pane — the route Muse's markdown fallback dialog uses to offer MacDown. A link only selects: it starts no download or install, and an in-flight operation continues undisturbed; an unknown id lands on a status line. A link that arrives at launch is held behind the SDS-8 welcome and applied when the store opens. Everything else stands: the unified registered logo on every surface, the version read from the bundle on the welcome screen, the functional menu bar, SHA-256 verification and the audit gate in DistroInstaller.",
+      "buildNotes": "Pre-flight installs (charter section 6): before Distro places an update, it closes the app if it is running — politely first, force-quit only if the app does not quit, and the install stops untouched if the app still will not quit — and removes the previous version's bundle. Your app data is stored separately from the bundle and is never deleted or moved by an install, so settings and history carry across every update. An app that replaced an earlier product under a different name can declare its predecessor identities, and pre-flight treats a running predecessor and its bundle the same way. Everything else stands: SHA-256 verification and the audit gate in DistroInstaller still run before pre-flight, so an unverified download never disturbs a running app; the unified registered logo, the version read from the bundle on the welcome screen, the functional menu bar, and academy-distro:// deep links all carry over.",
       "audits": [],
       "currentBuild": {
-        "tag": "distro-test-41",
-        "sizeBytes": 741645,
-        "sha256": "d3a2edd84c5eb7d03588d4c277684e30e37d64cee75bbce7dfbd6260a6fd674a",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/distro/releases/download/distro-test-41/Distro-test.zip",
+        "tag": "distro-test-42",
+        "sizeBytes": 744069,
+        "sha256": "770b75f6597fe3b72f67527382109ee20a330b0761ba6f25557d9a4e6229a810",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/distro/releases/download/distro-test-42/Distro-test.zip",
         "floor": "10.13",
         "builtAt": "2026-11-10",
-        "releasePublishedAt": "2026-11-11T00:01:51Z",
-        "ciRun": "42928016709",
+        "releasePublishedAt": "2026-11-11T03:31:30Z",
+        "ciRun": "42953228292",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule); fresh-download plist readback verified 2026-11-10 from a clean single-writer download: CFBundleURLTypes declares the academy-distro scheme; shipped binary carries the DL1 routing selectors; startup-sound.wav byte-identical to the SDS-10 master (distro-test-41, 741,645 B, SHA-256 d3a2edd84c5eb7d03588d4c277684e30e37d64cee75bbce7dfbd6260a6fd674a). Fingerprint corrected by changes/0032 — the value first registered by changes/0030 came from a spliced double download and was wrong."
+          "ref": "bundle-carried audit entry (Distro files/08 rule) earned on the line's standing record; fresh-download plist readback verified 2026-11-10: com.detroitautomationacademy.distro, CFBundleVersion distro-test-42, floor 10.13, audit entry complete (Authority Detroit Automation Academy, Date 2026-11-08, all flags true); shipped binary carries the pre-flight implementation (runPreflightForEntry, closeRunningApplication, forceTerminate, runningApplicationsWithBundleIdentifier, error-17 text) and the predecessorBundleIDs parser (distro-test-42, SHA-256 770b75f6597fe3b72f67527382109ee20a330b0761ba6f25557d9a4e6229a810)"
         }
       }
     },
