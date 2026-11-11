@@ -128,6 +128,7 @@
   .route-chip:hover { border-color: rgba(242,242,242,.4); }
   .filter-btn { display: inline-flex; align-items: center; gap: .5rem; background: rgba(16,16,16,.82); border: 1px solid rgba(118,118,118,.55); color: #F2F2F2; border-radius: 999px; padding: .5rem .95rem; font-size: .82rem; font-weight: 600; cursor: pointer; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); font-family: "Inter", sans-serif; }
   .filter-btn:hover { border-color: #767676; }
+  a.filter-btn { text-decoration: none; }
   .filter-btn .filter-ico { color: #767676; }
   .filter-btn[aria-expanded="true"] { background: #767676; border-color: #767676; color: #101010; }
   .filter-btn[aria-expanded="true"] .filter-ico { color: #101010; }
@@ -758,6 +759,7 @@
           </div>
         </div>
         <div class="bar-actions">
+          <a class="filter-btn" href="/board/" aria-label="Departure board"><span class="filter-ico">▤</span><span class="fb-label">Board</span></a>
           <button class="filter-btn" id="filter-btn" aria-expanded="false" aria-controls="filter-panel"><span class="filter-ico">⧩</span><span class="fb-label">Routes</span></button>
           <button class="filter-btn" id="trip-btn" aria-pressed="false" aria-label="Plan trip"><span class="filter-ico">◈</span><span class="fb-label"><span class="fb-full">Plan trip</span><span class="fb-short" aria-hidden="true">Plan</span></span></button>
           <button class="filter-btn" id="ride-btn" aria-pressed="false" aria-label="Ride along"><span class="filter-ico">◉</span><span class="fb-label"><span class="fb-full">Ride along</span><span class="fb-short" aria-hidden="true">Ride</span></span></button>
