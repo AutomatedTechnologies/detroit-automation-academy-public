@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:e4ccd07eb84905c077cc6c06eb9643bd38f8d9afb9a856113f04f217929e75f9",
+    "stateFingerprint": "sha256:e716ff021da9675993f94cc02abe09280b5d721ac32c773d5a57ac74c0522f39",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 7,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-07",
   "counts": {
     "apps": 11,
-    "builds": 26,
+    "builds": 27,
     "catalog_state": 10,
     "audits": 1,
     "findings": 17,
@@ -300,36 +300,36 @@
     },
     {
       "id": "muse-academy",
-      "displayName": "Muse (Academy Build)",
+      "displayName": "Minion",
       "repoUrl": "https://github.com/AutomatedTechnologies/muse-academy",
       "sourceUrl": "https://github.com/benjaminkitt/muse-desktop",
-      "bundleId": "com.detroitautomationacademy.muse",
+      "bundleId": "com.detroitautomationacademy.minion",
       "category": "Productivity",
       "license": "MIT",
       "kind": "catalog",
       "appStatus": "testing",
       "minMacOS": "10.13",
-      "tagline": "The Muse desktop client, rebuilt by the Academy for High Sierra.",
-      "description": "The Academy's build of the open-source muse-desktop client (MIT, v0.3.0) on Electron 22.3.27 — the last Electron that runs on macOS 10.13 — so Intel High Sierra machines can run a Muse client at all; the official Muse app requires Apple Silicon and a current macOS. Packaged with the Academy monochrome icon. Version 0.4.0 adds the Academy feature layer: repaired window management (no window opens partially off-screen; your window arrangement is restored), up-arrow sent-message history in the message box, markdown downloads that open in MacDown with a consented system-default offer, and — in 0.4.0-academy5 — a genuine Terminal view (View menu, Command-T): the app's own terminal window over the live hosted session. The earlier stylesheet Terminal Skin was rejected by the owner and is deleted outright. academy5 is also the first build under the Academy bundle identity, com.detroitautomationacademy.muse. Unofficial build: not a Meta product and not endorsed by Meta. Unsigned test build. Its icon is cut to the amended SDS-3 construction — white tile and ink glyph, no black field.",
+      "tagline": "The Academy's Muse client for High Sierra — Minion, under its own name and mark.",
+      "description": "Minion is the Academy's build of the open-source muse-desktop client (MIT, v0.3.0) on Electron 22.3.27 — the last Electron that runs on macOS 10.13 — so Intel High Sierra machines can run a Muse client at all; the official Muse app requires Apple Silicon and a current macOS. It was formerly listed as Muse (Academy Build); the owner renamed it Minion on 2026-11-10, and it ships under the Academy bundle identity com.detroitautomationacademy.minion (the earlier upstream-ID carve-out was revoked the same evening: nothing lists without a disassembly and rebuild). Its icon is Minion's registered mark — the scheming side-eye dog — cut to the SDS-3 construction: white tile and ink artwork, no black field, fully monochrome. Version 0.4.0 adds the Academy feature layer: repaired window management (no window opens partially off-screen; your window arrangement is restored), up-arrow sent-message history in the message box, markdown downloads that open in MacDown with a consented system-default offer, and a genuine Terminal view (View menu, Command-T): the app's own terminal window over the live hosted session. The earlier stylesheet Terminal Skin was rejected by the owner and is deleted outright. Unofficial build: not a Meta product and not endorsed by Meta. Unsigned test build.",
       "catalogStatus": "testing",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/muse-academy.png",
-      "buildNotes": "The genuine Terminal build. The rejected Terminal Skin is deleted outright — no stylesheet, no toggle, stock hosted UI untouched — and in its place a real Terminal view (View menu, Command-T): the app's own terminal window, with a scrollback and a proper text field on the minion ❯ prompt line. What you type is sent to Minion through the app's live hosted session and the reply streams back as the hosted conversation renders it. Local commands: /clear, /help, /view. This is also the first build under the Academy bundle identity (com.detroitautomationacademy.muse) — the owner revoked the old upstream-ID carve-out — so macOS treats it as a new app and a fresh sign-in is expected on first launch; your message history and preferences carry over. Markdown routing, the consented system default, window repair, up-arrow history, SDS-8 welcome and SDS-10 identity stand from academy4. Runtime verdict is the owner's, at the Air sitting.",
+      "buildNotes": "Minion. The app formerly listed here as Muse (Academy Build) has its own name now, its own icon, and its own Academy identity — renamed on the owner's directive of 2026-11-10. It ships as Minion under com.detroitautomationacademy.minion, and its icon is Minion's own mark: the scheming side-eye dog, rendered to the Academy monochrome standard (white tile, ink artwork, no black field). Everything from the previous build stands: the genuine Terminal view (View menu, Command-T) over the live hosted session, markdown routing to MacDown with the consented system default, window repair, up-arrow message history, the SDS-8 welcome. Because the bundle identity is new, macOS treats Minion as a new app — expect to sign in again on first launch; your message history and preferences carry over, because the app's data folder did not move. Unsigned test build; the runtime verdict is the owner's, at the Air sitting.",
       "audits": [],
       "currentBuild": {
-        "tag": "0.4.0-academy5",
-        "sizeBytes": 91916219,
-        "sha256": "1edf456f6e9d5061b369276803cd24c689f233b18e2b970970cc9a6b5ae1d670",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/muse-academy/releases/download/muse-academy-0.4.0-academy5/Muse-Academy-1013-x64.zip",
+        "tag": "0.4.0-minion1",
+        "sizeBytes": 92266514,
+        "sha256": "e294360f94cd615246bfd355dfb59d46b98588f46053fb745bed31241b078d62",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/muse-academy/releases/download/muse-academy-0.4.0-minion1/Muse-Academy-1013-x64.zip",
         "floor": "10.13",
         "builtAt": "2026-11-10",
-        "releasePublishedAt": "2026-11-11T02:31:11Z",
-        "ciRun": "42946493382",
+        "releasePublishedAt": "2026-11-11T03:03:03Z",
+        "ciRun": "42950037603",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule) earned on the line's actual provenance: upstream muse-desktop v0.3.0 layer + stock Electron 22.3.27 distribution disassembled and scanned (files/19 sections 2-9), app recompiled in CI from the pinned distribution + Academy layer; fresh-download plist readback verified 2026-11-10 (com.detroitautomationacademy.muse, 0.4.0, floor 10.13, audit + SDS-10 conformance complete, all four clauses true); NO terminal-skin.css in the artifact; terminal.html + terminal-preload.cjs present; build label 0.4.0-academy5 in shipped main.cjs; Mach-O census 16; startup sound byte-identical to the estate master"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) earned on THIS pass's record (Distro files/26): per-file SHA-256 manifests of the served academy4 + academy5 artifacts; app-layer endpoint census (only https://muse.ai); file-by-file diffs academy4->academy5->minion1 (rename set only; Electron payload byte-identical); the line's standing dissection/scan record (files/06, files/19 sections 2-10) for the upstream muse-desktop v0.3.0 layer + pinned Electron 22.3.27 distribution; CI reassembly from the pinned distribution + Academy layer, test suite 42/42; fresh-download readback verified 2026-11-10 (Minion / com.detroitautomationacademy.minion, 0.4.0, floor 10.13, audit + SDS-10 conformance complete); icon.icns byte-identical to the built monochrome master; Mach-O census 16; startup sound byte-identical to the estate master"
         }
       }
     },
