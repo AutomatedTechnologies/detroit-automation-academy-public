@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:5c6bd53c1c5ae1c70c45afd7557b445e525a6576b0d610df08e33b1914a3b980",
+    "stateFingerprint": "sha256:25a612c0f90cab536b5a61cfc89a6005ac8bcde1b0f188ed84b5094afc0f6d01",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 7,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-07",
   "counts": {
     "apps": 11,
-    "builds": 29,
+    "builds": 30,
     "catalog_state": 10,
     "audits": 1,
     "findings": 17,
@@ -310,26 +310,26 @@
       "appStatus": "testing",
       "minMacOS": "10.13",
       "tagline": "The Academy's Muse client for High Sierra — Minion, under its own name and mark.",
-      "description": "Minion is the Academy's build of the open-source muse-desktop client (MIT, v0.3.0) on Electron 22.3.27 — the last Electron that runs on macOS 10.13 — so Intel High Sierra machines can run a Muse client at all; the official Muse app requires Apple Silicon and a current macOS. It is the renamed successor of Muse (Academy Build): its declared predecessor is Muse (Academy Build), bundle ai.muse.desktop, which an install of Minion supersedes. The owner renamed it Minion on 2026-11-10, and it ships under the Academy bundle identity com.detroitautomationacademy.minion (the earlier upstream-ID carve-out was revoked the same evening: nothing lists without a disassembly and rebuild). Its icon is Minion's registered mark — the scheming side-eye dog — cut to the SDS-3 construction: white tile and ink artwork, no black field, fully monochrome. App data is stored separately, outside the bundle, at ~/Library/Application Support/com.detroitautomationacademy.minion; the previous version's data stays untouched under its own location. Version 0.4.0 adds the Academy feature layer: repaired window management (no window opens partially off-screen; your window arrangement is restored), up-arrow sent-message history in the message box, markdown downloads that open in MacDown with a consented system-default offer, and a genuine Terminal view (View menu, Command-T): the app's own terminal window over the live hosted session. The earlier stylesheet Terminal Skin was rejected by the owner and is deleted outright. Unofficial build: not a Meta product and not endorsed by Meta. Unsigned test build.",
+      "description": "Minion is the Academy's build of the open-source muse-desktop client (MIT, v0.3.0) on Electron 22.3.27 — the last Electron that runs on macOS 10.13 — so Intel High Sierra machines can run a Muse client at all; the official Muse app requires Apple Silicon and a current macOS. It is the renamed successor of Muse (Academy Build): its declared predecessor is Muse (Academy Build), bundle ai.muse.desktop, which an install of Minion supersedes. The owner renamed it Minion on 2026-11-10, and it ships under the Academy bundle identity com.detroitautomationacademy.minion (the earlier upstream-ID carve-out was revoked the same evening: nothing lists without a disassembly and rebuild). Its icon is Minion's registered mark — the scheming side-eye dog — cut to the SDS-3 construction: white tile and ink artwork, no black field, fully monochrome. App data is stored separately, outside the bundle, at ~/Library/Application Support/com.detroitautomationacademy.minion; the previous version's data stays untouched under its own location. Version 0.4.0 adds the Academy feature layer: repaired window management (no window opens partially off-screen; your window arrangement is restored), up-arrow sent-message history in the message box, markdown downloads that open in MacDown with a consented system-default offer, and a genuine Terminal view (View menu, Command-T): the app's own terminal window over the live hosted session. The window title bar reads Minion, and the app presents dark by default (View → Appearance records an explicit Dark / Light / System choice, which later launches honor). The earlier stylesheet Terminal Skin was rejected by the owner and is deleted outright. Unofficial build: not a Meta product and not endorsed by Meta. Unsigned test build.",
       "catalogStatus": "testing",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/muse-academy.png",
-      "buildNotes": "Minion — the renamed successor of Muse (Academy Build). PREDECESSOR: Minion replaces Muse (Academy Build), bundle ai.muse.desktop — that is the previous version an install of Minion supersedes. App data is stored separately: Minion keeps no user data inside the app bundle; its data lives at ~/Library/Application Support/com.detroitautomationacademy.minion, a fresh location under the new bundle identity. The previous version's data remains untouched at ~/Library/Application Support/Muse, and removing either version's bundle never touches either data store — expect a fresh sign-in and a fresh start in Minion; nothing is migrated. The icon is Minion's own mark: the scheming side-eye dog, rendered to the Academy monochrome standard (white tile, ink artwork, no black field). Everything else stands from the previous builds: the genuine Terminal view (View menu, Command-T) over the live hosted session, markdown routing to MacDown with the consented system default, window repair, up-arrow message history (kept in Minion's own data store), the SDS-8 welcome. Unsigned test build; the runtime verdict is the owner's, at the Air sitting.",
+      "buildNotes": "Minion — the renamed successor of Muse (Academy Build). PREDECESSOR: Minion replaces Muse (Academy Build), bundle ai.muse.desktop — that is the previous version an install of Minion supersedes. App data is stored separately: Minion keeps no user data inside the app bundle; its data lives at ~/Library/Application Support/com.detroitautomationacademy.minion, a fresh location under the new bundle identity. The previous version's data remains untouched at ~/Library/Application Support/Muse, and removing either version's bundle never touches either data store — expect a fresh sign-in and a fresh start in Minion; nothing is migrated. The icon is Minion's own mark: the scheming side-eye dog, rendered to the Academy monochrome standard (white tile, ink artwork, no black field). New in 0.4.0-minion3: the window title bar reads Minion (the hosted page's own title no longer replaces the app's name in the title bar), and the app presents dark by default — a fresh profile opens dark; View → Appearance (Dark / Light / System) records your explicit choice and later launches honor it. Everything else stands from the previous builds: the genuine Terminal view (View menu, Command-T) over the live hosted session, markdown routing to MacDown with the consented system default, window repair, up-arrow message history (kept in Minion's own data store), the SDS-8 welcome. Unsigned test build; the runtime verdict is the owner's, at the Air sitting.",
       "audits": [],
       "currentBuild": {
-        "tag": "0.4.0-minion2",
-        "sizeBytes": 92267070,
-        "sha256": "e45759747f59ab749b227bd582633b96335dea14a0100e34165331529b12656c",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/muse-academy/releases/download/muse-academy-0.4.0-minion2/Muse-Academy-1013-x64.zip",
+        "tag": "0.4.0-minion3",
+        "sizeBytes": 92268423,
+        "sha256": "266d053c2f61e574c22f17bf7e6fd1fd0fb48e987ee34d4e6be7be98d2279c7c",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/muse-academy/releases/download/muse-academy-0.4.0-minion3/Muse-Academy-1013-x64.zip",
         "floor": "10.13",
         "builtAt": "2026-11-10",
-        "releasePublishedAt": "2026-11-11T03:26:31Z",
-        "ciRun": "42952712996",
+        "releasePublishedAt": "2026-11-11T03:51:07Z",
+        "ciRun": "42955361127",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule) on the changes/0034 scope (Distro files/26: manifests, endpoint census, diff discipline, standing dissection record) plus THIS pass (Distro files/27): source + artifact diff minion1->minion2 limited to main.cjs / academy.cjs / INSTALL.txt; the bundle-ID userData pin read back from the shipped artifact (old pin absent); test suite 43/43 incl. the data-separation group; fresh-download plist readback verified 2026-11-10 (Minion / com.detroitautomationacademy.minion, 0.4.0, floor 10.13, audit + SDS-10 conformance complete); icon byte-identical to the monochrome master; Mach-O census 16"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) on the changes/0034 scope (Distro files/26: manifests, endpoint census, diff discipline, standing dissection record) plus THIS pass (Distro files/28): source + artifact diff minion2->minion3 limited to main.cjs / academy.cjs / INSTALL.txt (assembler docstring, workflow release step and the test suite carry no shipped code); the title pin (page-title-updated refused, setTitle Minion) and the nativeTheme appearance application (themeSource = stored choice, dark while unset) read back from the shipped artifact; test suite 44/44 incl. the minion3 appearance group and both-launch stubbed-shell behavior; fresh-download plist readback verified 2026-11-10 (Minion / com.detroitautomationacademy.minion, 0.4.0, floor 10.13, audit + SDS-10 conformance complete); startup sound byte-identical to the SDS-10 master; icon byte-identical to the monochrome master; Mach-O census 16; no terminal-skin.css"
         }
       }
     },
