@@ -10027,31 +10027,70 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   // never part of the vehicles.json contract. Fetched on the same poll
   // cycle as the main envelope; resolves null on any failure so a SMART
   // outage can never fail or delay-mark the DDOT/QLINE poll.
+  // === DATA-PLANE-BEGIN (split 2026-11-10) ===
+  // Primary source: the detroit-live-data Pages origin (the page sets
+  // window.FORGE_LIVE_DATA_URL to it). Fallback: this site's own
+  // live-data/ archive (window.FORGE_LIVE_DATA_FALLBACK). fetchLiveJson
+  // fetches the primary; on failure, or when its generated_at is older
+  // than the 20-minute freshness bound, it fetches the fallback and
+  // resolves with whichever copy carries the later generated_at. An
+  // envelope with no generated_at is taken at face value. Rejects only
+  // when every source failed. The degradation notice below reads the
+  // chosen envelope exactly as before.
+  var LIVE_FRESH_MS = 20 * 60 * 1000;
+  function liveBases() {
+    var p = (window.FORGE_LIVE_DATA_URL || '').replace(/\/$/, '');
+    var f = (window.FORGE_LIVE_DATA_FALLBACK || '').replace(/\/$/, '');
+    return { primary: p, fallback: (f && f !== p) ? f : '' };
+  }
+  function envelopeGenMs(d) {
+    var t = d ? Date.parse(d.generated_at || '') : NaN;
+    return isNaN(t) ? null : t;
+  }
+  function fetchLiveJson(name, timeoutMs) {
+    var bases = liveBases();
+    if (!bases.primary) return Promise.reject(new Error('no live base'));
+    function attempt(base) {
+      var ctrl = new AbortController();
+      var timer = setTimeout(function () { ctrl.abort(); }, timeoutMs);
+      return fetch(base + '/' + name, { cache: 'no-store', signal: ctrl.signal })
+        .then(function (r) { clearTimeout(timer); if (!r.ok) throw new Error('http ' + r.status); return r.json(); },
+              function (e) { clearTimeout(timer); throw e; });
+    }
+    return attempt(bases.primary).then(function (d1) {
+      var g1 = envelopeGenMs(d1);
+      var stale = g1 !== null && (Date.now() - g1) > LIVE_FRESH_MS;
+      if (!stale || !bases.fallback) return d1;
+      return attempt(bases.fallback).then(function (d2) {
+        var g2 = envelopeGenMs(d2);
+        return (g2 !== null && (g1 === null || g2 > g1)) ? d2 : d1;
+      }, function () { return d1; });
+    }, function (e1) {
+      if (!bases.fallback) throw e1;
+      return attempt(bases.fallback);
+    });
+  }
+  // Null-on-failure variant for the SMART display legs, preserving
+  // their standing contract: a SMART outage never fails the poll.
+  function fetchLiveJsonOrNull(name, timeoutMs) {
+    return fetchLiveJson(name, timeoutMs).then(
+      function (d) { return d; }, function () { return null; });
+  }
+  // === DATA-PLANE-END ===
+
   function fetchSmartDisplay(proxy) {
-    var ctrl = new AbortController();
-    var timer = setTimeout(function () { ctrl.abort(); }, 8000);
-    return fetch(proxy + '/smart-display.json', { cache: 'no-store', signal: ctrl.signal })
-      .then(function (r) { clearTimeout(timer); return r.ok ? r.json() : null; },
-            function () { clearTimeout(timer); return null; });
+    return fetchLiveJsonOrNull('smart-display.json', 8000);
   }
   // SMART trip-updates payload (deployed 2026-10-17): fetched
   // on the same poll cycle as the display payload; resolves null on
   // any failure so a trip-updates outage can never fail the poll.
   function fetchSmartTripUpdates(proxy) {
-    var ctrl = new AbortController();
-    var timer = setTimeout(function () { ctrl.abort(); }, 8000);
-    return fetch(proxy + '/smart-trip-updates.json', { cache: 'no-store', signal: ctrl.signal })
-      .then(function (r) { clearTimeout(timer); return r.ok ? r.json() : null; },
-            function () { clearTimeout(timer); return null; });
+    return fetchLiveJsonOrNull('smart-trip-updates.json', 8000);
   }
   function poll() {
     var proxy = (window.FORGE_LIVE_DATA_URL || '').replace(/\/$/, '');
     if (!proxy) { setHeader(null, 'connecting…', false); return; }
-    var ctrl = new AbortController();
-    var timer = setTimeout(function () { ctrl.abort(); }, 20000);
-    fetch(proxy + '/vehicles.json', { cache: 'no-store', signal: ctrl.signal })
-      .then(function (r) { clearTimeout(timer); if (!r.ok) throw new Error('http ' + r.status); return r.json(); },
-            function (e) { clearTimeout(timer); throw e; })
+    fetchLiveJson('vehicles.json', 20000)
       .then(function (d) {
         if (!d || !Array.isArray(d.vehicles)) throw new Error('bad payload');
         // SMART (reactivated 2026-10-15) joins here: the display
@@ -10778,11 +10817,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   function pollAlerts() {
     var proxy = (window.FORGE_LIVE_DATA_URL || '').replace(/\/$/, '');
     if (!proxy) return;
-    var ctrl = new AbortController();
-    var timer = setTimeout(function () { ctrl.abort(); }, 15000);
-    fetch(proxy + '/alerts.json', { cache: 'no-store', signal: ctrl.signal })
-      .then(function (r) { clearTimeout(timer); if (!r.ok) throw new Error('http ' + r.status); return r.json(); },
-            function (e) { clearTimeout(timer); throw e; })
+    fetchLiveJson('alerts.json', 15000)
       .then(function (d) {
         if (!d || !Array.isArray(d.alerts)) throw new Error('bad payload');
         // SMART service alerts are not published to this feed: the
