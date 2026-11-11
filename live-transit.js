@@ -10027,17 +10027,22 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   // never part of the vehicles.json contract. Fetched on the same poll
   // cycle as the main envelope; resolves null on any failure so a SMART
   // outage can never fail or delay-mark the DDOT/QLINE poll.
-  // === DATA-PLANE-BEGIN (split 2026-11-10) ===
+  // === DATA-PLANE-BEGIN (split 2026-11-10; fresher-copy rule 2026-11-11) ===
   // Primary source: the detroit-live-data Pages origin (the page sets
   // window.FORGE_LIVE_DATA_URL to it). Fallback: this site's own
   // live-data/ archive (window.FORGE_LIVE_DATA_FALLBACK). fetchLiveJson
-  // fetches the primary; on failure, or when its generated_at is older
-  // than the 20-minute freshness bound, it fetches the fallback and
-  // resolves with whichever copy carries the later generated_at. An
-  // envelope with no generated_at is taken at face value. Rejects only
-  // when every source failed. The degradation notice below reads the
+  // fetches BOTH origins on every call and resolves with whichever copy
+  // carries the later generated_at; a failure on either side degrades to
+  // the other, and it rejects only when every source failed. An envelope
+  // with no generated_at yields to a dated copy; two undated copies
+  // resolve to the primary. The degradation notice below reads the
   // chosen envelope exactly as before.
-  var LIVE_FRESH_MS = 20 * 60 * 1000;
+  // History: the original split rule returned the primary whenever its
+  // age was under a 20-minute bound, without ever consulting the
+  // fallback — so a laggard primary (or a same-origin-only session) was
+  // shown even while a fresher copy existed. Field report 2026-11-11:
+  // the Departure Board showed ~14-minute-old positions while the data
+  // origin served a ~2-minute-old copy.
   function liveBases() {
     var p = (window.FORGE_LIVE_DATA_URL || '').replace(/\/$/, '');
     var f = (window.FORGE_LIVE_DATA_FALLBACK || '').replace(/\/$/, '');
@@ -10057,17 +10062,26 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
         .then(function (r) { clearTimeout(timer); if (!r.ok) throw new Error('http ' + r.status); return r.json(); },
               function (e) { clearTimeout(timer); throw e; });
     }
-    return attempt(bases.primary).then(function (d1) {
-      var g1 = envelopeGenMs(d1);
-      var stale = g1 !== null && (Date.now() - g1) > LIVE_FRESH_MS;
-      if (!stale || !bases.fallback) return d1;
-      return attempt(bases.fallback).then(function (d2) {
-        var g2 = envelopeGenMs(d2);
-        return (g2 !== null && (g1 === null || g2 > g1)) ? d2 : d1;
-      }, function () { return d1; });
-    }, function (e1) {
-      if (!bases.fallback) throw e1;
-      return attempt(bases.fallback);
+    function wrap(p) {
+      return p.then(function (d) { return { d: d }; }, function (e) { return { e: e }; });
+    }
+    var p1 = wrap(attempt(bases.primary));
+    if (!bases.fallback) {
+      return p1.then(function (r) { if (r.e) throw r.e; return r.d; });
+    }
+    var p2 = wrap(attempt(bases.fallback));
+    return Promise.all([p1, p2]).then(function (rs) {
+      var r1 = rs[0], r2 = rs[1];
+      if (r1.d && r2.d) {
+        var g1 = envelopeGenMs(r1.d), g2 = envelopeGenMs(r2.d);
+        if (g1 === null && g2 === null) return r1.d;
+        if (g1 === null) return r2.d;
+        if (g2 === null) return r1.d;
+        return g2 > g1 ? r2.d : r1.d;
+      }
+      if (r1.d) return r1.d;
+      if (r2.d) return r2.d;
+      throw r1.e || r2.e || new Error('all live sources failed');
     });
   }
   // Null-on-failure variant for the SMART display legs, preserving
