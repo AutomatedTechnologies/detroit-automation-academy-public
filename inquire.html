@@ -96,7 +96,7 @@
         <input type="text" name="company_url" tabindex="-1" autocomplete="off">
       </label>
       <button type="submit" class="btn btn-primary">Send inquiry</button>
-      <p class="inq-status" id="inquiryStatus">Prefer email? Write to <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a> — every inquiry is read.</p>
+      <p class="inq-status" id="inquiryStatus">Prefer email? Write to <a href="mailto:detroit@muse.ai">detroit@muse.ai</a> — every inquiry is read.</p>
     </form>
   </div>
 
@@ -110,7 +110,7 @@
       <img src="/assets/logo.webp" alt="" class="brand-mark">
       <span>Detroit Automation Academy</span>
     </div>
-    <p class="footer-fine">Southfield, Michigan · <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a></p>
+    <p class="footer-fine">Southfield, Michigan · <a href="mailto:detroit@muse.ai">detroit@muse.ai</a></p>
     <nav class="footer-groups" aria-label="Site">
       <div class="footer-group">
         <h3>Ride</h3>
@@ -130,7 +130,7 @@
         <p class="footer-fine"><a href="/dashboard.html">Status</a> · <a href="/terms.html">Terms of Service</a> · <a href="/privacy.html">Privacy Policy</a> · <a href="/live-transit/terms/">Live Transit Terms</a></p>
       </div>
     </nav>
-    <p class="footer-fine"><a href="/find.html">Find</a> (search) · <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a></p>
+    <p class="footer-fine"><a href="/find.html">Find</a> (search) · <a href="mailto:detroit@muse.ai">detroit@muse.ai</a></p>
     <p class="footer-fine">© 2026 AutomatedTechnologies d/b/a Detroit Automation Academy</p>
     <p class="footer-fine">© 2026 Detroit Automation Academy / Automated Technologies. All rights reserved. Detroit Automation Academy, Automated Technologies, Distro, Workbench, Live Transit Detroit, The Signal, and the Academy monochrome logo are marks of the Academy, used under the founder's permission. Academy-original works are licensed under the Academy License (revocable); upstream open-source components remain under their own licenses.</p>
   </div>
@@ -167,8 +167,8 @@
         'Name: ' + data.name + '\nOrganization: ' + (data.organization || '(none)') +
         '\nEmail: ' + data.email + '\n\n' + data.message);
       status.innerHTML = 'Opening your email with the inquiry pre-written — ' +
-        'or copy it to <a href="mailto:justin@detroitautomationacademy.com">justin@detroitautomationacademy.com</a>.';
-      window.location.href = 'mailto:justin@detroitautomationacademy.com?subject=' + subject + '&body=' + body;
+        'or copy it to <a href="mailto:detroit@muse.ai">detroit@muse.ai</a>.';
+      window.location.href = 'mailto:detroit@muse.ai?subject=' + subject + '&body=' + body;
     }
     if (!INQUIRY_ENDPOINT) { viaEmail(); return; }
     status.textContent = 'Sending…';
@@ -178,7 +178,7 @@
       body: JSON.stringify(data)
     }).then(function (r) {
       if (!r.ok) throw new Error('send failed');
-      status.textContent = 'Received — thank you. We reply from a human inbox; if two business days pass without an answer, write to smit4786@gmail.com and say so.';
+      status.textContent = 'Received — thank you. We reply from a human inbox; if two business days pass without an answer, write to detroit@muse.ai and say so.';
       form.reset();
     }).catch(viaEmail);
   });
