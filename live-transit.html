@@ -1119,13 +1119,21 @@
 </footer>
 
 <script>
-  // Live feed base (2026-10-15 migration): the page's two feed fetches
-  // resolve under this base as live-data/vehicles.json and
-  // live-data/alerts.json — static files in this repo, republished on
-  // a 5-minute cadence by the live-feed GitHub Actions workflow. The
-  // variable name is retained from the Netlify proxy era; that proxy
-  // was quota-paused on 2026-10-15 and is no longer consumed.
-  window.FORGE_LIVE_DATA_URL = "https://www.detroitautomationacademy.com/live-data";
+  // Live feed bases (data-plane split, 2026-11-10): live data is
+  // served primarily from the detroit-live-data repo's Pages origin —
+  // a tiny repo whose deploys never queue behind this site's full
+  // build (the 2026-11-10 check-797 lag: served data ~25 min behind
+  // a healthy chain, 7th episode). The VM feed-publisher mirrors the
+  // identical payload set there every cycle; this site's own
+  // live-data/ copy remains the archive and the fallback. The JS
+  // fetch layer (fetchLiveJson in live-transit.js) takes the primary
+  // first and, when it fails or runs stale past 20 minutes, the
+  // fresher of the two copies by generated_at. Rollback: point
+  // FORGE_LIVE_DATA_URL back at the fallback base below.
+  // The variable name is retained from the Netlify proxy era; that
+  // proxy was quota-paused on 2026-10-15 and is no longer consumed.
+  window.FORGE_LIVE_DATA_URL = "https://automatedtechnologies.github.io/detroit-live-data/live-data";
+  window.FORGE_LIVE_DATA_FALLBACK = "https://www.detroitautomationacademy.com/live-data";
 </script>
 <script src="ride-along.js?v=20261019-1228"></script>
 <script>
