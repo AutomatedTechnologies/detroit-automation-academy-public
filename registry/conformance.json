@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:a3a90191b04ec967db2ce6632520e00e9b2797e830db966e5f6f48bf81661d5d",
+    "stateFingerprint": "sha256:686ba195572a6e298c883c16c9b667f072886677e24985e5ad3eee15a4e7b632",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 7,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-07",
   "counts": {
     "apps": 11,
-    "builds": 31,
+    "builds": 32,
     "catalog_state": 10,
     "audits": 1,
     "findings": 17,
@@ -310,26 +310,26 @@
       "appStatus": "testing",
       "minMacOS": "10.13",
       "tagline": "The Academy's Minion client for High Sierra — under its own name and mark.",
-      "description": "Minion is the Detroit Automation Academy's desktop client for Intel Macs running macOS High Sierra (10.13), assembled on Electron 22.3.27 — the last Electron that runs on macOS 10.13 — so High Sierra machines can run a client at all; the official client for the hosted service requires Apple Silicon and a current macOS. Minion ships under the Academy bundle identity com.detroitautomationacademy.minion, under its own name and its own mark: the scheming side-eye dog, cut to the SDS-3 construction — white tile and ink artwork, no black field, fully monochrome. Version 0.4.1 is identified by version alone. App data is stored separately, outside the bundle, at ~/Library/Application Support/com.detroitautomationacademy.minion. The feature layer: repaired window management (no window opens partially off-screen; your window arrangement is restored), up-arrow sent-message history in the message box, markdown downloads that open in MacDown with a consented system-default offer, and a genuine Terminal view (View menu, Command-T): the app's own terminal window over the live hosted session. The window title bar reads Minion, and the app presents dark by default (View → Appearance records an explicit Dark / Light / System choice, which later launches honor). Unofficial build: not a Meta product and not endorsed by Meta. Unsigned test build.",
+      "description": "Minion is the Detroit Automation Academy's desktop client for Intel Macs running macOS High Sierra (10.13), assembled on Electron 22.3.27 — the last Electron that runs on macOS 10.13 — so High Sierra machines can run a client at all; the official client for the hosted service requires Apple Silicon and a current macOS. Minion ships under the Academy bundle identity com.detroitautomationacademy.minion, under its own name and its own mark: the scheming side-eye dog, cut to the SDS-3 construction — white tile and ink artwork, no black field, fully monochrome. Version 0.4.2 is identified by version alone. App data is stored separately, outside the bundle, at ~/Library/Application Support/com.detroitautomationacademy.minion. The feature layer: repaired window management (no window opens partially off-screen; your window arrangement is restored), up-arrow sent-message history in the message box, markdown downloads that open in MacDown with a consented system-default offer, and a genuine Terminal view (View menu, Command-T): the app's own terminal window over the live hosted session. The window title bar reads Minion, and the app presents dark by default (View → Appearance records an explicit Dark / Light / System choice, which later launches honor). Unofficial build: not a Meta product and not endorsed by Meta. Unsigned test build.",
       "catalogStatus": "testing",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/minion.png",
-      "buildNotes": "Minion 0.4.1 — identified by version alone. The rename is total (owner ruling 2026-11-11): this build renames every naming string carried from the app's earlier identity — the load-failure dialog, the Terminal view's messages, the stored history keys, and the session partition all read Minion — so expect a fresh sign-in and empty message recall on first launch; nothing is migrated. App data is stored separately: Minion keeps no user data inside the app bundle; its data lives at ~/Library/Application Support/com.detroitautomationacademy.minion. The icon is Minion's own mark: the scheming side-eye dog, rendered to the Academy monochrome standard (white tile, ink artwork, no black field). The window title bar reads Minion, and the app presents dark by default — a fresh profile opens dark; View → Appearance (Dark / Light / System) records your explicit choice and later launches honor it. Standing features: the genuine Terminal view (View menu, Command-T) over the live hosted session, markdown routing to MacDown with the consented system default, window repair, up-arrow message history (kept in Minion's own data store), the SDS-8 welcome. Unsigned test build; the runtime verdict is the owner's, at the Air sitting.",
+      "buildNotes": "Minion 0.4.2 — the sign-in repair. 0.4.1's rename pass renamed two plumbing identities along with the app's display name — the session partition (the session store's identity) and the package identity the session machinery derives from — and sign-in broke: an existing sign-in was left behind, and a fresh sign-in spun forever after the two-factor step. 0.4.2 restores both plumbing identities to the values the working builds used, so a sign-in made in an earlier build carries into this one and a fresh sign-in completes. A sign-in made inside 0.4.1's own separate session store is not read; if 0.4.1 was the only build you ran, sign in once more. Nothing about the app's name or surfaces changes: bundle Minion.app under com.detroitautomationacademy.minion, Minion's own mark (the scheming side-eye dog, Academy monochrome standard), title bar pinned to Minion, dark by default (View → Appearance records your explicit choice and later launches honor it). App data is stored separately at ~/Library/Application Support/com.detroitautomationacademy.minion. Standing features: the genuine Terminal view (View menu, Command-T) over the live hosted session, markdown routing to MacDown with the consented system default, window repair, up-arrow message history, the SDS-8 welcome. Unsigned test build; the runtime verdict is the owner's, at the Air sitting.",
       "audits": [],
       "currentBuild": {
-        "tag": "0.4.1",
-        "sizeBytes": 92267766,
-        "sha256": "40bf511472a203041143748fec079b686865b1770bf17f4cc427d0a5413d0614",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/minion/releases/download/minion-0.4.1/Minion-1013-x64.zip",
+        "tag": "0.4.2",
+        "sizeBytes": 92268268,
+        "sha256": "699973368808a3b955d2677614d1c37264b0113b46654f55fef777e97142021e",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/minion/releases/download/minion-0.4.2/Minion-1013-x64.zip",
         "floor": "10.13",
         "builtAt": "2026-11-11",
-        "releasePublishedAt": "2026-11-11T18:28:11Z",
-        "ciRun": "43077951167",
+        "releasePublishedAt": "2026-11-12T02:06:19Z",
+        "ciRun": "43138986304",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule) on the changes/0034 scope (Distro files/26: manifests, endpoint census, diff discipline, standing dissection record) plus THIS pass (Distro files/19 section 17): the obliteration diff minion3->0.4.1 limited to the Academy layer naming set (20 repo files: electron layer strings + identifiers + keys + partition, package.json identity/version, assembler version + output name, INSTALL.txt, README, build workflow release step, test suite); shipped-artifact census: the only /muse/i lines in the artifact's Academy layer are the API endpoint constants (endpoint address + origin checks); test suite 45/45 incl. the new obliteration census group; fresh-download plist readback verified 2026-11-11 (Minion / com.detroitautomationacademy.minion, 0.4.1, floor 10.13, audit + SDS-10 conformance complete); startup sound byte-identical to the SDS-10 master; icon byte-identical to the monochrome master; zip census 273 entries; no terminal-skin.css"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) on the changes/0034 scope (Distro files/26) as carried by changes/0038 (Distro files/19 section 17), plus THIS pass (Distro files/32): the complete source diff 0.4.1->0.4.2 (8 repo files) dissected line by line — the auth-continuity set only: session partition restored at 3 sites in main.cjs, package identity restored in package.json (name/version), the app-menu name pinned to the display string in academy.cjs, version bumps (assembler, build label, About), INSTALL.txt/README consequence copy, the build workflow release step, and the test suite (46/46 incl. the new auth-continuity group and the census amended with the recorded plumbing exception); shipped-artifact census: the only /muse/i lines in the artifact's Academy layer are the 3 API endpoint constants, the 3 session partition literals and the package identity line — plumbing all, displayed nowhere; fresh-download plist readback verified 2026-11-11 (Minion / com.detroitautomationacademy.minion, 0.4.2, floor 10.13, audit + SDS-10 conformance complete); startup sound byte-identical to the SDS-10 master; icon byte-identical to the monochrome master; zip census 273 entries; no terminal-skin.css"
         }
       }
     },
