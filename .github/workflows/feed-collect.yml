@@ -19,9 +19,10 @@ name: Feed collect (raw source payloads)
 #
 # Triggers: workflow_dispatch + a coarse schedule floor (every
 # 15 minutes; resilience tranche 2026-10-26,
-# feed-resilience-2026-10-26.md D5). Cadence is owned by the VM (the
-# publisher dispatches on bundle age; the dispatch driver backstops on
-# served age) — the VM holds the fine ~5-minute cadence. The schedule
+# feed-resilience-2026-10-26.md D5). HISTORICAL NOTE (superseded
+# 2026-11-12 by the publish/chain jobs below): cadence was owned by
+# the VM (the publisher dispatched on bundle age; the dispatch
+# driver backstopped on served age). The schedule
 # is only a floor: it runs on GITHUB_TOKEN, whose quota is per-repo
 # and independent of the PAT window the VM consumers share, so
 # bundles keep flowing at reduced cadence even if the VM is dead or
@@ -128,3 +129,139 @@ jobs:
           done
           echo 'failed to push bundle after 3 attempts' >&2
           exit 1
+
+  # Actions publisher (2026-11-12, LTD VM removal — owner directive:
+  # the production path must not depend on the agent VM). The merge /
+  # adherence / quality / publish half that ran on the VM under
+  # feed-publisher.timer now runs here, in the same serialized run
+  # as the collect that produced the bundle. The publisher code of
+  # record is tools/feed/feed-publisher.py (vendored from the VM
+  # phase4 copy with surgical adaptations, each commented at its
+  # site: GH_TOKEN auth, FEED_NODE, proxy guard, mirror skip,
+  # feed-only deploy dispatch). It publishes to main with the same
+  # commit shape as the VM publisher and dispatches deploy-pages.yml
+  # with feed_only=true, which reproduces the data-only fast path.
+  # The data-repo mirror is owned by the data repo's own
+  # feed-mirror.yml: this repo's GITHUB_TOKEN cannot write across
+  # repos, and needs no credential to read this public repo.
+  # Gated by the FEED_PUBLISH repo variable (anything but "on" skips
+  # the job), so landing this workflow changed nothing until
+  # cutover. Bulletin carry state (GF-1) round-trips through the
+  # feed-raw branch under publisher-state/ — the only publisher
+  # state that must survive between runs; everything else in work/
+  # is cache and re-derives cold.
+  publish:
+    needs: collect
+    if: vars.FEED_PUBLISH == 'on'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - name: Checkout main (publisher)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          path: src
+
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Checkout feed-raw branch (publisher state)
+        run: |
+          git clone --depth 1 --branch feed-raw \
+            https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git rawstate
+
+      - name: Restore bulletin carry state
+        run: |
+          mkdir -p src/tools/feed/work
+          for f in bulletin-carry.json bulletin-recovered.json; do
+            if [ -f "rawstate/publisher-state/$f" ]; then
+              cp "rawstate/publisher-state/$f" "src/tools/feed/work/$f"
+            fi
+          done
+
+      - name: Publish feed to main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FEED_PUBLISHER_SKIP_MIRROR: "1"
+          FEED_PUBLISHER_FEED_ONLY_DEPLOY: "1"
+        run: |
+          export FEED_NODE="$(command -v node)"
+          cd src/tools/feed
+          python3 feed-publisher.py
+
+      - name: Persist bulletin carry state
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/pubstate"
+          found=0
+          for f in bulletin-carry.json bulletin-recovered.json; do
+            if [ -f "src/tools/feed/work/$f" ]; then
+              cp "src/tools/feed/work/$f" "$RUNNER_TEMP/pubstate/$f"
+              found=1
+            fi
+          done
+          if [ "$found" = "0" ]; then
+            echo "no bulletin state produced this run; nothing to persist"
+            exit 0
+          fi
+          cd rawstate
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          mkdir -p publisher-state
+          cp "$RUNNER_TEMP"/pubstate/*.json publisher-state/
+          git add publisher-state
+          if git diff --cached --quiet; then
+            echo "publisher state already current on feed-raw"
+            exit 0
+          fi
+          git commit -m "publisher-state: bulletin carry update [skip ci]"
+          # Same house race pattern as the bundle commit: fetch +
+          # rebase + retry x3, fail loud.
+          for attempt in 1 2 3; do
+            if git push origin HEAD:feed-raw; then
+              echo "publisher state pushed on attempt $attempt"
+              exit 0
+            fi
+            echo "push raced (attempt $attempt); rebasing"
+            git fetch origin feed-raw
+            git rebase origin/feed-raw || { git rebase --abort; echo 'publisher-state rebase conflict; failing loud, next cycle retries fresh' >&2; exit 1; }
+          done
+          echo 'failed to push publisher state after 3 attempts' >&2
+          exit 1
+
+  # Self-dispatch chain (2026-11-12): GitHub's scheduler cannot hold
+  # the ~4-minute feed cadence in this account (measured ~2.4% of
+  # */5 crons delivered, Project 30 diagnosis), so each run
+  # dispatches the next after a delay, and the */15 schedule floor
+  # above restarts a dead chain. Single pending slot: if another run
+  # is already queued or pending, it chains onward itself — runs
+  # never pile up. Gated by FEED_CHAIN (anything but "on" skips).
+  chain:
+    needs: [collect, publish]
+    if: always() && vars.FEED_CHAIN == 'on'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: write
+    steps:
+      - name: Dispatch the next cycle
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CHAIN_DELAY_SEC: ${{ vars.FEED_CHAIN_DELAY_SEC }}
+        run: |
+          others=$(gh run list --repo "${{ github.repository }}" \
+            --workflow feed-collect.yml --limit 15 \
+            --json databaseId,status \
+            --jq "[.[] | select(.databaseId != ${{ github.run_id }}) | select(.status == \"queued\" or .status == \"pending\" or .status == \"waiting\" or .status == \"in_progress\")] | length")
+          if [ "${others:-0}" != "0" ]; then
+            echo "chain: $others other run(s) active or queued; the queued run chains onward itself"
+            exit 0
+          fi
+          delay="${CHAIN_DELAY_SEC:-120}"
+          echo "chain: sleeping ${delay}s, then dispatching the next feed-collect run"
+          sleep "$delay"
+          gh workflow run feed-collect.yml --repo "${{ github.repository }}" --ref main
