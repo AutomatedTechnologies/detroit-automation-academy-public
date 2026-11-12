@@ -10208,7 +10208,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   function poll() {
     var proxy = (window.FORGE_LIVE_DATA_URL || '').replace(/\/$/, '');
     if (!proxy) { setHeader(null, 'connecting…', false); return; }
-    fetchLiveJson('vehicles.json', 9000)
+    fetchLiveJson('vehicles.json', 20000)
       .then(function (d) {
         if (!d || !Array.isArray(d.vehicles)) throw new Error('bad payload');
         // SMART (reactivated 2026-10-15) joins here: the display
