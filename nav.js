@@ -162,3 +162,44 @@
     build();
   }
 })();
+
+/* SAT weekend banner (SITE-A) + contact strip (SITE-C) — added 2026-11-12,
+ * campaign-detroit-at-muse-ai-2026-11-14 repair run. Copy verbatim.
+ * Banner self-expires Sun 2026-11-15 00:00 EST. */
+(function () {
+  'use strict';
+  function satBuild() {
+    if (new Date() < new Date('2026-11-15T00:00:00-05:00') &&
+        !document.getElementById('sat-banner')) {
+      var banner = document.createElement('div');
+      banner.id = 'sat-banner';
+      banner.setAttribute('role', 'note');
+      banner.setAttribute('style', 'background:#000;color:#fff;padding:10px 16px;' +
+        'text-align:center;font:500 14px/1.5 Inter,system-ui,sans-serif');
+      banner.innerHTML = 'ONE DOOR, THIS WEEKEND: Readers, riders &amp; sponsors — email ' +
+        '<a href="mailto:detroit@muse.ai?subject=SAT-SITE" style="color:#fff;text-decoration:underline">detroit@muse.ai</a> ' +
+        '(subject: SAT-SITE) with your name + ONE lane: Signal · Square One · ' +
+        'Live Transit Detroit · Distro · Sponsorship &amp; placements. Opt-in only.';
+      document.body.insertBefore(banner, document.body.firstChild);
+    }
+    if (!document.getElementById('sat-contact-strip')) {
+      var strip = document.createElement('div');
+      strip.id = 'sat-contact-strip';
+      strip.setAttribute('style', 'background:#000;color:#fff;padding:18px 16px;' +
+        'text-align:center;font:400 14px/1.6 Inter,system-ui,sans-serif');
+      strip.innerHTML =
+        '<p style="margin:0 0 6px;font-weight:600">Contact of record: ' +
+        '<a href="mailto:detroit@muse.ai" style="color:#fff;text-decoration:underline">detroit@muse.ai</a></p>' +
+        '<p style="margin:0">For Signal, Square One, Live Transit Detroit, Distro, and Sponsorship &amp; placements — email ' +
+        '<a href="mailto:detroit@muse.ai" style="color:#fff;text-decoration:underline">detroit@muse.ai</a> ' +
+        'with your name + ONE lane. Subject SAT-SITE if you came from this site. We reply within 48 hours. ' +
+        'Opt-in only; reply "stop" to end contact.</p>';
+      document.body.appendChild(strip);
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', satBuild);
+  } else {
+    satBuild();
+  }
+})();
