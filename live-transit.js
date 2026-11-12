@@ -10210,6 +10210,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   var svcDismissedSig = null; // signature of the dismissed condition set
   var svcShownSig = null;     // signature currently rendered (null = hidden)
   var svcExpanded = false;
+  var svcKickAt = 0;          // last ticker-triggered recovery poll (2026-11-12)
 
   var SVC_SHORT = {
     'stale': 'live positions delayed',
@@ -10218,7 +10219,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     'ddot-partial': 'DDOT positions incomplete',
     'qline-down': 'QLINE positions unavailable'
   };
-  var SVC_TAIL = 'What still works: the map, all stop and route information, and the trip planner are unaffected. The planner computes journeys from the published DDOT timetable (DDOT schedule data current through February 7, 2027), not from live positions. While live positions are degraded, scheduled times are the reliable basis for planning a trip. This notice concerns the live data feed only. Bus and streetcar service is not cancelled, and this page does not announce service cancellations.';
+  var SVC_TAIL = 'Buses and streetcars are running on their published schedules.';
 
   function svcConditions() {
     var out = [];
@@ -10259,19 +10260,18 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   function svcHeadline(c) {
     switch (c.key) {
       case 'unreachable':
-        return 'Live vehicle positions unavailable. The live feed cannot be reached.';
+        return 'Live positions unavailable — schedules are current.';
       case 'stale':
-        return 'Live positions delayed — last update ' +
-          fmtTime(new Date(c.genAt)) + ', ' + c.ageMin +
-          (c.ageMin === 1 ? ' minute' : ' minutes') + ' ago.';
+        return 'Live positions delayed — showing the ' +
+          formatClock12(new Date(c.genAt).getTime()) + ' update. Schedules are current.';
       case 'ddot-not-configured':
-        return 'DDOT live positions are not available on this map.';
+        return 'DDOT positions are not connected — schedules are current.';
       case 'ddot-down':
-        return 'DDOT live positions unavailable. The DDOT feed is not reporting.';
+        return 'DDOT positions unavailable — schedules are current.';
       case 'ddot-partial':
-        return 'DDOT live positions are incomplete. Some DDOT routes are not reporting.';
+        return 'Some DDOT positions are missing — schedules are current.';
       case 'qline-down':
-        return 'QLINE live positions unavailable. The QLINE feed is not reporting.';
+        return 'QLINE positions unavailable — schedules are current.';
     }
     return '';
   }
@@ -10280,25 +10280,21 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     switch (c.key) {
       case 'unreachable':
         if (typeof liveEverOk !== 'undefined' && liveEverOk && svcLastPayload) {
-          return 'The live data file this page reads could not be loaded. The vehicle positions on the map are from the last successful update (' +
-            fmtTime(new Date(svcLastPayload.generated_at)) + ') and are not being refreshed.';
+          return 'The live update could not be loaded. The map shows the last reported positions (' +
+            fmtTime(new Date(svcLastPayload.generated_at)) + '); use scheduled times for planning.';
         }
-        if (typeof historyOk !== 'undefined' && historyOk) {
-          return 'The live data file this page reads could not be loaded. Any vehicle positions shown come from the most recent logged snapshot. They are not current positions and are not being refreshed.';
-        }
-        return 'The live data file this page reads could not be loaded, and no live update has been received yet. No live vehicle positions are shown.';
+        return 'The live update could not be loaded. Use scheduled times for planning.';
       case 'stale':
-        return 'The live feed is rebuilt every five minutes. The newest file available is from ' +
-          fmtTime(new Date(c.genAt)) + ' (' + c.ageMin + ' minutes old). The positions on the map are exactly the positions in that file. They are not advanced or estimated between updates.';
+        return 'These are the most recent reported positions. For planning, use the scheduled times.';
       case 'ddot-not-configured':
-        return 'The DDOT live position feed is not connected to this map in its current configuration, so DDOT vehicles do not appear. This is a data connection state. It is not a change to DDOT service, and it does not affect QLINE positions, the map, or the trip planner.';
+        return 'DDOT buses do not appear on the map right now. Their scheduled times still work for planning.';
       case 'ddot-down':
-        return 'The DDOT position source returned no data for the most recent update. DDOT vehicles are removed from the map while the source is not reporting, and they return when the source resumes. A source outage is not a service suspension. DDOT buses continue to run on their published schedules.';
+        return 'DDOT buses are running on their published schedules.';
       case 'ddot-partial':
-        return 'The DDOT position source returned data for ' + c.ok + ' of ' + c.total +
-          ' route groups in the most recent update. Vehicles on the remaining routes do not appear in this update. Routes that are reporting are shown at their measured positions.';
+        return 'DDOT reported ' + c.ok + ' of ' + c.total +
+          ' route groups in the most recent update; the rest are missing from the map for now.';
       case 'qline-down':
-        return 'The QLINE position source returned no data for the most recent update. QLINE streetcars are removed from the map while the source is not reporting, and they return when the source resumes. A source outage is not a service suspension.';
+        return 'QLINE streetcars are running on their published schedule.';
     }
     return '';
   }
@@ -10328,6 +10324,9 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
       svcShownSig = null;
       return;
     }
+    // A new or changed condition always renders collapsed (2026-11-12):
+    // the explanation opens only when the rider taps Details.
+    if (sig !== svcShownSig) svcExpanded = false;
     var head = svcHeadline(conds[0]);
     if (conds.length > 1) {
       head += ' Also: ' + conds.slice(1).map(function (c) { return SVC_SHORT[c.key]; }).join('; ') + '.';
@@ -10378,8 +10377,24 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     });
     // Re-evaluate between polls so a stale condition surfaces (and its
     // stated age stays current) without waiting for the next 60 s poll.
-    // Renders from stored state only; this timer never fetches.
-    setInterval(function () { svcRender(); }, 30000);
+    // Self-heal (2026-11-12): a stale notice must not merely age in
+    // place from stored state — while the tab is visible and the stored
+    // envelope is past the stale bound, the ticker also kicks a fresh
+    // both-origins poll (rate-limited to ~1/min; the regular 20 s
+    // cadence normally makes this a no-op). This closes the suspended /
+    // restored-tab hole where the banner re-rendered an old envelope's
+    // escalating age with no completed poll behind it.
+    setInterval(function () {
+      svcRender();
+      if (!document.hidden && svcLastOk && svcLastPayload) {
+        var genT = Date.parse(svcLastPayload.generated_at || '');
+        if (!isNaN(genT) && (Date.now() - genT) > SVC_STALE_MS &&
+            (Date.now() - svcKickAt) > 55000) {
+          svcKickAt = Date.now();
+          poll();
+        }
+      }
+    }, 30000);
   })();
   // === SVC-NOTICE-END ===
 
@@ -12959,6 +12974,12 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
       schedulePoll();
       document.addEventListener('visibilitychange', function () {
         if (!document.hidden) { poll(); schedulePoll(); }
+      });
+      // bfcache restore (iOS Safari back/forward + tab restore): boot
+      // code does not re-run on a persisted pageshow, so force the same
+      // immediate refresh the visibility path performs (2026-11-12).
+      window.addEventListener('pageshow', function (e) {
+        if (e.persisted) { poll(); schedulePoll(); }
       });
       // Empirical motion prior: restore the local speed map, fetch the
       // telemetry timing cells now and hourly; persist the map on hide.
