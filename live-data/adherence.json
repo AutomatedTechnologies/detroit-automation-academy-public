@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-12T07:49:16.376Z",
+  "generated_at": "2026-11-12T07:50:20.607Z",
   "smart": {
     "method": "tu-static-join",
     "static_feed": "S1000147",
@@ -15,7 +15,7 @@
         "next_stop_eta": "2026-11-12T10:05:00.000Z",
         "in_service": true,
         "method": "tu-static-join",
-        "updated_at": "2026-11-12T07:49:08.000Z"
+        "updated_at": "2026-11-12T07:50:19.000Z"
       },
       "1751020": {
         "route_id": "462",
@@ -28,23 +28,13 @@
         "next_stop_eta": "2026-11-12T08:32:00.000Z",
         "in_service": true,
         "method": "tu-static-join",
-        "updated_at": "2026-11-12T07:49:08.000Z"
+        "updated_at": "2026-11-12T07:50:19.000Z"
       }
     }
   },
   "ddot": {
     "method": "track-dwell",
     "missed_stops": [
-      {
-        "agency": "ddot",
-        "route_id": "16",
-        "direction_id": 1,
-        "stop_id": "98",
-        "vehicle_id": "1525",
-        "detected_at": "2026-11-11T23:03:20.030Z",
-        "method": "track-dwell",
-        "inference": true
-      },
       {
         "agency": "ddot",
         "route_id": "42",
@@ -1032,6 +1022,16 @@
         "stop_id": "242",
         "vehicle_id": "2212",
         "detected_at": "2026-11-12T07:17:55.011Z",
+        "method": "track-dwell",
+        "inference": true
+      },
+      {
+        "agency": "ddot",
+        "route_id": "8",
+        "direction_id": 1,
+        "stop_id": "3368",
+        "vehicle_id": "2230",
+        "detected_at": "2026-11-12T07:50:20.607Z",
         "method": "track-dwell",
         "inference": true
       }
