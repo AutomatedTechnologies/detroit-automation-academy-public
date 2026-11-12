@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-12T06:37:15.968Z",
+  "generated_at": "2026-11-12T06:38:45.886Z",
   "smart": {
     "method": "tu-static-join",
     "static_feed": "S1000147",
@@ -10,12 +10,12 @@
         "vehicle_id": "3723",
         "headsign": "23 Mile",
         "state": "late",
-        "delay_sec": 98,
+        "delay_sec": 110,
         "next_stop_id": "3147",
-        "next_stop_eta": "2026-11-12T06:40:38.000Z",
+        "next_stop_eta": "2026-11-12T06:40:50.000Z",
         "in_service": true,
         "method": "tu-static-join",
-        "updated_at": "2026-11-12T06:36:57.000Z"
+        "updated_at": "2026-11-12T06:38:28.000Z"
       },
       "471020": {
         "route_id": "462",
@@ -23,12 +23,12 @@
         "vehicle_id": "4010",
         "headsign": "Auburn Mile via Pontiac",
         "state": "on-time",
-        "delay_sec": 51,
+        "delay_sec": 56,
         "next_stop_id": "7152",
-        "next_stop_eta": "2026-11-12T06:38:51.000Z",
+        "next_stop_eta": "2026-11-12T06:38:56.000Z",
         "in_service": true,
         "method": "tu-static-join",
-        "updated_at": "2026-11-12T06:36:49.000Z"
+        "updated_at": "2026-11-12T06:38:19.000Z"
       },
       "545020": {
         "route_id": "561",
@@ -36,28 +36,18 @@
         "vehicle_id": "3648",
         "headsign": "23 Mile",
         "state": "late",
-        "delay_sec": 826,
+        "delay_sec": 821,
         "next_stop_id": "3169",
-        "next_stop_eta": "2026-11-12T06:38:07.000Z",
+        "next_stop_eta": "2026-11-12T06:38:02.000Z",
         "in_service": true,
         "method": "tu-static-join",
-        "updated_at": "2026-11-12T06:36:39.000Z"
+        "updated_at": "2026-11-12T06:38:02.000Z"
       }
     }
   },
   "ddot": {
     "method": "track-dwell",
     "missed_stops": [
-      {
-        "agency": "ddot",
-        "route_id": "17",
-        "direction_id": 0,
-        "stop_id": "5138",
-        "vehicle_id": "1526",
-        "detected_at": "2026-11-11T23:01:17.221Z",
-        "method": "track-dwell",
-        "inference": true
-      },
       {
         "agency": "ddot",
         "route_id": "4",
@@ -1045,6 +1035,16 @@
         "stop_id": "1227",
         "vehicle_id": "2212",
         "detected_at": "2026-11-12T05:43:20.520Z",
+        "method": "track-dwell",
+        "inference": true
+      },
+      {
+        "agency": "ddot",
+        "route_id": "6",
+        "direction_id": 0,
+        "stop_id": "97",
+        "vehicle_id": "1905",
+        "detected_at": "2026-11-12T06:38:45.886Z",
         "method": "track-dwell",
         "inference": true
       }
