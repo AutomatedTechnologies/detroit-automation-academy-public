@@ -182,21 +182,21 @@
     },
     {
       "category": "Productivity",
-      "datePublished": "2026-11-11",
-      "description": "Snowfell is the Detroit Automation Academy's Jira-style board application for Intel Macs running macOS High Sierra (10.13): every Academy project board in one native window. The bundled registry snapshot (v7-0038) carries 74 GitHub Projects boards and 614 items — the Academy's GitHub across the user smit4786 and the AutomatedTechnologies organization — with a portfolio rollup, per-board kanban whose columns are each board's own status vocabulary (data, never a hardcoded list), item detail, a roadmap over start and target dates, a command palette, an orchestration queue over a data-driven action manifest, and an incidents lens for consequential matters, their evidence, and their deadlines. Snowfell reads a pinned, hash-verified snapshot of the Academy registry and works fully offline; a newer snapshot can be fetched and verified in-app before it is swapped in. GitHub write-back is compiled OFF in this build (SNOWFELL_WRITEBACK_ENABLED = 0): actions queue locally and nothing is sent. Academy-original software under the Academy License (revocable). Unsigned test build.",
-      "downloadURL": "https://github.com/AutomatedTechnologies/snowfell/releases/download/snowfell-test-1/Snowfell-test.zip",
+      "datePublished": "2026-11-12",
+      "description": "Snowfell is the Detroit Automation Academy's Jira-style board application for Intel Macs running macOS High Sierra (10.13): every Academy project board in one native window. The bundled registry snapshot (v8-0041) carries 74 GitHub Projects boards and 614 items — the Academy's GitHub across the user smit4786 and the AutomatedTechnologies organization — with a portfolio rollup (health dot and an Open / Done split per board), per-board kanban whose columns are each board's own status vocabulary (data, never a hardcoded list), item detail, a roadmap over start and target dates, a command palette, an orchestration queue over a data-driven action manifest, an incidents lens for consequential matters, their evidence, and their deadlines, and — new in snowfell-test-2 — the V12 Storage lens (View menu, Command-8): a multi-tenant cloud storage and content-management console over the bundled SnowfellStorageService helper, loopback-only, with content-addressed deduplication by SHA-256. Board state is derived, not mirrored: a board whose items all sit in its own terminal status presents as Complete (the raw GitHub state is kept as secondary detail) whenever the loaded snapshot carries the registry's derivation (schema v9+). Snowfell reads a pinned, hash-verified snapshot of the Academy registry and works fully offline; a newer snapshot can be fetched and verified in-app before it is swapped in. GitHub write-back is compiled OFF in this build (SNOWFELL_WRITEBACK_ENABLED = 0): actions queue locally and nothing is sent. Academy-original software under the Academy License (revocable). Unsigned test build.",
+      "downloadURL": "https://github.com/AutomatedTechnologies/snowfell/releases/download/snowfell-test-2/Snowfell-test.zip",
       "iconURL": "https://detroitautomationacademy.com/store/icons/snowfell.png",
       "id": "snowfell",
       "license": "Academy License (revocable)",
       "minMacOS": "10.13",
       "name": "Snowfell",
-      "sha256": "3d657887828c41c5b8cd9ba7808c27ec8fad7b295a697cfc9cff91957815a36f",
-      "sizeBytes": 1148919,
+      "sha256": "021b29d991a4e06c960e3ba9211a99700e19204dd44505b14d3722d95dd566e9",
+      "sizeBytes": 1353389,
       "sourceURL": "https://github.com/AutomatedTechnologies/snowfell",
       "status": "testing",
       "tagline": "The Academy's project board — every GitHub project in one native window.",
-      "version": "snowfell-test-1",
-      "buildNotes": "Snowfell snowfell-test-1 — first Distro listing. The Academy's board: portfolio rollup, per-board kanban in each board's own status vocabulary, item detail, roadmap, command palette, orchestration queue, and the incidents lens — reading a pinned, hash-verified registry snapshot (v7-0038: 74 boards, 614 items, 5 incidents), fully offline. Write-back is compiled OFF in this build: actions queue locally and nothing is sent to GitHub. Unsigned test build; the runtime verdict is the owner's, at the Air sitting — install Snowfell from this listing; the install is the test."
+      "version": "snowfell-test-2",
+      "buildNotes": "Snowfell snowfell-test-2 — the uplift build. The interface now meets the design baseline: kanban columns as tinted wells with letterspaced uppercase headers, cards whose titles wrap in full (no more mid-word truncation) with each label as its own pill, and the Portfolio as a proper table — letterspaced column headers, a health dot and an Open / Done split per board, the board's own status vocabulary spelled out. New: the V12 Storage lens (View → Storage, Command-8) with its SnowfellStorageService helper bundled — multi-tenant storage and content management, deduplicated by SHA-256, loopback-only. Board state is derived: once the app pulls the schema v9 snapshot (Sync → Check Now → Apply Update), a board whose items all sit in its final status reads Complete instead of Open, with the GitHub state kept as a detail. Bundled snapshot v8-0041 (74 boards, 614 items, 5 incidents). Write-back is compiled OFF: actions queue locally and nothing is sent to GitHub. Unsigned test build; the runtime verdict is the owner's, at the Air sitting."
     }
   ],
   "catalogVersion": 1,
