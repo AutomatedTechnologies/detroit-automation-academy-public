@@ -1356,7 +1356,11 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   }
   function smartPillText(age) {
     if (!age || age.band !== 'stale') return '';
-    return 'SMART ' + age.count + ' (stale)';
+    // One-line law for header labels (2026-11-12 reconstruction): a
+    // short rider phrase, never a count with a "(stale)" fragment —
+    // the stale payload's vehicles are already dropped at ingest, so
+    // the old pill also claimed a count the map was not showing.
+    return 'SMART positions delayed';
   }
 
   // Applies the current smartAge object to every SMART age surface.
@@ -4453,7 +4457,17 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     var p = project(lat, lon);
     userXZ = p;
     cancelStreetTween();
+    // Marker first (2026-11-12 reconstruction): the rider's marker IS
+    // the locate result, so it lands before any camera work. In the
+    // previous order the marker became visible only after the camera
+    // glide was constructed and camMemRefresh ran — any throw in that
+    // path killed the locate silently: no marker, no centering, no
+    // message (owner field report 2026-11-12, iPad: "locate me not
+    // functioning", map stayed on downtown, nothing said).
     youMarker.group.position.set(p[0], 0, p[1]);
+    youMarker.setAccuracy(accMeters);
+    youMarker.group.visible = true;
+    locateBtn.setAttribute('aria-pressed', 'true');
     // Zoom-on-enable (2026-10-15, Justin's priority): enabling location
     // flies the camera SMOOTHLY to street level over the rider, so the
     // buses, stops, and routes around the rider are individually
@@ -4476,20 +4490,28 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     // instant recenter. Denied or unavailable location never reaches
     // this code: the error path and the settled home framing are
     // unchanged.
-    if (typeof tripFly !== 'undefined' && tripFly) {
-      var off = camera.position.clone().sub(controls.target);
-      controls.target.set(p[0], 0, p[1]);
-      camera.position.copy(controls.target).add(off);
-    } else {
-      TransitionEngine.go({ vantage: TransitionEngine.vantageForBus(p[0], p[1]) });
+    try {
+      if (typeof tripFly !== 'undefined' && tripFly) {
+        var off = camera.position.clone().sub(controls.target);
+        controls.target.set(p[0], 0, p[1]);
+        camera.position.copy(controls.target).add(off);
+      } else {
+        TransitionEngine.go({ vantage: TransitionEngine.vantageForBus(p[0], p[1]) });
+      }
+      // Camera memory (R6): a successful locate redefines the preserved
+      // framing — camMemFraming counts the in-flight glide at its
+      // destination; the tripFly branch above has already landed.
+      camMemRefresh();
+    } catch (e) {
+      // The camera move failed: recenter instantly on the rider rather
+      // than leave the map where it was. The marker above is already
+      // placed; silence is not an outcome this handler produces.
+      try {
+        var off2 = camera.position.clone().sub(controls.target);
+        controls.target.set(p[0], 0, p[1]);
+        camera.position.copy(controls.target).add(off2);
+      } catch (e2) {}
     }
-    // Camera memory (R6): a successful locate redefines the preserved
-    // framing — camMemFraming counts the in-flight glide at its
-    // destination; the tripFly branch above has already landed.
-    camMemRefresh();
-    youMarker.setAccuracy(accMeters);
-    youMarker.group.visible = true;
-    locateBtn.setAttribute('aria-pressed', 'true');
     if (pendingNearMe) {
       setNearMe(true);
     } else if (filterState.nearMe) {
@@ -4504,19 +4526,37 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     if (locating) return;
     locating = true;
     showToast('Locating\u2026');
-    navigator.geolocation.getCurrentPosition(
-      function (pos) {
-        locating = false;
-        onLocated(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
-      },
-      function (err) {
-        locating = false;
-        pendingNearMe = false;
-        if (err && err.code === 1) showToast('Location access denied — allow it in your browser settings to use this.');
-        else showToast('Could not get your location — please try again.');
-      },
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
-    );
+    // Every exit from this handler says something or shows something
+    // (2026-11-12 reconstruction): success places the marker, denial
+    // and timeout and unavailability each get one short rider line,
+    // and a synchronous throw from getCurrentPosition itself (seen on
+    // browsers where the API exists but is blocked) is caught rather
+    // than swallowed.
+    try {
+      navigator.geolocation.getCurrentPosition(
+        function (pos) {
+          locating = false;
+          try {
+            onLocated(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+          } catch (e) {
+            showToast('Could not show your location — please try again.');
+          }
+        },
+        function (err) {
+          locating = false;
+          pendingNearMe = false;
+          locateBtn.setAttribute('aria-pressed', 'false');
+          if (err && err.code === 1) showToast('Location access denied — allow it in your browser settings to use this.');
+          else if (err && err.code === 3) showToast('Location took too long — please try again.');
+          else showToast('Could not get your location — please try again.');
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
+      );
+    } catch (e) {
+      locating = false;
+      pendingNearMe = false;
+      showToast('Could not get your location — please try again.');
+    }
   });
 
   // Boot location prompt DELETED (first-view launcher, Concept 3 —
@@ -4524,7 +4564,8 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   // any form. The only location offer is the launcher sheet's Near me
   // tile (fvShowNearChoice, in the first-view section below), which is
   // inline, optional, and carries a no-permission map-center fallback.
-  // The map-tools locate button's own behavior above is unchanged.
+  // The map-tools locate button above was rebuilt 2026-11-12
+  // (marker-first, no silent exits); its contract is unchanged.
 
   // --- Engine/asset pairing guard (Board 47 item 7, G5 step 1) --------
   // A service_model: "set" timetable under an engine without set
@@ -10040,22 +10081,49 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   // source and the pre-integration fallback merge. Fetched on the same poll
   // cycle as the main envelope; resolves null on any failure so a SMART
   // outage can never fail or delay-mark the DDOT/QLINE poll.
-  // === DATA-PLANE-BEGIN (split 2026-11-10; fresher-copy rule 2026-11-11) ===
+  // === DATA-PLANE-BEGIN (split 2026-11-10; REBUILT 2026-11-12) ===
   // Primary source: the detroit-live-data Pages origin (the page sets
   // window.FORGE_LIVE_DATA_URL to it). Fallback: this site's own
-  // live-data/ archive (window.FORGE_LIVE_DATA_FALLBACK). fetchLiveJson
-  // fetches BOTH origins on every call and resolves with whichever copy
-  // carries the later generated_at; a failure on either side degrades to
-  // the other, and it rejects only when every source failed. An envelope
-  // with no generated_at yields to a dated copy; two undated copies
-  // resolve to the primary. The degradation notice below reads the
-  // chosen envelope exactly as before.
-  // History: the original split rule returned the primary whenever its
-  // age was under a 20-minute bound, without ever consulting the
-  // fallback — so a laggard primary (or a same-origin-only session) was
-  // shown even while a fresher copy existed. Field report 2026-11-11:
-  // the Departure Board showed ~14-minute-old positions while the data
-  // origin served a ~2-minute-old copy.
+  // live-data/ archive (window.FORGE_LIVE_DATA_FALLBACK).
+  //
+  // ROOT CAUSE of the 2026-11-12 field failure (owner screenshots
+  // 10:19 + 10:47 EST: positions 15-19 minutes old in production while
+  // the chain was healthy): the both-origins fetch below was correct,
+  // but the page's Content-Security-Policy (live-transit.html, meta
+  // tag) declared connect-src 'self' + the www origin ONLY. Every
+  // fetch to the data origin was refused by CSP in the browser before
+  // any network request was issued — verified in a real browser
+  // (console: "Fetch API cannot load
+  // https://automatedtechnologies.github.io/... Refused to connect
+  // because it violates the document's Content Security Policy"), on
+  // every poll, in every browser. The wrapper degraded silently to
+  // the www copy, so the page rode the slow-deploy www copy forever
+  // and called it the newest file available. Server-side curl checks
+  // never see CSP, which is why the estate's checks kept passing.
+  // The CSP now names the data origin explicitly. Do not remove it:
+  // without it this layer is decorative.
+  //
+  // Rebuilt contract (2026-11-12 reconstruction):
+  //  - Every call fetches BOTH origins in parallel, each attempt with
+  //    its own timeout; neither origin can hold the other hostage.
+  //  - The call resolves as soon as the outcome is decided: a copy
+  //    whose generated_at is under FEED_FRESH_ENOUGH_MS old wins on
+  //    arrival (a rival copy cannot be fresher by enough to matter);
+  //    otherwise the call waits for both copies and takes the later
+  //    generated_at. An envelope with no generated_at yields to a
+  //    dated copy; two undated copies resolve to the primary.
+  //  - It rejects only when every source failed.
+  //  - Every vehicles.json outcome is recorded per origin in
+  //    feedOrigins (ok / failed, generation time, receive time) and
+  //    the winning copy in feedWinner, so the degradation notice can
+  //    state which copy is in use and what the other copy said —
+  //    a silent one-origin ride is no longer possible.
+  var FEED_FRESH_ENOUGH_MS = 90 * 1000;
+  var feedOrigins = {
+    primary:  { ok: null, genAt: null, atMs: 0, err: null },
+    fallback: { ok: null, genAt: null, atMs: 0, err: null }
+  };
+  var feedWinner = null; // 'primary' | 'fallback' | null
   function liveBases() {
     var p = (window.FORGE_LIVE_DATA_URL || '').replace(/\/$/, '');
     var f = (window.FORGE_LIVE_DATA_FALLBACK || '').replace(/\/$/, '');
@@ -10068,33 +10136,56 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   function fetchLiveJson(name, timeoutMs) {
     var bases = liveBases();
     if (!bases.primary) return Promise.reject(new Error('no live base'));
+    var to = timeoutMs || 8000;
     function attempt(base) {
-      var ctrl = new AbortController();
-      var timer = setTimeout(function () { ctrl.abort(); }, timeoutMs);
-      return fetch(base + '/' + name + '?_=' + Date.now(), { cache: 'no-store', signal: ctrl.signal }) // #18: cache-bust parity with 2D — Pages max-age=600 otherwise serves stale copies ahead of the fresher-copy rule
-        .then(function (r) { clearTimeout(timer); if (!r.ok) throw new Error('http ' + r.status); return r.json(); },
-              function (e) { clearTimeout(timer); throw e; });
+      return new Promise(function (resolve) {
+        var ctrl = new AbortController();
+        var timer = setTimeout(function () { ctrl.abort(); }, to);
+        fetch(base + '/' + name + '?_=' + Date.now(), { cache: 'no-store', signal: ctrl.signal }) // #18: cache-bust parity with 2D — Pages max-age=600 otherwise serves stale copies ahead of the fresher-copy rule
+          .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+          .then(function (d) { clearTimeout(timer); resolve({ d: d }); },
+                function (e) { clearTimeout(timer); resolve({ e: e }); });
+      });
     }
-    function wrap(p) {
-      return p.then(function (d) { return { d: d }; }, function (e) { return { e: e }; });
-    }
-    var p1 = wrap(attempt(bases.primary));
-    if (!bases.fallback) {
-      return p1.then(function (r) { if (r.e) throw r.e; return r.d; });
-    }
-    var p2 = wrap(attempt(bases.fallback));
-    return Promise.all([p1, p2]).then(function (rs) {
-      var r1 = rs[0], r2 = rs[1];
-      if (r1.d && r2.d) {
-        var g1 = envelopeGenMs(r1.d), g2 = envelopeGenMs(r2.d);
-        if (g1 === null && g2 === null) return r1.d;
-        if (g1 === null) return r2.d;
-        if (g2 === null) return r1.d;
-        return g2 > g1 ? r2.d : r1.d;
-      }
-      if (r1.d) return r1.d;
-      if (r2.d) return r2.d;
-      throw r1.e || r2.e || new Error('all live sources failed');
+    var legs = [{ key: 'primary', base: bases.primary }];
+    if (bases.fallback) legs.push({ key: 'fallback', base: bases.fallback });
+    return new Promise(function (resolve, reject) {
+      var settled = 0, best = null, firstErr = null, done = false;
+      legs.forEach(function (leg) {
+        attempt(leg.base).then(function (r) {
+          settled++;
+          if (name === 'vehicles.json') {
+            var rec = feedOrigins[leg.key];
+            rec.atMs = Date.now();
+            if (r.d) { rec.ok = true; rec.err = null; rec.genAt = envelopeGenMs(r.d); }
+            else { rec.ok = false; rec.err = String((r.e && r.e.message) || r.e || 'failed'); }
+          }
+          if (done) return;
+          if (r.d) {
+            var g = envelopeGenMs(r.d);
+            if (!best || (g !== null && (best.g === null || g > best.g))) {
+              best = { d: r.d, g: g, key: leg.key };
+            }
+            if (g !== null && (Date.now() - g) < FEED_FRESH_ENOUGH_MS) {
+              done = true;
+              if (name === 'vehicles.json') feedWinner = leg.key;
+              resolve(r.d);
+              return;
+            }
+          } else if (!firstErr) {
+            firstErr = r.e;
+          }
+          if (settled === legs.length) {
+            done = true;
+            if (best) {
+              if (name === 'vehicles.json') feedWinner = best.key;
+              resolve(best.d);
+            } else {
+              reject(firstErr || new Error('all live sources failed'));
+            }
+          }
+        });
+      });
     });
   }
   // Null-on-failure variant for the SMART display legs, preserving
@@ -10117,7 +10208,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   function poll() {
     var proxy = (window.FORGE_LIVE_DATA_URL || '').replace(/\/$/, '');
     if (!proxy) { setHeader(null, 'connecting…', false); return; }
-    fetchLiveJson('vehicles.json', 20000)
+    fetchLiveJson('vehicles.json', 9000)
       .then(function (d) {
         if (!d || !Array.isArray(d.vehicles)) throw new Error('bad payload');
         // SMART (reactivated 2026-10-15) joins here: the display
@@ -10196,19 +10287,21 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   // claims only the freshness and source state the envelope measures,
   // and names the data's age whenever positions may be old.
   // Position Integrity item 3 (analysis-2026-10-16 §2 point 4): the
-  // stale-feed state fires at 12 minutes — past the feed's measured
-  // practical cadence (~10 min between builds in the founding stall),
-  // ahead of the hourly production check's ~20 min ops flag — so a
-  // stalled pipeline surfaces to riders while the positions on screen
-  // are still young. Supersedes the 2026-10-15 record's 15 min
-  // (3 build cycles), under which the founding stall never tripped
-  // this notice at all.
-  var SVC_STALE_MS = 12 * 60 * 1000;
+  // stale-feed state fires at 5 minutes (owner rule, 2026-11-12
+  // reconstruction): when BOTH live-data copies are older than one
+  // publish cycle, the notice shows the true age of the copy in use.
+  // Supersedes the 12-minute bound set 2026-10-16 (Position Integrity
+  // item 3), under which the 2026-11-12 stall — positions 15-19
+  // minutes old in production — spent most of its life unflagged,
+  // and the 2026-10-15 record's 15 min (3 build cycles), under which
+  // the founding stall never tripped this notice at all.
+  var SVC_STALE_MS = 5 * 60 * 1000;
   var svcAttempted = false;   // at least one poll attempt has completed
   var svcLastOk = false;      // the most recent poll attempt succeeded
   var svcLastPayload = null;  // last successfully parsed vehicles envelope
   var svcDismissedSig = null; // signature of the dismissed condition set
   var svcShownSig = null;     // signature currently rendered (null = hidden)
+  var svcShownOrigins = '';   // origins line currently rendered in Details
   var svcExpanded = false;
   var svcKickAt = 0;          // last ticker-triggered recovery poll (2026-11-12)
 
@@ -10217,7 +10310,8 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     'ddot-not-configured': 'DDOT positions not connected',
     'ddot-down': 'DDOT positions unavailable',
     'ddot-partial': 'DDOT positions incomplete',
-    'qline-down': 'QLINE positions unavailable'
+    'qline-down': 'QLINE positions unavailable',
+    'routes-dark': 'some routes have no live positions'
   };
   var SVC_TAIL = 'Buses and streetcars are running on their published schedules.';
 
@@ -10254,6 +10348,33 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     }
     var ql = src.qline;
     if (ql && ql.ok === false) out.push({ key: 'qline-down' });
+    // Whole-route absence (2026-11-12 reconstruction): a route in the
+    // published network that has reported no live vehicle for three
+    // consecutive polls is named here, so a healthy-looking total can
+    // never again hide a missing route (field case: DDOT routes 46
+    // and 47 dark all morning under sources.ddot ok:true). The band
+    // is deliberate: 1-6 dark DDOT routes is an outage signature; a
+    // mostly-dark network (overnight) is normal operations and does
+    // not fire. SMART routes are excluded — many are peak-only by
+    // schedule, so a quiet SMART route is not an anomaly.
+    var dark = svcDarkRoutes();
+    if (dark.length >= 1 && dark.length <= 6) {
+      out.push({ key: 'routes-dark', rids: dark });
+    }
+    return out;
+  }
+
+  var SVC_DDOT_GROUPS = { 'connect-ten': true, 'primary': true, 'neighborhood': true };
+  function svcDarkRoutes() {
+    var out = [];
+    if (typeof routeOrder === 'undefined' || typeof runningState === 'undefined') return out;
+    for (var i = 0; i < routeOrder.length; i++) {
+      var rid = routeOrder[i];
+      if (runningState[rid] !== 'not-running') continue;
+      var rec = (typeof routeById !== 'undefined') ? routeById[rid] : null;
+      if (!rec || !SVC_DDOT_GROUPS[rec.group]) continue;
+      out.push(rid);
+    }
     return out;
   }
 
@@ -10272,6 +10393,8 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
         return 'Some DDOT positions are missing — schedules are current.';
       case 'qline-down':
         return 'QLINE positions unavailable — schedules are current.';
+      case 'routes-dark':
+        return 'Some routes have no live positions — schedules are current.';
     }
     return '';
   }
@@ -10295,6 +10418,15 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
           ' route groups in the most recent update; the rest are missing from the map for now.';
       case 'qline-down':
         return 'QLINE streetcars are running on their published schedule.';
+      case 'routes-dark':
+        var names = c.rids.map(function (rid) {
+          return 'route ' + rid + (routeNames[rid] ? ' ' + routeNames[rid] : '');
+        });
+        var list = names.length > 1
+          ? names.slice(0, -1).join(', ') + ' or ' + names[names.length - 1]
+          : names[0];
+        return 'No live positions were reported for ' + list +
+          ' in the latest update. Their scheduled times still work for planning.';
     }
     return '';
   }
@@ -10303,8 +10435,32 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     return conds.map(function (c) {
       return c.key +
         (c.key === 'stale' ? '@' + c.genAt : '') +
-        (c.key === 'ddot-partial' ? ':' + c.ok + '/' + c.total : '');
+        (c.key === 'ddot-partial' ? ':' + c.ok + '/' + c.total : '') +
+        (c.key === 'routes-dark' ? ':' + c.rids.join(',') : '');
     }).join('|');
+  }
+
+  // Which live-data copy is in use, in rider words (2026-11-12
+  // reconstruction). The notice's Details names the copy behind the
+  // positions whenever the two copies disagree or one could not be
+  // loaded — the pre-reconstruction page degraded to a single copy
+  // silently and called it the newest file available.
+  function svcOriginsLine() {
+    if (typeof feedOrigins === 'undefined' || !feedWinner) return '';
+    var w = feedOrigins[feedWinner];
+    var l = feedOrigins[feedWinner === 'primary' ? 'fallback' : 'primary'];
+    if (!w || w.genAt == null) return '';
+    if (l && l.ok === false) {
+      return 'One of the two live data copies could not be loaded, so the map is using the ' +
+        formatClock12(w.genAt) + ' update.';
+    }
+    if (l && l.ok && l.genAt != null && Math.abs(w.genAt - l.genAt) > 60000) {
+      var newer = w.genAt > l.genAt ? w : l;
+      var older = w.genAt > l.genAt ? l : w;
+      return 'Positions shown are from the ' + formatClock12(newer.genAt) +
+        ' update; a second copy of the live data was older (' + formatClock12(older.genAt) + ').';
+    }
+    return '';
   }
 
   function svcRender() {
@@ -10314,6 +10470,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     if (!conds.length) {
       box.hidden = true;
       svcShownSig = null;
+      svcShownOrigins = '';
       svcDismissedSig = null; // a cleared condition re-arms the notice
       svcExpanded = false;
       return;
@@ -10331,7 +10488,8 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     if (conds.length > 1) {
       head += ' Also: ' + conds.slice(1).map(function (c) { return SVC_SHORT[c.key]; }).join('; ') + '.';
     }
-    if (!box.hidden && svcShownSig === sig && $('svc-headline').textContent === head) return;
+    var og = svcOriginsLine();
+    if (!box.hidden && svcShownSig === sig && $('svc-headline').textContent === head && svcShownOrigins === og) return;
     $('svc-headline').textContent = head;
     var det = $('svc-details');
     det.innerHTML = '';
@@ -10340,6 +10498,12 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
       p.textContent = svcDetailText(c);
       det.appendChild(p);
     });
+    if (og) {
+      var op = document.createElement('p');
+      op.textContent = og;
+      det.appendChild(op);
+    }
+    svcShownOrigins = og;
     var tail = document.createElement('p');
     tail.textContent = SVC_TAIL;
     det.appendChild(tail);
