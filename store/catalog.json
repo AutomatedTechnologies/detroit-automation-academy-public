@@ -73,24 +73,6 @@
       "buildNotes": "SDS10-T4 conformance build: the SDS-8 welcome screen (`SPWelcomeController`, presented at launch) draws the bundle AppIcon composition, displays the build's version read from the bundle's Info.plist at runtime, and plays the standard startup sound — `startup-sound.wav` in Resources, byte-identical to the Academy master. The bundle carries the SDS-10 conformance entry beside the Academy audit entry (all four clauses true). Academy bundle ID, trimmed monochrome cylinder icon, audit entry stand. Bundled MySQL client is 5.5.56 (end-of-life), unchanged in this tranche; its replacement is a separate owner decision. New glyph: the Cylinder (branding distinctiveness refresh)."
     },
     {
-      "category": "Audio",
-      "datePublished": null,
-      "description": "An Academy combine-fork: an Audacity-derived editor (pinned Audacity 3.7.9, the last line supporting macOS 10.13) with libVLC (pinned VLC 3.0.24) in a separate helper process for playback, conversion, and video-companion duties. Differentiators: High Sierra floor and a zero-telemetry build, verified by network capture before publication. Ships GPL-3.0 with full source, per the Gate 0 license record. The org fork (AutomatedTechnologies/audacity) is created and its provenance is filed; the first build — a High Sierra build proof of the pinned line — is the open tranche, followed by the bundled-dependency audit. No build exists yet; this entry publishes nothing until a verified build lands.",
-      "downloadURL": null,
-      "iconURL": "https://detroitautomationacademy.com/store/icons/sounddeck.png",
-      "id": "sounddeck",
-      "license": "GPL-3.0",
-      "minMacOS": "10.13",
-      "name": "SoundDeck",
-      "sha256": null,
-      "sizeBytes": null,
-      "sourceURL": "https://github.com/AutomatedTechnologies/audacity",
-      "status": "in-development",
-      "tagline": "Audio editor with VLC-powered playback and conversion — in development.",
-      "version": "0.0.0",
-      "buildNotes": "In development — no installable build yet. Build proof complete 2026-11-08 (SD-T2); D2 audit in progress."
-    },
-    {
       "category": "Network",
       "datePublished": "2026-11-10",
       "description": "Staged internal build of Workbench, the Academy's unified network utility, CI-built 2026-11-08; launched on the High Sierra rig 2026-11-08: the remediated KisMac discovery engine hosted in a new unified shell, a read-only AirPort base-station configuration view, Ping / Netstat / Traceroute / Speed Test diagnostics, and a local-only journal. Manage is read-only in this build — there is no configuration write path. Installs as Workbench.app under its own Academy bundle identity (com.detroitautomationacademy.workbench) and carries the Academy audit entry, distinct from KisMac — the two install side by side. (The earlier staged-v1-1 build shared the KisMac bundle identity and installing one replaced the other; corrected in staged-v1-2.) The Networks header now reads “Workbench” — staged-v1-4 is the surgical repair of the inherited “KisMac v0.3.4” header (ScanController), one line, nothing else changed. staged-v1-5 additionally re-cuts the app icon to the amended SDS-3 tile construction (the v1-4 header repair is carried in). staged-v1-6 adds the Optimizations panel.",
@@ -197,6 +179,24 @@
       "tagline": "The Academy's project board — every GitHub project in one native window.",
       "version": "snowfell-test-2",
       "buildNotes": "Snowfell snowfell-test-2 — the uplift build. The interface now meets the design baseline: kanban columns as tinted wells with letterspaced uppercase headers, cards whose titles wrap in full (no more mid-word truncation) with each label as its own pill, and the Portfolio as a proper table — letterspaced column headers, a health dot and an Open / Done split per board, the board's own status vocabulary spelled out. New: the V12 Storage lens (View → Storage, Command-8) with its SnowfellStorageService helper bundled — multi-tenant storage and content management, deduplicated by SHA-256, loopback-only. Board state is derived: once the app pulls the schema v9 snapshot (Sync → Check Now → Apply Update), a board whose items all sit in its final status reads Complete instead of Open, with the GitHub state kept as a detail. Bundled snapshot v8-0041 (74 boards, 614 items, 5 incidents). Write-back is compiled OFF: actions queue locally and nothing is sent to GitHub. Unsigned test build; the runtime verdict is the owner's, at the Air sitting."
+    },
+    {
+      "category": "Utilities",
+      "datePublished": "2026-11-12",
+      "description": "Tachometer is the Detroit Automation Academy's on-device analytics application for Intel Macs running macOS High Sierra (10.13). It measures the Academy's own applications where they actually run: per-process CPU and memory, itemized by role (shell, renderer, GPU, helper), so a cost like an animated avatar's is a number read off the device, not an estimate. Samples land in a segmented, append-only store under the app's own Application Support — single writer by lock, second writer refused, never merged — with rotation and retention bounds, and the built-in budget scorer reads that stream against the estate's per-app budgets (the Minion avatar budget: at most 10% of one thread sustained), reporting PASS, FAIL, or NO DATA — unmeasured is never a silent pass. There is no network code in the app: data is generated, stored, and read on the device only. Academy-original software under the Academy License (revocable). Unsigned test build.",
+      "downloadURL": "https://github.com/AutomatedTechnologies/tachometer/releases/download/tachometer-test-1/Tachometer-test.zip",
+      "iconURL": "https://detroitautomationacademy.com/store/icons/tachometer.png",
+      "id": "tachometer",
+      "license": "Academy License (revocable)",
+      "minMacOS": "10.13",
+      "name": "Tachometer",
+      "sha256": "2c2e59f52c2cc5aba0e5c526f8e6c2aba1d5056573bcecff55b9d224775b3655",
+      "sizeBytes": 803538,
+      "sourceURL": "https://github.com/AutomatedTechnologies/tachometer",
+      "status": "testing",
+      "tagline": "On-device analytics for Academy apps — measured on the device, kept on the device.",
+      "version": "tachometer-test-1",
+      "buildNotes": "Tachometer tachometer-test-1 — first Distro listing. The Academy's on-device analytics: per-process CPU and memory for Academy apps, itemized by role (shell, renderer, GPU, helper), stored on the device only in a segmented single-writer store, and scored in-app against the estate's budgets — PASS, FAIL, or NO DATA, never a silent pass. No network code. Unsigned test build; the runtime verdict is the owner's, at the Air sitting — install Tachometer from this listing; its first report scores the Minion avatar from device data."
     }
   ],
   "catalogVersion": 1,
