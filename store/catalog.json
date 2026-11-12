@@ -179,6 +179,24 @@
       "tagline": "Diagnose and recover a non-responsive AirPods Max (Lightning) — USB, Bluetooth, audio, firmware.",
       "version": "apd-test-5",
       "buildNotes": "Defect fix: the app shipped with no menu bar — the programmatic UI never built a main menu (no nib, and no code called setMainMenu:). The main menu is now constructed in code and installed at launch: app menu (About, Quit), File (Save Report…, Close Window), Edit (standard editing for the report view), Diagnostics (the window's nine actions, on the menu bar), Window, Help. No diagnostic behavior changes. Runtime verification at the owner's Air sitting, evening of 2026-11-10."
+    },
+    {
+      "category": "Productivity",
+      "datePublished": "2026-11-11",
+      "description": "Snowfell is the Detroit Automation Academy's Jira-style board application for Intel Macs running macOS High Sierra (10.13): every Academy project board in one native window. The bundled registry snapshot (v7-0038) carries 74 GitHub Projects boards and 614 items — the Academy's GitHub across the user smit4786 and the AutomatedTechnologies organization — with a portfolio rollup, per-board kanban whose columns are each board's own status vocabulary (data, never a hardcoded list), item detail, a roadmap over start and target dates, a command palette, an orchestration queue over a data-driven action manifest, and an incidents lens for consequential matters, their evidence, and their deadlines. Snowfell reads a pinned, hash-verified snapshot of the Academy registry and works fully offline; a newer snapshot can be fetched and verified in-app before it is swapped in. GitHub write-back is compiled OFF in this build (SNOWFELL_WRITEBACK_ENABLED = 0): actions queue locally and nothing is sent. Academy-original software under the Academy License (revocable). Unsigned test build.",
+      "downloadURL": "https://github.com/AutomatedTechnologies/snowfell/releases/download/snowfell-test-1/Snowfell-test.zip",
+      "iconURL": "https://detroitautomationacademy.com/store/icons/snowfell.png",
+      "id": "snowfell",
+      "license": "Academy License (revocable)",
+      "minMacOS": "10.13",
+      "name": "Snowfell",
+      "sha256": "3d657887828c41c5b8cd9ba7808c27ec8fad7b295a697cfc9cff91957815a36f",
+      "sizeBytes": 1148919,
+      "sourceURL": "https://github.com/AutomatedTechnologies/snowfell",
+      "status": "testing",
+      "tagline": "The Academy's project board — every GitHub project in one native window.",
+      "version": "snowfell-test-1",
+      "buildNotes": "Snowfell snowfell-test-1 — first Distro listing. The Academy's board: portfolio rollup, per-board kanban in each board's own status vocabulary, item detail, roadmap, command palette, orchestration queue, and the incidents lens — reading a pinned, hash-verified registry snapshot (v7-0038: 74 boards, 614 items, 5 incidents), fully offline. Write-back is compiled OFF in this build: actions queue locally and nothing is sent to GitHub. Unsigned test build; the runtime verdict is the owner's, at the Air sitting — install Snowfell from this listing; the install is the test."
     }
   ],
   "catalogVersion": 1,
