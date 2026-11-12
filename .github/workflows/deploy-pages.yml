@@ -4,6 +4,11 @@ on:
   push:
     branches: ["main"]
   workflow_dispatch:
+    inputs:
+      feed_only:
+        description: "Feed publisher dispatch: the tip commit is a live-data update; verify the tip diff and take the data-only fast path when it is one"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -46,6 +51,26 @@ jobs:
       - name: Determine change scope
         id: scope
         run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.feed_only }}" = "true" ]; then
+            # Feed-only dispatch (2026-11-12, LTD Actions move): the
+            # publisher dispatches after its own feed commit lands,
+            # so verify THAT commit's paths. Data-only -> the same
+            # fast path a data-only push takes; anything else (or an
+            # unreadable diff) falls back to the full gates.
+            changed="$(git diff --name-only HEAD~1 HEAD 2>/dev/null || true)"
+            printf '%s\n' "$changed"
+            if [ -n "$changed" ] && ! printf '%s\n' "$changed" | grep -qvE '^(live-data/|live-transit/[^/]+/data/|feed-raw/)'; then
+              echo "code_changed=false" >> "$GITHUB_OUTPUT"
+              echo "scope: feed-only dispatch, tip commit is data-only — heavy gates skipped (feed cadence)"
+              for g in shell-contract manifest-recompute ref-integrity; do
+                echo "EVIDENCE gate=$g class=bytes verdict=skip" >> gate-skipped.log
+              done
+            else
+              echo "code_changed=true" >> "$GITHUB_OUTPUT"
+              echo "scope: feed-only dispatch but tip is not data-only — full gates (safe default)"
+            fi
+            exit 0
+          fi
           if [ "${{ github.event_name }}" != "push" ] || [ -z "${{ github.event.before }}" ] || [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
             echo "code_changed=true" >> "$GITHUB_OUTPUT"
             echo "scope: non-push or first push — full gates"
@@ -214,7 +239,7 @@ jobs:
 
       - name: Boot smoke check
         id: smoke
-        if: needs.verify.outputs.code_changed == 'true' || github.event_name == 'workflow_dispatch'
+        if: needs.verify.outputs.code_changed == 'true' || (github.event_name == 'workflow_dispatch' && inputs.feed_only != true)
         run: |
           set -eo pipefail
           cd tools/cicd
