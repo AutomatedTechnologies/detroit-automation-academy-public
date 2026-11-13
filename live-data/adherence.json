@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-13T07:40:57.007Z",
+  "generated_at": "2026-11-13T07:43:40.414Z",
   "smart": {
     "method": "tu-static-join",
     "static_feed": "S1000147",
@@ -15,7 +15,7 @@
         "next_stop_eta": "2026-11-13T10:05:00.000Z",
         "in_service": true,
         "method": "tu-static-join",
-        "updated_at": "2026-11-13T07:40:56.000Z"
+        "updated_at": "2026-11-13T07:43:38.000Z"
       },
       "1751020": {
         "route_id": "462",
@@ -28,7 +28,7 @@
         "next_stop_eta": "2026-11-13T08:32:00.000Z",
         "in_service": true,
         "method": "tu-static-join",
-        "updated_at": "2026-11-13T07:40:56.000Z"
+        "updated_at": "2026-11-13T07:43:38.000Z"
       }
     }
   },
@@ -142,6 +142,16 @@
         "stop_id": "162",
         "vehicle_id": "2018",
         "detected_at": "2026-11-13T03:09:09.248Z",
+        "method": "track-dwell",
+        "inference": true
+      },
+      {
+        "agency": "ddot",
+        "route_id": "17",
+        "direction_id": 1,
+        "stop_id": "395",
+        "vehicle_id": "2218",
+        "detected_at": "2026-11-13T07:43:40.414Z",
         "method": "track-dwell",
         "inference": true
       }
