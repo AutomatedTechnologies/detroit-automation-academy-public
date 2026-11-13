@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:f7a1019b7d0d2203c02c00c01aaaf2d6ffd8a0d67766a3b83e807b6ddc501f7d",
+    "stateFingerprint": "sha256:68aba850ec2ca6b6c2bae8e6f665f19b954b506464ebacbf85da6a3a18ab51bb",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 9,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-13",
   "counts": {
     "apps": 14,
-    "builds": 44,
+    "builds": 46,
     "catalog_state": 12,
     "audits": 1,
     "findings": 17,
@@ -33,23 +33,23 @@
       "description": "The Academy's maintained build of KisMac: passive Wi-Fi scanning, hidden-SSID detection, client mapping, and GPS/KML export, remediated and rebuilt for macOS High Sierra. For network education and authorized testing of your own networks only. Installs as KisMac2.app under the Academy's own bundle identity (com.detroitautomationacademy.kismac) and carries the Academy audit entry. The bundle identity changed from the upstream com.igrsoft.kismac in this build, so the first launch is a fresh profile — preferences, Keychain items, and saved state do not carry over. It installs side by side with the Workbench entry (Workbench.app). Its app icon is the Academy re-cut under the amended SDS-3 construction (ink silhouette on the white tile) — the upstream color art no longer ships in the build.",
       "catalogStatus": "release-candidate",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/kismac.png",
-      "buildNotes": "Adds the SDS-8 welcome screen via the shared Academy component (AcademyWelcomeController + AcademyAppIconView): the welcome draws the bundle AppIcon composition, displays the build version read from the bundle's own Info.plist at runtime, and plays the standard startup sound (byte-identical in the bundle). The bundle stamps the SDS-10 conformance entry beside the Academy audit entry. Also adds the Academy license and notice to the bundle. Runtime verification at the owner's next Air sitting.",
+      "buildNotes": "The Growl notification channel is excised on this line too (SDS-10 10.6, both halves): Growl.framework no longer ships in the bundle, and scan banners post natively via NSUserNotificationCenter from the main bundle, so Notification Center attributes them to this app — its own bundle identity and icon — by construction. The self-asserted sender-identity vulnerability the inherited Growl registration created (a retired, unpatched third-party intermediary holding a user-facing trust surface) is closed estate-wide with this build: no Academy bundle ships the Growl channel any longer. The bundle stamps the SDS-10 conformance entry, including NotificationIdentity, beside the Academy audit entry.",
       "audits": [],
       "currentBuild": {
-        "tag": "test-build-19",
-        "sizeBytes": 2699372,
-        "sha256": "8d4f70ac74605ce11ecac018a2ebd08f8fbd8f65738561393c90963a4ee390a6",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/test-build-19/KisMac-test.zip",
+        "tag": "test-build-20",
+        "sizeBytes": 2328346,
+        "sha256": "db596f2372f48ad9beba949f078a20da122301272f3bb7d26bf4f25d7736cbc8",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/test-build-20/KisMac-test.zip",
         "floor": "10.13",
-        "builtAt": "2026-11-10",
-        "releasePublishedAt": "2026-11-10T22:39:52Z",
-        "ciRun": "42915974025",
+        "builtAt": "2026-11-13",
+        "releasePublishedAt": "2026-11-13T23:19:01Z",
+        "ciRun": "43526019031",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10; Logo / VersionAtStartup / StartupSound / MenuBar all true; Date 2026-11-10); fresh-download plist readback verified 2026-11-10 for the SDS10-T1 shared-welcome build (test-build-19, SHA-256 8d4f70ac74605ce11ecac018a2ebd08f8fbd8f65738561393c90963a4ee390a6); bundled startup-sound.wav byte-identical to the SDS-10 master (SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a)"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10; Logo / VersionAtStartup / StartupSound / MenuBar / NotificationIdentity all true; Date 2026-11-13); fresh-download readback verified 2026-11-13 for the SDS-10 10.6 Growl-excision build (test-build-20, SHA-256 db596f2372f48ad9beba949f078a20da122301272f3bb7d26bf4f25d7736cbc8): no Growl.framework in bundle, no Growl link or bridge symbols in binary, native NSUserNotificationCenter posting; bundled startup-sound.wav byte-identical to the SDS-10 master (SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a)"
         }
       }
     },
@@ -173,23 +173,23 @@
       "description": "Staged internal build of Workbench, the Academy's unified network utility, CI-built 2026-11-08; launched on the High Sierra rig 2026-11-08: the remediated KisMac discovery engine hosted in a new unified shell, a read-only AirPort base-station configuration view, Ping / Netstat / Traceroute / Speed Test diagnostics, and a local-only journal. Manage is read-only in this build — there is no configuration write path. Installs as Workbench.app under its own Academy bundle identity (com.detroitautomationacademy.workbench) and carries the Academy audit entry, distinct from KisMac — the two install side by side. (The earlier staged-v1-1 build shared the KisMac bundle identity and installing one replaced the other; corrected in staged-v1-2.) The Networks header now reads “Workbench” — staged-v1-4 is the surgical repair of the inherited “KisMac v0.3.4” header (ScanController), one line, nothing else changed. staged-v1-5 additionally re-cuts the app icon to the amended SDS-3 tile construction (the v1-4 header repair is carried in). staged-v1-6 adds the Optimizations panel.",
       "catalogStatus": "release-candidate",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/workbench.png",
-      "buildNotes": "Removes the Growl notification channel entirely (SDS-10 10.6, both halves): Growl.framework no longer ships in the bundle and the scan banners post natively via NSUserNotificationCenter from the main bundle, so Notification Center attributes them to Workbench — bundle identity and AppIcon — by construction, closing the self-asserted sender-identity vulnerability the inherited Growl registration created (photographed on the rig 2026-11-13: banner \"KisMAC / Stopping Scan...\" over the Workbench window). The bundle stamps the SDS-10 conformance entry, including NotificationIdentity, beside the Academy audit entry. Rig re-verification of the banner at the owner's next Air sitting.",
+      "buildNotes": "Menu identity completed: every label in the menu bar now speaks in this product's own name — About, Hide, and Quit read Workbench, the Help menu offers the Workbench website (the Academy's own page for this build) and Workbench Help, and the inherited Donate / FAQ / Forums items that routed users to the upstream project are removed. The short version leaves the inherited upstream numbering behind (1.27, tracking the staged-v1 line), and the Get Info string carries the Academy attribution with provenance to the fork record. The Growl excision and native notification posting of the previous build stand unchanged. Rig verification of the rendered menus joins the banner check at the owner's next Air sitting.",
       "audits": [],
       "currentBuild": {
-        "tag": "staged-v1-26",
-        "sizeBytes": 2319114,
-        "sha256": "1523172b5a24f2602789aae967471f002023f29bfa4c4bff24684c4af7fd75fd",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/staged-v1-26/Workbench-test.zip",
+        "tag": "staged-v1-27",
+        "sizeBytes": 2318933,
+        "sha256": "879633d06c214afa4a22a5c350421faa4022a58b1312c8f4c8b141a80dc73e59",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/staged-v1-27/Workbench-test.zip",
         "floor": "10.13",
         "builtAt": "2026-11-13",
-        "releasePublishedAt": "2026-11-13T22:38:53Z",
-        "ciRun": "43520762355",
+        "releasePublishedAt": "2026-11-13T23:19:00Z",
+        "ciRun": "43526031014",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10; Logo / VersionAtStartup / StartupSound / MenuBar / NotificationIdentity all true; Date 2026-11-13); fresh-download readback verified 2026-11-13 for the SDS-10 10.6 Growl-excision build (staged-v1-26, SHA-256 1523172b5a24f2602789aae967471f002023f29bfa4c4bff24684c4af7fd75fd): no Growl.framework in bundle, no Growl link or bridge symbols in binary, native NSUserNotificationCenter posting; bundled startup-sound.wav byte-identical to the SDS-10 master (SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a); AppIcon.icns unchanged (SHA-256 b1d0c57e29c12fa344563dee06469f2e4ad8739a67a0b37510f58a6260cf426b)"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10; Logo / VersionAtStartup / StartupSound / MenuBar / NotificationIdentity all true; Date 2026-11-13); fresh-download readback verified 2026-11-13 for the identity-follow-up build (staged-v1-27, SHA-256 879633d06c214afa4a22a5c350421faa4022a58b1312c8f4c8b141a80dc73e59): compiled-nib census clean of all eight inherited menu labels, short version 1.27, GetInfo + HelpBookName at ship identity, Growl census still zero; bundled startup-sound.wav byte-identical to the SDS-10 master (SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a); AppIcon.icns unchanged (SHA-256 b1d0c57e29c12fa344563dee06469f2e4ad8739a67a0b37510f58a6260cf426b)"
         }
       }
     },
