@@ -285,6 +285,32 @@
         "complete": true,
         "ref": "bundle-carried audit entry (Distro files/08 rule) attested on the shipped artifact's own Info.plist (audit + SDS-10 conformance dicts complete, dated 2026-11-12), plus THIS pass: fresh-download dissection of the shipped zip (803,538 B, SHA-256 == GitHub asset digest == registration packet) — bundle com.detroitautomationacademy.analytics, 0.1.0 (tachometer-test-1), LSMinimumSystemVersion 10.13, startup-sound.wav byte-identical to the SDS-10 master (07a11324...), zip census 11 entries; build-line record (AutomatedTechnologies/tachometer @ 315e8816, records/BUILD-RECORD-test-1.md): complete source tree (9 sources) syntax-clean under the clang / MacOSX 10.13 SDK recipe, CPUMath harness 16/16, contract conformance 19/19, tranche suite 12/12, network grep over shipped sources clean (no network code exists in the app), executable Mach-O x86_64; recompiled from that source by estate CI (run 43279781471, run_number 1, SUCCESS) into the shipped artifact"
       }
+    },
+    {
+      "category": "Utilities",
+      "datePublished": "2026-11-13",
+      "description": "Arcadia is the Detroit Automation Academy's emulation and public-domain media library for Intel Macs running macOS High Sierra (10.13). It browses one verified catalog (schema arcadia-catalog/1; the bundled snapshot carries 74 records — 29 emulators with their last High Sierra-compatible versions pinned with evidence, 18 public-domain films, 12 homebrew games, 10 audio records, 5 television episodes — and the app refreshes from the served catalog, adopting a new snapshot only when it validates). Every media title shows its rights class and the traced rights basis in full: the shelf is restricted to homebrew, public-domain, and openly-licensed works, license traced per title. No commercial ROMs and no BIOS or firmware ship with the app, and none are hosted or linked — emulators launch with files the user supplies, and the app says so in plain language. Media is reference-only in this build (nothing is hosted yet), so no title pretends to a Play button it does not have. Academy-original software under the Academy License (revocable). Unsigned test build.",
+      "downloadURL": "https://github.com/AutomatedTechnologies/arcadia/releases/download/arcadia-test-1/Arcadia-test.zip",
+      "iconURL": "https://detroitautomationacademy.com/store/icons/arcadia.png",
+      "id": "arcadia",
+      "license": "Academy License (revocable)",
+      "minMacOS": "10.13",
+      "name": "Arcadia",
+      "sha256": "984e0c36f5d77c93ad5dac1ac5df5dd76187ca34ed6a641a4cef878161f996c1",
+      "sizeBytes": 834175,
+      "sourceURL": "https://github.com/AutomatedTechnologies/arcadia",
+      "status": "testing",
+      "tagline": "The High Sierra emulation library — verified emulator pins and a public-domain shelf, license traced per title.",
+      "version": "arcadia-test-1",
+      "buildNotes": "Arcadia arcadia-test-1 — first Distro listing. The High Sierra emulation library: browse the verified catalog by shelf and genre (29 pinned emulators, 18 public-domain films, 12 homebrew games, 10 audio, 5 TV episodes), with the rights class and traced license basis shown for every title. Emulators launch with your own files only — no commercial ROMs, no BIOS, nothing hosted or linked; media is reference-only in this build. The bundled catalog snapshot refreshes in-app from the served catalog. Unsigned test build; the runtime verdict is the owner's, at the Air sitting — install Arcadia from this listing; the install is the test.",
+      "bundleId": "com.detroitautomationacademy.arcadia",
+      "audit": {
+        "disassembled": true,
+        "scanned": true,
+        "recompiled": true,
+        "complete": true,
+        "ref": "bundle-carried audit entry (Distro files/08 rule) attested on the shipped artifact's own Info.plist (audit + SDS-10 conformance dicts complete, dated 2026-11-13), plus THIS pass: fresh-download dissection of the shipped zip (834,175 B, SHA-256 == GitHub release asset, downloaded back and hashed locally) — bundle com.detroitautomationacademy.arcadia, 1.0.0 (arcadia-test-1), LSMinimumSystemVersion 10.13, startup-sound.wav byte-identical to the SDS-10 master (07a11324...), bundled arcadia-catalog.json byte-identical to the served Population Wave 1 catalog (5b557f4c..., 74 records, media reference-only, hosted = 0), Arcadia.icns 189,645 B from the registered iconset in-repo, executable Mach-O 64-bit x86_64, zip census 8 entries; build-line record (AutomatedTechnologies/arcadia @ 2d3c45b6ca, Arcadia goal files/APP-V1-BUILD.md + addendum): complete source tree (9 Objective-C sources, Academy-original clean-room code) dissected — catalog browser over arcadia-catalog/1 with bundled snapshot + validated refresh, rights class and traced basis shown per title, emulator launch for user-supplied files only with the fence stated in-app, no Play surface for reference-only media; scanned: zero third-party hosts/fonts/scripts/analytics in the tree (environment blacklist), the only network fetch is the Academy catalog URL; syntax-clean under the clang / MacOSX 10.13 SDK recipe (ALL SYNTAX OK at build time); recompiled from that source by estate CI (run 43417022885, macos-15, SUCCESS) into the shipped artifact"
+      }
     }
   ],
   "catalogVersion": 1,
