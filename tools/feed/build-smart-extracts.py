@@ -8,6 +8,8 @@ Outputs (live-data/):
   smart-headsigns.json     {by_trip:{trip_id:headsign}, by_route_dir:{"route|dir":headsign}}
   smart-schedule-extract.json {version, services{...}, trips{trip_id:[route,dir,service,[[stop,dep_sec]...]]}}
   ddot-patterns.json       {version, routes:{route:{dir:[[stop_id,lat,lon]...]}}}  (longest trip per route+dir)
+  route-meta.json          {ddot|smart: {feed_version, routes:{id:{short_name,long_name}},
+                             services:{...}, svc_routes:{service:{route:{trips,first,last}}}}}
 """
 import csv, io, json, sys, zipfile
 from collections import Counter, defaultdict
@@ -87,9 +89,105 @@ def build_ddot(zip_path, out_dir):
         json.dump({"feed_version": feed_version, "routes": dict(routes_out)}, f, separators=(",", ":"))
     return feed_version, len(routes_out)
 
+def agency_meta(zip_path):
+    """Route metadata for one agency, derived from its GTFS zip:
+    routes.txt names + per-(service, route) trip counts and first /
+    last departure seconds + the calendar services needed to resolve
+    which services run on a given date. Consumed by build-feed.mjs
+    (ER-FIX-FEED-01, 2026-11-13) for the vehicles.json routes_dark
+    list and the SMART destination fallback — GTFS-derived at extract
+    time, never hand-maintained."""
+    z = zipfile.ZipFile(zip_path)
+    feed_version = None
+    for row in rows(z, "feed_info.txt"):
+        feed_version = row["feed_version"]
+    routes = {}
+    for row in rows(z, "routes.txt"):
+        routes[row["route_id"]] = {
+            "short_name": (row.get("route_short_name") or row["route_id"]).strip(),
+            "long_name": (row.get("route_long_name") or "").strip(),
+        }
+    services = {}
+    for row in rows(z, "calendar.txt"):
+        services[row["service_id"]] = {
+            "days": [
+                int(row[d])
+                for d in (
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                    "saturday",
+                    "sunday",
+                )
+            ],
+            "start": row["start_date"],
+            "end": row["end_date"],
+            "add": [],
+            "remove": [],
+        }
+    for row in rows(z, "calendar_dates.txt"):
+        svc = services.setdefault(
+            row["service_id"],
+            {"days": [0] * 7, "start": "", "end": "", "add": [], "remove": []},
+        )
+        (svc["add"] if row["exception_type"] == "1" else svc["remove"]).append(
+            row["date"]
+        )
+    trip_sr = {}
+    for row in rows(z, "trips.txt"):
+        trip_sr[row["trip_id"]] = (row["service_id"], row["route_id"])
+    span = {}
+    for row in rows(z, "stop_times.txt"):
+        sr = trip_sr.get(row["trip_id"])
+        if sr is None:
+            continue
+        dep = t2s(row["departure_time"])
+        cur = span.get(row["trip_id"])
+        if cur is None:
+            span[row["trip_id"]] = [dep, dep]
+        else:
+            if dep < cur[0]:
+                cur[0] = dep
+            if dep > cur[1]:
+                cur[1] = dep
+    svc_routes = defaultdict(dict)
+    for tid, (sid, rid) in trip_sr.items():
+        first, last = span.get(tid, [0, 0])
+        cell = svc_routes[sid].get(rid)
+        if cell is None:
+            svc_routes[sid][rid] = {"trips": 1, "first": first, "last": last}
+        else:
+            cell["trips"] += 1
+            if first < cell["first"]:
+                cell["first"] = first
+            if last > cell["last"]:
+                cell["last"] = last
+    return {
+        "feed_version": feed_version,
+        "routes": routes,
+        "services": services,
+        "svc_routes": {sid: dict(rs) for sid, rs in svc_routes.items()},
+    }
+
+
+def build_route_meta(smart_zip, ddot_zip, out_dir):
+    meta = {"ddot": agency_meta(ddot_zip), "smart": agency_meta(smart_zip)}
+    with open(f"{out_dir}/route-meta.json", "w") as f:
+        json.dump(meta, f, separators=(",", ":"))
+    return meta
+
+
 if __name__ == "__main__":
     smart_zip, ddot_zip, out_dir = sys.argv[1], sys.argv[2], sys.argv[3]
     v1, n1, n2 = build_smart(smart_zip, out_dir)
     print(f"SMART {v1}: headsigns {n1}, schedule trips {n2}")
     v2, n3 = build_ddot(ddot_zip, out_dir)
     print(f"DDOT {v2}: pattern routes {n3}")
+    meta = build_route_meta(smart_zip, ddot_zip, out_dir)
+    print(
+        "route-meta: "
+        f"ddot routes {len(meta['ddot']['routes'])}, "
+        f"smart routes {len(meta['smart']['routes'])}"
+    )
