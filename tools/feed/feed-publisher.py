@@ -205,6 +205,10 @@ FEED_FILES = [
     "smart-headsigns.json",
     "smart-schedule-extract.json",
     "ddot-patterns.json",
+    # ER-FIX-FEED-01 (2026-11-13): GTFS-derived route metadata
+    # (routes.txt names + calendar/trip windows) the builder reads
+    # for routes_dark and the SMART destination fallback.
+    "route-meta.json",
     "adherence.json",
     "track-state.json",
 ]
@@ -717,7 +721,16 @@ def run_replay(builder_path, bundle_dir, out_dir):
             f"{proc.stdout[-400:]} {proc.stderr[-400:]}"
         )
     lines = proc.stdout.strip().splitlines()
-    return lines[-1] if lines else ""
+    # ER-FIX-FEED-01 standing alarm: the builder's named unmatched-
+    # vehicle warnings must reach this run's log, not die in the
+    # captured stdout (only the last line is returned as the summary).
+    alarms = [ln for ln in lines if "UNMATCHED_VEHICLES_ALARM" in ln]
+    for ln in alarms:
+        log(ln)
+    summary = lines[-1] if lines else ""
+    if alarms:
+        summary += f" | alarms={len(alarms)}"
+    return summary
 
 
 # ------------------------------------------- shadowed-fresh recovery
