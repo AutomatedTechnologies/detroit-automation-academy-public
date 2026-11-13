@@ -764,10 +764,17 @@ function haversineM(lat1, lon1, lat2, lon2) {
  * dominant headsign); missing VP attribution is adopted from the
  * vehicle's TU trip where the TU carries it. VP route wins over TU
  * route on disagreement (the position's own descriptor is primary;
- * disagreements are counted in the run log by the caller). */
-function finalizeSmartVehicles(smartVehicles, smartTrips, headsigns) {
+ * disagreements are counted in the run log by the caller).
+ * ER-FIX-FEED-01 (2026-11-13): when the headsign extract has no entry
+ * for an attributed route, the destination falls back to the route's
+ * GTFS routes.txt name from route-meta.json (long name, else short
+ * name) rather than shipping the vehicle with no display value. The
+ * meta is GTFS-derived at extract time (tools/feed/
+ * build-smart-extracts.py) — no hand-maintained route lists. */
+function finalizeSmartVehicles(smartVehicles, smartTrips, headsigns, routeMeta) {
   const byTrip = (headsigns && headsigns.by_trip) || {};
   const byRouteDir = (headsigns && headsigns.by_route_dir) || {};
+  const metaRoutes = (routeMeta && routeMeta.smart && routeMeta.smart.routes) || {};
   const tuByVehicle = new Map();
   for (const t of smartTrips || []) {
     if (!t.vehicle_id) continue;
@@ -789,9 +796,125 @@ function finalizeSmartVehicles(smartVehicles, smartTrips, headsigns) {
     if (!hs && out.route_id) {
       hs = byRouteDir[`${out.route_id}|${out.direction_id === null || out.direction_id === undefined ? '' : out.direction_id}`];
     }
+    if (!hs && out.route_id && metaRoutes[out.route_id]) {
+      hs = metaRoutes[out.route_id].long_name || metaRoutes[out.route_id].short_name || null;
+    }
     if (hs) out.destination = hs;
     return out;
   });
+}
+
+/* ER-FIX-FEED-01 (2026-11-13) — routes_dark + unmatched accounting.
+ * routes_dark names every route that has scheduled trips today
+ * (GTFS route-meta.json: trips.txt x calendar for the Detroit date),
+ * whose service window opened at least 30 minutes ago, and that has
+ * NO live vehicle in this cycle. A complete-attribution route whose
+ * first departure falls inside the next 300 minutes is also named,
+ * with window_source 'gtfs-schedule-inferred'. window_minutes is the elapsed
+ * scheduled-service window: first scheduled departure today ->
+ * min(now, last scheduled departure today); window_source names its
+ * provenance ('gtfs-schedule'). DDOT attribution is complete (every
+ * BusTime vehicle carries its route), so a DDOT entry is a proven
+ * absence; SMART attribution rides the Swiftly VP TripDescriptor, so
+ * a SMART entry is an absence of ATTRIBUTED vehicles and carries
+ * attribution_basis 'vp-attributed' to say so. The list ships in
+ * vehicles.json so a dark route is a served fact, not a client-side
+ * inference (ER-04). */
+const DARK_MIN_WINDOW_MIN = 30;
+const DARK_INFER_WINDOW_MIN = 300;
+const WEEKDAY_IDX = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
+
+function detroitToday(nowSec) {
+  const parts = {};
+  for (const p of _detroitDtf.formatToParts(new Date(nowSec * 1000))) parts[p.type] = p.value;
+  const wd = new Intl.DateTimeFormat('en-US', { timeZone: DETROIT_TZ, weekday: 'short' })
+    .format(new Date(nowSec * 1000));
+  return {
+    ymd: `${parts.year}${parts.month}${parts.day}`,
+    weekdayIdx: WEEKDAY_IDX[wd],
+  };
+}
+
+function computeRoutesDark(routeMeta, agency, liveCounts, nowSec) {
+  const meta = routeMeta && routeMeta[agency];
+  if (!meta || !meta.routes || !meta.services || !meta.svc_routes) return [];
+  const { ymd, weekdayIdx } = detroitToday(nowSec);
+  if (weekdayIdx === undefined) return [];
+  const midnight = detroitMidnightEpochSec(ymd);
+  const today = {};
+  for (const [sid, svc] of Object.entries(meta.services)) {
+    let active = Boolean(svc.days && svc.days[weekdayIdx])
+      && (!svc.start || svc.start <= ymd) && (!svc.end || ymd <= svc.end);
+    if ((svc.add || []).includes(ymd)) active = true;
+    if ((svc.remove || []).includes(ymd)) active = false;
+    if (!active) continue;
+    for (const [rid, cell] of Object.entries(meta.svc_routes[sid] || {})) {
+      const e = today[rid] || (today[rid] = { trips: 0, first: Infinity, last: 0 });
+      e.trips += cell.trips;
+      if (cell.first < e.first) e.first = cell.first;
+      if (cell.last > e.last) e.last = cell.last;
+    }
+  }
+  const out = [];
+  for (const [rid, e] of Object.entries(today)) {
+    if (!e.trips || (liveCounts.get(rid) || 0) > 0) continue;
+    const firstEpoch = midnight + e.first;
+    const lastEpoch = midnight + e.last;
+    const r = meta.routes[rid] || {};
+    if (nowSec < firstEpoch) {
+      /* Service not yet started. Only a complete-attribution agency
+       * may name a route here, and only when its first departure
+       * falls inside the standing 300-minute observation window:
+       * the entry is an inference from the schedule, and says so in
+       * window_source (the ER-04 diagnostic's 'inferred window'). */
+      if (agency !== 'ddot') continue;
+      if (firstEpoch - nowSec > DARK_INFER_WINDOW_MIN * 60) continue;
+      out.push({
+        agency,
+        route_id: rid,
+        route_short_name: r.short_name || rid,
+        route_long_name: r.long_name || '',
+        trips_today: e.trips,
+        window_minutes: DARK_INFER_WINDOW_MIN,
+        window_source: 'gtfs-schedule-inferred',
+        attribution_basis: 'complete',
+      });
+      continue;
+    }
+    const windowMinutes = Math.floor((Math.min(nowSec, lastEpoch) - firstEpoch) / 60);
+    if (windowMinutes < DARK_MIN_WINDOW_MIN) continue;
+    out.push({
+      agency,
+      route_id: rid,
+      route_short_name: r.short_name || rid,
+      route_long_name: r.long_name || '',
+      trips_today: e.trips,
+      window_minutes: windowMinutes,
+      window_source: 'gtfs-schedule',
+      attribution_basis: agency === 'ddot' ? 'complete' : 'vp-attributed',
+    });
+  }
+  out.sort((a, b) => a.route_id.localeCompare(b.route_id, undefined, { numeric: true }));
+  return out;
+}
+
+function routeCounts(vehicles) {
+  const m = new Map();
+  for (const v of vehicles || []) {
+    if (v.route_id) m.set(String(v.route_id), (m.get(String(v.route_id)) || 0) + 1);
+  }
+  return m;
+}
+
+/* Unmatched-vehicle alarm (ER-FIX-FEED-01 standing alarm): a vehicle
+ * with no route attribution after every honest join is counted per
+ * agency every cycle; above 2 the count ships as a NAMED warning in
+ * the run log (::warning:: line, forwarded by feed-publisher.py) and
+ * as sources.<agency>.unmatched in vehicles.json — never silently. */
+const UNMATCHED_ALARM_THRESHOLD = 2;
+
+function unmatchedCount(vehicles) {
+  return (vehicles || []).filter((v) => !v.route_id).length;
 }
 
 /* SMART delay per (trip, stop): TU predicted departure epoch minus
@@ -1609,27 +1732,43 @@ async function main() {
   const smartHeadsigns = readExisting(path.join(OUT_DIR, 'smart-headsigns.json')) || { by_trip: {}, by_route_dir: {} };
   const smartSched = readExisting(path.join(OUT_DIR, 'smart-schedule-extract.json'));
   const ddotPatterns = readExisting(path.join(OUT_DIR, 'ddot-patterns.json'));
+  const routeMeta = readExisting(path.join(OUT_DIR, 'route-meta.json'));
   const trackState = loadTrackState();
   const nowSec = Math.floor(Date.parse(nowIso) / 1000);
   const smartTripList = smartActive && smartTu ? smartTu.trips : [];
-  const smartFinal = smartActive && smart ? finalizeSmartVehicles(smart.vehicles, smartTripList, smartHeadsigns) : [];
+  const smartFinal = smartActive && smart ? finalizeSmartVehicles(smart.vehicles, smartTripList, smartHeadsigns, routeMeta) : [];
   const delaysByTrip = computeSmartTripDelays(smartTripList, smartSched);
   const allVehicles = [...ddot.vehicles, ...qline.vehicles, ...smartFinal];
+
+  /* ER-FIX-FEED-01 (2026-11-13): per-agency unmatched accounting +
+   * the routes_dark list, both computed from this cycle's own data
+   * and the GTFS-derived route-meta extract. Absent extract degrades
+   * routes_dark to empty — the build never fails on a seed. */
+  const unmatchedByAgency = {
+    ddot: unmatchedCount(ddot.vehicles),
+    smart: smartActive ? unmatchedCount(smartFinal) : 0,
+    qline: unmatchedCount(qline.vehicles),
+  };
+  const routesDark = [
+    ...computeRoutesDark(routeMeta, 'ddot', routeCounts(ddot.vehicles), nowSec),
+    ...computeRoutesDark(routeMeta, 'smart', routeCounts(smartFinal), nowSec),
+  ];
 
   const vehiclesBody = {
     generated_at: nowIso,
     count: allVehicles.length,
     vehicles: allVehicles,
+    routes_dark: routesDark,
     sources: {
-      ddot: ddot.state,
+      ddot: { ...ddot.state, unmatched: unmatchedByAgency.ddot },
       // FULL INTEGRATION (2026-11-11): SMART vehicles are merged into
       // this file with attribution, same as DDOT/QLINE. With a key
       // present, sources.smart reports the leg's own state; without
       // one it is the removed state, byte-identical to before.
       smart: smartActive
-        ? smart.state
+        ? { ...smart.state, unmatched: unmatchedByAgency.smart }
         : { ok: false, removed: true, at: nowIso, reason: SMART_REMOVED_REASON },
-      qline: qline.state,
+      qline: { ...qline.state, unmatched: unmatchedByAgency.qline },
     },
   };
   const alertsBody = reuse.reuse
@@ -1759,6 +1898,26 @@ async function main() {
   console.log(`adherence.json: ${adh} (smart trips=${Object.keys(adhBody.smart.trips).length}, missed stops retained=${trackState.missed_events.length})`);
   console.log(`track-state: ${trackStats.tracked} vehicles (teleport=${trackStats.teleport}, speed-mismatch=${trackStats.mismatch}, stale=${trackStats.stale}, missed-detected=${trackStats.missed})`);
   console.log(`vehicles.json: ${v} (ddot=${ddot.vehicles.length} ok=${ddot.state.ok}, qline=${qline.vehicles.length} ok=${qline.state.ok}, smart=${smartFinal.length} ok=${smartActive ? smart.state.ok : false})`);
+  console.log(
+    `unmatched vehicles: ddot=${unmatchedByAgency.ddot}/${ddot.vehicles.length} `
+    + `smart=${unmatchedByAgency.smart}/${smartFinal.length} qline=${unmatchedByAgency.qline}/${qline.vehicles.length}`
+  );
+  for (const [agency, n] of Object.entries(unmatchedByAgency)) {
+    const total = agency === 'ddot' ? ddot.vehicles.length
+      : agency === 'smart' ? smartFinal.length : qline.vehicles.length;
+    if (n > UNMATCHED_ALARM_THRESHOLD) {
+      console.log(
+        `::warning::UNMATCHED_VEHICLES_ALARM agency=${agency} unmatched=${n} total=${total} `
+        + `threshold=${UNMATCHED_ALARM_THRESHOLD} — vehicles served without route attribution`
+      );
+    }
+  }
+  console.log(
+    `routes_dark: ${routesDark.length} route(s) with scheduled trips today and no live vehicle`
+    + (routesDark.length
+      ? ` (${routesDark.map((r) => `${r.agency}:${r.route_id}`).join(', ')})`
+      : '')
+  );
   console.log(`alerts.json: ${a} (ddot alerts=${ddotAlerts.alerts.length} ok=${ddotAlerts.state.ok})`);
   console.log(`trip-updates.json: ${t} (canonical TU: no source; honest empty envelope)`);
   console.log(smartNote);
