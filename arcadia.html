@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Arcadia — Detroit Automation Academy</title>
+<meta name="description" content="Arcadia is the Academy's library for Macs running macOS High Sierra: emulators that still run on 10.13, and shelves of public-domain film, sound, and games — every title's rights checked before it is listed.">
+<meta name="author" content="Justin Spencer Smith">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="icon" type="image/webp" href="assets/logo.webp">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="canonical" href="https://www.detroitautomationacademy.com/arcadia">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Detroit Automation Academy">
+<meta property="og:title" content="Arcadia — Detroit Automation Academy">
+<meta property="og:description" content="Old Macs, running the whole history of games, film, and sound — lawfully. The Academy's High Sierra emulation and public-domain media library.">
+<meta property="og:url" content="https://www.detroitautomationacademy.com/arcadia">
+<meta property="og:image" content="https://www.detroitautomationacademy.com/assets/logo.webp">
+<meta property="og:image:alt" content="Detroit Automation Academy — Forge D logo">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Arcadia — Detroit Automation Academy">
+<meta name="twitter:description" content="Old Macs, running the whole history of games, film, and sound — lawfully. The Academy's High Sierra emulation and public-domain media library.">
+<meta name="twitter:image" content="https://www.detroitautomationacademy.com/assets/logo.webp">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Arcadia",
+  "url": "https://www.detroitautomationacademy.com/arcadia",
+  "description": "The Academy's High Sierra (macOS 10.13) emulation library and public-domain media library.",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Detroit Automation Academy"
+  }
+}
+</script>
+<link rel="alternate" type="application/rss+xml" title="Detroit Automation Academy — RSS feed" href="feed.xml">
+<style>
+  :root{
+    --ink:#141414; --ink2:#3d3d3d; --mut:#6f6f6f; --line:#e3e3e0; --line2:#c9c9c4;
+    --bg:#ffffff; --wash:#f6f6f3; --wash2:#efefeb; --btn:#141414; --btn-t:#ffffff;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color:var(--ink); background:var(--bg); line-height:1.5; -webkit-font-smoothing:antialiased;}
+  a{color:var(--ink);}
+  .wrap{max-width:1060px; margin:0 auto; padding:0 20px;}
+  /* ONE DOOR banner */
+  .door{background:var(--ink); color:#fff; font-size:13px; line-height:1.45; text-align:center; padding:10px 16px;}
+  .door b{letter-spacing:.06em;}
+  .door a{color:#fff; text-underline-offset:2px;}
+  .door .sep{opacity:.45; margin:0 6px;}
+  /* Header */
+  header{border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--bg); z-index:5;}
+  .bar{display:flex; align-items:center; gap:14px; padding:12px 0; flex-wrap:wrap;}
+  .brand{display:flex; align-items:center; gap:10px; text-decoration:none; font-weight:700; font-size:15px; letter-spacing:.01em;}
+  .brand svg, .brand img{width:32px; height:32px; flex:none;}
+  nav{margin-left:auto;}
+  nav ul{display:flex; gap:4px 16px; list-style:none; flex-wrap:wrap;}
+  nav a{text-decoration:none; font-size:13.5px; color:var(--ink2); padding:6px 2px; display:inline-block;}
+  nav a:hover{color:var(--ink); text-decoration:underline; text-underline-offset:3px;}
+  /* Hero */
+  .hero{text-align:center; padding:56px 0 40px; border-bottom:1px solid var(--line);
+    background-image:linear-gradient(var(--wash) 1px, transparent 1px), linear-gradient(90deg, var(--wash) 1px, transparent 1px);
+    background-size:44px 44px;}
+  .hero .mark{width:104px; height:104px; margin:0 auto 18px;}
+  .kick{font-size:11.5px; letter-spacing:.28em; color:var(--mut); font-weight:600; margin-bottom:14px;}
+  h1{font-size:clamp(38px, 7.2vw, 64px); line-height:1.04; letter-spacing:-.02em; font-weight:800; max-width:14em; margin:0 auto;}
+  .sub{font-size:clamp(16px, 2.4vw, 19px); color:var(--ink2); max-width:38em; margin:18px auto 0;}
+  .ctas{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:28px;}
+  .btn{display:inline-block; text-decoration:none; font-weight:650; font-size:15px; padding:13px 22px; border-radius:10px; border:1.5px solid var(--ink);}
+  .btn.solid{background:var(--btn); color:var(--btn-t);}
+  .btn.ghost{background:var(--bg); color:var(--ink);}
+  .hero .note{font-size:12.5px; color:var(--mut); margin-top:14px;}
+  /* Sections */
+  section{padding:46px 0;}
+  .eyebrow{font-size:11px; letter-spacing:.24em; color:var(--mut); font-weight:700; margin-bottom:8px;}
+  h2{font-size:clamp(24px, 4vw, 32px); letter-spacing:-.015em; line-height:1.15; margin-bottom:10px;}
+  .lede{color:var(--ink2); max-width:44em;}
+  .lanes{display:grid; grid-template-columns:repeat(2, 1fr); gap:14px; margin-top:24px;}
+  .lane{border:1px solid var(--line); border-radius:14px; padding:20px; background:var(--bg);}
+  .lane .tag{display:inline-block; font-size:10px; font-weight:700; letter-spacing:.14em; border:1px solid var(--line2);
+    border-radius:999px; padding:3px 9px; color:var(--ink2); margin-bottom:10px;}
+  .lane .tag.flag{background:var(--ink); color:#fff; border-color:var(--ink);}
+  .lane h3{font-size:19px; margin-bottom:6px;}
+  .lane p{font-size:14.5px; color:var(--ink2);}
+  .feature{background:var(--wash); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  .cols{display:grid; grid-template-columns:1.2fr .8fr; gap:28px; align-items:start;}
+  .spec{list-style:none; border:1px solid var(--line); border-radius:14px; background:var(--bg); overflow:hidden;}
+  .spec li{padding:12px 16px; font-size:14.5px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; gap:12px;}
+  .spec li:last-child{border-bottom:none;}
+  .spec .k{color:var(--mut);}
+  .spec .v{text-align:right;}
+  .rates{display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-top:24px;}
+  .rate{border:1px solid var(--line); border-radius:14px; padding:20px;}
+  .rate h3{font-size:16px; margin-bottom:4px;}
+  .rate p{font-size:14px; color:var(--ink2); margin-top:8px;}
+  .intake{margin-top:22px; border:1.5px solid var(--ink); border-radius:14px; padding:20px; display:flex; gap:16px; flex-wrap:wrap; align-items:center; justify-content:space-between;}
+  .intake p{font-size:15px; max-width:34em;}
+  .fine{font-size:12.5px; color:var(--mut); margin-top:14px;}
+  /* Footer */
+  footer{border-top:1px solid var(--line); background:var(--wash); padding:40px 0 34px;}
+  .fgrid{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:24px;}
+  footer h4{font-size:11px; letter-spacing:.2em; color:var(--mut); margin-bottom:10px;}
+  footer ul{list-style:none;}
+  footer li{margin:6px 0;}
+  footer a{text-decoration:none; font-size:14px; color:var(--ink2);}
+  footer a:hover{text-decoration:underline; text-underline-offset:3px;}
+  .fbrand{display:flex; gap:10px; align-items:center; font-weight:700; font-size:15px;}
+  .fbrand svg, .fbrand img{width:30px; height:30px;}
+  .fbot{border-top:1px solid var(--line); margin-top:28px; padding-top:16px; font-size:12.5px; color:var(--mut);
+    display:flex; gap:8px 20px; flex-wrap:wrap; justify-content:space-between;}
+  @media (max-width:760px){
+    .lanes, .rates, .cols{grid-template-columns:1fr;}
+    .fgrid{grid-template-columns:1fr 1fr;}
+    .hero{padding:40px 0 32px;}
+    nav{margin-left:0;}
+    .btn{width:100%; text-align:center;}
+    .ctas{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+
+<div class="door">
+  <b>ONE DOOR, THIS WEEKEND:</b> Readers, riders &amp; sponsors — email
+  <a href="mailto:detroit@muse.ai?subject=SAT-SITE">detroit@muse.ai</a> (subject: SAT-SITE) with your name + ONE lane:
+  Signal · Square One · Live Transit Detroit · Distro · Sponsorship &amp; placements. Opt-in only.
+  <span class="sep">|</span><a href="./#sponsor">See sponsorship &amp; placements</a>
+</div>
+
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="./" aria-label="Detroit Automation Academy — home">
+      <img src="assets/logo.webp" alt="" class="brand-mark">
+      Detroit Automation Academy
+    </a>
+    <nav aria-label="Primary">
+      <ul>
+        <li><a href="live-transit.html">Live Map</a></li>
+        <li><a href="board/">Departure Board</a></li>
+        <li><a href="live-transit/">Cities</a></li>
+        <li><a href="programs.html">Programs</a></li>
+        <li><a href="signal/">The Signal</a></li>
+        <li><a href="the-index/">The Index</a></li>
+        <li><a href="inquire.html">Contact</a></li>
+        <li><a href="find.html">Find</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <div class="hero">
+    <div class="wrap">
+      <img src="assets/logo.webp" alt="Forge D — Detroit Automation Academy mark" class="mark">
+      <p class="kick">DETROIT AUTOMATION ACADEMY · A LIBRARY</p>
+      <h1>Arcadia</h1>
+      <p class="sub">Old Macs, running the whole history of games, film, and sound — lawfully.
+        Arcadia is the Academy&rsquo;s library for machines on macOS High Sierra (10.13):
+        the emulators that still run on them, and shelves of public-domain film, music,
+        books, and homebrew games, with every title&rsquo;s rights checked before it is listed.</p>
+      <div class="ctas">
+        <a class="btn solid" href="#verified">See what is verified</a>
+        <a class="btn ghost" href="#rules">Read the rules of the house</a>
+      </div>
+      <p class="note">There are no downloads on this page yet. The shelves open title by title, as each one is verified.</p>
+    </div>
+  </div>
+
+  <section id="library">
+    <div class="wrap">
+      <p class="eyebrow">THE LIBRARY</p>
+      <h2>Two shelves, one standard: if it isn&rsquo;t lawful, it isn&rsquo;t here.</h2>
+      <p class="lede">A Mac from 2012 is not a museum piece — it is a machine that can still play
+        fifty years of games and a century of film. Arcadia keeps the list of what runs,
+        and the shelf of what may be shared, in one place.</p>
+      <div class="lanes">
+        <article class="lane">
+          <span class="tag flag">THE MACHINES</span>
+          <h3>Emulators for High Sierra</h3>
+          <p>Emulators are lawful software, and Arcadia lists them freely: which ones still
+            run on macOS 10.13, and exactly which version is the last one that does.
+            A version is named here only when that has been checked against the
+            maker&rsquo;s own records.</p>
+        </article>
+        <article class="lane">
+          <span class="tag">THE SHELVES</span>
+          <h3>Film, sound, books &amp; homebrew games</h3>
+          <p>The shelves carry works anyone may share: public-domain film and recordings,
+            books whose copyright has run its course, and games their makers released
+            to be shared. Each title is admitted with its rights written down beside it —
+            never on a stranger&rsquo;s say-so.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="feature" id="verified">
+    <div class="wrap cols">
+      <div>
+        <p class="eyebrow">VERIFIED SO FAR</p>
+        <h2>Checked, not guessed.</h2>
+        <p class="lede">These two entries are confirmed against their makers&rsquo; own records.
+          The rest of the list is still being checked, version by version — and nothing
+          joins this page as settled fact until the check is done.</p>
+        <p class="lede" style="margin-top:12px;">Some famous names will not appear at all.
+          PCSX2 and RPCS3, for example, need a newer macOS than High Sierra — so for
+          this library, they are simply out.</p>
+      </div>
+      <ul class="spec">
+        <li><span class="k">OpenEmu</span><span class="v">Version 2.0.9.1 — the last build for macOS 10.13</span></li>
+        <li><span class="k">RetroArch (Metal)</span><span class="v">Requires macOS 10.13 or later</span></li>
+        <li><span class="k">Everything else</span><span class="v">Being checked, version by version</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="media">
+    <div class="wrap">
+      <p class="eyebrow">FILM &amp; MEDIA</p>
+      <h2>How a work earns its place on the shelf.</h2>
+      <p class="lede">&ldquo;Public domain&rdquo; is not one thing. Arcadia keeps the classes separate,
+        and a work is shelved under the class its own paperwork proves.</p>
+      <div class="rates">
+        <article class="rate">
+          <h3>Free by age</h3>
+          <p>Works published in 1930 or earlier are public domain in the United States.
+            The early shelf already reads like a history of cinema: <i>Metropolis</i>,
+            <i>Nosferatu</i>, <i>The General</i>, <i>The Kid</i>, <i>Safety Last!</i>,
+            <i>Sherlock Jr.</i>, <i>Battleship Potemkin</i>, and <i>Steamboat Willie</i>.</p>
+        </article>
+        <article class="rate">
+          <h3>Free by lapse</h3>
+          <p>Some later works entered the public domain because a copyright was never
+            renewed, or was filed with a defective notice. These are admitted one title
+            at a time, and only when the evidence for that title is on file — a famous
+            name on a list somewhere is not evidence.</p>
+        </article>
+        <article class="rate">
+          <h3>Works of the government</h3>
+          <p>Works of the United States government are public domain by law — the films,
+            photographs, and recordings the public already paid for. Open collections
+            released under Creative Commons licenses are listed under those licenses,
+            exactly as their makers set them; a CC0 release is called CC0, never
+            relabeled.</p>
+        </article>
+      </div>
+      <p class="lede" style="margin-top:22px;">The library reads from the great open shelves:
+        Project Gutenberg, Smithsonian Open Access, the Library of Congress&rsquo;s
+        &ldquo;Free to Use and Reuse&rdquo; sets, The Public Domain Review, NASA&rsquo;s image
+        library, and the Prelinger Archives — each Prelinger film checked on its own,
+        because their rights vary film by film.</p>
+      <p class="lede" style="margin-top:12px;">Two standing cautions, applied to every title:
+        television is judged episode by episode, never a whole series on one claim;
+        and music carries two rights at once — the song and the recording of it —
+        so both must be clear before a recording is shelved.</p>
+    </div>
+  </section>
+
+  <section class="feature" id="rules">
+    <div class="wrap">
+      <p class="eyebrow">THE RULES OF THE HOUSE</p>
+      <h2>The legal fence is the identity of this library.</h2>
+      <p class="lede">Arcadia exists to prove a library like this can be built without
+        taking anything. These rules do not bend:</p>
+      <ul class="spec" style="margin-top:22px;">
+        <li><span>Emulators are listed freely — they are lawful software.</span></li>
+        <li><span>The shelves carry homebrew, public-domain, and openly-licensed works only, each with its license traced to its maker&rsquo;s own release.</span></li>
+        <li><span>Copyrighted commercial games are never hosted, distributed, or linked here. If you own the game, you bring your own copy, made from your own disc or cartridge — the library can explain how; it will not hand you the file.</span></li>
+        <li><span>System files an emulator may need — BIOS, firmware, and classic Mac ROM images — are likewise yours to supply. They are copyrighted, and they never pass through this library.</span></li>
+        <li><span>Free to download does not mean free to redistribute. A title is shelved only when its grant permits listing it here, and the grant is recorded beside the title.</span></li>
+      </ul>
+      <div class="intake">
+        <p><b>One door.</b> Questions about Arcadia — a title you believe belongs on the
+          shelf, a version you can help verify, a work of yours you want listed — email
+          <a href="mailto:detroit@muse.ai?subject=Arcadia">detroit@muse.ai</a> with
+          subject <b>Arcadia</b>. We answer with the evidence standard in writing.</p>
+        <a class="btn solid" href="mailto:detroit@muse.ai?subject=Arcadia">Write to the library</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap"><p class="build-stamp" style="font-size:.78rem;color:#444;border:1px solid #000;padding:.5rem .75rem;margin:1rem 0;">PAGE STAMP — Published: 2026-11-13 05:01 EST · Agent: Minion · Authorized: J. Spencer Smith, directive of 2026-11-13 (Arcadia public page)</p></div>
+  <div class="wrap">
+    <div class="fgrid">
+      <div>
+        <p class="fbrand">
+          <img src="assets/logo.webp" alt="" class="brand-mark">
+          Detroit Automation Academy
+        </p>
+        <p style="font-size:13.5px; color:var(--ink2); margin-top:10px; max-width:22em;">
+          Software, live data, stories, and training — built in Detroit, Michigan.</p>
+        <p style="font-size:13.5px; margin-top:8px;"><a href="mailto:detroit@muse.ai">detroit@muse.ai</a></p>
+      </div>
+      <div>
+        <h4>RIDE</h4>
+        <ul>
+          <li><a href="board/">Departure Board</a></li>
+          <li><a href="live-transit.html">Live Map</a></li>
+          <li><a href="live-transit-detroit/">Live Transit Detroit</a></li>
+          <li><a href="live-transit/">Cities</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>THE ACADEMY</h4>
+        <ul>
+          <li><a href="./#distro">Distro</a></li>
+          <li><a href="signal/">The Signal</a></li>
+          <li><a href="watch/">Square One</a></li>
+          <li><a href="programs.html">Programs</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>MORE</h4>
+        <ul>
+          <li><a href="the-index/">The Index</a></li>
+          <li><a href="press/">Press</a></li>
+          <li><a href="inquire.html">Contact</a></li>
+          <li><a href="find.html">Find</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="fbot">
+      <span>© 2026 Detroit Automation Academy · Detroit, Michigan</span>
+      <span><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
