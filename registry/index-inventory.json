@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "index-inventory",
     "generator": "tools/generate_inventory.py",
-    "stateFingerprint": "sha256:686ba195572a6e298c883c16c9b667f072886677e24985e5ad3eee15a4e7b632",
+    "stateFingerprint": "sha256:890f827c0abe001fd7fe7525b2d9d650c65ecb112f51e987f947e773b137068d",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "apps": [
@@ -60,23 +60,10 @@
       }
     },
     {
-      "appId": "sounddeck",
-      "displayName": "SoundDeck",
-      "catalogStatus": "in-development",
-      "buildTag": "0.0.0",
-      "conformance": {
-        "gapsDispositioned": true,
-        "depsClear": true,
-        "gateFiled": false,
-        "uatRecorded": false,
-        "attestationState": "not attested"
-      }
-    },
-    {
       "appId": "switchboard",
       "displayName": "Workbench",
       "catalogStatus": "release-candidate",
-      "buildTag": "staged-v1-9",
+      "buildTag": "staged-v1-26",
       "conformance": {
         "gapsDispositioned": true,
         "depsClear": true,
@@ -115,7 +102,7 @@
       "appId": "minion",
       "displayName": "Minion",
       "catalogStatus": "testing",
-      "buildTag": "0.4.2",
+      "buildTag": "0.4.3",
       "conformance": {
         "gapsDispositioned": true,
         "depsClear": true,
@@ -129,6 +116,45 @@
       "displayName": "AirPods Max Diagnostics",
       "catalogStatus": "testing",
       "buildTag": "apd-test-5",
+      "conformance": {
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": false,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      }
+    },
+    {
+      "appId": "snowfell",
+      "displayName": "Snowfell",
+      "catalogStatus": "testing",
+      "buildTag": "snowfell-test-4",
+      "conformance": {
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": false,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      }
+    },
+    {
+      "appId": "tachometer",
+      "displayName": "Tachometer",
+      "catalogStatus": "testing",
+      "buildTag": "tachometer-test-1",
+      "conformance": {
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": false,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      }
+    },
+    {
+      "appId": "arcadia",
+      "displayName": "Arcadia",
+      "catalogStatus": "testing",
+      "buildTag": "arcadia-test-1",
       "conformance": {
         "gapsDispositioned": true,
         "depsClear": true,

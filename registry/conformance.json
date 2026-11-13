@@ -3,19 +3,19 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:686ba195572a6e298c883c16c9b667f072886677e24985e5ad3eee15a4e7b632",
+    "stateFingerprint": "sha256:890f827c0abe001fd7fe7525b2d9d650c65ecb112f51e987f947e773b137068d",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
-  "schemaVersion": 7,
+  "schemaVersion": 9,
   "catalogVersion": 1,
-  "catalogGenerated": "2026-11-07",
+  "catalogGenerated": "2026-11-13",
   "counts": {
-    "apps": 11,
-    "builds": 32,
-    "catalog_state": 10,
+    "apps": 14,
+    "builds": 41,
+    "catalog_state": 12,
     "audits": 1,
     "findings": 17,
-    "catalogApps": 10
+    "catalogApps": 12
   },
   "apps": [
     {
@@ -159,41 +159,6 @@
       }
     },
     {
-      "id": "sounddeck",
-      "displayName": "SoundDeck",
-      "repoUrl": "https://github.com/AutomatedTechnologies/audacity",
-      "sourceUrl": "https://github.com/AutomatedTechnologies/audacity",
-      "bundleId": null,
-      "category": "Audio",
-      "license": "GPL-3.0",
-      "kind": "catalog",
-      "appStatus": "in-development",
-      "minMacOS": "10.13",
-      "tagline": "Audio editor with VLC-powered playback and conversion — in development.",
-      "description": "An Academy combine-fork: an Audacity-derived editor (pinned Audacity 3.7.9, the last line supporting macOS 10.13) with libVLC (pinned VLC 3.0.24) in a separate helper process for playback, conversion, and video-companion duties. Differentiators: High Sierra floor and a zero-telemetry build, verified by network capture before publication. Ships GPL-3.0 with full source, per the Gate 0 license record. The org fork (AutomatedTechnologies/audacity) is created and its provenance is filed; the first build — a High Sierra build proof of the pinned line — is the open tranche, followed by the bundled-dependency audit. No build exists yet; this entry publishes nothing until a verified build lands.",
-      "catalogStatus": "in-development",
-      "iconUrl": "https://detroitautomationacademy.com/store/icons/sounddeck.png",
-      "buildNotes": "In development — no installable build yet. Build proof complete 2026-11-08 (SD-T2); D2 audit in progress.",
-      "audits": [],
-      "currentBuild": {
-        "tag": "0.0.0",
-        "sizeBytes": null,
-        "sha256": null,
-        "downloadUrl": null,
-        "floor": "10.13",
-        "builtAt": null,
-        "releasePublishedAt": null,
-        "ciRun": null,
-        "auditFlags": {
-          "disassembled": false,
-          "scanned": false,
-          "recompiled": false,
-          "complete": false,
-          "ref": null
-        }
-      }
-    },
-    {
       "id": "switchboard",
       "displayName": "Workbench",
       "repoUrl": "https://github.com/AutomatedTechnologies/KisMac2",
@@ -208,23 +173,23 @@
       "description": "Staged internal build of Workbench, the Academy's unified network utility, CI-built 2026-11-08; launched on the High Sierra rig 2026-11-08: the remediated KisMac discovery engine hosted in a new unified shell, a read-only AirPort base-station configuration view, Ping / Netstat / Traceroute / Speed Test diagnostics, and a local-only journal. Manage is read-only in this build — there is no configuration write path. Installs as Workbench.app under its own Academy bundle identity (com.detroitautomationacademy.workbench) and carries the Academy audit entry, distinct from KisMac — the two install side by side. (The earlier staged-v1-1 build shared the KisMac bundle identity and installing one replaced the other; corrected in staged-v1-2.) The Networks header now reads “Workbench” — staged-v1-4 is the surgical repair of the inherited “KisMac v0.3.4” header (ScanController), one line, nothing else changed. staged-v1-5 additionally re-cuts the app icon to the amended SDS-3 tile construction (the v1-4 header repair is carried in). staged-v1-6 adds the Optimizations panel.",
       "catalogStatus": "release-candidate",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/workbench.png",
-      "buildNotes": "Adds the SDS-8 welcome screen via the shared Academy component (AcademyWelcomeController + AcademyAppIconView — the same component as the KisMac build): the welcome draws the bundle AppIcon composition, displays the build version read from the bundle's own Info.plist at runtime, and plays the standard startup sound (byte-identical in the bundle). The bundle stamps the SDS-10 conformance entry beside the Academy audit entry. Runtime verification at the owner's next Air sitting.",
+      "buildNotes": "Removes the Growl notification channel entirely (SDS-10 10.6, both halves): Growl.framework no longer ships in the bundle and the scan banners post natively via NSUserNotificationCenter from the main bundle, so Notification Center attributes them to Workbench — bundle identity and AppIcon — by construction, closing the self-asserted sender-identity vulnerability the inherited Growl registration created (photographed on the rig 2026-11-13: banner \"KisMAC / Stopping Scan...\" over the Workbench window). The bundle stamps the SDS-10 conformance entry, including NotificationIdentity, beside the Academy audit entry. Rig re-verification of the banner at the owner's next Air sitting.",
       "audits": [],
       "currentBuild": {
-        "tag": "staged-v1-9",
-        "sizeBytes": 2690451,
-        "sha256": "58349820dcd1a59d937beb0cea649d4803f404a2338ab9fb3bdaec1348945f18",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/staged-v1-9/Workbench-test.zip",
+        "tag": "staged-v1-26",
+        "sizeBytes": 2319114,
+        "sha256": "1523172b5a24f2602789aae967471f002023f29bfa4c4bff24684c4af7fd75fd",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/KisMac2/releases/download/staged-v1-26/Workbench-test.zip",
         "floor": "10.13",
-        "builtAt": "2026-11-10",
-        "releasePublishedAt": "2026-11-10T22:38:50Z",
-        "ciRun": "42916244473",
+        "builtAt": "2026-11-13",
+        "releasePublishedAt": "2026-11-13T22:38:53Z",
+        "ciRun": "43520762355",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10; Logo / VersionAtStartup / StartupSound / MenuBar all true; Date 2026-11-10); fresh-download plist readback verified 2026-11-10 for the SDS10-T1 shared-welcome build (staged-v1-9, SHA-256 58349820dcd1a59d937beb0cea649d4803f404a2338ab9fb3bdaec1348945f18); bundled startup-sound.wav byte-identical to the SDS-10 master (SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a)"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10; Logo / VersionAtStartup / StartupSound / MenuBar / NotificationIdentity all true; Date 2026-11-13); fresh-download readback verified 2026-11-13 for the SDS-10 10.6 Growl-excision build (staged-v1-26, SHA-256 1523172b5a24f2602789aae967471f002023f29bfa4c4bff24684c4af7fd75fd): no Growl.framework in bundle, no Growl link or bridge symbols in binary, native NSUserNotificationCenter posting; bundled startup-sound.wav byte-identical to the SDS-10 master (SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a); AppIcon.icns unchanged (SHA-256 b1d0c57e29c12fa344563dee06469f2e4ad8739a67a0b37510f58a6260cf426b)"
         }
       }
     },
@@ -310,26 +275,26 @@
       "appStatus": "testing",
       "minMacOS": "10.13",
       "tagline": "The Academy's Minion client for High Sierra — under its own name and mark.",
-      "description": "Minion is the Detroit Automation Academy's desktop client for Intel Macs running macOS High Sierra (10.13), assembled on Electron 22.3.27 — the last Electron that runs on macOS 10.13 — so High Sierra machines can run a client at all; the official client for the hosted service requires Apple Silicon and a current macOS. Minion ships under the Academy bundle identity com.detroitautomationacademy.minion, under its own name and its own mark: the scheming side-eye dog, cut to the SDS-3 construction — white tile and ink artwork, no black field, fully monochrome. Version 0.4.2 is identified by version alone. App data is stored separately, outside the bundle, at ~/Library/Application Support/com.detroitautomationacademy.minion. The feature layer: repaired window management (no window opens partially off-screen; your window arrangement is restored), up-arrow sent-message history in the message box, markdown downloads that open in MacDown with a consented system-default offer, and a genuine Terminal view (View menu, Command-T): the app's own terminal window over the live hosted session. The window title bar reads Minion, and the app presents dark by default (View → Appearance records an explicit Dark / Light / System choice, which later launches honor). Unofficial build: not a Meta product and not endorsed by Meta. Unsigned test build.",
+      "description": "Minion is the Detroit Automation Academy's desktop client for Intel Macs running macOS High Sierra (10.13), assembled on Electron 22.3.27 — the last Electron that runs on macOS 10.13 — so High Sierra machines can run a client at all; the official client for the hosted service requires Apple Silicon and a current macOS. Minion ships under the Academy bundle identity com.detroitautomationacademy.minion, under its own name and its own mark: the scheming side-eye dog, cut to the SDS-3 construction — white tile and ink artwork, no black field, fully monochrome. Version 0.4.3 is identified by version alone. App data is stored separately, outside the bundle, at ~/Library/Application Support/com.detroitautomationacademy.minion. The feature layer: repaired window management (no window opens partially off-screen; your window arrangement is restored), up-arrow sent-message history in the message box, markdown downloads that open in MacDown with a consented system-default offer, and a genuine Terminal view (View menu, Command-T): the app's own terminal window over the live hosted session. The window title bar reads Minion, and the app presents dark by default (View → Appearance records an explicit Dark / Light / System choice, which later launches honor). Unofficial build: not a Meta product and not endorsed by Meta. Unsigned test build.",
       "catalogStatus": "testing",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/minion.png",
-      "buildNotes": "Minion 0.4.2 — the sign-in repair. 0.4.1's rename pass renamed two plumbing identities along with the app's display name — the session partition (the session store's identity) and the package identity the session machinery derives from — and sign-in broke: an existing sign-in was left behind, and a fresh sign-in spun forever after the two-factor step. 0.4.2 restores both plumbing identities to the values the working builds used, so a sign-in made in an earlier build carries into this one and a fresh sign-in completes. A sign-in made inside 0.4.1's own separate session store is not read; if 0.4.1 was the only build you ran, sign in once more. Nothing about the app's name or surfaces changes: bundle Minion.app under com.detroitautomationacademy.minion, Minion's own mark (the scheming side-eye dog, Academy monochrome standard), title bar pinned to Minion, dark by default (View → Appearance records your explicit choice and later launches honor it). App data is stored separately at ~/Library/Application Support/com.detroitautomationacademy.minion. Standing features: the genuine Terminal view (View menu, Command-T) over the live hosted session, markdown routing to MacDown with the consented system default, window repair, up-arrow message history, the SDS-8 welcome. Unsigned test build; the runtime verdict is the owner's, at the Air sitting.",
+      "buildNotes": "Minion 0.4.3 — the avatar-CPU fix. Earlier builds let the hosted page's looping avatar animation decode and composite at full rate forever: on the owner's MacBook Air it measured roughly half the machine's CPU with the app simply open (Tachometer budget for the avatar: renderer + GPU at or under 10% of one thread sustained). 0.4.3 adds an avatar governor to the shell: the page's animation pauses — CSS animations held, video elements paused — whenever the page is hidden, the window is not frontmost, or the app sits idle for 45 seconds, and resumes the moment you click, type, or a reply starts streaming. While you are working in the app, the avatar animates exactly as before. Every 0.4.2 property stands, including the sign-in repair (an earlier build's sign-in carries into this one; a sign-in made inside 0.4.1's own separate session store is not read). Nothing about the app's name or surfaces changes: bundle Minion.app under com.detroitautomationacademy.minion, Minion's own mark (the scheming side-eye dog, Academy monochrome standard), title bar pinned to Minion, dark by default (View → Appearance records your explicit choice and later launches honor it). App data is stored separately at ~/Library/Application Support/com.detroitautomationacademy.minion. Standing features: the genuine Terminal view (View menu, Command-T) over the live hosted session, markdown routing to MacDown with the consented system default, window repair, up-arrow message history, the SDS-8 welcome. Unsigned test build; the Tachometer rig verdict is the owner's, at the Air sitting.",
       "audits": [],
       "currentBuild": {
-        "tag": "0.4.2",
-        "sizeBytes": 92268268,
-        "sha256": "699973368808a3b955d2677614d1c37264b0113b46654f55fef777e97142021e",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/minion/releases/download/minion-0.4.2/Minion-1013-x64.zip",
+        "tag": "0.4.3",
+        "sizeBytes": 92272769,
+        "sha256": "27241a45186520f7f9d3b047f6a6641a13a7448dbad2eb30cf6dfae2a739fdf8",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/minion/releases/download/minion-0.4.3/Minion-1013-x64.zip",
         "floor": "10.13",
-        "builtAt": "2026-11-11",
-        "releasePublishedAt": "2026-11-12T02:06:19Z",
-        "ciRun": "43138986304",
+        "builtAt": "2026-11-13",
+        "releasePublishedAt": "2026-11-13T09:32:12Z",
+        "ciRun": "43402022415",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule) on the changes/0034 scope (Distro files/26) as carried by changes/0038 (Distro files/19 section 17), plus THIS pass (Distro files/32): the complete source diff 0.4.1->0.4.2 (8 repo files) dissected line by line — the auth-continuity set only: session partition restored at 3 sites in main.cjs, package identity restored in package.json (name/version), the app-menu name pinned to the display string in academy.cjs, version bumps (assembler, build label, About), INSTALL.txt/README consequence copy, the build workflow release step, and the test suite (46/46 incl. the new auth-continuity group and the census amended with the recorded plumbing exception); shipped-artifact census: the only /muse/i lines in the artifact's Academy layer are the 3 API endpoint constants, the 3 session partition literals and the package identity line — plumbing all, displayed nowhere; fresh-download plist readback verified 2026-11-11 (Minion / com.detroitautomationacademy.minion, 0.4.2, floor 10.13, audit + SDS-10 conformance complete); startup sound byte-identical to the SDS-10 master; icon byte-identical to the monochrome master; zip census 273 entries; no terminal-skin.css"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) on the changes/0034 scope (Distro files/26) as carried by changes/0038 (Distro files/19 section 17) and changes/0039 (Distro files/32), plus THIS pass (Distro files/39): the complete source diff 0.4.2->0.4.3 (11 repo files) dissected line by line — the avatar-governor set only: new pure module avatar-governor.cjs + its byte-identical preload mirror and adapter (installAvatarGovernor), explicit backgroundThrottling on the main/popup windows (main.cjs) and Terminal/Welcome windows (academy.cjs), the welcome pulse visibility hold (welcome.html), version bumps (package.json, assembler + EXPECTED_APP_FILES, build label, About fallbacks, workflow release step), INSTALL.txt/README consequence copy, and the test suite (52/52 incl. 6 new governor groups and the amended script censuses); shipped-artifact census: avatar-governor.cjs present in the bundle, main.cjs carries exactly 3 \"persist:muse\" sites and 0 \"persist:minion\" (the 0.4.2 plumbing repair untouched), build label 0.4.3; fresh-download plist readback verified 2026-11-13 (Minion / com.detroitautomationacademy.minion, 0.4.3, floor 10.13, audit + SDS-10 conformance complete); startup sound byte-identical to the SDS-10 master; icon byte-identical to the monochrome master; zip census 274 entries; Mach-O census 16; no terminal-skin.css"
         }
       }
     },
@@ -365,6 +330,111 @@
           "recompiled": true,
           "complete": true,
           "ref": "bundle-carried audit entry (Distro files/08 rule); fresh-download plist readback verified 2026-11-10 for the menu-bar defect-fix build (apd-test-5, SHA-256 a32e34eec2cb5a06991da539666abc93cbd9a3b7ee332474d4426ab5515da8cd)"
+        }
+      }
+    },
+    {
+      "id": "snowfell",
+      "displayName": "Snowfell",
+      "repoUrl": "https://github.com/AutomatedTechnologies/snowfell",
+      "sourceUrl": "https://github.com/AutomatedTechnologies/snowfell",
+      "bundleId": "com.detroitautomationacademy.snowfell",
+      "category": "Productivity",
+      "license": "Academy License (revocable)",
+      "kind": "catalog",
+      "appStatus": "testing",
+      "minMacOS": "10.13",
+      "tagline": "The Academy's project board — every GitHub project in one native window.",
+      "description": "Snowfell is the Detroit Automation Academy's Jira-style board application for Intel Macs running macOS High Sierra (10.13): every Academy project board in one native window. The bundled registry snapshot (v9-0049) carries 83 GitHub Projects boards and 763 items — the Academy's GitHub across the user smit4786 and the AutomatedTechnologies organization — with a portfolio rollup (health dot and an Open / Done split per board), per-board kanban whose columns are each board's own status vocabulary (data, never a hardcoded list), item detail, a roadmap over start and target dates, a command palette, an orchestration queue over a data-driven action manifest, an incidents lens for consequential matters, their evidence, and their deadlines, and the V12 Storage lens (View menu, Command-8): a multi-tenant cloud storage and content-management console over the bundled SnowfellStorageService helper, loopback-only, with content-addressed deduplication by SHA-256. Every window carries the same navigation bar — Portfolio, Board, Staged, Orchestration, Roadmap, Incidents, Storage, Updates — so all eight lenses are visible and reachable from anywhere in the app, and the filled segment names the window you are in. The Updates lens (Command-9) puts snapshot state on one surface: the running snapshot beside the served one, a plain line naming any gap between them, and Check Now and Apply Update as separate presses. Changes are staged, not narrated: moving a card, adding an item, or commenting asks in plain terms — \"Move '<item>' to <status> on <board>?\" — and stages the change in a queue on the Mac; the full technical record (the exact GitHub operation, its destination, the staging store) sits behind each confirmation's Details button and in the Staged Changes panel, and nothing is sent without the owner's explicit Send Pending Changes in an armed build. Board state is derived, not mirrored: a board whose items all sit in its own terminal status presents as Complete (the raw GitHub state is kept as secondary detail) whenever the loaded snapshot carries the registry's derivation (schema v9+). Snowfell reads a pinned, hash-verified snapshot of the Academy registry and works fully offline; a newer snapshot can be fetched and verified in-app before it is swapped in. GitHub write-back is compiled OFF in this build (SNOWFELL_WRITEBACK_ENABLED = 0): actions stage locally and nothing is sent. Academy-original software under the Academy License (revocable). Unsigned test build.",
+      "catalogStatus": "testing",
+      "iconUrl": "https://detroitautomationacademy.com/store/icons/snowfell.png",
+      "buildNotes": "Adds the navigation bar: every window now carries the same eight-segment bar (Portfolio, Board, Staged, Orchestration, Roadmap, Incidents, Storage, Updates), so the app's lenses are visible and reachable from anywhere, and the segment filled names the window you are in. The new Updates lens gives snapshot state a home — the running snapshot beside the served one, a plain line naming any gap, and Check Now and Apply Update as separate presses — and the bundled snapshot itself advances to v9-0049 (83 boards, 763 items), so a fresh install starts current. Everything before it carries over: the decluttered staging language with the technical record behind Details, menu labels that follow state, the baseline interface, the V12 Storage lens with its bundled SnowfellStorageService, and board-state derivation. Write-back is compiled OFF: changes stage locally and nothing is sent to GitHub. Unsigned test build; the runtime verdict is the owner's, at the Air sitting.",
+      "audits": [],
+      "currentBuild": {
+        "tag": "snowfell-test-4",
+        "sizeBytes": 1435278,
+        "sha256": "0b6a61fe2b59ad25066928818ee194697a8981cc38e72c4a9195009b02373536",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/snowfell/releases/download/snowfell-test-4/Snowfell-test.zip",
+        "floor": "10.13",
+        "builtAt": "2026-11-13",
+        "releasePublishedAt": "2026-11-13T23:00:54Z",
+        "ciRun": "43523760077",
+        "auditFlags": {
+          "disassembled": true,
+          "scanned": true,
+          "recompiled": true,
+          "complete": true,
+          "ref": "bundle-carried audit entry (Distro files/08 rule) attested on the shipped artifact's own Info.plist (audit dict all-true, dated 2026-11-12, the build line's carried attestation as at test-3; SDS-10 conformance dict complete on its own schema — Logo / VersionAtStartup / StartupSound / MenuBar true; no NotificationIdentity key carried or claimed: Snowfell posts no notifications and this build adds none), plus THIS pass: the navigation delta (2 new sources — NavigationBar, UpdatesViewController — plus AppDelegate wiring over the test-3 tree, AutomatedTechnologies/snowfell @ f0676c0d) dissected against the design of record (Snowfell goal files/08); scanned: no data-layer, schema, or write-back-flag change (SNOWFELL_WRITEBACK_ENABLED still 0 in the shipped source; the Updates lens adds no network code); recompiled from that source by estate CI (run 43523760077, macos-15, clang, x86_64, LSMinimumSystemVersion 10.13, all steps green; the run's predecessor attempt 43523548190 built green and failed only its release step on an unescaped quote in the workflow notes, fixed in the same commit); fresh-download verification 2026-11-13: bundle com.detroitautomationacademy.snowfell, 0.1.0 (snowfell-test-4), startup-sound.wav byte-identical to the SDS-10 master (07a11324…), bundled registry.db == served snapshot v9-0049 (4bd7ec4e…; 83 boards / 763 items / 5 incidents), SnowfellStorageService present at Contents/MacOS, both executables Mach-O 64-bit x86_64, zip census 13 entries; navigation verified in the shipped bytes (NavigationBar + UpdatesViewController classes, SnowfellNavigationToolbar identifier, eight segment labels, Updates gap-line literal in UTF-16)"
+        }
+      }
+    },
+    {
+      "id": "tachometer",
+      "displayName": "Tachometer",
+      "repoUrl": "https://github.com/AutomatedTechnologies/tachometer",
+      "sourceUrl": "https://github.com/AutomatedTechnologies/tachometer",
+      "bundleId": "com.detroitautomationacademy.analytics",
+      "category": "Utilities",
+      "license": "Academy License (revocable)",
+      "kind": "catalog",
+      "appStatus": "testing",
+      "minMacOS": "10.13",
+      "tagline": "On-device analytics for Academy apps — measured on the device, kept on the device.",
+      "description": "Tachometer is the Detroit Automation Academy's on-device analytics application for Intel Macs running macOS High Sierra (10.13). It measures the Academy's own applications where they actually run: per-process CPU and memory, itemized by role (shell, renderer, GPU, helper), so a cost like an animated avatar's is a number read off the device, not an estimate. Samples land in a segmented, append-only store under the app's own Application Support — single writer by lock, second writer refused, never merged — with rotation and retention bounds, and the built-in budget scorer reads that stream against the estate's per-app budgets (the Minion avatar budget: at most 10% of one thread sustained), reporting PASS, FAIL, or NO DATA — unmeasured is never a silent pass. There is no network code in the app: data is generated, stored, and read on the device only. Academy-original software under the Academy License (revocable). Unsigned test build.",
+      "catalogStatus": "testing",
+      "iconUrl": "https://detroitautomationacademy.com/store/icons/tachometer.png",
+      "buildNotes": "Tachometer tachometer-test-1 — first Distro listing. The Academy's on-device analytics: per-process CPU and memory for Academy apps, itemized by role (shell, renderer, GPU, helper), stored on the device only in a segmented single-writer store, and scored in-app against the estate's budgets — PASS, FAIL, or NO DATA, never a silent pass. No network code. Unsigned test build; the runtime verdict is the owner's, at the Air sitting — install Tachometer from this listing; its first report scores the Minion avatar from device data.",
+      "audits": [],
+      "currentBuild": {
+        "tag": "tachometer-test-1",
+        "sizeBytes": 803538,
+        "sha256": "2c2e59f52c2cc5aba0e5c526f8e6c2aba1d5056573bcecff55b9d224775b3655",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/tachometer/releases/download/tachometer-test-1/Tachometer-test.zip",
+        "floor": "10.13",
+        "builtAt": "2026-11-12",
+        "releasePublishedAt": "2026-11-12T18:31:25Z",
+        "ciRun": "43279781471",
+        "auditFlags": {
+          "disassembled": true,
+          "scanned": true,
+          "recompiled": true,
+          "complete": true,
+          "ref": "bundle-carried audit entry (Distro files/08 rule) attested on the shipped artifact's own Info.plist (audit + SDS-10 conformance dicts complete, dated 2026-11-12), plus THIS pass: fresh-download dissection of the shipped zip (803,538 B, SHA-256 == GitHub asset digest == registration packet) — bundle com.detroitautomationacademy.analytics, 0.1.0 (tachometer-test-1), LSMinimumSystemVersion 10.13, startup-sound.wav byte-identical to the SDS-10 master (07a11324...), zip census 11 entries; build-line record (AutomatedTechnologies/tachometer @ 315e8816, records/BUILD-RECORD-test-1.md): complete source tree (9 sources) syntax-clean under the clang / MacOSX 10.13 SDK recipe, CPUMath harness 16/16, contract conformance 19/19, tranche suite 12/12, network grep over shipped sources clean (no network code exists in the app), executable Mach-O x86_64; recompiled from that source by estate CI (run 43279781471, run_number 1, SUCCESS) into the shipped artifact"
+        }
+      }
+    },
+    {
+      "id": "arcadia",
+      "displayName": "Arcadia",
+      "repoUrl": "https://github.com/AutomatedTechnologies/arcadia",
+      "sourceUrl": "https://github.com/AutomatedTechnologies/arcadia",
+      "bundleId": "com.detroitautomationacademy.arcadia",
+      "category": "Utilities",
+      "license": "Academy License (revocable)",
+      "kind": "catalog",
+      "appStatus": "testing",
+      "minMacOS": "10.13",
+      "tagline": "The High Sierra emulation library — verified emulator pins and a public-domain shelf, license traced per title.",
+      "description": "Arcadia is the Detroit Automation Academy's emulation and public-domain media library for Intel Macs running macOS High Sierra (10.13). It browses one verified catalog (schema arcadia-catalog/1; the bundled snapshot carries 74 records — 29 emulators with their last High Sierra-compatible versions pinned with evidence, 18 public-domain films, 12 homebrew games, 10 audio records, 5 television episodes — and the app refreshes from the served catalog, adopting a new snapshot only when it validates). Every media title shows its rights class and the traced rights basis in full: the shelf is restricted to homebrew, public-domain, and openly-licensed works, license traced per title. No commercial ROMs and no BIOS or firmware ship with the app, and none are hosted or linked — emulators launch with files the user supplies, and the app says so in plain language. Media is reference-only in this build (nothing is hosted yet), so no title pretends to a Play button it does not have. Academy-original software under the Academy License (revocable). Unsigned test build.",
+      "catalogStatus": "testing",
+      "iconUrl": "https://detroitautomationacademy.com/store/icons/arcadia.png",
+      "buildNotes": "Arcadia arcadia-test-1 — first Distro listing. The High Sierra emulation library: browse the verified catalog by shelf and genre (29 pinned emulators, 18 public-domain films, 12 homebrew games, 10 audio, 5 TV episodes), with the rights class and traced license basis shown for every title. Emulators launch with your own files only — no commercial ROMs, no BIOS, nothing hosted or linked; media is reference-only in this build. The bundled catalog snapshot refreshes in-app from the served catalog. Unsigned test build; the runtime verdict is the owner's, at the Air sitting — install Arcadia from this listing; the install is the test.",
+      "audits": [],
+      "currentBuild": {
+        "tag": "arcadia-test-1",
+        "sizeBytes": 834175,
+        "sha256": "984e0c36f5d77c93ad5dac1ac5df5dd76187ca34ed6a641a4cef878161f996c1",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/arcadia/releases/download/arcadia-test-1/Arcadia-test.zip",
+        "floor": "10.13",
+        "builtAt": "2026-11-13",
+        "releasePublishedAt": "2026-11-13T11:26:26Z",
+        "ciRun": "43417022885",
+        "auditFlags": {
+          "disassembled": true,
+          "scanned": true,
+          "recompiled": true,
+          "complete": true,
+          "ref": "bundle-carried audit entry (Distro files/08 rule) attested on the shipped artifact's own Info.plist (audit + SDS-10 conformance dicts complete, dated 2026-11-13), plus THIS pass: fresh-download dissection of the shipped zip (834,175 B, SHA-256 == GitHub release asset, downloaded back and hashed locally) — bundle com.detroitautomationacademy.arcadia, 1.0.0 (arcadia-test-1), LSMinimumSystemVersion 10.13, startup-sound.wav byte-identical to the SDS-10 master (07a11324...), bundled arcadia-catalog.json byte-identical to the served Population Wave 1 catalog (5b557f4c..., 74 records, media reference-only, hosted = 0), Arcadia.icns 189,645 B from the registered iconset in-repo, executable Mach-O 64-bit x86_64, zip census 8 entries; build-line record (AutomatedTechnologies/arcadia @ 2d3c45b6ca, Arcadia goal files/APP-V1-BUILD.md + addendum): complete source tree (9 Objective-C sources, Academy-original clean-room code) dissected — catalog browser over arcadia-catalog/1 with bundled snapshot + validated refresh, rights class and traced basis shown per title, emulator launch for user-supplied files only with the fence stated in-app, no Play surface for reference-only media; scanned: zero third-party hosts/fonts/scripts/analytics in the tree (environment blacklist), the only network fetch is the Academy catalog URL; syntax-clean under the clang / MacOSX 10.13 SDK recipe (ALL SYNTAX OK at build time); recompiled from that source by estate CI (run 43417022885, macos-15, SUCCESS) into the shipped artifact"
         }
       }
     }
@@ -421,6 +491,14 @@
         "attestationState": "not attested"
       },
       {
+        "appId": "arcadia",
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": false,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      },
+      {
         "appId": "distro",
         "gapsDispositioned": true,
         "depsClear": true,
@@ -469,6 +547,14 @@
         "attestationState": "not attested"
       },
       {
+        "appId": "snowfell",
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": false,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      },
+      {
         "appId": "sounddeck",
         "gapsDispositioned": true,
         "depsClear": true,
@@ -494,6 +580,14 @@
       },
       {
         "appId": "tabletool",
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": false,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      },
+      {
+        "appId": "tachometer",
         "gapsDispositioned": true,
         "depsClear": true,
         "gateFiled": false,
