@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:890f827c0abe001fd7fe7525b2d9d650c65ecb112f51e987f947e773b137068d",
+    "stateFingerprint": "sha256:543bb38218240045f82c9d0ef783205d80dcace58f9964ae0d8da0959bc17791",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 9,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-13",
   "counts": {
     "apps": 14,
-    "builds": 41,
+    "builds": 42,
     "catalog_state": 12,
     "audits": 1,
     "findings": 17,
@@ -208,23 +208,23 @@
       "description": "The Academy's native macOS edition of Live Transit Detroit: the whole regional network (DDOT, SMART, QLINE, People Mover) as one live map and vehicle list, rendered in native Core Graphics with no WebView or browser engine. Only the small live vehicle feed is fetched, on a conditional-GET refresh. Release candidate: live merged-network vehicles and alerts on the regional map; GTFS route polylines are not in this build yet. It carries the Academy audit entry and has not yet been launched on the High Sierra rig.",
       "catalogStatus": "release-candidate",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/live-transit-detroit.png",
-      "buildNotes": "Native map and live vehicles for the District of Detroit. Route polylines not yet included. New glyph: the Bus (branding distinctiveness refresh). v0.1.0-rc3 adds the SDS-10 conformance surface: a code-constructed menu bar (About with the version, Refresh Now, Quit) and an SDS-8 welcome sheet whose version line is read from the bundle's own Info.plist at runtime; the standard startup sound plays as the welcome presents.",
+      "buildNotes": "Native map and live vehicles for the District of Detroit. Route polylines not yet included. New glyph: the Bus (branding distinctiveness refresh). The conformance uplift build closes the 2026-11-13 listing's DOES NOT CONFORM set: the map renders on the SDS-1 paper field with monochrome ink vehicle markers; the status line reads in Detroit local time (\"Updated 5:00 PM EST\") with correct singular/plural counts; the live vehicle table is read-only by construction; and the welcome sheet carries the AppIcon mark with the standard signal-arc pulse (static under Reduce Motion) plus its verified-state line. The SDS-10 conformance entry is attested honestly for the clauses this build meets. Release candidate — the High Sierra rig pass and the owner's verdict remain the released gate.",
       "audits": [],
       "currentBuild": {
-        "tag": "v0.1.0-rc3",
-        "sizeBytes": 811904,
-        "sha256": "30236d2f0939c86b85057c553b7088505fa700df08384acc6f112014fe3e8181",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/live-transit-detroit/releases/download/v0.1.0-rc3/LiveTransitDetroit-v0.1.0-rc3.zip",
+        "tag": "v0.1.0-rc4",
+        "sizeBytes": 815854,
+        "sha256": "e5cf890d8ae63164807f8ff532b4609bf61fef63bd58b276660ef524ed3c60c5",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/live-transit-detroit/releases/download/v0.1.0-rc4/LiveTransitDetroit-v0.1.0-rc4.zip",
         "floor": "10.13",
-        "builtAt": "2026-11-10",
-        "releasePublishedAt": "2026-11-10T22:35:11Z",
-        "ciRun": "42915834003",
+        "builtAt": "2026-11-13",
+        "releasePublishedAt": "2026-11-13T23:21:16Z",
+        "ciRun": "43526400743",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10; Logo / VersionAtStartup / StartupSound / MenuBar all true; Date 2026-11-10); fresh-download plist readback verified 2026-11-10 for the SDS10-T5 conformance build (v0.1.0-rc3, SHA-256 30236d2f0939c86b85057c553b7088505fa700df08384acc6f112014fe3e8181); bundled startup-sound.wav byte-identical to the SDS-10 master (SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a)"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10; Logo / VersionAtStartup / StartupSound / MenuBar all true; Date 2026-11-13), both asserted by the CI audit + conformance gates at packaging; fresh-download plist readback verified 2026-11-13 for the conformance uplift build (v0.1.0-rc4, SHA-256 e5cf890d8ae63164807f8ff532b4609bf61fef63bd58b276660ef524ed3c60c5): bundle com.detroitautomationacademy.livetransit, CFBundleVersion v0.1.0-rc4, LSMinimumSystemVersion 10.13, AppIcon.icns byte-identical to rc3 (98a70dbb...), startup-sound.wav byte-identical to the SDS-10 master (SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a); binary carries LTDWelcomeMarkView + America/Detroit status formatter; shipped source grep-verified zero hue constructors; the conformance Logo flag is attested for a clause this build meets (welcome AppIcon composition), closing listing row 21 honestly"
         }
       }
     },
