@@ -16,7 +16,15 @@
       "status": "release-candidate",
       "tagline": "Wireless network discovery for education and authorized testing.",
       "version": "test-build-19",
-      "buildNotes": "Adds the SDS-8 welcome screen via the shared Academy component (AcademyWelcomeController + AcademyAppIconView): the welcome draws the bundle AppIcon composition, displays the build version read from the bundle's own Info.plist at runtime, and plays the standard startup sound (byte-identical in the bundle). The bundle stamps the SDS-10 conformance entry beside the Academy audit entry. Also adds the Academy license and notice to the bundle. Runtime verification at the owner's next Air sitting."
+      "buildNotes": "Adds the SDS-8 welcome screen via the shared Academy component (AcademyWelcomeController + AcademyAppIconView): the welcome draws the bundle AppIcon composition, displays the build version read from the bundle's own Info.plist at runtime, and plays the standard startup sound (byte-identical in the bundle). The bundle stamps the SDS-10 conformance entry beside the Academy audit entry. Also adds the Academy license and notice to the bundle. Runtime verification at the owner's next Air sitting.",
+      "bundleId": "com.detroitautomationacademy.kismac",
+      "audit": {
+        "disassembled": true,
+        "scanned": true,
+        "recompiled": true,
+        "complete": true,
+        "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10; Logo / VersionAtStartup / StartupSound / MenuBar all true; Date 2026-11-10); fresh-download plist readback verified 2026-11-10 for the SDS10-T1 shared-welcome build (test-build-19, SHA-256 8d4f70ac74605ce11ecac018a2ebd08f8fbd8f65738561393c90963a4ee390a6); bundled startup-sound.wav byte-identical to the SDS-10 master (SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a)"
+      }
     },
     {
       "category": "Productivity",
@@ -34,7 +42,15 @@
       "status": "release-candidate",
       "tagline": "Move and resize windows with the keyboard, maintained for High Sierra.",
       "version": "spectacle-test-8",
-      "buildNotes": "SDS-10 conformance build (tranche SDS10-T2, adapted form per SDS-10 10.4.5): the build identifier is read from the bundle's own Info.plist at runtime (SpectacleUtilities.applicationBuildVersion, CFBundleVersion) and shown in the About panel (SpectacleAppDelegate showAboutPanel:, About action rewired in Spectacle.xib) and in the status-item menu (installVersionMenuItem); the standard startup sound plays once at first presentation (playStartupSound; bundled startup-sound.wav byte-identical to the SDS-10 master). Conformance attested in the bundle beside the audit entry. LICENSE-ACADEMY.txt + NOTICE.txt bundled (Academy layer only). Runtime verification at the owner's next Air sitting."
+      "buildNotes": "SDS-10 conformance build (tranche SDS10-T2, adapted form per SDS-10 10.4.5): the build identifier is read from the bundle's own Info.plist at runtime (SpectacleUtilities.applicationBuildVersion, CFBundleVersion) and shown in the About panel (SpectacleAppDelegate showAboutPanel:, About action rewired in Spectacle.xib) and in the status-item menu (installVersionMenuItem); the standard startup sound plays once at first presentation (playStartupSound; bundled startup-sound.wav byte-identical to the SDS-10 master). Conformance attested in the bundle beside the audit entry. LICENSE-ACADEMY.txt + NOTICE.txt bundled (Academy layer only). Runtime verification at the owner's next Air sitting.",
+      "bundleId": "",
+      "audit": {
+        "disassembled": true,
+        "scanned": true,
+        "recompiled": true,
+        "complete": true,
+        "ref": "bundle-carried audit entry (Distro files/08 rule); fresh-download plist readback verified 2026-11-10 for the SDS-10 conformance build (spectacle-test-8, SHA-256 c84593142ffc5278ea20f45e849d43da5c408e7e8950095ed742c7350462f8a0); conformance key com.detroitautomationacademy.conformance (SDS-10, all four clauses true, Date 2026-11-10) read back from the same bundle; bundled startup-sound.wav hash-identical to the SDS-10 master"
+      }
     },
     {
       "category": "Productivity",
@@ -52,7 +68,15 @@
       "status": "release-candidate",
       "tagline": "Markdown editor with live preview, maintained for High Sierra.",
       "version": "macdown-test-13",
-      "buildNotes": "Handler-rank build (MD-T5, Distro files/24): the Markdown document type now declares LSHandlerRank Alternate — MacDown presents itself as an alternate handler for markdown, deliberately not the system default and not the owner. Routing from Muse (Academy Build) opens files in MacDown explicitly; any system-default change is the owner's consented act in Muse, never something MacDown claims by installing. The plain-text and catch-all document entries are unchanged and carry no rank. Everything else stands from the SDS-10 conformance build: SDS-8 welcome screen (MPWelcomeController), SDS-10 conformance entry, Academy audit entry, Academy bundle ID, trimmed monochrome icon."
+      "buildNotes": "Handler-rank build (MD-T5, Distro files/24): the Markdown document type now declares LSHandlerRank Alternate — MacDown presents itself as an alternate handler for markdown, deliberately not the system default and not the owner. Routing from Muse (Academy Build) opens files in MacDown explicitly; any system-default change is the owner's consented act in Muse, never something MacDown claims by installing. The plain-text and catch-all document entries are unchanged and carry no rank. Everything else stands from the SDS-10 conformance build: SDS-8 welcome screen (MPWelcomeController), SDS-10 conformance entry, Academy audit entry, Academy bundle ID, trimmed monochrome icon.",
+      "bundleId": "",
+      "audit": {
+        "disassembled": true,
+        "scanned": true,
+        "recompiled": true,
+        "complete": true,
+        "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (all four clauses true); fresh-download plist readback verified 2026-11-10: Markdown document type carries LSHandlerRank Alternate, plain-text and public.data entries carry no rank (Distro files/24 section 6, gap G1)"
+      }
     },
     {
       "category": "Utilities",
@@ -70,7 +94,15 @@
       "status": "release-candidate",
       "tagline": "MySQL database client, maintained for High Sierra.",
       "version": "sequelpro-test-8",
-      "buildNotes": "SDS10-T4 conformance build: the SDS-8 welcome screen (`SPWelcomeController`, presented at launch) draws the bundle AppIcon composition, displays the build's version read from the bundle's Info.plist at runtime, and plays the standard startup sound — `startup-sound.wav` in Resources, byte-identical to the Academy master. The bundle carries the SDS-10 conformance entry beside the Academy audit entry (all four clauses true). Academy bundle ID, trimmed monochrome cylinder icon, audit entry stand. Bundled MySQL client is 5.5.56 (end-of-life), unchanged in this tranche; its replacement is a separate owner decision. New glyph: the Cylinder (branding distinctiveness refresh)."
+      "buildNotes": "SDS10-T4 conformance build: the SDS-8 welcome screen (`SPWelcomeController`, presented at launch) draws the bundle AppIcon composition, displays the build's version read from the bundle's Info.plist at runtime, and plays the standard startup sound — `startup-sound.wav` in Resources, byte-identical to the Academy master. The bundle carries the SDS-10 conformance entry beside the Academy audit entry (all four clauses true). Academy bundle ID, trimmed monochrome cylinder icon, audit entry stand. Bundled MySQL client is 5.5.56 (end-of-life), unchanged in this tranche; its replacement is a separate owner decision. New glyph: the Cylinder (branding distinctiveness refresh).",
+      "bundleId": "",
+      "audit": {
+        "disassembled": true,
+        "scanned": true,
+        "recompiled": true,
+        "complete": true,
+        "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10, Logo/VersionAtStartup/StartupSound/MenuBar all true, Date 2026-11-10); fresh-download plist readback verified 2026-11-10 for the SDS10-T4 conformance build (sequelpro-test-8, SHA-256 0868ab558a94324f2f8afb198e4e717f5e00392039a4f9c89697367221ff732a); bundled startup-sound.wav SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a = the SDS-10 master"
+      }
     },
     {
       "category": "Network",
@@ -88,7 +120,15 @@
       "status": "release-candidate",
       "tagline": "One network utility: discovery, diagnostics, and read-only base-station view — staged test build.",
       "version": "staged-v1-9",
-      "buildNotes": "Adds the SDS-8 welcome screen via the shared Academy component (AcademyWelcomeController + AcademyAppIconView — the same component as the KisMac build): the welcome draws the bundle AppIcon composition, displays the build version read from the bundle's own Info.plist at runtime, and plays the standard startup sound (byte-identical in the bundle). The bundle stamps the SDS-10 conformance entry beside the Academy audit entry. Runtime verification at the owner's next Air sitting."
+      "buildNotes": "Adds the SDS-8 welcome screen via the shared Academy component (AcademyWelcomeController + AcademyAppIconView — the same component as the KisMac build): the welcome draws the bundle AppIcon composition, displays the build version read from the bundle's own Info.plist at runtime, and plays the standard startup sound (byte-identical in the bundle). The bundle stamps the SDS-10 conformance entry beside the Academy audit entry. Runtime verification at the owner's next Air sitting.",
+      "bundleId": "com.detroitautomationacademy.workbench",
+      "audit": {
+        "disassembled": true,
+        "scanned": true,
+        "recompiled": true,
+        "complete": true,
+        "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10; Logo / VersionAtStartup / StartupSound / MenuBar all true; Date 2026-11-10); fresh-download plist readback verified 2026-11-10 for the SDS10-T1 shared-welcome build (staged-v1-9, SHA-256 58349820dcd1a59d937beb0cea649d4803f404a2338ab9fb3bdaec1348945f18); bundled startup-sound.wav byte-identical to the SDS-10 master (SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a)"
+      }
     },
     {
       "category": "Transit",
@@ -106,7 +146,15 @@
       "status": "release-candidate",
       "tagline": "Live regional transit for the District of Detroit — native, no browser, built for High Sierra.",
       "version": "v0.1.0-rc3",
-      "buildNotes": "Native map and live vehicles for the District of Detroit. Route polylines not yet included. New glyph: the Bus (branding distinctiveness refresh). v0.1.0-rc3 adds the SDS-10 conformance surface: a code-constructed menu bar (About with the version, Refresh Now, Quit) and an SDS-8 welcome sheet whose version line is read from the bundle's own Info.plist at runtime; the standard startup sound plays as the welcome presents."
+      "buildNotes": "Native map and live vehicles for the District of Detroit. Route polylines not yet included. New glyph: the Bus (branding distinctiveness refresh). v0.1.0-rc3 adds the SDS-10 conformance surface: a code-constructed menu bar (About with the version, Refresh Now, Quit) and an SDS-8 welcome sheet whose version line is read from the bundle's own Info.plist at runtime; the standard startup sound plays as the welcome presents.",
+      "bundleId": "com.detroitautomationacademy.livetransit",
+      "audit": {
+        "disassembled": true,
+        "scanned": true,
+        "recompiled": true,
+        "complete": true,
+        "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10; Logo / VersionAtStartup / StartupSound / MenuBar all true; Date 2026-11-10); fresh-download plist readback verified 2026-11-10 for the SDS10-T5 conformance build (v0.1.0-rc3, SHA-256 30236d2f0939c86b85057c553b7088505fa700df08384acc6f112014fe3e8181); bundled startup-sound.wav byte-identical to the SDS-10 master (SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a)"
+      }
     },
     {
       "category": "Distribution",
@@ -124,7 +172,15 @@
       "status": "release-candidate",
       "tagline": "The Academy's application store for High Sierra — browse, install, and update Academy apps.",
       "version": "distro-test-42",
-      "buildNotes": "Pre-flight installs (charter section 6): before Distro places an update, it closes the app if it is running — politely first, force-quit only if the app does not quit, and the install stops untouched if the app still will not quit — and removes the previous version's bundle. Your app data is stored separately from the bundle and is never deleted or moved by an install, so settings and history carry across every update. An app that replaced an earlier product under a different name can declare its predecessor identities, and pre-flight treats a running predecessor and its bundle the same way. Everything else stands: SHA-256 verification and the audit gate in DistroInstaller still run before pre-flight, so an unverified download never disturbs a running app; the unified registered logo, the version read from the bundle on the welcome screen, the functional menu bar, and academy-distro:// deep links all carry over."
+      "buildNotes": "Pre-flight installs (charter section 6): before Distro places an update, it closes the app if it is running — politely first, force-quit only if the app does not quit, and the install stops untouched if the app still will not quit — and removes the previous version's bundle. Your app data is stored separately from the bundle and is never deleted or moved by an install, so settings and history carry across every update. An app that replaced an earlier product under a different name can declare its predecessor identities, and pre-flight treats a running predecessor and its bundle the same way. Everything else stands: SHA-256 verification and the audit gate in DistroInstaller still run before pre-flight, so an unverified download never disturbs a running app; the unified registered logo, the version read from the bundle on the welcome screen, the functional menu bar, and academy-distro:// deep links all carry over.",
+      "bundleId": "com.detroitautomationacademy.distro",
+      "audit": {
+        "disassembled": true,
+        "scanned": true,
+        "recompiled": true,
+        "complete": true,
+        "ref": "bundle-carried audit entry (Distro files/08 rule) earned on the line's standing record; fresh-download plist readback verified 2026-11-10: com.detroitautomationacademy.distro, CFBundleVersion distro-test-42, floor 10.13, audit entry complete (Authority Detroit Automation Academy, Date 2026-11-08, all flags true); shipped binary carries the pre-flight implementation (runPreflightForEntry, closeRunningApplication, forceTerminate, runningApplicationsWithBundleIdentifier, error-17 text) and the predecessorBundleIDs parser (distro-test-42, SHA-256 770b75f6597fe3b72f67527382109ee20a330b0761ba6f25557d9a4e6229a810)"
+      }
     },
     {
       "category": "Productivity",
@@ -142,7 +198,15 @@
       "status": "testing",
       "tagline": "The Academy's Minion client for High Sierra — under its own name and mark.",
       "version": "0.4.2",
-      "buildNotes": "Minion 0.4.2 — the sign-in repair. 0.4.1's rename pass renamed two plumbing identities along with the app's display name — the session partition (the session store's identity) and the package identity the session machinery derives from — and sign-in broke: an existing sign-in was left behind, and a fresh sign-in spun forever after the two-factor step. 0.4.2 restores both plumbing identities to the values the working builds used, so a sign-in made in an earlier build carries into this one and a fresh sign-in completes. A sign-in made inside 0.4.1's own separate session store is not read; if 0.4.1 was the only build you ran, sign in once more. Nothing about the app's name or surfaces changes: bundle Minion.app under com.detroitautomationacademy.minion, Minion's own mark (the scheming side-eye dog, Academy monochrome standard), title bar pinned to Minion, dark by default (View → Appearance records your explicit choice and later launches honor it). App data is stored separately at ~/Library/Application Support/com.detroitautomationacademy.minion. Standing features: the genuine Terminal view (View menu, Command-T) over the live hosted session, markdown routing to MacDown with the consented system default, window repair, up-arrow message history, the SDS-8 welcome. Unsigned test build; the runtime verdict is the owner's, at the Air sitting."
+      "buildNotes": "Minion 0.4.2 — the sign-in repair. 0.4.1's rename pass renamed two plumbing identities along with the app's display name — the session partition (the session store's identity) and the package identity the session machinery derives from — and sign-in broke: an existing sign-in was left behind, and a fresh sign-in spun forever after the two-factor step. 0.4.2 restores both plumbing identities to the values the working builds used, so a sign-in made in an earlier build carries into this one and a fresh sign-in completes. A sign-in made inside 0.4.1's own separate session store is not read; if 0.4.1 was the only build you ran, sign in once more. Nothing about the app's name or surfaces changes: bundle Minion.app under com.detroitautomationacademy.minion, Minion's own mark (the scheming side-eye dog, Academy monochrome standard), title bar pinned to Minion, dark by default (View → Appearance records your explicit choice and later launches honor it). App data is stored separately at ~/Library/Application Support/com.detroitautomationacademy.minion. Standing features: the genuine Terminal view (View menu, Command-T) over the live hosted session, markdown routing to MacDown with the consented system default, window repair, up-arrow message history, the SDS-8 welcome. Unsigned test build; the runtime verdict is the owner's, at the Air sitting.",
+      "bundleId": "com.detroitautomationacademy.minion",
+      "audit": {
+        "disassembled": true,
+        "scanned": true,
+        "recompiled": true,
+        "complete": true,
+        "ref": "bundle-carried audit entry (Distro files/08 rule) on the changes/0034 scope (Distro files/26) as carried by changes/0038 (Distro files/19 section 17), plus THIS pass (Distro files/32): the complete source diff 0.4.1->0.4.2 (8 repo files) dissected line by line — the auth-continuity set only: session partition restored at 3 sites in main.cjs, package identity restored in package.json (name/version), the app-menu name pinned to the display string in academy.cjs, version bumps (assembler, build label, About), INSTALL.txt/README consequence copy, the build workflow release step, and the test suite (46/46 incl. the new auth-continuity group and the census amended with the recorded plumbing exception); shipped-artifact census: the only /muse/i lines in the artifact's Academy layer are the 3 API endpoint constants, the 3 session partition literals and the package identity line — plumbing all, displayed nowhere; fresh-download plist readback verified 2026-11-11 (Minion / com.detroitautomationacademy.minion, 0.4.2, floor 10.13, audit + SDS-10 conformance complete); startup sound byte-identical to the SDS-10 master; icon byte-identical to the monochrome master; zip census 273 entries; no terminal-skin.css"
+      }
     },
     {
       "category": "Utilities",
@@ -160,7 +224,15 @@
       "status": "testing",
       "tagline": "Diagnose and recover a non-responsive AirPods Max (Lightning) — USB, Bluetooth, audio, firmware.",
       "version": "apd-test-5",
-      "buildNotes": "Defect fix: the app shipped with no menu bar — the programmatic UI never built a main menu (no nib, and no code called setMainMenu:). The main menu is now constructed in code and installed at launch: app menu (About, Quit), File (Save Report…, Close Window), Edit (standard editing for the report view), Diagnostics (the window's nine actions, on the menu bar), Window, Help. No diagnostic behavior changes. Runtime verification at the owner's Air sitting, evening of 2026-11-10."
+      "buildNotes": "Defect fix: the app shipped with no menu bar — the programmatic UI never built a main menu (no nib, and no code called setMainMenu:). The main menu is now constructed in code and installed at launch: app menu (About, Quit), File (Save Report…, Close Window), Edit (standard editing for the report view), Diagnostics (the window's nine actions, on the menu bar), Window, Help. No diagnostic behavior changes. Runtime verification at the owner's Air sitting, evening of 2026-11-10.",
+      "bundleId": "com.detroitautomationacademy.airpodsmaxdiag",
+      "audit": {
+        "disassembled": true,
+        "scanned": true,
+        "recompiled": true,
+        "complete": true,
+        "ref": "bundle-carried audit entry (Distro files/08 rule); fresh-download plist readback verified 2026-11-10 for the menu-bar defect-fix build (apd-test-5, SHA-256 a32e34eec2cb5a06991da539666abc93cbd9a3b7ee332474d4426ab5515da8cd)"
+      }
     },
     {
       "category": "Productivity",
@@ -178,7 +250,15 @@
       "status": "testing",
       "tagline": "The Academy's project board — every GitHub project in one native window.",
       "version": "snowfell-test-3",
-      "buildNotes": "Snowfell snowfell-test-3 — the declutter build, on the owner's verdicts from the first rig screenshots. Confirmations now speak the push model: \"Move '<item>' to <status> on <board>?\" with Stage buttons, and Send Pending Changes as the push — the mutation names, endpoints, and file paths that used to fill the dialog moved behind a Details button and into the Staged Changes panel, where the full record still reads exactly. The Incidents lens header is one plain line and its state and label columns no longer truncate silently. Menu labels follow state: Enter/Exit Full Screen tracks the window, and Show Closed/Archived Boards read Hide while on. Everything from test-2 carries over: the baseline interface (tinted kanban wells, full-wrap card titles, label pills, Portfolio health dots and Open / Done split), the V12 Storage lens with its bundled SnowfellStorageService, board-state derivation (pull the schema v9 snapshot in-app: Sync → Check Now → Apply Update), bundled snapshot v8-0041 (74 boards, 614 items, 5 incidents). Write-back is compiled OFF: changes stage locally and nothing is sent to GitHub. Unsigned test build; the runtime verdict is the owner's, at the Air sitting."
+      "buildNotes": "Snowfell snowfell-test-3 — the declutter build, on the owner's verdicts from the first rig screenshots. Confirmations now speak the push model: \"Move '<item>' to <status> on <board>?\" with Stage buttons, and Send Pending Changes as the push — the mutation names, endpoints, and file paths that used to fill the dialog moved behind a Details button and into the Staged Changes panel, where the full record still reads exactly. The Incidents lens header is one plain line and its state and label columns no longer truncate silently. Menu labels follow state: Enter/Exit Full Screen tracks the window, and Show Closed/Archived Boards read Hide while on. Everything from test-2 carries over: the baseline interface (tinted kanban wells, full-wrap card titles, label pills, Portfolio health dots and Open / Done split), the V12 Storage lens with its bundled SnowfellStorageService, board-state derivation (pull the schema v9 snapshot in-app: Sync → Check Now → Apply Update), bundled snapshot v8-0041 (74 boards, 614 items, 5 incidents). Write-back is compiled OFF: changes stage locally and nothing is sent to GitHub. Unsigned test build; the runtime verdict is the owner's, at the Air sitting.",
+      "bundleId": "com.detroitautomationacademy.snowfell",
+      "audit": {
+        "disassembled": true,
+        "scanned": true,
+        "recompiled": true,
+        "complete": true,
+        "ref": "bundle-carried audit entry (Distro files/08 rule) attested on the shipped artifact's own Info.plist (audit + SDS-10 conformance dicts complete, dated 2026-11-12), plus THIS pass: the declutter delta (5 presentation sources — AppDelegate, WriteBackQueueViewController, OrchestrationViewController, IncidentsViewController, ItemDetailViewController — over the test-2 tree, AutomatedTechnologies/snowfell @ 059f46c3) dissected line by line against the three owner verdicts of 2026-11-12 13:21–13:25 EST; scanned: no data-layer, schema, lens-logic, or write-back-flag change (SNOWFELL_WRITEBACK_ENABLED still 0 in the shipped source; GitHubProjectsClient error records inspected and retained verbatim as the error-record layer); recompiled from that source by estate CI (run 43281165706, macos-15, clang, x86_64, LSMinimumSystemVersion 10.13, all steps green on the first attempt) into the shipped artifact; fresh-download verification 2026-11-12: bundle com.detroitautomationacademy.snowfell, 0.1.0 (snowfell-test-3), startup-sound.wav byte-identical to the SDS-10 master (07a11324…), bundled registry.db == snapshot v8-0041 (52df7ed6…; 74 boards / 614 items / 5 incidents), SnowfellStorageService present at Contents/MacOS, both executables Mach-O 64-bit x86_64, zip census 13 entries; declutter verified in the shipped bytes (new primary copy present incl. UTF-16 literals; old primary copy absent in both encodings; technical record present in Details strings only)"
+      }
     },
     {
       "category": "Utilities",
@@ -196,9 +276,17 @@
       "status": "testing",
       "tagline": "On-device analytics for Academy apps — measured on the device, kept on the device.",
       "version": "tachometer-test-1",
-      "buildNotes": "Tachometer tachometer-test-1 — first Distro listing. The Academy's on-device analytics: per-process CPU and memory for Academy apps, itemized by role (shell, renderer, GPU, helper), stored on the device only in a segmented single-writer store, and scored in-app against the estate's budgets — PASS, FAIL, or NO DATA, never a silent pass. No network code. Unsigned test build; the runtime verdict is the owner's, at the Air sitting — install Tachometer from this listing; its first report scores the Minion avatar from device data."
+      "buildNotes": "Tachometer tachometer-test-1 — first Distro listing. The Academy's on-device analytics: per-process CPU and memory for Academy apps, itemized by role (shell, renderer, GPU, helper), stored on the device only in a segmented single-writer store, and scored in-app against the estate's budgets — PASS, FAIL, or NO DATA, never a silent pass. No network code. Unsigned test build; the runtime verdict is the owner's, at the Air sitting — install Tachometer from this listing; its first report scores the Minion avatar from device data.",
+      "bundleId": "com.detroitautomationacademy.analytics",
+      "audit": {
+        "disassembled": true,
+        "scanned": true,
+        "recompiled": true,
+        "complete": true,
+        "ref": "bundle-carried audit entry (Distro files/08 rule) attested on the shipped artifact's own Info.plist (audit + SDS-10 conformance dicts complete, dated 2026-11-12), plus THIS pass: fresh-download dissection of the shipped zip (803,538 B, SHA-256 == GitHub asset digest == registration packet) — bundle com.detroitautomationacademy.analytics, 0.1.0 (tachometer-test-1), LSMinimumSystemVersion 10.13, startup-sound.wav byte-identical to the SDS-10 master (07a11324...), zip census 11 entries; build-line record (AutomatedTechnologies/tachometer @ 315e8816, records/BUILD-RECORD-test-1.md): complete source tree (9 sources) syntax-clean under the clang / MacOSX 10.13 SDK recipe, CPUMath harness 16/16, contract conformance 19/19, tranche suite 12/12, network grep over shipped sources clean (no network code exists in the app), executable Mach-O x86_64; recompiled from that source by estate CI (run 43279781471, run_number 1, SUCCESS) into the shipped artifact"
+      }
     }
   ],
   "catalogVersion": 1,
-  "generated": "2026-11-07"
+  "generated": "2026-11-13"
 }
