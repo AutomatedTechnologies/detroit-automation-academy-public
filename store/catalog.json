@@ -158,28 +158,28 @@
     },
     {
       "category": "Distribution",
-      "datePublished": "2026-11-10",
+      "datePublished": "2026-11-13",
       "description": "Distro is the Detroit Automation Academy's native application-store app for macOS High Sierra: it browses the Academy catalog, downloads Academy-maintained apps from the AutomatedTechnologies GitHub org, verifies every download by SHA-256 before install, and carries no privileged helper. Prepared at DAADV3 T1 codification (2026-11-07); not yet published — publication remains gated on Distro tranche D-T5. Disassembled. Scanned. Recompiled. Distro distributes only apps carrying the Academy audit entry in their plist — proof of the Academy pipeline. distro-test-17 applies the SDS-9 liquid-glass cues to the store chrome: layered tint depth, the glass hairline pair on the dividers and sheet edges, capsule state controls, and the status word in a capsule chip — flat tints only, no behavior change.\n\n© 2026 Detroit Automation Academy / Automated Technologies. All rights reserved. Detroit Automation Academy, Automated Technologies, Distro, Workbench, Live Transit Detroit, The Signal, and the Academy monochrome logo are marks of the Academy, used under the founder's permission. Academy-original works are licensed under the Academy License (revocable); upstream open-source components remain under their own licenses. distro-test-22 adds Update All: when updates are pending, one button runs them sequentially — each app still verified by SHA-256 and the audit gate on its own — and ends with a single summary. The detail pane now shows build notes for the catalog version and the installed app's file path. Catalog fetches now bypass HTTP caches, so Refresh always returns the current catalog.",
-      "downloadURL": "https://github.com/AutomatedTechnologies/distro/releases/download/distro-test-42/Distro-test.zip",
+      "downloadURL": "https://github.com/AutomatedTechnologies/distro/releases/download/distro-test-43/Distro-test.zip",
       "iconURL": "https://detroitautomationacademy.com/store/icons/distro.png",
       "id": "distro",
       "license": "Academy License (revocable)",
       "minMacOS": "10.13",
       "name": "Distro",
-      "sha256": "770b75f6597fe3b72f67527382109ee20a330b0761ba6f25557d9a4e6229a810",
-      "sizeBytes": 744069,
+      "sha256": "662bcbff9ae7fb4c0380c5ec95a46b6d13f660327053c71bae47da011c15367a",
+      "sizeBytes": 744145,
       "sourceURL": "https://github.com/AutomatedTechnologies/distro",
       "status": "release-candidate",
       "tagline": "The Academy's application store for High Sierra — browse, install, and update Academy apps.",
-      "version": "distro-test-42",
-      "buildNotes": "Pre-flight installs (charter section 6): before Distro places an update, it closes the app if it is running — politely first, force-quit only if the app does not quit, and the install stops untouched if the app still will not quit — and removes the previous version's bundle. Your app data is stored separately from the bundle and is never deleted or moved by an install, so settings and history carry across every update. An app that replaced an earlier product under a different name can declare its predecessor identities, and pre-flight treats a running predecessor and its bundle the same way. Everything else stands: SHA-256 verification and the audit gate in DistroInstaller still run before pre-flight, so an unverified download never disturbs a running app; the unified registered logo, the version read from the bundle on the welcome screen, the functional menu bar, and academy-distro:// deep links all carry over.",
+      "version": "distro-test-43",
+      "buildNotes": "First Distro build carrying the full SDS-10 conformance entry beside the Academy audit entry: the bundle now attests, in its own Info.plist, the standard it is built to — unified registered logo, version read from the bundle on the welcome screen, startup sound byte-identical to the master, a functional menu bar, and no notification intermediary of any kind (this build has no notification surface at all). The M-03 absence gap — a storefront app attesting nothing — is closed. Everything else stands from the previous build: SHA-256 verification and the audit gate in DistroInstaller run before pre-flight installs, which close a running app politely first and never disturb an app that will not quit; academy-distro:// deep links carry over.",
       "bundleId": "com.detroitautomationacademy.distro",
       "audit": {
         "disassembled": true,
         "scanned": true,
         "recompiled": true,
         "complete": true,
-        "ref": "bundle-carried audit entry (Distro files/08 rule) earned on the line's standing record; fresh-download plist readback verified 2026-11-10: com.detroitautomationacademy.distro, CFBundleVersion distro-test-42, floor 10.13, audit entry complete (Authority Detroit Automation Academy, Date 2026-11-08, all flags true); shipped binary carries the pre-flight implementation (runPreflightForEntry, closeRunningApplication, forceTerminate, runningApplicationsWithBundleIdentifier, error-17 text) and the predecessorBundleIDs parser (distro-test-42, SHA-256 770b75f6597fe3b72f67527382109ee20a330b0761ba6f25557d9a4e6229a810)"
+        "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10; Logo / VersionAtStartup / StartupSound / MenuBar / NotificationIdentity all true; Date 2026-11-13) — the first Distro build carrying the attestation; fresh-download readback verified 2026-11-13 (distro-test-43, SHA-256 662bcbff9ae7fb4c0380c5ec95a46b6d13f660327053c71bae47da011c15367a): conformance dict present as attested, audit dict identical to test-42, notification census of the new bundle zero on every intermediary marker; bundled startup-sound.wav byte-identical to the SDS-10 master (SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a)"
       }
     },
     {
@@ -210,28 +210,28 @@
     },
     {
       "category": "Utilities",
-      "datePublished": "2026-11-10",
+      "datePublished": "2026-11-13",
       "description": "An Academy-original utility for a USB-connected AirPods Max (Lightning generation) that will not respond. Five-section diagnostics — USB enumeration and power, IORegistry device node, CoreAudio device list, Bluetooth pairing and link, recent bluetoothd/coreaudiod log evidence — with a branching verdict; guided Restart and Factory Reset sheets for the headphones (including the 15-second reset hold timer); a Restart Services action for coreaudiod and bluetoothd; and a Firmware panel that reads the device firmware and compares it with the latest for this model (6F25, Apple Support 106340), evaluating Apple's automatic-update conditions live. Installs as AirPodsMaxDiag.app under its own Academy bundle identity (com.detroitautomationacademy.airpodsmaxdiag) and carries the Academy audit entry. AirPods Max is a trademark of Apple Inc.; this utility is not affiliated with or endorsed by Apple Inc.",
-      "downloadURL": "https://github.com/AutomatedTechnologies/airpods-max-diag/releases/download/apd-test-5/AirPodsMaxDiag-test.zip",
+      "downloadURL": "https://github.com/AutomatedTechnologies/airpods-max-diag/releases/download/apd-test-6/AirPodsMaxDiag-test.zip",
       "iconURL": "https://detroitautomationacademy.com/store/icons/airpods-max-diag.png",
       "id": "airpods-max-diag",
       "license": "Academy License (revocable)",
       "minMacOS": "10.13",
       "name": "AirPods Max Diagnostics",
-      "sha256": "a32e34eec2cb5a06991da539666abc93cbd9a3b7ee332474d4426ab5515da8cd",
-      "sizeBytes": 719776,
+      "sha256": "bcb352ea6e30af6cdba0c6ce6b1c5a3b68e1182d7b9030dcf79c652ecac7e599",
+      "sizeBytes": 720354,
       "sourceURL": "https://github.com/AutomatedTechnologies/airpods-max-diag",
       "status": "testing",
       "tagline": "Diagnose and recover a non-responsive AirPods Max (Lightning) — USB, Bluetooth, audio, firmware.",
-      "version": "apd-test-5",
-      "buildNotes": "Defect fix: the app shipped with no menu bar — the programmatic UI never built a main menu (no nib, and no code called setMainMenu:). The main menu is now constructed in code and installed at launch: app menu (About, Quit), File (Save Report…, Close Window), Edit (standard editing for the report view), Diagnostics (the window's nine actions, on the menu bar), Window, Help. No diagnostic behavior changes. Runtime verification at the owner's Air sitting, evening of 2026-11-10.",
+      "version": "apd-test-6",
+      "buildNotes": "The diagnostics build now meets the same identity standard as the rest of the catalog: its welcome screen shows the version read from the app's own bundle at runtime — never a hardcoded string — and the bundle carries the full SDS-10 conformance entry beside the Academy audit entry, closing the two absence gaps (no attestation, no rendered version) recorded against the previous build. Diagnostics behavior is unchanged, including its privilege posture: the one escalation is transient and user-consented, and no helper or persistent privileged surface exists.",
       "bundleId": "com.detroitautomationacademy.airpodsmaxdiag",
       "audit": {
         "disassembled": true,
         "scanned": true,
         "recompiled": true,
         "complete": true,
-        "ref": "bundle-carried audit entry (Distro files/08 rule); fresh-download plist readback verified 2026-11-10 for the menu-bar defect-fix build (apd-test-5, SHA-256 a32e34eec2cb5a06991da539666abc93cbd9a3b7ee332474d4426ab5515da8cd)"
+        "ref": "bundle-carried audit entry (Distro files/08 rule) + SDS-10 conformance entry (Standard SDS-10; Logo / VersionAtStartup / StartupSound / MenuBar / NotificationIdentity all true; Date 2026-11-13) — first APD build carrying the attestation, and the first whose executable reads and renders its own version at startup; fresh-download readback verified 2026-11-13 (apd-test-6, SHA-256 bcb352ea6e30af6cdba0c6ce6b1c5a3b68e1182d7b9030dcf79c652ecac7e599): conformance dict present as attested, CFBundleVersion referenced by the executable, notification census zero; bundled startup-sound.wav byte-identical to the SDS-10 master (SHA-256 07a113244c6b432b22954a089ce519bd239311b14a48f26ae85214ed8c25b09a)"
       }
     },
     {
