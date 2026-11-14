@@ -186,14 +186,12 @@
     <div class="wrap">
       <img src="assets/logo.webp" alt="Forge D — Detroit Automation Academy mark" class="mark">
       <p class="kick">DETROIT AUTOMATION ACADEMY</p>
-      <h1>Detroit builds what&rsquo;s next.</h1>
-      <p class="sub">One academy, four working lanes — software, live data, stories, and training.
-        Built in Detroit, in the open, for the city that uses it.</p>
-      <div class="ctas">
-        <a class="btn solid" href="board/">Find your stop — Departure Board</a>
-        <a class="btn ghost" href="#lanes">See the work</a>
+      <h1 id="siteb-headline">Every bus. Every feed. One screen.</h1>
+      <p class="sub" id="siteb-sub">Square One is filming the build of the software Detroit actually uses — Live Transit Detroit, Distro, The Signal. Watch it happen. Own a piece of the season.</p>
+      <div class="ctas" id="siteb-ctas">
+        <a class="btn solid" href="mailto:detroit@muse.ai?subject=SAT-SITE">Email detroit@muse.ai (subject: SAT-SITE)</a>
       </div>
-      <p class="note">The Departure Board is free for every rider, every day — no account, no app to install.</p>
+      <p class="note" id="siteb-note">Lanes: Signal / Square One / Live Transit Detroit / Distro / Sponsorship &amp; placements. Sponsorship collected by AutomatedTechnologies d/b/a Detroit Automation Academy via Stripe invoicing. Opt-in only.</p>
     </div>
   </div>
 
@@ -351,5 +349,14 @@
   </div>
 </footer>
 
+<script>
+/* SITE-B hero decommission — Sun 2026-11-15 00:00 EST: restore the pre-SITE-B hero. */
+(function(){'use strict';if(new Date()>=new Date('2026-11-15T00:00:00-05:00')){
+var h=document.getElementById('siteb-headline');if(h){h.innerHTML='Detroit builds what&rsquo;s next.';}
+var s=document.getElementById('siteb-sub');if(s){s.textContent='One academy, four working lanes — software, live data, stories, and training. Built in Detroit, in the open, for the city that uses it.';}
+var c=document.getElementById('siteb-ctas');if(c){c.innerHTML='<a class="btn solid" href="board/">Find your stop — Departure Board</a> <a class="btn ghost" href="#lanes">See the work</a>';}
+var n=document.getElementById('siteb-note');if(n){n.textContent='The Departure Board is free for every rider, every day — no account, no app to install.';}
+}})();
+</script>
 </body>
 </html>
