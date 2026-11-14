@@ -140,6 +140,8 @@
   .fbrand svg, .fbrand img{width:30px; height:30px;}
   .fbot{border-top:1px solid var(--line); margin-top:28px; padding-top:16px; font-size:12.5px; color:var(--mut);
     display:flex; gap:8px 20px; flex-wrap:wrap; justify-content:space-between;}
+  .fbot .vnum{font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-weight:700; color:var(--ink);
+    border:1px solid var(--line2); background:#fff; border-radius:6px; padding:1px 8px; letter-spacing:.14em;}
   @media (max-width:760px){
     .lanes, .rates, .cols{grid-template-columns:1fr;}
     .fgrid{grid-template-columns:1fr 1fr;}
@@ -344,6 +346,7 @@
     </div>
     <div class="fbot">
       <span>© 2026 Detroit Automation Academy · Detroit, Michigan</span>
+      <span id="daa-visitor" hidden>You are visitor <span class="vnum" id="daa-visitor-num"></span></span>
       <span><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></span>
     </div>
   </div>
@@ -357,6 +360,22 @@ var s=document.getElementById('siteb-sub');if(s){s.textContent='One academy, fou
 var c=document.getElementById('siteb-ctas');if(c){c.innerHTML='<a class="btn solid" href="board/">Find your stop — Departure Board</a> <a class="btn ghost" href="#lanes">See the work</a>';}
 var n=document.getElementById('siteb-note');if(n){n.textContent='The Departure Board is free for every rider, every day — no account, no app to install.';}
 }})();
+</script>
+<script>
+/* Visitor counter — first-party endpoint on the Academy's own Netlify site
+   (daa-visitor-counter). Each homepage view calls it once; the endpoint
+   increments the stored total by one and returns it as comma-formatted
+   plain text, shown in the footer after "You are visitor". Async and
+   failure-silent: if the endpoint is unreachable, the footer line stays
+   hidden and the page renders exactly as without it. */
+(function(){'use strict';
+var box=document.getElementById('daa-visitor');if(!box)return;
+fetch('https://daa-visitor-counter.netlify.app/api/hit',{cache:'no-store'})
+  .then(function(r){return r.text();})
+  .then(function(t){var n=(t||'').trim();if(!n)return;
+    document.getElementById('daa-visitor-num').textContent=n;box.hidden=false;})
+  .catch(function(){});
+})();
 </script>
 </body>
 </html>
