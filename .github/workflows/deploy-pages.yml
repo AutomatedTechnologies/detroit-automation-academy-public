@@ -59,7 +59,7 @@ jobs:
             # unreadable diff) falls back to the full gates.
             changed="$(git diff --name-only HEAD~1 HEAD 2>/dev/null || true)"
             printf '%s\n' "$changed"
-            if [ -n "$changed" ] && ! printf '%s\n' "$changed" | grep -qvE '^(live-data/|live-transit/[^/]+/data/|feed-raw/)'; then
+            if [ -n "$changed" ] && ! printf '%s\n' "$changed" | grep -qvE '^(live-data/|live-transit/[^/]+/data/|feed-raw/|atc/live\.json$)'; then
               echo "code_changed=false" >> "$GITHUB_OUTPUT"
               echo "scope: feed-only dispatch, tip commit is data-only — heavy gates skipped (feed cadence)"
               for g in shell-contract manifest-recompute ref-integrity; do
@@ -86,7 +86,7 @@ jobs:
           if [ -z "$changed" ]; then
             echo "code_changed=true" >> "$GITHUB_OUTPUT"
             echo "scope: empty diff — full gates (safe default)"
-          elif printf '%s\n' "$changed" | grep -qvE '^(live-data/|live-transit/[^/]+/data/|feed-raw/)'; then
+          elif printf '%s\n' "$changed" | grep -qvE '^(live-data/|live-transit/[^/]+/data/|feed-raw/|atc/live\.json$)'; then
             echo "code_changed=true" >> "$GITHUB_OUTPUT"
             echo "scope: code/shell/manifest paths changed — full gates"
           else
@@ -294,3 +294,4 @@ jobs:
           gh label create ci-cd --color B60205 --description "CI/CD pipeline alarms" --force || true
           gh issue create --title "[post-deploy] ${stage} failed${cities:+ — }${cities} @ ${GITHUB_SHA:0:7}" --body-file issue-body.md --label ci-cd || \
             gh issue create --title "[post-deploy] ${stage} failed @ ${GITHUB_SHA:0:7}" --body-file issue-body.md
+
