@@ -7,9 +7,9 @@
 <meta name="description" content="A playable air traffic control training simulator for Detroit Metro (DTW) airspace, with the fictional SRCL automated coordination link. Simulation only — not for operational use.">
 <style>
   :root{
-    --bg:#07130b; --panel:#0c1f12; --panel2:#0a1a0f; --line:#2a5a38;
-    --ink:#eaf7ec; --dim:#a9cbb0; --scope:#04140a;
-    --caution:#ffb300; --warn:#ff5252; --sel:#4dd0e1; --ok:#69f0ae;
+    --bg:#0a0a0a; --panel:#161616; --panel2:#101010; --line:#4d4d4d;
+    --ink:#f2f2f2; --dim:#9e9e9e; --scope:#050505;
+    --caution:#c4c4c4; --warn:#ffffff; --sel:#ffffff; --ok:#dcdcdc;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
@@ -17,7 +17,7 @@
   header{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;
     padding:10px 14px;border-bottom:2px solid var(--line);background:var(--panel);}
   header h1{font-size:19px;margin:0;letter-spacing:.5px}
-  .badge{background:#7a1010;color:#fff;border:2px solid #ff8a80;padding:3px 10px;
+  .badge{background:#3d3d3d;color:#fff;border:2px solid #ffffff;padding:3px 10px;
     font-weight:700;font-size:13px;border-radius:3px;letter-spacing:.4px}
   .clockbox{font-size:14px;color:var(--dim)}
   .clockbox b{color:var(--ink);font-size:16px}
@@ -28,21 +28,21 @@
   @media (max-width:900px){main{grid-template-columns:1fr}}
   .scopewrap{position:relative;background:var(--scope);border-right:2px solid var(--line)}
   canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;max-height:calc(100vh - 120px);margin:0 auto;cursor:crosshair}
-  .overlay{position:absolute;inset:0;background:rgba(3,12,6,.93);display:flex;
+  .overlay{position:absolute;inset:0;background:rgba(5,5,5,.93);display:flex;
     align-items:center;justify-content:center;padding:18px;z-index:5}
   .overlay .card{max-width:560px;background:var(--panel);border:2px solid var(--line);
     border-radius:6px;padding:20px 24px}
   .overlay h2{margin:0 0 8px;font-size:22px}
   .overlay p,.overlay li{font-size:14px;line-height:1.45;color:var(--ink)}
   .overlay ul{margin:6px 0 12px;padding-left:20px}
-  button{background:#17452a;color:var(--ink);border:1px solid var(--line);
+  button{background:#262626;color:var(--ink);border:1px solid var(--line);
     border-radius:4px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
-  button:hover:not(:disabled){background:#1f5c37}
+  button:hover:not(:disabled){background:#333333}
   button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--sel);outline-offset:1px}
   button:disabled{opacity:.38;cursor:not-allowed}
-  button.primary{background:#1b5e20;border-color:var(--ok);font-weight:700}
+  button.primary{background:#404040;border-color:var(--ok);font-weight:700}
   button.big{width:100%;padding:10px;font-size:15px;margin-top:6px}
-  button.armed{background:#7a1010;border-color:var(--warn)}
+  button.armed{background:#525252;border-color:var(--warn)}
   aside{padding:10px 12px;display:flex;flex-direction:column;gap:12px;background:var(--panel2)}
   section{border:1px solid var(--line);border-radius:5px;padding:8px 10px;background:var(--panel)}
   section h2{font-size:13px;margin:0 0 6px;text-transform:uppercase;letter-spacing:1px;color:var(--dim)}
@@ -53,33 +53,33 @@
   .seldata b{color:var(--ink)}
   .ctlrow{display:flex;gap:6px;align-items:center;margin:5px 0;flex-wrap:wrap}
   .ctlrow label{font-size:12px;color:var(--dim);width:64px}
-  input[type=number],select{background:#06130a;color:var(--ink);border:1px solid var(--line);
+  input[type=number],select{background:#0d0d0d;color:var(--ink);border:1px solid var(--line);
     border-radius:3px;padding:5px 6px;font:inherit;font-size:13px;width:92px}
   select{width:auto}
   .chips{display:flex;gap:4px;flex-wrap:wrap}
   .chips button{padding:3px 7px;font-size:12px}
   #alerts{list-style:none;margin:0;padding:0;font-size:13px;max-height:130px;overflow:auto}
-  #alerts li{padding:4px 6px;border-left:5px solid var(--dim);margin-bottom:4px;background:#06130a}
+  #alerts li{padding:4px 6px;border-left:5px solid var(--dim);margin-bottom:4px;background:#0d0d0d}
   #alerts li.caution{border-left-color:var(--caution)}
   #alerts li.warning{border-left-color:var(--warn);font-weight:700}
   #alerts .none{color:var(--dim);border-left-color:var(--line);font-weight:400}
   #strips{list-style:none;margin:0;padding:0;max-height:220px;overflow:auto}
-  #strips li{padding:5px 7px;margin-bottom:4px;background:#06130a;border:1px solid var(--line);
+  #strips li{padding:5px 7px;margin-bottom:4px;background:#0d0d0d;border:1px solid var(--line);
     border-radius:3px;font-size:12.5px;cursor:pointer;line-height:1.45}
   #strips li:hover{border-color:var(--sel)}
-  #strips li.sel{border-color:var(--sel);background:#0d2f3a}
+  #strips li.sel{border-color:var(--sel);background:#2b2b2b}
   #strips li.caution{border-left:5px solid var(--caution)}
   #strips li.warning{border-left:5px solid var(--warn)}
   #strips .st{color:var(--dim)}
   #log{list-style:none;margin:0;padding:0;font-size:12.5px;max-height:220px;overflow:auto;line-height:1.5}
-  #log li{padding:3px 4px;border-bottom:1px dotted #1e4028}
+  #log li{padding:3px 4px;border-bottom:1px dotted #2e2e2e}
   #log .tx{color:var(--sel)}
   #log .rx{color:var(--dim)}
   #log .sys{color:var(--caution)}
-  #log .dl{color:var(--ok);border-left:3px solid var(--ok);padding-left:5px;background:#0a2417}
-  button.toggle-on{background:#1b5e20;border-color:var(--ok);font-weight:700}
-  button.toggle-off{background:#4a1414;border-color:var(--warn);font-weight:700}
-  .kbd{background:#06130a;border:1px solid var(--line);border-bottom-width:2px;border-radius:3px;padding:0 4px;font-size:12px}
+  #log .dl{color:var(--ok);border-left:3px solid var(--ok);padding-left:5px;background:#1c1c1c}
+  button.toggle-on{background:#404040;border-color:var(--ok);font-weight:700}
+  button.toggle-off{background:#2b2b2b;border-color:var(--warn);font-weight:700}
+  .kbd{background:#0d0d0d;border:1px solid var(--line);border-bottom-width:2px;border-radius:3px;padding:0 4px;font-size:12px}
   footer{padding:10px 14px;border-top:2px solid var(--line);font-size:12.5px;color:var(--dim);line-height:1.55;background:var(--panel)}
   footer b{color:var(--ink)}
 </style>
@@ -899,9 +899,9 @@ const RANGE=42;
 function toPx(x,y){ const s=cv.width/2/RANGE; return [cv.width/2 + x*s, cv.height/2 - y*s]; }
 function draw(){
   const W=cv.width,H=cv.height;
-  ctx.fillStyle="#04140a"; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle="#050505"; ctx.fillRect(0,0,W,H);
   // Range rings + spokes
-  ctx.strokeStyle="#1d4d2b"; ctx.lineWidth=1; ctx.fillStyle="#3f7a4e";
+  ctx.strokeStyle="#2b2b2b"; ctx.lineWidth=1; ctx.fillStyle="#6e6e6e";
   ctx.font="11px ui-monospace,monospace"; ctx.textAlign="left";
   for(const r of [10,20,30,40]){
     ctx.beginPath(); ctx.arc(W/2,H/2, r*(W/2/RANGE), 0, Math.PI*2); ctx.stroke();
@@ -912,20 +912,20 @@ function draw(){
     ctx.lineTo(W/2+Math.sin(rad(a))*W/2, H/2-Math.cos(rad(a))*W/2); ctx.stroke();
   }
   // SRCL coverage boundary (25 NM)
-  ctx.strokeStyle="#7fb98a"; ctx.setLineDash([10,7]); ctx.lineWidth=2;
+  ctx.strokeStyle="#8a8a8a"; ctx.setLineDash([10,7]); ctx.lineWidth=2;
   ctx.beginPath(); ctx.arc(W/2,H/2, SRCL_RANGE*(W/2/RANGE), 0, Math.PI*2); ctx.stroke();
   ctx.setLineDash([]); ctx.lineWidth=1;
   const [sx2,sy2]=toPx(SRCL_RANGE*0.72, -SRCL_RANGE*0.72);
-  ctx.fillStyle="#7fb98a"; ctx.fillText("SRCL COVERAGE "+SRCL_RANGE+" NM", sx2+4, sy2+12);
+  ctx.fillStyle="#8a8a8a"; ctx.fillText("SRCL COVERAGE "+SRCL_RANGE+" NM", sx2+4, sy2+12);
   // Fixes
   for(const [name,f] of Object.entries(FIXES)){
     const [x,y]=toPx(f.x,f.y);
-    ctx.strokeStyle="#7fb98a"; ctx.beginPath();
+    ctx.strokeStyle="#8a8a8a"; ctx.beginPath();
     ctx.moveTo(x,y-5); ctx.lineTo(x+5,y); ctx.lineTo(x,y+5); ctx.lineTo(x-5,y); ctx.closePath(); ctx.stroke();
-    ctx.fillStyle="#a9cbb0"; ctx.fillText(name, x+8, y+4);
+    ctx.fillStyle="#9e9e9e"; ctx.fillText(name, x+8, y+4);
   }
   // Final approach course (22L)
-  ctx.strokeStyle="#2a5a38"; ctx.setLineDash([6,6]);
+  ctx.strokeStyle="#3d3d3d"; ctx.setLineDash([6,6]);
   ctx.beginPath();
   let [fx1,fy1]=toPx(THR22L.x+Math.sin(rad(36))*20, THR22L.y+Math.cos(rad(36))*20);
   let [fx2,fy2]=toPx(THR22L.x, THR22L.y);
@@ -934,35 +934,35 @@ function draw(){
   for(const r of RUNWAYS){
     const e1=rwyEnd(r, r.hdg), e2=rwyEnd(r, r.hdg+180);
     const [x1,y1]=toPx(e1.x,e1.y), [x2,y2]=toPx(e2.x,e2.y);
-    ctx.strokeStyle="#cfe8d2"; ctx.lineWidth=3;
+    ctx.strokeStyle="#d9d9d9"; ctx.lineWidth=3;
     ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); ctx.lineWidth=1;
   }
   const [ax,ay]=toPx(0,0);
-  ctx.fillStyle="#eaf7ec"; ctx.fillText("KDTW", ax+6, ay-6);
+  ctx.fillStyle="#f2f2f2"; ctx.fillText("KDTW", ax+6, ay-6);
   // Selected route line
   const s=sel();
   if(s && s.wps.length){
     const w=FIXES[s.wps[Math.min(s.wpIdx,s.wps.length-1)]];
     if(w){ const [wx,wy]=toPx(w.x,w.y), [sx,sy]=toPx(s.x,s.y);
-      ctx.strokeStyle="#4dd0e1"; ctx.setLineDash([3,5]);
+      ctx.strokeStyle="#ffffff"; ctx.setLineDash([3,5]);
       ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(wx,wy); ctx.stroke(); ctx.setLineDash([]); }
   }
   // Aircraft
   for(const ac of aircraft){
     const [x,y]=toPx(ac.x,ac.y);
     ctx.save(); ctx.translate(x,y); ctx.rotate(rad(ac.hdg));
-    ctx.fillStyle = ac.alert==="warning" ? "#ff5252" : ac.alert==="caution" ? "#ffb300" : "#eaf7ec";
+    ctx.fillStyle = ac.alert==="warning" ? "#ffffff" : ac.alert==="caution" ? "#e8e8e8" : "#c4c4c4";
     ctx.beginPath(); ctx.moveTo(0,-7); ctx.lineTo(5,6); ctx.lineTo(0,3); ctx.lineTo(-5,6); ctx.closePath(); ctx.fill();
     ctx.restore();
     if(ac.alert){ // shape marker: alerts are never carried by color alone
-      ctx.fillStyle = ac.alert==="warning" ? "#ff5252" : "#ffb300";
+      ctx.fillStyle = ac.alert==="warning" ? "#ffffff" : "#e8e8e8";
       ctx.font="bold 13px ui-monospace,monospace";
       ctx.fillText(ac.alert==="warning" ? "■" : "▲", x+9, y-8);
     }
-    if(s && ac.id===s.id){ ctx.strokeStyle="#4dd0e1"; ctx.lineWidth=2;
+    if(s && ac.id===s.id){ ctx.strokeStyle="#ffffff"; ctx.lineWidth=2;
       ctx.beginPath(); ctx.arc(x,y,13,0,Math.PI*2); ctx.stroke(); ctx.lineWidth=1; }
     // Data block
-    ctx.fillStyle = (s&&ac.id===s.id) ? "#4dd0e1" : "#cfe8d2";
+    ctx.fillStyle = (s&&ac.id===s.id) ? "#ffffff" : "#d9d9d9";
     ctx.font="11px ui-monospace,monospace";
     const a3=String(Math.round(ac.alt/100)).padStart(3,"0");
     const t3=String(Math.round(ac.tAlt/100)).padStart(3,"0");
