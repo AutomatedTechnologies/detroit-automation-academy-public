@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Transit API — Detroit Automation Academy</title>
-<meta name="description" content="Documentation for the Detroit Automation Academy's live transit data: DDOT and QLINE vehicle positions and DDOT service alerts as static JSON.">
+<meta name="description" content="Documentation for the Detroit Automation Academy's live transit data: DDOT and QLINE vehicle positions and DDOT service alerts as static JSON. Plus the licensed Navigation API — computed journeys across the whole Detroit network.">
 <link rel="icon" type="image/webp" href="assets/logo.webp">
 <link rel="stylesheet" href="styles.css?v=20261031-0615">
 <style>
@@ -267,6 +267,24 @@
       <h2>Commercial use</h2>
       <div class="prose">
         <p>Personal, student, and community use is free with attribution: <em>Live transit data: Detroit Automation Academy (detroitautomationacademy.com)</em>. Building something commercial on this data — a product, a service, a paid integration? Talk to us first: <a href="mailto:detroit@muse.ai?subject=API%20commercial%20use%20inquiry">detroit@muse.ai</a>. Commercial use is licensed by AUTOMATEDTECHNOLOGIES; one conversation sets the terms.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="api-section">
+    <div class="wrap">
+      <h2>Navigation API — licensed</h2>
+      <div class="prose">
+        <p>The feed above publishes data. The <strong>Navigation API</strong> computes on it: door-to-door transit journeys across the whole Detroit network — DDOT, SMART, QLINE, and the People Mover as one network — planned by the same native engine that powers Live Transit Detroit, plus the full route and stop registry, live vehicle positions where the network publishes them, and service alerts. One network, one key, every agency.</p>
+        <p>Commercial use of the Navigation API is licensed by <strong>AUTOMATEDTECHNOLOGIES</strong>:</p>
+        <ul>
+          <li><strong>Pilot license — $1,250 per quarter.</strong> One API key, 10,000 journey computations a day, every endpoint.</li>
+          <li><strong>Annual license — $7,500 per year.</strong> The same surface, billed once a year.</li>
+          <li><strong>Integration &amp; support — $125 per hour.</strong> Direct help wiring the API into your product.</li>
+          <li><strong>Free tier — no key.</strong> 100 journey computations a day for personal, student, and community use, with attribution. The free data feed above is unchanged: still keyless, still free — not repriced and not gated.</li>
+        </ul>
+        <p>Endpoints: <code>GET /api/v1/journeys</code> (origin &rarr; destination itineraries with exact departure times, boarding stops, and headsigns), <code>/api/v1/routes</code>, <code>/api/v1/stops</code> (including arrival boards), <code>/api/v1/vehicles</code>, and <code>/api/v1/alerts</code> — every response in the same envelope discipline as the feed, with a <code>generated_at</code> freshness clock and per-source state.</p>
+        <p>How licensing works: licenses are issued by hand, per customer — there is no self-serve signup. Invoicing is by AUTOMATEDTECHNOLOGIES (Stripe once activated; manual invoicing until then), and your API key is issued when the license is signed, together with connection details. To start: <a href="mailto:detroit@muse.ai?subject=Navigation%20API%20license%20inquiry">detroit@muse.ai</a>.</p>
       </div>
     </div>
   </section>
