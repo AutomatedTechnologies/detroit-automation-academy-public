@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DTW Tower — Air Traffic Control Simulator | Detroit Automation Academy</title>
-<meta name="description" content="A playable air traffic control training simulator for Detroit Metro (DTW) airspace. Simulation only — not for operational use.">
+<meta name="description" content="A playable air traffic control training simulator for Detroit Metro (DTW) airspace, with the fictional SRCL automated coordination link. Simulation only — not for operational use.">
 <style>
   :root{
     --bg:#07130b; --panel:#0c1f12; --panel2:#0a1a0f; --line:#2a5a38;
@@ -76,6 +76,9 @@
   #log .tx{color:var(--sel)}
   #log .rx{color:var(--dim)}
   #log .sys{color:var(--caution)}
+  #log .dl{color:var(--ok);border-left:3px solid var(--ok);padding-left:5px;background:#0a2417}
+  button.toggle-on{background:#1b5e20;border-color:var(--ok);font-weight:700}
+  button.toggle-off{background:#4a1414;border-color:var(--warn);font-weight:700}
   .kbd{background:#06130a;border:1px solid var(--line);border-bottom-width:2px;border-radius:3px;padding:0 4px;font-size:12px}
   footer{padding:10px 14px;border-top:2px solid var(--line);font-size:12.5px;color:var(--dim);line-height:1.55;background:var(--panel)}
   footer b{color:var(--ink)}
@@ -94,6 +97,8 @@
     <span>On scope <b id="sc-scope">0</b></span>
   </div>
   <div class="ctlrow" role="group" aria-label="Simulation controls">
+    <button id="btn-srcl" type="button" class="toggle-on" aria-pressed="true"
+      title="Master toggle for SRCL automated coordination">SRCL AUTO: ON</button>
     <button id="btn-pause" type="button">Pause</button>
     <button id="btn-rate" type="button" aria-label="Simulation rate">Rate 1×</button>
     <button id="btn-restart" type="button">Restart</button>
@@ -110,7 +115,7 @@
         FAA JO 7110.65 phraseology and terminal separation minima (3 NM lateral /
         1,000 ft vertical). Not affiliated with the FAA.</p>
         <ul>
-          <li><b>Arrivals</b> check in at the edge fixes at 10,000–12,000 ft. Vector and descend them,
+          <li><b>Arrivals</b> check in at the edge fixes at an assigned cruise altitude. Vector and descend them,
           then clear them for the ILS runway 22L approach and for landing. No landing
           clearance by short final = go-around.</li>
           <li><b>Departures</b> wait on runway 22R. Clear them for takeoff; they climb to
@@ -120,6 +125,14 @@
           <li><b>Separation:</b> keep 3 NM and 1,000 ft between aircraft. ▲ CAUTION = predicted
           loss within about two minutes. ■ CONFLICT = separation is being lost right now —
           every loss is scored against you.</li>
+          <li><b>SRCL automation:</b> inside the dashed 25 NM ring, aircraft are on the
+          <b>SRCL</b> — the Academy's (fictional) proprietary Short-Range Coordination Link.
+          With SRCL AUTO on, the link sequences arrivals on the last leg, issues approach,
+          landing, and takeoff clearances by datalink (logged with the ⇅ SRCL marker) when —
+          and only when — separation is assured, and holds or sends around traffic it cannot
+          clear safely. Any manual clearance you issue to a linked aircraft suspends its
+          automation until you re-engage it from the selected-aircraft panel. You always
+          have the final word: the master toggle is in the header.</li>
           <li>Keys: <span class="kbd">Tab</span> cycle aircraft · <span class="kbd">A</span> approach ·
           <span class="kbd">L</span> land · <span class="kbd">T</span> takeoff ·
           <span class="kbd">P</span> pause · <span class="kbd">+</span>/<span class="kbd">−</span> sim rate.</li>
@@ -132,6 +145,15 @@
     <section aria-labelledby="h-metar">
       <h2 id="h-metar">Weather — KDTW (simulated)</h2>
       <div class="metar" id="metar">—</div>
+    </section>
+    <section aria-labelledby="h-srcl">
+      <h2 id="h-srcl">SRCL — DAA Short-Range Coordination Link</h2>
+      <div class="seldata" id="srcl-status">—</div>
+      <div class="seldata">Proprietary datalink (fictional, simulation only). Coverage:
+      25 NM around KDTW. Inside coverage the link automates last-leg arrival sequencing
+      and takeoff release under the same JO 7110.65 minima; outside it, aircraft are
+      voice-only. Datalink traffic is logged with the ⇅ SRCL marker. [A] on a data block
+      = automation engaged · [M] = manual (automation suspended by a controller clearance).</div>
     </section>
     <section aria-labelledby="h-sel">
       <h2 id="h-sel">Selected aircraft</h2>
@@ -164,6 +186,7 @@
         <button class="primary big" id="btn-apch" type="button">Cleared ILS approach RWY 22L (A)</button>
         <button class="primary big" id="btn-land" type="button">Cleared to land RWY 22L (L)</button>
         <button class="primary big" id="btn-takeoff" type="button">Cleared for takeoff RWY 22R (T)</button>
+        <button class="big" id="btn-auto" type="button">SRCL automation</button>
       </div>
     </section>
     <section aria-labelledby="h-alerts">
@@ -188,6 +211,9 @@
   (terminal: 3 NM lateral / 1,000 ft vertical); right-of-way concepts follow 14 CFR Part 91.
   Traffic, weather, and callsigns are simulated. Real DTW runway identifiers are used for
   training realism only.
+  The <b>SRCL (DAA Short-Range Coordination Link)</b> is a fictional proprietary protocol
+  invented by the Detroit Automation Academy for this simulation. It is not a real datalink
+  standard, is not CPDLC, ADS-B, or any certified system, and confers no real-world capability.
 </footer>
 <script>
 "use strict";
@@ -235,6 +261,14 @@ let score = {land:0, dep:0, loss:0};
 let spawnArrT = 2, spawnDepT = 8, metarT = 0, uiT = 0;
 let pairState = {}; // "idA-idB" -> "caution"|"warning"
 let metar = null;
+// SRCL (DAA Short-Range Coordination Link) — fictional proprietary datalink.
+const SRCL_RANGE = 25; // NM coverage radius around KDTW. Sized to cover the
+// HANBL hold stack (fix at 16.6 NM, v1 orbit radius ~8 NM): the hold is where
+// arrival sequencing happens, so it must be on the link for the automation to
+// keep the stack separated. Entry fixes (~36 NM) remain voice-only en route,
+// deconflicted by the spawn-level allocator.
+let srclOn = true;     // master automation toggle (default ON per directive)
+let seqCounter = 0;    // SRCL arrival sequence numbers (assigned at link acquisition, stable)
 
 // ---------- Helpers ----------
 const $ = id => document.getElementById(id);
@@ -262,6 +296,18 @@ function log(kind, text){
 function tx(text){ log("tx","▸ "+text); }   // controller transmission
 function rx(text){ log("rx","▸ "+text); }   // pilot readback
 function sys(text){ log("sys","• "+text); }
+function dl(text){ log("dl","⇅ SRCL "+text); } // SRCL datalink traffic (automated)
+function dlTx(ac, text){ dl("▸ "+ac.cs+", "+text+" · ACK"); }
+function dlSys(text){ dl("• "+text); }
+function isAuto(ac){ return srclOn && ac.linked && !ac.autoSuspended; }
+// Controller supremacy: any manual clearance to a linked aircraft suspends its
+// SRCL automation until the controller re-engages it from the selected panel.
+function noteManual(ac){
+  if(ac && ac.linked && srclOn && !ac.autoSuspended){
+    ac.autoSuspended = true; ac.delaying = false; ac.autoTarget = null;
+    dlSys(ac.cs+" automation suspended — manual clearance issued. Controller has the aircraft.");
+  }
+}
 function sel(){ return aircraft.find(a=>a.id===selectedId) || null; }
 
 // ---------- Weather (simulated METAR) ----------
@@ -294,11 +340,31 @@ function newCallsign(){
 function spawnArrival(){
   const fix=ENTRY_FIXES[Math.floor(Math.random()*ENTRY_FIXES.length)];
   const f=FIXES[fix], c=newCallsign();
-  const spawnAlt = 10000 + (nextId % 3)*1000; // stagger the stack so the controller has vertical room
+  // Cruise-level deconfliction: pick a level no other arrival is currently
+  // targeting, so en-route arrivals never converge at one altitude. The ladder
+  // reaches past the usual 10–12k band when traffic is dense.
+  const levels=[10000,11000,12000,9000,13000,8000,14000,15000,7000,6000];
+  let spawnAlt = null;
+  for(const L of levels){
+    if(!aircraft.some(a=>["ARR","HOLD","MISSED","FINAL","CLIMB"].includes(a.phase) &&
+        (Math.abs(a.tAlt-L)<1100 || Math.abs(a.alt-L)<1100))){ spawnAlt=L; break; }
+  }
+  if(spawnAlt==null){ // dense traffic: take the level with the most clearance
+    let bestScore=-1;
+    for(let L=6000; L<=16000; L+=500){
+      let d=Infinity;
+      for(const a of aircraft) if(["ARR","HOLD","MISSED","FINAL","CLIMB"].includes(a.phase))
+        d=Math.min(d, Math.abs(a.alt-L), Math.abs(a.tAlt-L));
+      if(d>bestScore){ bestScore=d; spawnAlt=L; }
+    }
+  }
   const ac={ id:nextId++, ...c, type:TYPES[Math.floor(Math.random()*TYPES.length)],
     x:f.x, y:f.y, hdg:bearingTo(f,FIXES.HANBL), spd:250, tSpd:250, alt:spawnAlt, tAlt:spawnAlt,
     mode:"NAV", tHdg:null, phase:"ARR", wps:["HANBL","ZETAL"], wpIdx:0,
-    clearedApch:false, clearedLand:false, clearedTO:false, depAlt:5000, alert:"" };
+    clearedApch:false, clearedLand:false, clearedTO:false, depAlt:5000, alert:"",
+    linked:false, autoSuspended:false, stackAlt:null, holdLogged:false,
+    prevPhase:"ARR", delaying:false, gateLogged:false,
+    seqNo:null, autoTarget:null, loggedTarget:null };
   aircraft.push(ac);
   rx(`${spokenCall(ac)}, Detroit Approach, radar contact ${fix}, `+
      `descend via arrival, expect ILS runway two two left.`);
@@ -309,7 +375,10 @@ function spawnDeparture(){
   const ac={ id:nextId++, ...c, type:TYPES[Math.floor(Math.random()*TYPES.length)],
     x:DEP22R_START.x, y:DEP22R_START.y, hdg:216, spd:0, tSpd:250, alt:0, tAlt:0,
     mode:"NAV", tHdg:null, phase:"DEP", wps:[exit], wpIdx:0,
-    clearedApch:false, clearedLand:false, clearedTO:false, depAlt:5000, alert:"" };
+    clearedApch:false, clearedLand:false, clearedTO:false, depAlt:5000, alert:"",
+    linked:false, autoSuspended:false, stackAlt:null, holdLogged:false,
+    prevPhase:"DEP", delaying:false, gateLogged:false,
+    seqNo:null, autoTarget:null, loggedTarget:null };
   aircraft.push(ac);
   rx(`${spokenCall(ac)}, Detroit Tower, holding short runway two two right, ready for departure.`);
 }
@@ -396,7 +465,13 @@ function stepAircraft(ac, dt){ // dt in sim-seconds
     }
   }
   else if(ac.phase==="CLIMB"){
-    if(dist(ac,{x:0,y:0})>38){ ac.done=true; score.dep++;
+    // Handoff completes at the exit fix (the airspace boundary, ~36 NM) or
+    // beyond 38 NM. Without the fix capture, a departure circles its exit
+    // fix at turn radius (~1.4 NM at 250 kt) and never crosses the 38 NM
+    // removal line — departures released under SRCL must actually depart.
+    const exitFix = FIXES[ac.wps[0]];
+    if(dist(ac,{x:0,y:0})>38 || (exitFix && dist(ac,exitFix)<1.5)){
+      ac.done=true; score.dep++;
       sys(`${ac.cs} handed off to departure. Departure #${score.dep}.`); }
   }
 }
@@ -410,6 +485,12 @@ function checkSeparation(){
     const a=aircraft[i], b=aircraft[j];
     if(a.phase==="ROLL"||b.phase==="ROLL") continue;
     if(a.alt<300 && b.alt<300) continue; // both on the ground at the airport
+    // Surface movement is tower runway control, not radar separation: an aircraft
+    // still on its runway (DEP, not yet airborne) does not pair under the airborne
+    // 3 NM / 1,000 ft minima. Runway occupancy is enforced by the clearance gates
+    // (manual discipline and the SRCL gates) instead. Minima for airborne pairs
+    // are unchanged from v1.
+    if((a.phase==="DEP" && a.alt<=0) || (b.phase==="DEP" && b.alt<=0)) continue;
     const lat=dist(a,b), vert=Math.abs(a.alt-b.alt);
     const key=a.id+"-"+b.id; seen[key]=true;
     let state="";
@@ -438,9 +519,311 @@ function checkSeparation(){
   return aircraft.filter(a=>a.alert);
 }
 
+// ---------- SRCL automation (DAA Short-Range Coordination Link) ----------
+// A clearance-issuing layer ON TOP of the v1 separation engine: it applies the
+// same JO 7110.65 minima (3 NM / 1,000 ft) through its gates and never clears an
+// aircraft when separation is not assured — traffic it cannot clear holds or
+// goes around under the v1 rules, and the event is flagged on the frequency.
+function updateLinks(){
+  for(const ac of aircraft){
+    const was = ac.linked;
+    ac.linked = dist(ac, {x:0,y:0}) <= SRCL_RANGE;
+    if(ac.linked && !was){
+      if(ac.seqNo==null && ["ARR","HOLD","MISSED","FINAL"].includes(ac.phase))
+        ac.seqNo = ++seqCounter; // stable sequence position for this arrival
+      if(isAuto(ac)) dlSys(ac.cs+" link acquired — automated last-leg coordination active.");
+    }
+    if(!ac.linked && was){
+      ac.holdLogged = false;
+      // Link lost mid-transit under a datalink altitude clearance: level off
+      // at a level deconflicted by 1,100 ft from nearby traffic rather than
+      // continuing the descent unmanaged, and abandon any delay vector.
+      if(ac.autoTarget!=null && Math.abs(ac.alt-ac.autoTarget)>60){
+        // Snap to a ladder level (never an odd hundred — off-ladder levels
+        // compress the stack's 1,000 ft spacing when traffic parks beside
+        // them later).
+        let best = Math.round(ac.alt/100)*100, bd = Infinity;
+        for(const L of [3000,4000,5000,6000,7000,8000,9000,10000,11000,12000,13000,14000,15000]){
+          const clash = aircraft.some(o=>o!==ac &&
+            ["ARR","HOLD","MISSED","FINAL","CLIMB"].includes(o.phase) &&
+            dist(o,ac)<18 && (Math.abs(o.alt-L)<1100 || Math.abs(o.tAlt-L)<1100));
+          if(!clash && Math.abs(L-ac.alt)<bd){ bd = Math.abs(L-ac.alt); best = L; }
+        }
+        ac.tAlt = best;
+        dlSys(ac.cs+" link lost — leveling at "+altWords(ac.tAlt)+" until link or controller contact.");
+      }
+      if(ac.delaying){ ac.delaying=false; ac.mode="NAV";
+        if(["ARR","HOLD","MISSED"].includes(ac.phase)){ ac.wps=["HANBL","ZETAL"]; ac.wpIdx=0; } }
+      ac.autoTarget = null; ac.loggedTarget = null;
+    }
+  }
+}
+function flagTransitions(){
+  for(const ac of aircraft){
+    if(ac.prevPhase && ac.prevPhase!==ac.phase){
+      if(ac.phase==="MISSED" && srclOn && ac.linked && !ac.autoSuspended)
+        dlSys("⚠ "+ac.cs+" going around — SRCL could not assure separation for landing; re-sequencing.");
+      if(ac.phase==="HOLD" && isAuto(ac))
+        dlSys(ac.cs+" holding at HANBL under SRCL sequencing.");
+    }
+    ac.prevPhase = ac.phase;
+  }
+}
+// A departure still climbing out through the arrival band near the field.
+function depConflict(ac, maxAlt){
+  return aircraft.some(a=>a!==ac && a.phase==="CLIMB" && a.alt<maxAlt &&
+    dist(a,{x:0,y:0})<9);
+}
+function arrQueue(){ // arrivals in sequence order for automation: FINAL first,
+  // MISSED last (re-stacking), otherwise LOWEST FIRST — stack discipline: the
+  // lowest arrival is always the next to land, so desired levels are monotone
+  // in current altitude and the stack drains bottom-up with no level crossings
+  // (sequence-number order deadlocked the stack: a high early arrival could
+  // never descend through later, lower arrivals sharing the HANBL orbit).
+  return aircraft.filter(a=>["ARR","HOLD","MISSED","FINAL"].includes(a.phase))
+    .sort((p,q)=>{
+      const pf=p.phase==="FINAL"?0:p.phase==="MISSED"?2:1,
+            qf=q.phase==="FINAL"?0:q.phase==="MISSED"?2:1;
+      if(pf!==qf) return pf-qf;
+      if(Math.abs(p.alt-q.alt)>50) return p.alt-q.alt;
+      const ps=p.seqNo==null?1e9:p.seqNo, qs=q.seqNo==null?1e9:q.seqNo;
+      if(ps!==qs) return ps-qs;
+      return dist(p,THR22L)-dist(q,THR22L);
+    });
+}
+function landingGateClear(ac){
+  if(aircraft.some(a=>a.phase==="ROLL")) return false; // runway 22L occupied
+  if(aircraft.some(a=>a!==ac && a.phase==="FINAL" && dist(a,THR22L)<dist(ac,THR22L)))
+    return false; // traffic ahead on final
+  if(aircraft.some(a=>a!==ac && a.phase==="CLIMB" && a.alt<1800 && dist(a,THR22L)<5))
+    return false; // departure climbing beside the final
+  if(aircraft.some(a=>a!==ac && a.phase==="DEP" && a.clearedTO && a.spd>20))
+    return false; // departure rolling on 22R
+  if(ac.alt > dist(ac,THR22L)*318 + 500) return false; // too high to land from here
+  return true;
+}
+function levelFree(ac, L){
+  return !aircraft.some(a=>a!==ac && ["ARR","HOLD","MISSED","FINAL"].includes(a.phase) &&
+    (Math.abs(a.tAlt-L)<1100 || Math.abs(a.alt-L)<1100));
+}
+// Step guard: move ac toward its automation target altitude, but never let it
+// settle within 1,000 ft (the JO 7110.65 minimum) of traffic in the band it
+// traverses. Separations are measured from blockers' settled levels and
+// rounded directionally, so parked pairs sit at exactly 1,000 ft on round
+// hundreds — never at 900 or 999. Blockers are traffic
+// at or beyond this aircraft's own level in the direction of travel, out to
+// 1,000 ft past the target; the nearest one binds. Applied continuously, so
+// converging traffic stops the climb/descent — or pushes the aircraft back to
+// the protected level — rather than being crossed.
+const GUARD_PHASES = ["ARR","HOLD","MISSED","FINAL","CLIMB"];
+function applyAutoTarget(ac){
+  if(ac.autoTarget==null) return;
+  const base = ac.autoTarget;
+  let tgt = base;
+  // Predictive level clamp: for every blocker whose lateral path comes
+  // within 3.5 NM of ours in the next 120 s (CPA, the same prediction the
+  // separation engine uses for CAUTION) — or that is already within 10 NM —
+  // the target may not cross the blocker's level: it clamps to exactly
+  // 1,000 ft on the side we are currently on, measured from the blocker's
+  // settled level (its target when it is holding one, else its altitude),
+  // rounded directionally (floors up, ceilings down) so parked pairs sit at
+  // exactly the 1,000 ft minimum, never at 900 or 999. The stack ladder is
+  // itself 1,000-spaced, so a clamped target lands on a ladder level and a
+  // legal column is never "boxed in" by its own margins.
+  let floor = -Infinity, ceil = Infinity;
+  for(const o of aircraft){
+    if(o===ac || !GUARD_PHASES.includes(o.phase)) continue;
+    const d0 = dist(o,ac);
+    if(d0>=12) continue;
+    const rvx = Math.sin(rad(o.hdg))*o.spd - Math.sin(rad(ac.hdg))*ac.spd;
+    const rvy = Math.cos(rad(o.hdg))*o.spd - Math.cos(rad(ac.hdg))*ac.spd;
+    const rx = o.x-ac.x, ry = o.y-ac.y, vv = rvx*rvx + rvy*rvy;
+    let cpa = d0;
+    if(vv>1){ const t = clamp(-(rx*rvx + ry*rvy)/vv, 0, 120/3600); cpa = Math.hypot(rx+rvx*t, ry+rvy*t); }
+    // Close = CPA < 3.5 NM, or already within 10 NM: inside the terminal bowl
+    // traffic flies curved paths (the HANBL orbit), where a straight-line CPA
+    // under-predicts convergence — proximity alone must trigger the clamp.
+    if(cpa>=3.5 && d0>=10) continue;
+    const oLevel = Math.abs(o.alt-o.tAlt)<300 ? o.tAlt : o.alt;
+    if(ac.alt >= o.alt) floor = Math.max(floor, Math.ceil((oLevel + 1000)/100)*100);
+    else ceil = Math.min(ceil, Math.floor((oLevel - 1000)/100)*100);
+  }
+  if(floor > ceil) tgt = Math.round(ac.alt/100)*100; // boxed in: hold this level
+  else tgt = clamp(tgt, floor, ceil);
+  if(tgt===base && Math.abs(ac.alt-base)<=60) tgt = base; // settled: no-op
+  // An aircraft on final cannot maneuver off the glidepath: if it will pass
+  // within 1,100 ft of this aircraft's level inside 6 NM, this aircraft moves
+  // to the far side of it (above it, in the geometry this airspace produces).
+  for(const o of aircraft){
+    if(o===ac || o.phase!=="FINAL") continue;
+    if(dist(o,ac)>=6) continue;
+    if(Math.abs(tgt-o.alt)<1100)
+      tgt = ac.alt>=o.alt ? o.alt+1100 : Math.max(1500, o.alt-1100);
+  }
+  ac.tAlt = Math.round(tgt/100)*100;
+}
+// Departure climb guard: a climbing departure under SRCL caps its climb
+// 1,100 ft below arrival traffic within 8 NM, resuming to its assigned
+// departure altitude when the band is clear. Mirrors applyAutoTarget.
+function applyDepGuard(ac){
+  let cap = ac.depAlt;
+  for(const o of aircraft){
+    if(o===ac || !["ARR","HOLD","MISSED"].includes(o.phase)) continue;
+    if(dist(o,ac)>=8) continue;
+    if(o.alt > ac.alt-20 && o.alt < ac.depAlt+1000){
+      const s = o.alt - 1000;
+      if(s<cap) cap = s;
+    }
+  }
+  ac.tAlt = Math.max(1400, Math.floor(cap/100)*100);
+}
+function setAutoTarget(ac, target, phrase){
+  if(ac.autoTarget===target) return;
+  ac.autoTarget = target;
+  if(ac.loggedTarget!==target){ ac.loggedTarget = target; dlTx(ac, phrase); }
+}
+function runAutoArrivals(){
+  const managed = arrQueue().filter(isAuto); // roles are ranked among auto-managed arrivals
+  managed.forEach((ac,i)=>{
+    if(ac.phase==="FINAL"){
+      ac.autoTarget = null;
+      if(!ac.clearedLand && dist(ac,THR22L)<5 && landingGateClear(ac)){
+        ac.clearedLand = true;
+        dlTx(ac, "runway two two left, cleared to land (automated).");
+      }
+      return;
+    }
+    if(ac.phase==="MISSED"){
+      // ---- Missed approach: re-stack to a free level, then rejoin the
+      // sequence (it transitions back through ARR/HOLD under v1 rules). ----
+      if(ac.autoTarget==null || Math.abs(ac.alt-ac.autoTarget)<=60){
+        for(const L of [9000,8000,7000,6000,5000]){
+          if(levelFree(ac, L)){
+            ac.stackAlt = L;
+            setAutoTarget(ac, L, "climb and maintain "+altWords(L)+" (automated re-sequencing).");
+            break;
+          }
+        }
+      }
+      applyAutoTarget(ac);
+      return;
+    }
+    if(i===0){
+      // ---- Sequence leader: descend to 2,500, meter, clear approach + landing ----
+      if(ac.autoTarget!==2500){
+        if(!depConflict(ac, 4200)){
+          setAutoTarget(ac, 2500, "descend and maintain "+altWords(2500)+" (automated sequencing).");
+          ac.gateLogged=false;
+        } else if(!ac.gateLogged){ ac.gateLogged=true;
+          dlSys(ac.cs+" descent held by SRCL — departure climbing through the arrival band."); }
+      }
+      // Energy management: if the descent cannot be made on the remaining
+      // track, take a delay vector while descending (standard flow control).
+      const need = Math.max(0,(ac.alt-2500))/1800 * (ac.spd/60); // NM of track needed
+      const avail = dist(ac, FIXES.ZETAL) + 8;                    // leg + final
+      if(ac.phase==="ARR" && !ac.clearedApch){
+        if(!ac.delaying && need > avail + 1.5){
+          ac.delaying = true; ac.mode="HDG"; ac.tHdg=norm360(ac.hdg+140); ac.tSpd=180;
+          dlTx(ac, "turn for descent delay (automated flow control), descend and maintain "+altWords(2500)+".");
+        } else if(ac.delaying && need <= avail + 1.0){
+          ac.delaying = false; ac.mode="NAV"; ac.wps=["ZETAL"]; ac.wpIdx=0; ac.tSpd=210;
+          dlTx(ac, "proceed direct ZETAL (automated).");
+        }
+      }
+      if(!ac.delaying && ac.phase==="ARR") ac.tSpd = dist(ac,FIXES.ZETAL)<15 ? 210 : 250;
+      if(ac.delaying) ac.tSpd = 180;
+      // Approach clearance at the final-approach gate, when assured. Only one
+      // outstanding approach clearance at a time: an aircraft already cleared
+      // and inbound (even if not yet on FINAL) reserves the final.
+      if(!ac.clearedApch && ac.alt<=3400 && !depConflict(ac, 4200) &&
+         ac.alt <= Math.max(3000, dist(ac,THR22L)*318 + 900) &&
+         !aircraft.some(a=>a!==ac && a.clearedApch &&
+           ["ARR","HOLD","MISSED","FINAL"].includes(a.phase)) &&
+         (dist(ac,FIXES.ZETAL)<5.5 || ac.phase==="HOLD")){
+        ac.clearedApch = true; ac.mode="NAV";
+        if(!ac.wps.includes("ZETAL")){ ac.wps=["HANBL","ZETAL"]; ac.wpIdx=0; }
+        dlTx(ac, "cleared I L S runway two two left approach (automated).");
+      }
+    } else {
+      // ---- Sequenced follower: own exactly one ladder level by rank, so no
+      // two managed aircraft ever share an altitude assignment (the v1 hold
+      // orbit puts every holder on the same circular path around HANBL —
+      // altitude is the only separation the stack has). Levels an unmanaged
+      // arrival is using inbound are skipped. ----
+      const LADDER = [4000,5000,6000,7000,8000,9000,10000,11000,12000,13000,14000,15000];
+      let want = LADDER[Math.min(i-1, LADDER.length-1)];
+      const levelTaken = L => aircraft.some(a=>a!==ac &&
+        ["ARR","HOLD","MISSED","FINAL"].includes(a.phase) &&
+        ((isAuto(a) && (a.autoTarget===L ||
+                        (Math.abs(a.alt-L)<300 && Math.abs(a.alt-a.tAlt)<300))) ||
+         (!isAuto(a) && (Math.abs(a.alt-L)<1100 || Math.abs(a.tAlt-L)<1100))));
+      if(levelTaken(want)){ // rank's level already owned: nearest free level, upward first
+        const above = LADDER.filter(L=>L>want && !levelTaken(L));
+        const below = LADDER.filter(L=>L<want && !levelTaken(L)).reverse();
+        if(above.length) want = above[0];
+        else if(below.length) want = below[0];
+      }
+      if(ac.autoTarget!==want && !depConflict(ac, want+1200))
+        setAutoTarget(ac, want, (want>ac.alt?"climb":"descend")+" and maintain "+
+          altWords(want)+" (automated sequencing, number "+(i+1)+").");
+      const ahead = managed[i-1];
+      if(ahead && ac.phase==="ARR"){
+        const gap = dist(ac, ahead);
+        ac.tSpd = gap<5 ? 180 : gap<8 ? 210 : 250;
+      }
+    }
+    applyAutoTarget(ac);
+  });
+}
+function depBlockReason(ac, front){
+  if(!front) return "departure sequencing — traffic ahead at the runway";
+  // 22R and 22L are parallel runways: the release constraints are in-trail
+  // spacing, an arrival close on final, and traffic low over the field. The
+  // climb guard (applyDepGuard) and the arrival step guard manage vertical
+  // deconfliction once the departure is airborne.
+  if(aircraft.some(a=>a.phase==="FINAL" && dist(a,THR22L)<5))
+    return "arrival inside five miles on final for two two left";
+  if(aircraft.some(a=>a!==ac && a.clearedTO &&
+      (a.phase==="DEP" || (a.phase==="CLIMB" && a.alt<2500 && dist(a,{x:0,y:0})<6))))
+    return "departure ahead still climbing out";
+  if(aircraft.some(a=>a!==ac && ["ARR","MISSED","HOLD"].includes(a.phase) &&
+      a.alt<3000 && dist(a,{x:0,y:0})<4.5))
+    return "arrival low over the field";
+  return null;
+}
+function runAutoDepartures(){
+  const deps = aircraft.filter(a=>a.phase==="DEP" && !a.clearedTO)
+    .sort((p,q)=>p.id-q.id);
+  for(const ac of deps){
+    if(!isAuto(ac)) continue;
+    const reason = depBlockReason(ac, deps[0]===ac);
+    if(!reason){
+      // Deconflicted climb level among active departures (all default 5,000).
+      for(const L of [5000,4000,6000,3000,7000]){
+        if(!aircraft.some(a=>a!==ac &&
+            (a.phase==="CLIMB" ? a.tAlt===L : a.phase==="DEP" && a.depAlt===L))){ ac.depAlt=L; break; }
+      }
+      ac.clearedTO = true; ac.tSpd = 170; ac.holdLogged = false;
+      dlTx(ac, "runway two two right, cleared for takeoff (automated).");
+    } else if(!ac.holdLogged){
+      ac.holdLogged = true;
+      dlSys(ac.cs+" holding short runway two two right — "+reason+".");
+    }
+  }
+}
+function runAutomation(){
+  updateLinks();
+  flagTransitions();
+  if(!srclOn) return;
+  runAutoArrivals();
+  runAutoDepartures();
+  for(const ac of aircraft) if(ac.phase==="CLIMB" && isAuto(ac)) applyDepGuard(ac);
+}
+
 // ---------- Clearances (controller actions) ----------
 function issueAlt(){
   const ac=sel(); if(!ac) return;
+  noteManual(ac);
   const v=clamp(Math.round(+$("in-alt").value/100)*100, 0, 17000);
   if(ac.phase==="DEP" && !ac.clearedTO){ ac.depAlt=Math.max(v,1000);
     tx(`${ac.cs}, departure altitude ${altWords(ac.depAlt)} on departure.`); rx(`${altWords(ac.depAlt)} on departure, ${spokenCall(ac)}.`); return; }
@@ -451,6 +834,7 @@ function issueAlt(){
 }
 function issueHdg(){
   const ac=sel(); if(!ac) return;
+  noteManual(ac);
   const v=norm360(Math.round(+$("in-hdg").value));
   ac.mode="HDG"; ac.tHdg=v;
   const dir = turnDelta(ac.hdg, v)<=0 ? "left" : "right";
@@ -459,12 +843,14 @@ function issueHdg(){
 }
 function issueResume(){
   const ac=sel(); if(!ac) return;
+  noteManual(ac);
   ac.mode="NAV"; ac.tHdg=null;
   tx(`${ac.cs}, resume own navigation.`);
   rx(`Resume own navigation, ${spokenCall(ac)}.`);
 }
 function issueSpd(){
   const ac=sel(); if(!ac) return;
+  noteManual(ac);
   const v=clamp(Math.round(+$("in-spd").value/10)*10, 120, 320);
   ac.tSpd=v;
   tx(`${ac.cs}, maintain ${digits(v)} knots.`);
@@ -473,6 +859,7 @@ function issueSpd(){
 function issueFix(){
   const ac=sel(); if(!ac) return;
   const f=$("in-fix").value; if(!f) return;
+  noteManual(ac);
   ac.mode="NAV"; ac.tHdg=null;
   if(ac.phase==="ARR"||ac.phase==="HOLD"||ac.phase==="MISSED"){
     ac.wps = f==="ZETAL" ? ["ZETAL"] : f==="HANBL" ? ["HANBL","ZETAL"] : [f,"HANBL","ZETAL"];
@@ -483,6 +870,7 @@ function issueFix(){
 }
 function issueApch(){
   const ac=sel(); if(!ac || (ac.phase!=="ARR"&&ac.phase!=="HOLD"&&ac.phase!=="MISSED")) return;
+  noteManual(ac);
   ac.clearedApch=true; ac.mode="NAV";
   if(!ac.wps.includes("ZETAL")){ ac.wps=["HANBL","ZETAL"]; ac.wpIdx=0; }
   tx(`${ac.cs}, cleared I L S runway two two left approach.`);
@@ -490,12 +878,14 @@ function issueApch(){
 }
 function issueLand(){
   const ac=sel(); if(!ac || (ac.phase!=="ARR"&&ac.phase!=="FINAL"&&ac.phase!=="HOLD")) return;
+  noteManual(ac);
   ac.clearedLand=true;
   tx(`${ac.cs}, ${rawPhrase()}runway two two left, cleared to land.`);
   rx(`Cleared to land two two left, ${spokenCall(ac)}.`);
 }
 function issueTakeoff(){
   const ac=sel(); if(!ac || ac.phase!=="DEP" || ac.clearedTO) return;
+  noteManual(ac);
   ac.clearedTO=true; ac.tSpd=170;
   tx(`${ac.cs}, ${rawPhrase()}runway two two right, cleared for takeoff.`);
   rx(`Cleared for takeoff two two right, ${spokenCall(ac)}.`);
@@ -521,6 +911,12 @@ function draw(){
     ctx.beginPath(); ctx.moveTo(W/2,H/2);
     ctx.lineTo(W/2+Math.sin(rad(a))*W/2, H/2-Math.cos(rad(a))*W/2); ctx.stroke();
   }
+  // SRCL coverage boundary (25 NM)
+  ctx.strokeStyle="#7fb98a"; ctx.setLineDash([10,7]); ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(W/2,H/2, SRCL_RANGE*(W/2/RANGE), 0, Math.PI*2); ctx.stroke();
+  ctx.setLineDash([]); ctx.lineWidth=1;
+  const [sx2,sy2]=toPx(SRCL_RANGE*0.72, -SRCL_RANGE*0.72);
+  ctx.fillStyle="#7fb98a"; ctx.fillText("SRCL COVERAGE "+SRCL_RANGE+" NM", sx2+4, sy2+12);
   // Fixes
   for(const [name,f] of Object.entries(FIXES)){
     const [x,y]=toPx(f.x,f.y);
@@ -570,7 +966,8 @@ function draw(){
     ctx.font="11px ui-monospace,monospace";
     const a3=String(Math.round(ac.alt/100)).padStart(3,"0");
     const t3=String(Math.round(ac.tAlt/100)).padStart(3,"0");
-    ctx.fillText(ac.cs, x+10, y+2);
+    const tag = ac.linked ? (ac.autoSuspended ? " [M]" : (srclOn ? " [A]" : " [L]")) : "";
+    ctx.fillText(ac.cs+tag, x+10, y+2);
     ctx.fillText(a3+(ac.tAlt!==Math.round(ac.alt/100)*100?"→"+t3:"")+" "+Math.round(ac.spd/10), x+10, y+14);
   }
 }
@@ -579,6 +976,11 @@ function phaseText(ac){
   return {ARR:"Arrival", FINAL:"On final 22L", HOLD:"Holding at HANBL", MISSED:"Missed approach",
           DEP: ac.clearedTO?"Departing":"Awaiting takeoff clearance", CLIMB:"Departing",
           ROLL:"Rolling out 22L"}[ac.phase] || ac.phase;
+}
+function srclText(ac){
+  if(!ac.linked) return "SRCL — (voice only)";
+  if(ac.autoSuspended) return "SRCL MANUAL (suspended)";
+  return srclOn ? "SRCL AUTO" : "SRCL LINKED (auto off)";
 }
 function refreshPanels(){
   $("sc-land").textContent=score.land; $("sc-dep").textContent=score.dep;
@@ -589,6 +991,14 @@ function refreshPanels(){
         ss=String(Math.floor((simMinutes%1)*60)).padStart(2,"0");
   $("zclock").textContent=`${hh}:${mm}:${ss}Z`;
   $("lclock").textContent=new Date().toLocaleTimeString("en-US",{hour12:false,timeZone:"America/Detroit"});
+  // SRCL status + master toggle presentation
+  const sb=$("btn-srcl");
+  sb.textContent = srclOn ? "SRCL AUTO: ON" : "SRCL AUTO: OFF";
+  sb.className = srclOn ? "toggle-on" : "toggle-off";
+  sb.setAttribute("aria-pressed", srclOn ? "true" : "false");
+  const nLink = aircraft.filter(a=>a.linked).length;
+  const nAuto = aircraft.filter(a=>isAuto(a)).length;
+  $("srcl-status").textContent = `Automation ${srclOn?"ON":"OFF"} · ${nLink} aircraft on the link · ${nAuto} auto-managed · coverage ${SRCL_RANGE} NM`;
   // Alerts
   const ul=$("alerts"); ul.innerHTML="";
   const alerted=aircraft.filter(a=>a.alert);
@@ -624,7 +1034,7 @@ function refreshPanels(){
     l1.querySelector("b").textContent=ac.cs+" · "+ac.type;
     l1.querySelector(".st").textContent=phaseText(ac);
     const l2=document.createElement("div"); l2.className="st";
-    l2.textContent=`ALT ${Math.round(ac.alt)} → ${Math.round(ac.tAlt)} · SPD ${Math.round(ac.spd)} · HDG ${String(Math.round(ac.hdg)).padStart(3,"0")} · ${clr}`;
+    l2.textContent=`ALT ${Math.round(ac.alt)} → ${Math.round(ac.tAlt)} · SPD ${Math.round(ac.spd)} · HDG ${String(Math.round(ac.hdg)).padStart(3,"0")} · ${clr} · ${srclText(ac)}`;
     li.append(l1,l2);
     li.addEventListener("click",()=>selectAc(ac.id));
     st.appendChild(li);
@@ -641,7 +1051,8 @@ function refreshPanels(){
       ["Speed", Math.round(ac.spd)+" kt → "+Math.round(ac.tSpd)+" kt"],
       ["Heading", String(Math.round(ac.hdg)).padStart(3,"0")+"°"+(ac.mode==="HDG"?" → vector "+ac.tHdg+"°":" (own navigation)")],
       ["Route", ac.wps.length? ac.wps.slice(ac.wpIdx).join(" → ") : "—"],
-      ["Clearances", [ac.clearedApch?"approach":null, ac.clearedLand?"land":null, ac.clearedTO?"takeoff":null].filter(Boolean).join(", ")||"none"]
+      ["Clearances", [ac.clearedApch?"approach":null, ac.clearedLand?"land":null, ac.clearedTO?"takeoff":null].filter(Boolean).join(", ")||"none"],
+      ["SRCL", srclText(ac)]
     ];
     for(const [k,v] of rows){
       const d=document.createElement("div");
@@ -651,6 +1062,11 @@ function refreshPanels(){
     $("btn-apch").disabled = !(ac.phase==="ARR"||ac.phase==="HOLD"||ac.phase==="MISSED") || ac.clearedApch;
     $("btn-land").disabled = !(ac.phase==="ARR"||ac.phase==="FINAL"||ac.phase==="HOLD") || ac.clearedLand;
     $("btn-takeoff").disabled = !(ac.phase==="DEP"&&!ac.clearedTO);
+    const ba=$("btn-auto");
+    ba.disabled = !ac.linked;
+    ba.textContent = !ac.linked ? "SRCL — outside coverage (voice only)" :
+      ac.autoSuspended ? "Re-engage SRCL automation" :
+      (srclOn ? "SRCL automation ENGAGED — click to suspend" : "SRCL automation off (master toggle)");
   }
 }
 function selectAc(id){
@@ -675,6 +1091,7 @@ function loop(now){
     for(const ac of aircraft) stepAircraft(ac, dt);
     aircraft = aircraft.filter(a=>!a.done);
     if(selectedId && !sel()) selectedId=null;
+    runAutomation();
     checkSeparation();
     uiT-=dt; if(uiT<=0){ refreshPanels(); uiT=0.25; }
   }
@@ -682,6 +1099,20 @@ function loop(now){
   requestAnimationFrame(loop);
 }
 // ---------- Wiring ----------
+$("btn-srcl").addEventListener("click",()=>{
+  srclOn=!srclOn;
+  dlSys(srclOn ? "Master automation ON — SRCL coordinating linked traffic."
+               : "Master automation OFF — all traffic voice-only until re-engaged.");
+  refreshPanels();
+});
+$("btn-auto").addEventListener("click",()=>{
+  const ac=sel(); if(!ac || !ac.linked) return;
+  ac.autoSuspended=!ac.autoSuspended;
+  if(ac.autoSuspended){ ac.delaying=false; ac.autoTarget=null; }
+  dlSys(ac.autoSuspended ? ac.cs+" SRCL automation suspended by the controller."
+                         : ac.cs+" SRCL automation re-engaged.");
+  refreshPanels();
+});
 function setPaused(p){ paused=p; $("btn-pause").textContent=paused?"Resume":"Pause"; }
 $("btn-pause").addEventListener("click",()=>setPaused(!paused));
 $("btn-rate").addEventListener("click",()=>{
@@ -690,7 +1121,7 @@ $("btn-rate").addEventListener("click",()=>{
 });
 $("btn-restart").addEventListener("click",()=>{
   aircraft=[]; pairState={}; score={land:0,dep:0,loss:0}; selectedId=null;
-  spawnArrT=1; spawnDepT=6; $("log").innerHTML="";
+  seqCounter=0; spawnArrT=1; spawnDepT=6; $("log").innerHTML="";
   sys("Frequency reset. Traffic respawning."); refreshPanels();
 });
 $("btn-start").addEventListener("click",()=>{
