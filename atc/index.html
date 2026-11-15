@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DTW Tower — Air Traffic Control Simulator | Detroit Automation Academy</title>
-<meta name="description" content="A playable air traffic control training simulator for Detroit Metro (DTW) airspace, with the fictional SRCL automated coordination link. Simulation only — not for operational use.">
+<meta name="description" content="Detroit Metro (DTW) airspace viewer: a live flight-data display of real traffic around KDTW, plus a playable air traffic control training simulator with the fictional SRCL automated coordination link. Not for operational use.">
 <style>
   :root{
     --bg:#0a0a0a; --panel:#161616; --panel2:#101010; --line:#4d4d4d;
@@ -80,6 +80,12 @@
   button.toggle-on{background:#404040;border-color:var(--ok);font-weight:700}
   button.toggle-off{background:#2b2b2b;border-color:var(--warn);font-weight:700}
   .kbd{background:#0d0d0d;border:1px solid var(--line);border-bottom-width:2px;border-radius:3px;padding:0 4px;font-size:12px}
+  #stale-banner{position:absolute;top:0;left:0;right:0;z-index:4;background:#3d3d3d;color:#fff;
+    border-bottom:2px solid #ffffff;padding:8px 12px;font-weight:700;font-size:14px;
+    text-align:center;letter-spacing:.4px}
+  #live-status b{font-size:14px}
+  input[type=text]{background:#0d0d0d;color:var(--ink);border:1px solid var(--line);
+    border-radius:3px;padding:5px 6px;font:inherit;font-size:13px;width:200px}
   footer{padding:10px 14px;border-top:2px solid var(--line);font-size:12.5px;color:var(--dim);line-height:1.55;background:var(--panel)}
   footer b{color:var(--ink)}
 </style>
@@ -89,14 +95,21 @@
   <h1>DTW TOWER — ATC SIMULATOR</h1>
   <span class="badge" role="note">SIMULATION — NOT FOR OPERATIONAL USE</span>
   <div class="clockbox">Zulu <b id="zclock">--:--:--</b> · Local <b id="lclock">--:--:--</b></div>
-  <div class="scorebox" aria-label="Score">
+  <div class="scorebox" id="scorebox" aria-label="Score">
     <span>Landings <b id="sc-land">0</b></span>
     <span>Departures <b id="sc-dep">0</b></span>
     <span>Handled <b id="sc-hand">0</b></span>
     <span class="loss">Losses of separation <b id="sc-loss">0</b></span>
     <span>On scope <b id="sc-scope">0</b></span>
   </div>
-  <div class="ctlrow" role="group" aria-label="Simulation controls">
+  <div class="clockbox" id="live-status" role="status">Live data: <b>—</b></div>
+  <div class="ctlrow" role="group" aria-label="Display mode">
+    <button id="btn-mode-live" type="button" class="toggle-on" aria-pressed="true"
+      title="Show real traffic from the live feed">LIVE</button>
+    <button id="btn-mode-sim" type="button" aria-pressed="false"
+      title="Play the training simulator">SIMULATION</button>
+  </div>
+  <div class="ctlrow" id="sim-controls" role="group" aria-label="Simulation controls">
     <button id="btn-srcl" type="button" class="toggle-on" aria-pressed="true"
       title="Master toggle for SRCL automated coordination">SRCL AUTO: ON</button>
     <button id="btn-pause" type="button">Pause</button>
@@ -108,9 +121,14 @@
   <div class="scopewrap">
     <canvas id="scope" width="900" height="900" role="img" tabindex="0"
       aria-label="Radar scope centered on Detroit Metro Airport. Aircraft also appear as a text list in the flight strips panel."></canvas>
-    <div class="overlay" id="start-overlay">
+    <div id="stale-banner" role="alert" hidden>LIVE DATA STALE — SHOWING SIMULATION</div>
+    <div class="overlay" id="start-overlay" style="display:none">
       <div class="card">
         <h2>Detroit Metro Approach — you are the controller</h2>
+        <p><b>The default view is LIVE:</b> real aircraft position reports around
+        Detroit Metro from the feed credited in the header. This card opens the
+        training game — entering SIMULATION mode replaces the live display with
+        simulated traffic. Nothing in either mode is transmitted to any real system.</p>
         <p><b>SIMULATION — NOT FOR OPERATIONAL USE.</b> A training game built on
         FAA JO 7110.65 phraseology and terminal separation minima (3 NM lateral /
         1,000 ft vertical). Not affiliated with the FAA.</p>
@@ -188,6 +206,19 @@
         <button class="primary big" id="btn-takeoff" type="button">Cleared for takeoff RWY 22R (T)</button>
         <button class="big" id="btn-auto" type="button">SRCL automation</button>
       </div>
+      <div id="sel-live" hidden>
+        <div class="selname" id="sel-live-name">—</div>
+        <div class="seldata" id="sel-live-data">—</div>
+        <div class="ctlrow">
+          <label for="in-note">Local note</label>
+          <input type="text" id="in-note" maxlength="80" placeholder="Exercise note — this browser only">
+          <button id="btn-note" type="button">Save note</button>
+        </div>
+        <div class="seldata">Exercise annotations are stored only in this browser, on this
+        device. This page is a display only: it is not connected to any air traffic control
+        system, no clearance can be issued to a real aircraft from it, and nothing entered
+        here is transmitted anywhere.</div>
+      </div>
     </section>
     <section aria-labelledby="h-alerts">
       <h2 id="h-alerts">Conflict alerts</h2>
@@ -204,22 +235,33 @@
   </aside>
 </main>
 <footer>
-  <b>SIMULATION — NOT FOR OPERATIONAL USE.</b> This is an educational game published by the
-  Detroit Automation Academy. It is not a real air traffic control system, is not affiliated
-  with or endorsed by the FAA, and must never be used for navigation or real-world traffic
-  separation. Separation minima and phraseology are modeled on FAA Order JO 7110.65
-  (terminal: 3 NM lateral / 1,000 ft vertical); right-of-way concepts follow 14 CFR Part 91.
-  Traffic, weather, and callsigns are simulated. Real DTW runway identifiers are used for
-  training realism only.
+  <b>SIMULATION — NOT FOR OPERATIONAL USE.</b> This is an educational viewer and game
+  published by the Detroit Automation Academy. It is not a real air traffic control system,
+  is not affiliated with or endorsed by the FAA, and must never be used for navigation or
+  real-world traffic separation. In SIMULATION mode, separation minima and phraseology are
+  modeled on FAA Order JO 7110.65 (terminal: 3 NM lateral / 1,000 ft vertical); right-of-way
+  concepts follow 14 CFR Part 91. Weather is simulated. Real DTW runway identifiers are used
+  for training realism only.
+  In <b>LIVE mode</b>, the aircraft shown are real position reports from the flight-data feed
+  credited in the header (live traffic data: see the header credit). Reports may be delayed,
+  coverage is not guaranteed, and positions are dead-reckoned (interpolated) between updates.
+  LIVE mode is a display only: no clearances can be issued to real aircraft from this page,
+  exercise annotations stay in this browser, and nothing entered here is transmitted to any
+  real system. If the feed is missing or more than 15 minutes old, the page says so and
+  falls back to labeled simulated traffic.
   The <b>SRCL (DAA Short-Range Coordination Link)</b> is a fictional proprietary protocol
   invented by the Detroit Automation Academy for this simulation. It is not a real datalink
   standard, is not CPDLC, ADS-B, or any certified system, and confers no real-world capability.
+  SRCL operates only on simulated traffic, only in SIMULATION mode.
 </footer>
 <script>
 "use strict";
-/* DTW ATC Simulator — single-file training game.
-   Separation model: FAA JO 7110.65 terminal minima, 3 NM / 1,000 ft.
-   SIMULATION ONLY — no real traffic, no real weather, no operational use. */
+/* DTW ATC viewer + simulator — single file.
+   LIVE mode (default): real aircraft position reports around KDTW from the
+   same-origin feed live.json — display only, no clearances, no transmission.
+   SIMULATION mode: the training game; separation model FAA JO 7110.65
+   terminal minima, 3 NM / 1,000 ft; weather simulated.
+   NOT FOR OPERATIONAL USE in either mode. */
 
 // ---------- Airspace data (NM relative to DTW, x east, y north) ----------
 const FIXES = {
@@ -309,6 +351,35 @@ function noteManual(ac){
   }
 }
 function sel(){ return aircraft.find(a=>a.id===selectedId) || null; }
+
+// ---------- LIVE mode (real traffic display) ----------
+// Feed contract (same-origin live.json, produced by the Data lane):
+// { generated_at, source, center:{lat,lon}, radius_nm,
+//   aircraft:[{callsign,lat,lon,alt_ft,heading_deg,speed_kt,type,origin,dest,
+//   observed_at}] } — per-aircraft fields may be absent; absent fields are
+// shown as absent, never invented.
+let mode = "LIVE";            // "LIVE" | "SIM" — page defaults to LIVE
+let liveBoot = false;         // true only where fetch() exists (a real browser)
+let liveFeed = null;          // last successfully parsed feed
+let liveState = "boot";       // boot | ok | stale | error
+let liveAc = [];              // live aircraft; x/y in NM relative to feed center
+let liveSelCs = null;         // selected live callsign
+let liveNotes = {};           // callsign -> local-only exercise note
+let liveGenMs = 0;            // generated_at of liveFeed, epoch ms
+let liveLastSelShown = null;  // selection last rendered into the note input
+const LIVE_STALE_MS = 15*60*1000;   // feed older than this = stale (brief §2)
+const LIVE_POLL_MS = 30000;
+const DTW_CENTER = {lat:42.2162, lon:-83.3554}; // KDTW (feed contract center)
+function liveCenter(){ return (liveFeed && liveFeed.center) || DTW_CENTER; }
+function latLonToXY(lat, lon){ // NM east/north of the feed center
+  const c = liveCenter();
+  return { x:(lon-c.lon)*60*Math.cos(rad(c.lat)), y:(lat-c.lat)*60 };
+}
+function livePosAt(ac, nowMs){ // dead reckoning from the last report
+  const dtH = Math.min(Math.max(0,(nowMs-ac.obsMs)/3600000), 0.25); // cap 15 min
+  return { x: ac.x + Math.sin(rad(ac.hdg))*ac.spd*dtH,
+           y: ac.y + Math.cos(rad(ac.hdg))*ac.spd*dtH };
+}
 
 // ---------- Weather (simulated METAR) ----------
 function genMetar(){
@@ -898,6 +969,7 @@ const cv=$("scope"), ctx=cv.getContext("2d");
 const RANGE=42;
 function toPx(x,y){ const s=cv.width/2/RANGE; return [cv.width/2 + x*s, cv.height/2 - y*s]; }
 function draw(){
+  if(mode==="LIVE" && !fallback){ drawLive(); return; }
   const W=cv.width,H=cv.height;
   ctx.fillStyle="#050505"; ctx.fillRect(0,0,W,H);
   // Range rings + spokes
@@ -971,6 +1043,76 @@ function draw(){
     ctx.fillText(a3+(ac.tAlt!==Math.round(ac.alt/100)*100?"→"+t3:"")+" "+Math.round(ac.spd/10), x+10, y+14);
   }
 }
+function drawLive(){
+  const W=cv.width,H=cv.height;
+  ctx.fillStyle="#050505"; ctx.fillRect(0,0,W,H);
+  // Range rings + spokes (same scope geography as the simulator)
+  ctx.strokeStyle="#2b2b2b"; ctx.lineWidth=1; ctx.fillStyle="#6e6e6e";
+  ctx.font="11px ui-monospace,monospace"; ctx.textAlign="left";
+  for(const r of [10,20,30,40]){
+    ctx.beginPath(); ctx.arc(W/2,H/2, r*(W/2/RANGE), 0, Math.PI*2); ctx.stroke();
+    const [lx,ly]=toPx(r*0.72, r*0.72); ctx.fillText(r+" NM", lx+3, ly-3);
+  }
+  for(let a=0;a<360;a+=30){
+    ctx.beginPath(); ctx.moveTo(W/2,H/2);
+    ctx.lineTo(W/2+Math.sin(rad(a))*W/2, H/2-Math.cos(rad(a))*W/2); ctx.stroke();
+  }
+  // Feed coverage boundary (radius from the feed contract)
+  const cov = (liveFeed && liveFeed.radius_nm) || 40;
+  if(cov < RANGE){
+    ctx.strokeStyle="#8a8a8a"; ctx.setLineDash([10,7]); ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(W/2,H/2, cov*(W/2/RANGE), 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]); ctx.lineWidth=1;
+    const [cx2,cy2]=toPx(cov*0.72, -cov*0.72);
+    ctx.fillStyle="#8a8a8a"; ctx.fillText("LIVE COVERAGE "+cov+" NM", cx2+4, cy2+12);
+  }
+  // Fixes
+  for(const [name,f] of Object.entries(FIXES)){
+    const [x,y]=toPx(f.x,f.y);
+    ctx.strokeStyle="#8a8a8a"; ctx.beginPath();
+    ctx.moveTo(x,y-5); ctx.lineTo(x+5,y); ctx.lineTo(x,y+5); ctx.lineTo(x-5,y); ctx.closePath(); ctx.stroke();
+    ctx.fillStyle="#9e9e9e"; ctx.fillText(name, x+8, y+4);
+  }
+  // Final approach course (22L) — chart geography, drawn as in the simulator
+  ctx.strokeStyle="#3d3d3d"; ctx.setLineDash([6,6]);
+  ctx.beginPath();
+  let [fx1,fy1]=toPx(THR22L.x+Math.sin(rad(36))*20, THR22L.y+Math.cos(rad(36))*20);
+  let [fx2,fy2]=toPx(THR22L.x, THR22L.y);
+  ctx.moveTo(fx1,fy1); ctx.lineTo(fx2,fy2); ctx.stroke(); ctx.setLineDash([]);
+  // Runways
+  for(const r of RUNWAYS){
+    const e1=rwyEnd(r, r.hdg), e2=rwyEnd(r, r.hdg+180);
+    const [x1,y1]=toPx(e1.x,e1.y), [x2,y2]=toPx(e2.x,e2.y);
+    ctx.strokeStyle="#d9d9d9"; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); ctx.lineWidth=1;
+  }
+  const [ax,ay]=toPx(0,0);
+  ctx.fillStyle="#f2f2f2"; ctx.fillText("KDTW", ax+6, ay-6);
+  // Live aircraft, dead-reckoned from their last reports
+  const nowMs = Date.now();
+  for(const ac of liveAc){
+    const p = livePosAt(ac, nowMs);
+    if(Math.hypot(p.x,p.y) > RANGE+2) continue;
+    const [x,y]=toPx(p.x,p.y);
+    const isSel = ac.cs===liveSelCs;
+    ctx.save(); ctx.translate(x,y); ctx.rotate(rad(ac.hdg));
+    ctx.fillStyle = isSel ? "#ffffff" : "#c4c4c4";
+    ctx.beginPath(); ctx.moveTo(0,-7); ctx.lineTo(5,6); ctx.lineTo(0,3); ctx.lineTo(-5,6); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    if(isSel){ ctx.strokeStyle="#ffffff"; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(x,y,13,0,Math.PI*2); ctx.stroke(); ctx.lineWidth=1; }
+    ctx.fillStyle = isSel ? "#ffffff" : "#d9d9d9";
+    ctx.font="11px ui-monospace,monospace";
+    const a3=String(Math.round(ac.alt/100)).padStart(3,"0");
+    ctx.fillText(ac.cs, x+10, y+2);
+    ctx.fillText(a3+" "+Math.round(ac.spd/10)+(ac.type?" "+ac.type:""), x+10, y+14);
+  }
+  if(!liveAc.length){
+    ctx.fillStyle="#9e9e9e"; ctx.font="14px ui-monospace,monospace"; ctx.textAlign="center";
+    ctx.fillText(liveState==="ok" ? "No traffic inside coverage" : "Waiting for live data…", W/2, H/2-14);
+    ctx.textAlign="left";
+  }
+}
 // ---------- Panels ----------
 function phaseText(ac){
   return {ARR:"Arrival", FINAL:"On final 22L", HOLD:"Holding at HANBL", MISSED:"Missed approach",
@@ -982,7 +1124,94 @@ function srclText(ac){
   if(ac.autoSuspended) return "SRCL MANUAL (suspended)";
   return srclOn ? "SRCL AUTO" : "SRCL LINKED (auto off)";
 }
+function updateModeButtons(){
+  const bl=$("btn-mode-live"), bs=$("btn-mode-sim");
+  bl.className = mode==="LIVE" ? "toggle-on" : "";
+  bs.className = mode==="SIM" ? "toggle-on" : "";
+  bl.setAttribute("aria-pressed", mode==="LIVE" ? "true" : "false");
+  bs.setAttribute("aria-pressed", mode==="SIM" ? "true" : "false");
+}
+function selectLive(cs){ liveSelCs=cs; refreshPanels(); }
+function refreshLivePanels(){
+  // Real clocks (LIVE mode shows real time, not the sim clock)
+  const d=new Date();
+  $("zclock").textContent=d.toISOString().slice(11,19)+"Z";
+  $("lclock").textContent=d.toLocaleTimeString("en-US",{hour12:false,timeZone:"America/Detroit"});
+  // Header live-data credit + age — visible at all times in LIVE mode
+  const src = liveFeed ? (liveFeed.source || "source not named by feed") : "—";
+  let ageTxt = "no data yet";
+  if(liveGenMs){
+    const s=Math.max(0,Math.round((Date.now()-liveGenMs)/1000));
+    ageTxt = s<60 ? s+"s ago" : Math.floor(s/60)+"m "+String(s%60).padStart(2,"0")+"s ago";
+  }
+  const ls=$("live-status"); ls.innerHTML="";
+  ls.append(document.createTextNode("Live traffic data: "));
+  const b=document.createElement("b"); b.textContent=src; ls.appendChild(b);
+  ls.append(document.createTextNode(" · updated "+ageTxt+" · "+liveAc.length+
+    " aircraft · positions dead-reckoned between updates"));
+  $("srcl-status").textContent = "LIVE mode — display only. SRCL automation runs only in "+
+    "SIMULATION mode, on simulated traffic. No clearances are issued to real aircraft "+
+    "and nothing is transmitted to any real system.";
+  // Alerts: none computed for real traffic
+  const ul=$("alerts"); ul.innerHTML="";
+  const nli=document.createElement("li"); nli.className="none";
+  nli.textContent="Live display only — no separation alerting is computed for real traffic.";
+  ul.appendChild(nli);
+  // Strips: the live flights
+  const st=$("strips"); st.innerHTML="";
+  const nowMs=Date.now();
+  const sorted=[...liveAc].sort((a,b)=>a.cs<b.cs?-1:a.cs>b.cs?1:0);
+  for(const ac of sorted){
+    const li=document.createElement("li");
+    if(ac.cs===liveSelCs) li.className="sel";
+    const route = (ac.origin||ac.dest) ? (ac.origin||"????")+" → "+(ac.dest||"????") : "route not reported";
+    const ageS = Math.max(0,Math.round((nowMs-ac.obsMs)/1000));
+    const l1=document.createElement("div");
+    l1.innerHTML=`<b></b> <span class="st"></span>`;
+    l1.querySelector("b").textContent=ac.cs+(ac.type?" · "+ac.type:"");
+    l1.querySelector(".st").textContent=route;
+    const l2=document.createElement("div"); l2.className="st";
+    l2.textContent=`ALT ${Math.round(ac.alt)} · SPD ${Math.round(ac.spd)} · HDG ${String(Math.round(ac.hdg)).padStart(3,"0")} · reported ${ageS}s ago${liveNotes[ac.cs]?" · NOTE ✓":""}`;
+    li.append(l1,l2);
+    li.addEventListener("click",()=>selectLive(ac.cs));
+    st.appendChild(li);
+  }
+  if(!sorted.length){
+    const li=document.createElement("li"); li.className="none";
+    li.textContent = liveState==="ok" ? "No traffic inside coverage." : "No live data yet.";
+    st.appendChild(li);
+  }
+  // Selected live flight
+  const ac = liveAc.find(a=>a.cs===liveSelCs) || null;
+  $("sel-none").hidden=!!ac; $("sel-body").hidden=true; $("sel-live").hidden=!ac;
+  $("sel-none").textContent="Click a live aircraft on the scope or in the flight list.";
+  if(ac){
+    $("sel-live-name").textContent=ac.cs+(ac.type?" — "+ac.type:"");
+    const ageS = Math.max(0,Math.round((Date.now()-ac.obsMs)/1000));
+    const rows=[
+      ["Route", (ac.origin||ac.dest) ? (ac.origin||"not reported")+" → "+(ac.dest||"not reported") : "not reported"],
+      ["Altitude", Math.round(ac.alt)+" ft (reported)"],
+      ["Speed", Math.round(ac.spd)+" kt (reported)"],
+      ["Heading", String(Math.round(ac.hdg)).padStart(3,"0")+"° (reported)"],
+      ["Position", ac.lat.toFixed(4)+", "+ac.lon.toFixed(4)+" · reported "+ageS+"s ago · shown position is dead-reckoned (interpolated)"],
+      ["Local note", liveNotes[ac.cs] || "—"]
+    ];
+    const sd=$("sel-live-data"); sd.innerHTML="";
+    for(const [k,v] of rows){
+      const dv=document.createElement("div");
+      const bb=document.createElement("b"); bb.textContent=k+": ";
+      dv.append(bb, document.createTextNode(v)); sd.appendChild(dv);
+    }
+    if(liveLastSelShown!==ac.cs){ $("in-note").value = liveNotes[ac.cs] || ""; liveLastSelShown=ac.cs; }
+  } else liveLastSelShown=null;
+}
 function refreshPanels(){
+  const showSim = (mode==="SIM") || fallback;
+  $("scorebox").style.display = showSim ? "" : "none";
+  $("sim-controls").style.display = showSim ? "" : "none";
+  updateModeButtons();
+  if(!showSim){ refreshLivePanels(); return; }
+  $("live-status").textContent = "Live data: not displayed in SIMULATION mode";
   $("sc-land").textContent=score.land; $("sc-dep").textContent=score.dep;
   $("sc-hand").textContent=score.land+score.dep; $("sc-loss").textContent=score.loss;
   $("sc-scope").textContent=aircraft.length;
@@ -1042,6 +1271,8 @@ function refreshPanels(){
   // Selected panel
   const ac=sel();
   $("sel-none").hidden=!!ac; $("sel-body").hidden=!ac;
+  $("sel-live").hidden=true;
+  $("sel-none").textContent="Click an aircraft on the scope or a flight strip.";
   if(ac){
     $("sel-name").textContent=ac.cs+" — "+ac.name+" "+ac.num;
     $("sel-data").innerHTML="";
@@ -1079,9 +1310,13 @@ function selectAc(id){
 }
 // ---------- Main loop ----------
 let lastT=performance.now();
+let fallback=false, liveUiT=0; // fallback: LIVE mode showing labeled simulation
 function loop(now){
   const realDt=(now-lastT)/1000; lastT=now;
-  if(started && !paused){
+  // The simulation engine steps in SIMULATION mode, and in LIVE mode only
+  // while the stale-data fallback is showing simulated traffic.
+  const simRunning = (mode==="SIM" || fallback) && started && !paused;
+  if(simRunning){
     let dt=Math.min(realDt,0.1)*rate;
     simMinutes += dt/60;
     spawnArrT-=dt; spawnDepT-=dt; metarT-=dt;
@@ -1095,10 +1330,78 @@ function loop(now){
     checkSeparation();
     uiT-=dt; if(uiT<=0){ refreshPanels(); uiT=0.25; }
   }
+  else if(mode==="LIVE" && liveBoot){
+    liveUiT-=realDt;
+    if(liveUiT<=0){ checkLiveStale(); refreshPanels(); liveUiT=0.25; }
+  }
   draw();
   requestAnimationFrame(loop);
 }
+// ---------- LIVE feed engine ----------
+function ensureFallbackSim(){
+  if(fallback && mode==="LIVE" && !started){ // fallback shows the simulator, auto-started
+    started=true; paused=false;
+    spawnArrival(); spawnDeparture();
+    sys("Live data unavailable or stale — simulation traffic shown. Nothing on this scope is real traffic.");
+  }
+}
+function setFallback(on){
+  fallback=on;
+  $("stale-banner").hidden = !(on && mode==="LIVE");
+  ensureFallbackSim();
+  refreshPanels();
+}
+function checkLiveStale(){
+  if(liveFeed && liveState==="ok" && Date.now()-liveGenMs > LIVE_STALE_MS){
+    liveState="stale"; setFallback(true);
+  }
+}
+function ingestLive(feed){
+  if(!feed || !Array.isArray(feed.aircraft)) throw new Error("live feed malformed");
+  liveFeed=feed;
+  liveGenMs = Date.parse(feed.generated_at) || 0;
+  const out=[];
+  for(const a of feed.aircraft){
+    if(!a || typeof a.lat!=="number" || typeof a.lon!=="number") continue;
+    const p=latLonToXY(a.lat, a.lon);
+    out.push({ cs:String(a.callsign || "???"), type:a.type || "",
+      origin:a.origin || "", dest:a.dest || "", lat:a.lat, lon:a.lon,
+      x:p.x, y:p.y, alt:a.alt_ft || 0, hdg:a.heading_deg || 0, spd:a.speed_kt || 0,
+      obsMs: Date.parse(a.observed_at) || liveGenMs || Date.now() });
+  }
+  liveAc=out;
+  if(liveSelCs && !liveAc.some(a=>a.cs===liveSelCs)) liveSelCs=null;
+  const stale = !liveGenMs || (Date.now()-liveGenMs > LIVE_STALE_MS);
+  liveState = stale ? "stale" : "ok";
+  setFallback(stale);
+  refreshPanels();
+}
+function pollLive(){
+  if(!liveBoot) return;
+  fetch("live.json", {cache:"no-store"})
+    .then(r=>{ if(!r.ok) throw new Error("live.json HTTP "+r.status); return r.json(); })
+    .then(ingestLive)
+    .catch(()=>{
+      if(!liveFeed) liveState="error";
+      if(!liveFeed || Date.now()-liveGenMs > LIVE_STALE_MS) setFallback(true);
+    });
+}
 // ---------- Wiring ----------
+function setMode(m){
+  mode=m;
+  $("start-overlay").style.display = (m==="SIM" && !started) ? "" : "none";
+  $("stale-banner").hidden = !(fallback && mode==="LIVE");
+  ensureFallbackSim();
+  refreshPanels();
+}
+$("btn-mode-live").addEventListener("click",()=>setMode("LIVE"));
+$("btn-mode-sim").addEventListener("click",()=>setMode("SIM"));
+$("btn-note").addEventListener("click",()=>{
+  if(!liveSelCs) return;
+  const v=$("in-note").value.trim();
+  if(v) liveNotes[liveSelCs]=v; else delete liveNotes[liveSelCs];
+  refreshPanels();
+});
 $("btn-srcl").addEventListener("click",()=>{
   srclOn=!srclOn;
   dlSys(srclOn ? "Master automation ON — SRCL coordinating linked traffic."
@@ -1125,6 +1428,7 @@ $("btn-restart").addEventListener("click",()=>{
   sys("Frequency reset. Traffic respawning."); refreshPanels();
 });
 $("btn-start").addEventListener("click",()=>{
+  mode="SIM";
   started=true; setPaused(false); $("start-overlay").style.display="none";
   sys("You have the watch. Detroit Approach/Tower, simulation.");
   spawnArrival(); spawnDeparture(); refreshPanels();
@@ -1141,6 +1445,12 @@ cv.addEventListener("click",ev=>{
   const r=cv.getBoundingClientRect();
   const px=(ev.clientX-r.left)*(cv.width/r.width), py=(ev.clientY-r.top)*(cv.height/r.height);
   const nm={ x:(px-cv.width/2)/(cv.width/2/RANGE), y:-(py-cv.height/2)/(cv.height/2/RANGE) };
+  if(mode==="LIVE" && !fallback){ // select a live flight — display only, no clearances
+    const nowMs=Date.now(); let best=null,bd=2.4;
+    for(const ac of liveAc){ const d=dist(livePosAt(ac,nowMs),nm); if(d<bd){bd=d;best=ac;} }
+    if(best) selectLive(best.cs);
+    return;
+  }
   let best=null,bd=2.4;
   for(const ac of aircraft){ const d=dist(ac,nm); if(d<bd){bd=d;best=ac;} }
   if(best) selectAc(best.id);
@@ -1148,6 +1458,12 @@ cv.addEventListener("click",ev=>{
 document.addEventListener("keydown",ev=>{
   if(/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return;
   const k=ev.key.toLowerCase();
+  if(mode==="LIVE" && !fallback){ // no clearance keys act on real aircraft
+    if(k==="tab"){ ev.preventDefault(); if(liveAc.length){
+      const i=liveAc.findIndex(a=>a.cs===liveSelCs);
+      selectLive(liveAc[(i+1)%liveAc.length].cs); } }
+    return;
+  }
   if(k==="tab"){ ev.preventDefault(); if(aircraft.length){
     const i=aircraft.findIndex(a=>a.id===selectedId);
     selectAc(aircraft[(i+1)%aircraft.length].id); } }
@@ -1173,6 +1489,13 @@ document.addEventListener("keydown",ev=>{
   }
   genMetar(); refreshPanels();
   requestAnimationFrame(loop);
+  // LIVE boot — real browsers only. Headless harnesses have no fetch():
+  // the live subsystem stays off and the simulator behaves exactly as v3.
+  if(typeof fetch==="function"){
+    liveBoot=true;
+    pollLive();
+    if(typeof setInterval==="function") setInterval(pollLive, LIVE_POLL_MS);
+  }
 })();
 </script>
 </body>
