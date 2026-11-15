@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DTW Tower — Air Traffic Control Simulator | Detroit Automation Academy</title>
+<meta name="description" content="A playable air traffic control training simulator for Detroit Metro (DTW) airspace. Simulation only — not for operational use.">
+<style>
+  :root{
+    --bg:#07130b; --panel:#0c1f12; --panel2:#0a1a0f; --line:#2a5a38;
+    --ink:#eaf7ec; --dim:#a9cbb0; --scope:#04140a;
+    --caution:#ffb300; --warn:#ff5252; --sel:#4dd0e1; --ok:#69f0ae;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;}
+  header{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;
+    padding:10px 14px;border-bottom:2px solid var(--line);background:var(--panel);}
+  header h1{font-size:19px;margin:0;letter-spacing:.5px}
+  .badge{background:#7a1010;color:#fff;border:2px solid #ff8a80;padding:3px 10px;
+    font-weight:700;font-size:13px;border-radius:3px;letter-spacing:.4px}
+  .clockbox{font-size:14px;color:var(--dim)}
+  .clockbox b{color:var(--ink);font-size:16px}
+  .scorebox{display:flex;gap:14px;flex-wrap:wrap;font-size:13px}
+  .scorebox b{color:var(--ok);font-size:16px}
+  .scorebox .loss b{color:var(--warn)}
+  main{display:grid;grid-template-columns:minmax(320px,1fr) 372px;gap:0;align-items:start}
+  @media (max-width:900px){main{grid-template-columns:1fr}}
+  .scopewrap{position:relative;background:var(--scope);border-right:2px solid var(--line)}
+  canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;max-height:calc(100vh - 120px);margin:0 auto;cursor:crosshair}
+  .overlay{position:absolute;inset:0;background:rgba(3,12,6,.93);display:flex;
+    align-items:center;justify-content:center;padding:18px;z-index:5}
+  .overlay .card{max-width:560px;background:var(--panel);border:2px solid var(--line);
+    border-radius:6px;padding:20px 24px}
+  .overlay h2{margin:0 0 8px;font-size:22px}
+  .overlay p,.overlay li{font-size:14px;line-height:1.45;color:var(--ink)}
+  .overlay ul{margin:6px 0 12px;padding-left:20px}
+  button{background:#17452a;color:var(--ink);border:1px solid var(--line);
+    border-radius:4px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+  button:hover:not(:disabled){background:#1f5c37}
+  button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--sel);outline-offset:1px}
+  button:disabled{opacity:.38;cursor:not-allowed}
+  button.primary{background:#1b5e20;border-color:var(--ok);font-weight:700}
+  button.big{width:100%;padding:10px;font-size:15px;margin-top:6px}
+  button.armed{background:#7a1010;border-color:var(--warn)}
+  aside{padding:10px 12px;display:flex;flex-direction:column;gap:12px;background:var(--panel2)}
+  section{border:1px solid var(--line);border-radius:5px;padding:8px 10px;background:var(--panel)}
+  section h2{font-size:13px;margin:0 0 6px;text-transform:uppercase;letter-spacing:1px;color:var(--dim)}
+  .metar{font-size:13px;word-break:break-word}
+  .metar .plain{color:var(--dim);font-size:12px;margin-top:3px}
+  .selname{font-size:18px;font-weight:700}
+  .seldata{font-size:13px;color:var(--dim);line-height:1.5}
+  .seldata b{color:var(--ink)}
+  .ctlrow{display:flex;gap:6px;align-items:center;margin:5px 0;flex-wrap:wrap}
+  .ctlrow label{font-size:12px;color:var(--dim);width:64px}
+  input[type=number],select{background:#06130a;color:var(--ink);border:1px solid var(--line);
+    border-radius:3px;padding:5px 6px;font:inherit;font-size:13px;width:92px}
+  select{width:auto}
+  .chips{display:flex;gap:4px;flex-wrap:wrap}
+  .chips button{padding:3px 7px;font-size:12px}
+  #alerts{list-style:none;margin:0;padding:0;font-size:13px;max-height:130px;overflow:auto}
+  #alerts li{padding:4px 6px;border-left:5px solid var(--dim);margin-bottom:4px;background:#06130a}
+  #alerts li.caution{border-left-color:var(--caution)}
+  #alerts li.warning{border-left-color:var(--warn);font-weight:700}
+  #alerts .none{color:var(--dim);border-left-color:var(--line);font-weight:400}
+  #strips{list-style:none;margin:0;padding:0;max-height:220px;overflow:auto}
+  #strips li{padding:5px 7px;margin-bottom:4px;background:#06130a;border:1px solid var(--line);
+    border-radius:3px;font-size:12.5px;cursor:pointer;line-height:1.45}
+  #strips li:hover{border-color:var(--sel)}
+  #strips li.sel{border-color:var(--sel);background:#0d2f3a}
+  #strips li.caution{border-left:5px solid var(--caution)}
+  #strips li.warning{border-left:5px solid var(--warn)}
+  #strips .st{color:var(--dim)}
+  #log{list-style:none;margin:0;padding:0;font-size:12.5px;max-height:220px;overflow:auto;line-height:1.5}
+  #log li{padding:3px 4px;border-bottom:1px dotted #1e4028}
+  #log .tx{color:var(--sel)}
+  #log .rx{color:var(--dim)}
+  #log .sys{color:var(--caution)}
+  .kbd{background:#06130a;border:1px solid var(--line);border-bottom-width:2px;border-radius:3px;padding:0 4px;font-size:12px}
+  footer{padding:10px 14px;border-top:2px solid var(--line);font-size:12.5px;color:var(--dim);line-height:1.55;background:var(--panel)}
+  footer b{color:var(--ink)}
+</style>
+</head>
+<body>
+<header>
+  <h1>DTW TOWER — ATC SIMULATOR</h1>
+  <span class="badge" role="note">SIMULATION — NOT FOR OPERATIONAL USE</span>
+  <div class="clockbox">Zulu <b id="zclock">--:--:--</b> · Local <b id="lclock">--:--:--</b></div>
+  <div class="scorebox" aria-label="Score">
+    <span>Landings <b id="sc-land">0</b></span>
+    <span>Departures <b id="sc-dep">0</b></span>
+    <span>Handled <b id="sc-hand">0</b></span>
+    <span class="loss">Losses of separation <b id="sc-loss">0</b></span>
+    <span>On scope <b id="sc-scope">0</b></span>
+  </div>
+  <div class="ctlrow" role="group" aria-label="Simulation controls">
+    <button id="btn-pause" type="button">Pause</button>
+    <button id="btn-rate" type="button" aria-label="Simulation rate">Rate 1×</button>
+    <button id="btn-restart" type="button">Restart</button>
+  </div>
+</header>
+<main>
+  <div class="scopewrap">
+    <canvas id="scope" width="900" height="900" role="img" tabindex="0"
+      aria-label="Radar scope centered on Detroit Metro Airport. Aircraft also appear as a text list in the flight strips panel."></canvas>
+    <div class="overlay" id="start-overlay">
+      <div class="card">
+        <h2>Detroit Metro Approach — you are the controller</h2>
+        <p><b>SIMULATION — NOT FOR OPERATIONAL USE.</b> A training game built on
+        FAA JO 7110.65 phraseology and terminal separation minima (3 NM lateral /
+        1,000 ft vertical). Not affiliated with the FAA.</p>
+        <ul>
+          <li><b>Arrivals</b> check in at the edge fixes at 10,000–12,000 ft. Vector and descend them,
+          then clear them for the ILS runway 22L approach and for landing. No landing
+          clearance by short final = go-around.</li>
+          <li><b>Departures</b> wait on runway 22R. Clear them for takeoff; they climb to
+          5,000 ft (or your assigned altitude) and exit at their departure fix.</li>
+          <li><b>Select</b> an aircraft by clicking it on the scope or in the flight strips.
+          Issue altitude, heading, speed, and direct-to clearances from the control panel.</li>
+          <li><b>Separation:</b> keep 3 NM and 1,000 ft between aircraft. ▲ CAUTION = predicted
+          loss within about two minutes. ■ CONFLICT = separation is being lost right now —
+          every loss is scored against you.</li>
+          <li>Keys: <span class="kbd">Tab</span> cycle aircraft · <span class="kbd">A</span> approach ·
+          <span class="kbd">L</span> land · <span class="kbd">T</span> takeoff ·
+          <span class="kbd">P</span> pause · <span class="kbd">+</span>/<span class="kbd">−</span> sim rate.</li>
+        </ul>
+        <button class="primary big" id="btn-start" type="button">Begin controlling</button>
+      </div>
+    </div>
+  </div>
+  <aside>
+    <section aria-labelledby="h-metar">
+      <h2 id="h-metar">Weather — KDTW (simulated)</h2>
+      <div class="metar" id="metar">—</div>
+    </section>
+    <section aria-labelledby="h-sel">
+      <h2 id="h-sel">Selected aircraft</h2>
+      <div id="sel-none" class="seldata">Click an aircraft on the scope or a flight strip.</div>
+      <div id="sel-body" hidden>
+        <div class="selname" id="sel-name">—</div>
+        <div class="seldata" id="sel-data">—</div>
+        <div class="ctlrow">
+          <label for="in-alt">Altitude ft</label>
+          <input type="number" id="in-alt" step="100" min="0" max="17000" value="3000">
+          <button id="btn-alt" type="button">Climb / Descend</button>
+        </div>
+        <div class="ctlrow chips" id="alt-chips" aria-label="Altitude presets"></div>
+        <div class="ctlrow">
+          <label for="in-hdg">Heading °</label>
+          <input type="number" id="in-hdg" step="5" min="0" max="360" value="360">
+          <button id="btn-hdg" type="button">Turn to heading</button>
+          <button id="btn-resume" type="button">Resume own nav</button>
+        </div>
+        <div class="ctlrow">
+          <label for="in-spd">Speed kt</label>
+          <input type="number" id="in-spd" step="10" min="120" max="320" value="210">
+          <button id="btn-spd" type="button">Set speed</button>
+        </div>
+        <div class="ctlrow">
+          <label for="in-fix">Direct to</label>
+          <select id="in-fix"></select>
+          <button id="btn-fix" type="button">Direct</button>
+        </div>
+        <button class="primary big" id="btn-apch" type="button">Cleared ILS approach RWY 22L (A)</button>
+        <button class="primary big" id="btn-land" type="button">Cleared to land RWY 22L (L)</button>
+        <button class="primary big" id="btn-takeoff" type="button">Cleared for takeoff RWY 22R (T)</button>
+      </div>
+    </section>
+    <section aria-labelledby="h-alerts">
+      <h2 id="h-alerts">Conflict alerts</h2>
+      <ul id="alerts" aria-live="polite"><li class="none">No alerts.</li></ul>
+    </section>
+    <section aria-labelledby="h-strips">
+      <h2 id="h-strips">Flight strips</h2>
+      <ul id="strips"></ul>
+    </section>
+    <section aria-labelledby="h-log">
+      <h2 id="h-log">Frequency — 118.45 (simulated)</h2>
+      <ul id="log" aria-live="polite"></ul>
+    </section>
+  </aside>
+</main>
+<footer>
+  <b>SIMULATION — NOT FOR OPERATIONAL USE.</b> This is an educational game published by the
+  Detroit Automation Academy. It is not a real air traffic control system, is not affiliated
+  with or endorsed by the FAA, and must never be used for navigation or real-world traffic
+  separation. Separation minima and phraseology are modeled on FAA Order JO 7110.65
+  (terminal: 3 NM lateral / 1,000 ft vertical); right-of-way concepts follow 14 CFR Part 91.
+  Traffic, weather, and callsigns are simulated. Real DTW runway identifiers are used for
+  training realism only.
+</footer>
+<script>
+"use strict";
+/* DTW ATC Simulator — single-file training game.
+   Separation model: FAA JO 7110.65 terminal minima, 3 NM / 1,000 ft.
+   SIMULATION ONLY — no real traffic, no real weather, no operational use. */
+
+// ---------- Airspace data (NM relative to DTW, x east, y north) ----------
+const FIXES = {
+  POLAR:{x:0,y:36,kind:"entry"}, KLYNK:{x:26,y:26,kind:"entry"},
+  BONZZ:{x:36,y:3,kind:"entry"}, HAYLL:{x:25,y:-25,kind:"entry"},
+  MOONN:{x:-2,y:-36,kind:"entry"}, TEEZY:{x:-36,y:-2,kind:"entry"},
+  HANBL:{x:9.1,y:13.9,kind:"iaf"}, ZETAL:{x:4.38,y:7.47,kind:"faf"}
+};
+const ENTRY_FIXES = ["POLAR","KLYNK","BONZZ","HAYLL","MOONN","TEEZY"];
+const EXIT_FIXES  = ["KLYNK","BONZZ","POLAR","TEEZY","MOONN","HAYLL"];
+// Runways: center offset (NM), true heading of the low-number end, length NM.
+const RUNWAYS = [
+  {a:"4L",b:"22R",x:-1.6,y:0.6,hdg:36,len:1.65},
+  {a:"4R",b:"22L",x:-0.9,y:0.2,hdg:36,len:1.97},
+  {a:"3L",b:"21R",x:0.9,y:0.9,hdg:36,len:1.40},
+  {a:"3R",b:"21L",x:1.6,y:0.4,hdg:36,len:1.65},
+  {a:"9L",b:"27R",x:-0.4,y:-1.5,hdg:90,len:1.40},
+  {a:"9R",b:"27L",x:0.3,y:-2.1,hdg:90,len:1.81}
+];
+const RWY22L = RUNWAYS[1], RWY22R = RUNWAYS[0];
+function rwyEnd(rwy, deg){ // end point in direction of heading deg from center
+  const r = deg*Math.PI/180, h = rwy.len/2;
+  return {x:rwy.x + Math.sin(r)*h, y:rwy.y + Math.cos(r)*h};
+}
+const THR22L = rwyEnd(RWY22L, 36);        // landing threshold (NE end)
+const DEP22R_START = rwyEnd(RWY22R, 36);  // takeoff roll starts at NE end, rolls toward 216
+const AIRLINES = [
+  ["DAL","Delta"],["AAL","American"],["UAL","United"],["SWA","Southwest"],
+  ["NKS","Spirit"],["JBU","JetBlue"],["FFT","Frontier"],["ASA","Alaska"],
+  ["FDX","FedEx"],["UPS","UPS"]
+];
+const TYPES = ["B738","A320","B739","A321","B763","E175","CRJ9","B712"];
+
+// ---------- State ----------
+let aircraft = [], nextId = 1, selectedId = null;
+let simMinutes = 13*60 + 52; // sim clock starts 13:52Z
+let rate = 1, paused = true, started = false;
+let score = {land:0, dep:0, loss:0};
+let spawnArrT = 2, spawnDepT = 8, metarT = 0, uiT = 0;
+let pairState = {}; // "idA-idB" -> "caution"|"warning"
+let metar = null;
+
+// ---------- Helpers ----------
+const $ = id => document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rad = d => d*Math.PI/180, deg = r => r*180/Math.PI;
+function norm360(d){ d%=360; return d<0?d+360:d; }
+function bearingTo(a,b){ return norm360(deg(Math.atan2(b.x-a.x, b.y-a.y))); }
+function dist(a,b){ return Math.hypot(b.x-a.x, b.y-a.y); }
+function turnDelta(cur,tgt){ let d=norm360(tgt)-norm360(cur); if(d>180)d-=360; if(d<-180)d+=360; return d; }
+const ONES=["zero","one","two","three","four","five","six","seven","eight","nine"];
+function digits(n){ return String(n).split("").map(c=>ONES[+c]).join(" "); }
+function altWords(ft){
+  if(ft===0) return "the surface";
+  const th=Math.floor(ft/1000), hu=Math.round((ft%1000)/100);
+  let s = th>0 ? (th<10?ONES[th]:digits(th))+" thousand" : "";
+  if(hu>0) s += (s?" ":"")+ONES[hu]+" hundred";
+  return s || "zero";
+}
+function spokenCall(ac){ return ac.name+" "+digits(ac.num); }
+function log(kind, text){
+  const li=document.createElement("li"); li.className=kind; li.textContent=text;
+  const ul=$("log"); ul.prepend(li);
+  while(ul.children.length>60) ul.removeChild(ul.lastChild);
+}
+function tx(text){ log("tx","▸ "+text); }   // controller transmission
+function rx(text){ log("rx","▸ "+text); }   // pilot readback
+function sys(text){ log("sys","• "+text); }
+function sel(){ return aircraft.find(a=>a.id===selectedId) || null; }
+
+// ---------- Weather (simulated METAR) ----------
+function genMetar(){
+  const windDir = [270,290,310,220,180][Math.floor(Math.random()*5)];
+  const windKt = 5+Math.floor(Math.random()*11);
+  const temp = 8+Math.floor(Math.random()*9), dew = temp-3-Math.floor(Math.random()*5);
+  const alt = (29.80+Math.random()*0.35).toFixed(2);
+  const hh=String(Math.floor(simMinutes/60)%24).padStart(2,"0"),
+        mm=String(Math.floor(simMinutes)%60).padStart(2,"0");
+  const vis = windKt>12 ? "8SM" : "10SM";
+  const clouds = ["FEW045 SCT250","SCT040 BKN250","FEW050","SKC"][Math.floor(Math.random()*4)];
+  metar = { raw:`KDTW ${hh}${mm}Z AUTO ${String(windDir).padStart(3,"0")}${String(windKt).padStart(2,"0")}KT ${vis} ${clouds} ${temp}/${dew} A${alt.replace(".","")}`,
+            plain:`Wind ${windDir}° at ${windKt} kt · visibility ${vis==="10SM"?"10 statute miles":"8 statute miles"} · ${temp}°C / dewpoint ${dew}°C · altimeter ${alt} inHg · Active runways: arrivals 22L, departures 22R.` };
+  $("metar").innerHTML = "";
+  const d1=document.createElement("div"); d1.textContent=metar.raw;
+  const d2=document.createElement("div"); d2.className="plain"; d2.textContent=metar.plain;
+  $("metar").append(d1,d2);
+}
+
+// ---------- Spawning ----------
+function newCallsign(){
+  for(let tries=0;tries<40;tries++){
+    const [code,name]=AIRLINES[Math.floor(Math.random()*AIRLINES.length)];
+    const num=100+Math.floor(Math.random()*880);
+    if(!aircraft.some(a=>a.cs===code+num)) return {code,name,num,cs:code+num};
+  }
+  return {code:"DAL",name:"Delta",num:nextId,cs:"DAL"+nextId};
+}
+function spawnArrival(){
+  const fix=ENTRY_FIXES[Math.floor(Math.random()*ENTRY_FIXES.length)];
+  const f=FIXES[fix], c=newCallsign();
+  const spawnAlt = 10000 + (nextId % 3)*1000; // stagger the stack so the controller has vertical room
+  const ac={ id:nextId++, ...c, type:TYPES[Math.floor(Math.random()*TYPES.length)],
+    x:f.x, y:f.y, hdg:bearingTo(f,FIXES.HANBL), spd:250, tSpd:250, alt:spawnAlt, tAlt:spawnAlt,
+    mode:"NAV", tHdg:null, phase:"ARR", wps:["HANBL","ZETAL"], wpIdx:0,
+    clearedApch:false, clearedLand:false, clearedTO:false, depAlt:5000, alert:"" };
+  aircraft.push(ac);
+  rx(`${spokenCall(ac)}, Detroit Approach, radar contact ${fix}, `+
+     `descend via arrival, expect ILS runway two two left.`);
+}
+function spawnDeparture(){
+  const c=newCallsign();
+  const exit=EXIT_FIXES[Math.floor(Math.random()*EXIT_FIXES.length)];
+  const ac={ id:nextId++, ...c, type:TYPES[Math.floor(Math.random()*TYPES.length)],
+    x:DEP22R_START.x, y:DEP22R_START.y, hdg:216, spd:0, tSpd:250, alt:0, tAlt:0,
+    mode:"NAV", tHdg:null, phase:"DEP", wps:[exit], wpIdx:0,
+    clearedApch:false, clearedLand:false, clearedTO:false, depAlt:5000, alert:"" };
+  aircraft.push(ac);
+  rx(`${spokenCall(ac)}, Detroit Tower, holding short runway two two right, ready for departure.`);
+}
+</script>
+<script>
+"use strict";
+// ---------- Flight model ----------
+function stepAircraft(ac, dt){ // dt in sim-seconds
+  // Target heading: explicit vector, or bearing to active waypoint.
+  let want = ac.hdg;
+  if(ac.mode==="HDG" && ac.tHdg!=null) want = ac.tHdg;
+  else if(ac.wps.length){
+    const w = FIXES[ac.wps[Math.min(ac.wpIdx, ac.wps.length-1)]];
+    if(w) want = bearingTo(ac, w);
+  }
+  if(ac.phase==="FINAL") want = bearingTo(ac, THR22L);
+  if(ac.phase==="HOLD"){
+    const f = FIXES.HANBL; // right-hand orbit around the IAF
+    want = norm360(bearingTo(f, ac) + 90);
+  }
+  if(ac.phase==="ROLL") want = 216;
+  const turnRate = ac.phase==="FINAL" ? 90 : 170; // deg per minute
+  const d = turnDelta(ac.hdg, want), maxTurn = turnRate*dt/60;
+  ac.hdg = norm360(ac.hdg + clamp(d, -maxTurn, maxTurn));
+
+  // Speed
+  let targetSpd = ac.tSpd, accel = 260; // kt per minute
+  if(ac.phase==="FINAL") targetSpd = 140;
+  if(ac.phase==="DEP" && !ac.clearedTO) targetSpd = 0;
+  if(ac.phase==="ROLL"){ targetSpd = 0; accel = 500; }
+  if(ac.phase==="CLIMB") targetSpd = 250;
+  ac.spd += clamp(targetSpd-ac.spd, -accel*dt/60, accel*dt/60);
+  if(ac.spd<0) ac.spd=0;
+
+  // Altitude
+  let targetAlt = ac.tAlt, vs = 1800; // ft per minute
+  if(ac.phase==="FINAL"){
+    const dThr = dist(ac, THR22L);
+    targetAlt = Math.max(0, dThr*318); // 3-degree glidepath
+    vs = 900;
+  }
+  if(ac.phase==="ROLL") targetAlt = 0;
+  ac.alt += clamp(targetAlt-ac.alt, -vs*dt/60, vs*dt/60);
+  if(ac.alt<0) ac.alt=0;
+
+  // Position
+  const nm = ac.spd * dt/3600;
+  ac.x += Math.sin(rad(ac.hdg))*nm;
+  ac.y += Math.cos(rad(ac.hdg))*nm;
+
+  // Phase logic
+  if(ac.phase==="ARR" || ac.phase==="MISSED"){
+    const wName = ac.wps[ac.wpIdx], w = FIXES[wName];
+    if(w && dist(ac,w) < (ac.spd>220?2.2:1.3)){
+      if(wName==="ZETAL"){
+        if(ac.clearedApch){ ac.phase="FINAL"; sys(`${ac.cs} established on the ILS 22L final.`); }
+        else { ac.phase="HOLD"; sys(`${ac.cs} not cleared for the approach — holding at HANBL.`); }
+      } else if(ac.wpIdx < ac.wps.length-1){ ac.wpIdx++; }
+      else if(ac.phase==="MISSED"){ ac.phase="ARR"; }
+    }
+  }
+  else if(ac.phase==="HOLD"){
+    if(ac.clearedApch){ ac.phase="ARR"; ac.wps=["ZETAL"]; ac.wpIdx=0; }
+  }
+  else if(ac.phase==="FINAL"){
+    const dThr = dist(ac, THR22L);
+    if(dThr < 0.35 && ac.clearedLand && ac.alt < 120){
+      ac.phase="ROLL"; ac.hdg=216; score.land++;
+      sys(`${ac.cs} landed on 22L. Landing #${score.land}.`);
+    } else if(dThr < 1.2 && !ac.clearedLand){
+      ac.phase="MISSED"; ac.clearedApch=false; ac.tAlt=3000; ac.tSpd=210;
+      ac.mode="NAV"; ac.wps=["HANBL","ZETAL"]; ac.wpIdx=0;
+      rx(`${spokenCall(ac)}, going around, Detroit Tower.`);
+      sys(`${ac.cs} went around — no landing clearance on short final.`);
+    }
+  }
+  else if(ac.phase==="ROLL"){
+    if(ac.spd<=2){ ac.done=true; sys(`${ac.cs} vacated 22L, contact ground point niner.`); }
+  }
+  else if(ac.phase==="DEP"){
+    if(ac.clearedTO){
+      ac.tSpd=170;
+      if(ac.spd>=155 && ac.alt===0){ ac.phase="CLIMB"; ac.tAlt=ac.depAlt; }
+    }
+  }
+  else if(ac.phase==="CLIMB"){
+    if(dist(ac,{x:0,y:0})>38){ ac.done=true; score.dep++;
+      sys(`${ac.cs} handed off to departure. Departure #${score.dep}.`); }
+  }
+}
+function rawPhrase(){ const m=metar.raw.match(/AUTO (\d{5})KT/); return m?`wind ${m[1].slice(0,3)} at ${+m[1].slice(3)}, `:""; }
+
+// ---------- Separation (JO 7110.65 terminal: 3 NM / 1,000 ft) ----------
+function checkSeparation(){
+  const seen={};
+  for(const a of aircraft) a.alert="";
+  for(let i=0;i<aircraft.length;i++) for(let j=i+1;j<aircraft.length;j++){
+    const a=aircraft[i], b=aircraft[j];
+    if(a.phase==="ROLL"||b.phase==="ROLL") continue;
+    if(a.alt<300 && b.alt<300) continue; // both on the ground at the airport
+    const lat=dist(a,b), vert=Math.abs(a.alt-b.alt);
+    const key=a.id+"-"+b.id; seen[key]=true;
+    let state="";
+    if(lat<3 && vert<1000) state="warning";
+    else {
+      // Predicted CPA over the next 150 s at current velocity.
+      const va={x:Math.sin(rad(a.hdg))*a.spd, y:Math.cos(rad(a.hdg))*a.spd};
+      const vb={x:Math.sin(rad(b.hdg))*b.spd, y:Math.cos(rad(b.hdg))*b.spd};
+      const rx=b.x-a.x, ry=b.y-a.y, vx=vb.x-va.x, vy=vb.y-va.y;
+      const vv=vx*vx+vy*vy;
+      let tca=0; if(vv>0.01) tca=clamp(-(rx*vx+ry*vy)/vv, 0, 150/3600);
+      const cpa=Math.hypot(rx+vx*tca, ry+vy*tca);
+      if(cpa<3 && vert<1000 && tca>0) state="caution";
+    }
+    if(state){
+      a.alert = state==="warning" ? "warning" : (a.alert||"caution");
+      b.alert = state==="warning" ? "warning" : (b.alert||"caution");
+      if(state==="warning" && pairState[key]!=="warning"){
+        score.loss++;
+        sys(`LOSS OF SEPARATION: ${a.cs} and ${b.cs} — ${lat.toFixed(1)} NM, ${Math.round(vert)} ft. Loss #${score.loss}.`);
+      }
+      pairState[key]=state;
+    } else if(pairState[key]) delete pairState[key];
+  }
+  for(const k in pairState) if(!seen[k]) delete pairState[k];
+  return aircraft.filter(a=>a.alert);
+}
+
+// ---------- Clearances (controller actions) ----------
+function issueAlt(){
+  const ac=sel(); if(!ac) return;
+  const v=clamp(Math.round(+$("in-alt").value/100)*100, 0, 17000);
+  if(ac.phase==="DEP" && !ac.clearedTO){ ac.depAlt=Math.max(v,1000);
+    tx(`${ac.cs}, departure altitude ${altWords(ac.depAlt)} on departure.`); rx(`${altWords(ac.depAlt)} on departure, ${spokenCall(ac)}.`); return; }
+  ac.tAlt=v;
+  const verb = v>ac.alt ? "climb and maintain" : v<ac.alt ? "descend and maintain" : "maintain";
+  tx(`${ac.cs}, ${verb} ${altWords(v)}.`);
+  rx(`${verb==="maintain"?"Maintain":verb[0].toUpperCase()+verb.slice(1)} ${altWords(v)}, ${spokenCall(ac)}.`);
+}
+function issueHdg(){
+  const ac=sel(); if(!ac) return;
+  const v=norm360(Math.round(+$("in-hdg").value));
+  ac.mode="HDG"; ac.tHdg=v;
+  const dir = turnDelta(ac.hdg, v)<=0 ? "left" : "right";
+  tx(`${ac.cs}, turn ${dir} heading ${digits(String(v).padStart(3,"0"))}.`);
+  rx(`Turn ${dir} heading ${digits(String(v).padStart(3,"0"))}, ${spokenCall(ac)}.`);
+}
+function issueResume(){
+  const ac=sel(); if(!ac) return;
+  ac.mode="NAV"; ac.tHdg=null;
+  tx(`${ac.cs}, resume own navigation.`);
+  rx(`Resume own navigation, ${spokenCall(ac)}.`);
+}
+function issueSpd(){
+  const ac=sel(); if(!ac) return;
+  const v=clamp(Math.round(+$("in-spd").value/10)*10, 120, 320);
+  ac.tSpd=v;
+  tx(`${ac.cs}, maintain ${digits(v)} knots.`);
+  rx(`Maintain ${digits(v)} knots, ${spokenCall(ac)}.`);
+}
+function issueFix(){
+  const ac=sel(); if(!ac) return;
+  const f=$("in-fix").value; if(!f) return;
+  ac.mode="NAV"; ac.tHdg=null;
+  if(ac.phase==="ARR"||ac.phase==="HOLD"||ac.phase==="MISSED"){
+    ac.wps = f==="ZETAL" ? ["ZETAL"] : f==="HANBL" ? ["HANBL","ZETAL"] : [f,"HANBL","ZETAL"];
+    ac.wpIdx=0; if(ac.phase==="HOLD") ac.phase="ARR";
+  } else ac.wps=[f], ac.wpIdx=0;
+  tx(`${ac.cs}, proceed direct ${f}.`);
+  rx(`Direct ${f}, ${spokenCall(ac)}.`);
+}
+function issueApch(){
+  const ac=sel(); if(!ac || (ac.phase!=="ARR"&&ac.phase!=="HOLD"&&ac.phase!=="MISSED")) return;
+  ac.clearedApch=true; ac.mode="NAV";
+  if(!ac.wps.includes("ZETAL")){ ac.wps=["HANBL","ZETAL"]; ac.wpIdx=0; }
+  tx(`${ac.cs}, cleared I L S runway two two left approach.`);
+  rx(`Cleared I L S two two left approach, ${spokenCall(ac)}.`);
+}
+function issueLand(){
+  const ac=sel(); if(!ac || (ac.phase!=="ARR"&&ac.phase!=="FINAL"&&ac.phase!=="HOLD")) return;
+  ac.clearedLand=true;
+  tx(`${ac.cs}, ${rawPhrase()}runway two two left, cleared to land.`);
+  rx(`Cleared to land two two left, ${spokenCall(ac)}.`);
+}
+function issueTakeoff(){
+  const ac=sel(); if(!ac || ac.phase!=="DEP" || ac.clearedTO) return;
+  ac.clearedTO=true; ac.tSpd=170;
+  tx(`${ac.cs}, ${rawPhrase()}runway two two right, cleared for takeoff.`);
+  rx(`Cleared for takeoff two two right, ${spokenCall(ac)}.`);
+}
+</script>
+<script>
+"use strict";
+// ---------- Rendering ----------
+const cv=$("scope"), ctx=cv.getContext("2d");
+const RANGE=42;
+function toPx(x,y){ const s=cv.width/2/RANGE; return [cv.width/2 + x*s, cv.height/2 - y*s]; }
+function draw(){
+  const W=cv.width,H=cv.height;
+  ctx.fillStyle="#04140a"; ctx.fillRect(0,0,W,H);
+  // Range rings + spokes
+  ctx.strokeStyle="#1d4d2b"; ctx.lineWidth=1; ctx.fillStyle="#3f7a4e";
+  ctx.font="11px ui-monospace,monospace"; ctx.textAlign="left";
+  for(const r of [10,20,30,40]){
+    ctx.beginPath(); ctx.arc(W/2,H/2, r*(W/2/RANGE), 0, Math.PI*2); ctx.stroke();
+    const [lx,ly]=toPx(r*0.72, r*0.72); ctx.fillText(r+" NM", lx+3, ly-3);
+  }
+  for(let a=0;a<360;a+=30){
+    ctx.beginPath(); ctx.moveTo(W/2,H/2);
+    ctx.lineTo(W/2+Math.sin(rad(a))*W/2, H/2-Math.cos(rad(a))*W/2); ctx.stroke();
+  }
+  // Fixes
+  for(const [name,f] of Object.entries(FIXES)){
+    const [x,y]=toPx(f.x,f.y);
+    ctx.strokeStyle="#7fb98a"; ctx.beginPath();
+    ctx.moveTo(x,y-5); ctx.lineTo(x+5,y); ctx.lineTo(x,y+5); ctx.lineTo(x-5,y); ctx.closePath(); ctx.stroke();
+    ctx.fillStyle="#a9cbb0"; ctx.fillText(name, x+8, y+4);
+  }
+  // Final approach course (22L)
+  ctx.strokeStyle="#2a5a38"; ctx.setLineDash([6,6]);
+  ctx.beginPath();
+  let [fx1,fy1]=toPx(THR22L.x+Math.sin(rad(36))*20, THR22L.y+Math.cos(rad(36))*20);
+  let [fx2,fy2]=toPx(THR22L.x, THR22L.y);
+  ctx.moveTo(fx1,fy1); ctx.lineTo(fx2,fy2); ctx.stroke(); ctx.setLineDash([]);
+  // Runways
+  for(const r of RUNWAYS){
+    const e1=rwyEnd(r, r.hdg), e2=rwyEnd(r, r.hdg+180);
+    const [x1,y1]=toPx(e1.x,e1.y), [x2,y2]=toPx(e2.x,e2.y);
+    ctx.strokeStyle="#cfe8d2"; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); ctx.lineWidth=1;
+  }
+  const [ax,ay]=toPx(0,0);
+  ctx.fillStyle="#eaf7ec"; ctx.fillText("KDTW", ax+6, ay-6);
+  // Selected route line
+  const s=sel();
+  if(s && s.wps.length){
+    const w=FIXES[s.wps[Math.min(s.wpIdx,s.wps.length-1)]];
+    if(w){ const [wx,wy]=toPx(w.x,w.y), [sx,sy]=toPx(s.x,s.y);
+      ctx.strokeStyle="#4dd0e1"; ctx.setLineDash([3,5]);
+      ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(wx,wy); ctx.stroke(); ctx.setLineDash([]); }
+  }
+  // Aircraft
+  for(const ac of aircraft){
+    const [x,y]=toPx(ac.x,ac.y);
+    ctx.save(); ctx.translate(x,y); ctx.rotate(rad(ac.hdg));
+    ctx.fillStyle = ac.alert==="warning" ? "#ff5252" : ac.alert==="caution" ? "#ffb300" : "#eaf7ec";
+    ctx.beginPath(); ctx.moveTo(0,-7); ctx.lineTo(5,6); ctx.lineTo(0,3); ctx.lineTo(-5,6); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    if(ac.alert){ // shape marker: alerts are never carried by color alone
+      ctx.fillStyle = ac.alert==="warning" ? "#ff5252" : "#ffb300";
+      ctx.font="bold 13px ui-monospace,monospace";
+      ctx.fillText(ac.alert==="warning" ? "■" : "▲", x+9, y-8);
+    }
+    if(s && ac.id===s.id){ ctx.strokeStyle="#4dd0e1"; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(x,y,13,0,Math.PI*2); ctx.stroke(); ctx.lineWidth=1; }
+    // Data block
+    ctx.fillStyle = (s&&ac.id===s.id) ? "#4dd0e1" : "#cfe8d2";
+    ctx.font="11px ui-monospace,monospace";
+    const a3=String(Math.round(ac.alt/100)).padStart(3,"0");
+    const t3=String(Math.round(ac.tAlt/100)).padStart(3,"0");
+    ctx.fillText(ac.cs, x+10, y+2);
+    ctx.fillText(a3+(ac.tAlt!==Math.round(ac.alt/100)*100?"→"+t3:"")+" "+Math.round(ac.spd/10), x+10, y+14);
+  }
+}
+// ---------- Panels ----------
+function phaseText(ac){
+  return {ARR:"Arrival", FINAL:"On final 22L", HOLD:"Holding at HANBL", MISSED:"Missed approach",
+          DEP: ac.clearedTO?"Departing":"Awaiting takeoff clearance", CLIMB:"Departing",
+          ROLL:"Rolling out 22L"}[ac.phase] || ac.phase;
+}
+function refreshPanels(){
+  $("sc-land").textContent=score.land; $("sc-dep").textContent=score.dep;
+  $("sc-hand").textContent=score.land+score.dep; $("sc-loss").textContent=score.loss;
+  $("sc-scope").textContent=aircraft.length;
+  const hh=String(Math.floor(simMinutes/60)%24).padStart(2,"0"),
+        mm=String(Math.floor(simMinutes)%60).padStart(2,"0"),
+        ss=String(Math.floor((simMinutes%1)*60)).padStart(2,"0");
+  $("zclock").textContent=`${hh}:${mm}:${ss}Z`;
+  $("lclock").textContent=new Date().toLocaleTimeString("en-US",{hour12:false,timeZone:"America/Detroit"});
+  // Alerts
+  const ul=$("alerts"); ul.innerHTML="";
+  const alerted=aircraft.filter(a=>a.alert);
+  if(!alerted.length){ ul.innerHTML='<li class="none">No alerts.</li>'; }
+  else {
+    const pairs=new Set();
+    for(let i=0;i<aircraft.length;i++) for(let j=i+1;j<aircraft.length;j++){
+      const a=aircraft[i],b=aircraft[j];
+      if(a.alert&&b.alert&&dist(a,b)<6){
+        const k=[a.cs,b.cs].sort().join("/");
+        if(pairs.has(k)) continue; pairs.add(k);
+        const warn=a.alert==="warning"||b.alert==="warning";
+        const li=document.createElement("li");
+        li.className=warn?"warning":"caution";
+        li.textContent=(warn?"■ CONFLICT — ":"▲ CAUTION — ")+a.cs+" / "+b.cs+
+          " · "+dist(a,b).toFixed(1)+" NM · "+Math.round(Math.abs(a.alt-b.alt))+" ft";
+        ul.appendChild(li);
+      }
+    }
+    if(!ul.children.length) ul.innerHTML='<li class="none">No alerts.</li>';
+  }
+  // Strips
+  const st=$("strips"); st.innerHTML="";
+  for(const ac of aircraft){
+    const li=document.createElement("li");
+    if(ac.id===selectedId) li.className="sel";
+    if(ac.alert) li.classList.add(ac.alert);
+    const clr = ac.phase==="DEP" ? (ac.clearedTO?"TO ✓":"TO —") :
+      (ac.clearedLand?"LAND ✓":ac.clearedApch?"APCH ✓":"");
+    li.innerHTML="";
+    const l1=document.createElement("div");
+    l1.innerHTML=`<b></b> <span class="st"></span>`;
+    l1.querySelector("b").textContent=ac.cs+" · "+ac.type;
+    l1.querySelector(".st").textContent=phaseText(ac);
+    const l2=document.createElement("div"); l2.className="st";
+    l2.textContent=`ALT ${Math.round(ac.alt)} → ${Math.round(ac.tAlt)} · SPD ${Math.round(ac.spd)} · HDG ${String(Math.round(ac.hdg)).padStart(3,"0")} · ${clr}`;
+    li.append(l1,l2);
+    li.addEventListener("click",()=>selectAc(ac.id));
+    st.appendChild(li);
+  }
+  // Selected panel
+  const ac=sel();
+  $("sel-none").hidden=!!ac; $("sel-body").hidden=!ac;
+  if(ac){
+    $("sel-name").textContent=ac.cs+" — "+ac.name+" "+ac.num;
+    $("sel-data").innerHTML="";
+    const rows=[
+      ["Phase", phaseText(ac)],
+      ["Altitude", Math.round(ac.alt)+" ft → assigned "+Math.round(ac.phase==="DEP"&&!ac.clearedTO?ac.depAlt:ac.tAlt)+" ft"],
+      ["Speed", Math.round(ac.spd)+" kt → "+Math.round(ac.tSpd)+" kt"],
+      ["Heading", String(Math.round(ac.hdg)).padStart(3,"0")+"°"+(ac.mode==="HDG"?" → vector "+ac.tHdg+"°":" (own navigation)")],
+      ["Route", ac.wps.length? ac.wps.slice(ac.wpIdx).join(" → ") : "—"],
+      ["Clearances", [ac.clearedApch?"approach":null, ac.clearedLand?"land":null, ac.clearedTO?"takeoff":null].filter(Boolean).join(", ")||"none"]
+    ];
+    for(const [k,v] of rows){
+      const d=document.createElement("div");
+      const b=document.createElement("b"); b.textContent=k+": ";
+      d.append(b, document.createTextNode(v)); $("sel-data").appendChild(d);
+    }
+    $("btn-apch").disabled = !(ac.phase==="ARR"||ac.phase==="HOLD"||ac.phase==="MISSED") || ac.clearedApch;
+    $("btn-land").disabled = !(ac.phase==="ARR"||ac.phase==="FINAL"||ac.phase==="HOLD") || ac.clearedLand;
+    $("btn-takeoff").disabled = !(ac.phase==="DEP"&&!ac.clearedTO);
+  }
+}
+function selectAc(id){
+  selectedId=id;
+  const ac=sel(); if(!ac) return;
+  $("in-alt").value = ac.phase==="DEP"&&!ac.clearedTO ? ac.depAlt : (ac.tAlt||3000);
+  $("in-hdg").value = Math.round(ac.hdg);
+  $("in-spd").value = ac.tSpd||210;
+  refreshPanels();
+}
+// ---------- Main loop ----------
+let lastT=performance.now();
+function loop(now){
+  const realDt=(now-lastT)/1000; lastT=now;
+  if(started && !paused){
+    let dt=Math.min(realDt,0.1)*rate;
+    simMinutes += dt/60;
+    spawnArrT-=dt; spawnDepT-=dt; metarT-=dt;
+    if(spawnArrT<=0 && aircraft.length<12){ spawnArrival(); spawnArrT=22+Math.random()*18; }
+    if(spawnDepT<=0 && aircraft.length<12){ spawnDeparture(); spawnDepT=38+Math.random()*26; }
+    if(metarT<=0){ genMetar(); metarT=300; }
+    for(const ac of aircraft) stepAircraft(ac, dt);
+    aircraft = aircraft.filter(a=>!a.done);
+    if(selectedId && !sel()) selectedId=null;
+    checkSeparation();
+    uiT-=dt; if(uiT<=0){ refreshPanels(); uiT=0.25; }
+  }
+  draw();
+  requestAnimationFrame(loop);
+}
+// ---------- Wiring ----------
+function setPaused(p){ paused=p; $("btn-pause").textContent=paused?"Resume":"Pause"; }
+$("btn-pause").addEventListener("click",()=>setPaused(!paused));
+$("btn-rate").addEventListener("click",()=>{
+  rate = rate===1?2: rate===2?4: rate===4?0.5:1;
+  $("btn-rate").textContent="Rate "+rate+"×";
+});
+$("btn-restart").addEventListener("click",()=>{
+  aircraft=[]; pairState={}; score={land:0,dep:0,loss:0}; selectedId=null;
+  spawnArrT=1; spawnDepT=6; $("log").innerHTML="";
+  sys("Frequency reset. Traffic respawning."); refreshPanels();
+});
+$("btn-start").addEventListener("click",()=>{
+  started=true; setPaused(false); $("start-overlay").style.display="none";
+  sys("You have the watch. Detroit Approach/Tower, simulation.");
+  spawnArrival(); spawnDeparture(); refreshPanels();
+});
+$("btn-alt").addEventListener("click",issueAlt);
+$("btn-hdg").addEventListener("click",issueHdg);
+$("btn-resume").addEventListener("click",issueResume);
+$("btn-spd").addEventListener("click",issueSpd);
+$("btn-fix").addEventListener("click",issueFix);
+$("btn-apch").addEventListener("click",issueApch);
+$("btn-land").addEventListener("click",issueLand);
+$("btn-takeoff").addEventListener("click",issueTakeoff);
+cv.addEventListener("click",ev=>{
+  const r=cv.getBoundingClientRect();
+  const px=(ev.clientX-r.left)*(cv.width/r.width), py=(ev.clientY-r.top)*(cv.height/r.height);
+  const nm={ x:(px-cv.width/2)/(cv.width/2/RANGE), y:-(py-cv.height/2)/(cv.height/2/RANGE) };
+  let best=null,bd=2.4;
+  for(const ac of aircraft){ const d=dist(ac,nm); if(d<bd){bd=d;best=ac;} }
+  if(best) selectAc(best.id);
+});
+document.addEventListener("keydown",ev=>{
+  if(/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return;
+  const k=ev.key.toLowerCase();
+  if(k==="tab"){ ev.preventDefault(); if(aircraft.length){
+    const i=aircraft.findIndex(a=>a.id===selectedId);
+    selectAc(aircraft[(i+1)%aircraft.length].id); } }
+  else if(k==="a") issueApch();
+  else if(k==="l") issueLand();
+  else if(k==="t") issueTakeoff();
+  else if(k==="p") setPaused(!paused);
+  else if(k==="+"||k==="=") $("btn-rate").click();
+  else if(k==="-") { rate = rate===0.5?4: rate===4?2: rate===2?1:0.5; $("btn-rate").textContent="Rate "+rate+"×"; }
+});
+// Init
+(function init(){
+  const fixSel=$("in-fix");
+  for(const name of Object.keys(FIXES)){
+    const o=document.createElement("option"); o.value=name; o.textContent=name; fixSel.appendChild(o);
+  }
+  fixSel.value="HANBL";
+  const chips=$("alt-chips");
+  for(const v of [11000,9000,7000,5000,3000,2300]){
+    const b=document.createElement("button"); b.type="button"; b.textContent=v.toLocaleString();
+    b.addEventListener("click",()=>{ $("in-alt").value=v; issueAlt(); });
+    chips.appendChild(b);
+  }
+  genMetar(); refreshPanels();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
