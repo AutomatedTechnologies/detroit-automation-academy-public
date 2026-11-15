@@ -121,12 +121,20 @@ def main():
     now = time.time()
     aircraft, sources = [], []
 
-    try:
-        aircraft = from_adsblol(fetch_json(ADSBLOL_URL), now)
-        sources.append("adsb.lol")
-        print(f"adsb.lol: {len(aircraft)} airborne in {RADIUS_NM} NM")
-    except Exception as e:  # noqa: BLE001 - fallback path is the point
-        print(f"adsb.lol FAILED: {type(e).__name__}: {str(e)[:200]}")
+    # adsb.lol intermittently refuses shared datacenter egress IPs
+    # (observed ~half of GitHub Actions cycles, 2026-11-15); retry with
+    # backoff before falling back to OpenSky.
+    for attempt in range(3):
+        try:
+            aircraft = from_adsblol(fetch_json(ADSBLOL_URL), now)
+            sources.append("adsb.lol")
+            print(f"adsb.lol: {len(aircraft)} airborne in {RADIUS_NM} NM (attempt {attempt + 1})")
+            break
+        except Exception as e:  # noqa: BLE001 - fallback path is the point
+            print(f"adsb.lol attempt {attempt + 1} FAILED: {type(e).__name__}: {str(e)[:200]}")
+            aircraft = []
+            if attempt < 2:
+                time.sleep(15)
 
     if len(aircraft) < 5:
         try:
