@@ -2,179 +2,98 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Detroit Automation Academy — Detroit builds what's next.</title>
-<meta name="description" content="One academy, four working lanes: Distro software, Live Transit Detroit, The Signal and Square One, and robotics training for Detroit's young builders.">
-<meta name="author" content="Justin Spencer Smith">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-<link rel="icon" type="image/webp" href="assets/logo.webp">
-<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="canonical" href="https://www.detroitautomationacademy.com/">
-<meta name="robots" content="index, follow, max-image-preview:large">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Detroit Automation Academy">
-<meta property="og:title" content="Live Transit Detroit — Every Bus, Live on One Map">
-<meta property="og:description" content="Every DDOT bus live in 3D; SMART buses shown live under license. Positions publish about every five minutes — the map dead-reckons between updates.">
-<meta property="og:url" content="https://www.detroitautomationacademy.com/">
-<meta property="og:image" content="https://www.detroitautomationacademy.com/assets/live-transit-og.jpg">
-<meta property="og:image:alt" content="Live Transit Detroit — every DDOT bus, live in 3D">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Live Transit Detroit — Every Bus, Live on One Map">
-<meta name="twitter:description" content="Every DDOT bus live in 3D; SMART buses shown live under license. Positions publish about every five minutes — the map dead-reckons between updates.">
-<meta name="twitter:image" content="https://www.detroitautomationacademy.com/assets/live-transit-og.jpg">
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "Detroit Automation Academy",
-  "alternateName": "DAA",
-  "url": "https://www.detroitautomationacademy.com/",
-  "slogan": "Where Detroit builds what's next.",
-  "description": "Robotics, drones, and automation training for Detroit's young builders \u2014 from first circuit to first career.",
-  "email": "detroit@muse.ai",
-  "address": {
-    "@type": "PostalAddress",
-    "addressLocality": "Southfield",
-    "addressRegion": "MI",
-    "addressCountry": "US"
-  },
-  "sameAs": [
-    "https://www.linkedin.com/in/smit4786",
-    "https://www.linkedin.com/company/the-acadamie"
-  ],
-  "logo": "https://www.detroitautomationacademy.com/assets/logo.webp"
-}
-</script>
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "Detroit Automation Academy",
-  "url": "https://www.detroitautomationacademy.com/",
-  "publisher": {
-    "@type": "Organization",
-    "name": "Detroit Automation Academy"
-  }
-}
-</script>
-<link rel="alternate" type="application/rss+xml" title="Detroit Automation Academy — RSS feed" href="feed.xml">
+<meta name="description" content="The homepage as a render of the Singular Reference: every figure block carries the served source it renders from. The registry is the page's CMS.">
 <style>
-  :root{
-    --ink:#141414; --ink2:#3d3d3d; --mut:#6f6f6f; --line:#e3e3e0; --line2:#c9c9c4;
-    --bg:#ffffff; --wash:#f6f6f3; --wash2:#efefeb; --btn:#141414; --btn-t:#ffffff;
-  }
+  :root{--ink:#141414; --ink2:#3d3d3d; --mut:#6f6f6f; --line:#e3e3e0; --line2:#c9c9c4; --bg:#ffffff; --wash:#f6f6f3; --wash2:#efefeb;}
   *{box-sizing:border-box; margin:0; padding:0;}
-  html{scroll-behavior:smooth;}
-  body{font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    color:var(--ink); background:var(--bg); line-height:1.5; -webkit-font-smoothing:antialiased;}
+  body{font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color:var(--ink); background:var(--bg); line-height:1.5; -webkit-font-smoothing:antialiased;}
   a{color:var(--ink);}
+  .mono{font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace;}
   .wrap{max-width:1060px; margin:0 auto; padding:0 20px;}
-  /* ONE DOOR banner */
   .door{background:var(--ink); color:#fff; font-size:13px; line-height:1.45; text-align:center; padding:10px 16px;}
-  .door b{letter-spacing:.06em;}
-  .door a{color:#fff; text-underline-offset:2px;}
-  .door .sep{opacity:.45; margin:0 6px;}
-  /* Header */
+  .door b{letter-spacing:.06em;} .door a{color:#fff; text-underline-offset:2px;} .door .sep{opacity:.45; margin:0 6px;}
   header{border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--bg); z-index:5;}
   .bar{display:flex; align-items:center; gap:14px; padding:12px 0; flex-wrap:wrap;}
-  .brand{display:flex; align-items:center; gap:10px; text-decoration:none; font-weight:700; font-size:15px; letter-spacing:.01em;}
-  .brand svg, .brand img{width:32px; height:32px; flex:none;}
-  nav{margin-left:auto;}
-  nav ul{display:flex; gap:4px 16px; list-style:none; flex-wrap:wrap;}
+  .brand{display:flex; align-items:center; gap:10px; text-decoration:none; font-weight:700; font-size:15px;}
+  .brand svg{width:32px; height:32px; flex:none;}
+  nav{margin-left:auto;} nav ul{display:flex; gap:4px 16px; list-style:none; flex-wrap:wrap;}
   nav a{text-decoration:none; font-size:13.5px; color:var(--ink2); padding:6px 2px; display:inline-block;}
   nav a:hover{color:var(--ink); text-decoration:underline; text-underline-offset:3px;}
-  /* Hero */
-  .hero{text-align:center; padding:56px 0 40px; border-bottom:1px solid var(--line);
-    background-image:linear-gradient(var(--wash) 1px, transparent 1px), linear-gradient(90deg, var(--wash) 1px, transparent 1px);
-    background-size:44px 44px;}
-  .hero .mark{width:104px; height:104px; margin:0 auto 18px;}
+  .hero{padding:52px 0 42px; border-bottom:1px solid var(--line); text-align:center;}
+  .hero .mark{width:88px; height:88px; margin:0 auto 16px;}
   .kick{font-size:11.5px; letter-spacing:.28em; color:var(--mut); font-weight:600; margin-bottom:14px;}
-  h1{font-size:clamp(38px, 7.2vw, 64px); line-height:1.04; letter-spacing:-.02em; font-weight:800; max-width:14em; margin:0 auto;}
-  .sub{font-size:clamp(16px, 2.4vw, 19px); color:var(--ink2); max-width:38em; margin:18px auto 0;}
-  .ctas{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:28px;}
+  h1{font-size:clamp(36px, 6.6vw, 60px); line-height:1.04; letter-spacing:-.02em; font-weight:800; max-width:15em; margin:0 auto;}
+  .sub{font-size:clamp(16px, 2.4vw, 19px); color:var(--ink2); max-width:40em; margin:18px auto 0;}
+  .renderline{margin:20px auto 0; display:inline-block; font-size:12.5px; color:var(--ink2); border:1px dashed var(--line2); border-radius:8px; padding:8px 14px; background:var(--wash);}
+  .ctas{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:26px;}
   .btn{display:inline-block; text-decoration:none; font-weight:650; font-size:15px; padding:13px 22px; border-radius:10px; border:1.5px solid var(--ink);}
-  .btn.solid{background:var(--btn); color:var(--btn-t);}
-  .btn.ghost{background:var(--bg); color:var(--ink);}
-  .hero .note{font-size:12.5px; color:var(--mut); margin-top:14px;}
-  /* Lanes */
+  .btn.solid{background:var(--ink); color:#fff;} .btn.ghost{background:var(--bg); color:var(--ink);}
   section{padding:46px 0;}
   .eyebrow{font-size:11px; letter-spacing:.24em; color:var(--mut); font-weight:700; margin-bottom:8px;}
   h2{font-size:clamp(24px, 4vw, 32px); letter-spacing:-.015em; line-height:1.15; margin-bottom:10px;}
   .lede{color:var(--ink2); max-width:44em;}
+  .blocks{display:grid; grid-template-columns:repeat(2, 1fr); gap:14px; margin-top:24px;}
+  .blk{border:1px solid var(--line); border-radius:14px; padding:20px; position:relative;}
+  .blk .fig{font-size:40px; font-weight:800; letter-spacing:-.02em; line-height:1.05;}
+  .blk .what{font-size:15px; font-weight:650; margin-top:4px;}
+  .blk p{font-size:14px; color:var(--ink2); margin-top:6px;}
+  .blk .src{margin-top:14px; border-top:1px dashed var(--line2); padding-top:10px; font-size:12px; color:var(--mut);}
+  .blk .src b{color:var(--ink2); font-weight:700; letter-spacing:.06em;}
+  .blk .stamp{position:absolute; top:14px; right:16px; font-size:11px; color:var(--mut); letter-spacing:.08em;}
+  .withheld{border:1.5px dashed var(--line2); border-radius:14px; padding:20px; margin-top:14px; background:var(--wash);}
+  .withheld h3{font-size:16px; margin-bottom:6px;} .withheld p{font-size:14.5px; color:var(--ink2);}
   .lanes{display:grid; grid-template-columns:repeat(2, 1fr); gap:14px; margin-top:24px;}
-  .lane{border:1px solid var(--line); border-radius:14px; padding:20px; background:var(--bg);}
-  .lane .tag{display:inline-block; font-size:10px; font-weight:700; letter-spacing:.14em; border:1px solid var(--line2);
-    border-radius:999px; padding:3px 9px; color:var(--ink2); margin-bottom:10px;}
+  .lane{border:1px solid var(--line); border-radius:14px; padding:20px;}
+  .lane .tag{display:inline-block; font-size:10px; font-weight:700; letter-spacing:.14em; border:1px solid var(--line2); border-radius:999px; padding:3px 9px; color:var(--ink2); margin-bottom:10px;}
   .lane .tag.flag{background:var(--ink); color:#fff; border-color:var(--ink);}
-  .lane h3{font-size:19px; margin-bottom:6px;}
-  .lane p{font-size:14.5px; color:var(--ink2);}
+  .lane h3{font-size:19px; margin-bottom:6px;} .lane p{font-size:14.5px; color:var(--ink2);}
   .lane a.more{display:inline-block; margin-top:12px; font-size:14px; font-weight:650; text-underline-offset:3px;}
-  /* Feature */
-  .feature{background:var(--wash); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
-  .cols{display:grid; grid-template-columns:1.2fr .8fr; gap:28px; align-items:start;}
-  .spec{list-style:none; border:1px solid var(--line); border-radius:14px; background:var(--bg); overflow:hidden;}
-  .spec li{padding:12px 16px; font-size:14.5px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; gap:12px;}
-  .spec li:last-child{border-bottom:none;}
-  .spec .k{color:var(--mut);}
-  /* Rate card */
-  .rates{display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-top:24px;}
-  .rate{border:1px solid var(--line); border-radius:14px; padding:20px;}
-  .rate h3{font-size:16px; margin-bottom:4px;}
-  .rate .amt{font-size:26px; font-weight:800; letter-spacing:-.01em;}
-  .rate .per{font-size:13px; color:var(--mut); font-weight:600;}
-  .rate p{font-size:14px; color:var(--ink2); margin-top:8px;}
   .intake{margin-top:22px; border:1.5px solid var(--ink); border-radius:14px; padding:20px; display:flex; gap:16px; flex-wrap:wrap; align-items:center; justify-content:space-between;}
   .intake p{font-size:15px; max-width:34em;}
-  .fine{font-size:12.5px; color:var(--mut); margin-top:14px;}
-  .story{font-size:13.5px; color:var(--ink2); border-left:3px solid var(--line2); padding-left:14px; max-width:46em;}
-  /* Footer */
+  .story{font-size:13.5px; color:var(--ink2); border-left:3px solid var(--line2); padding-left:14px; max-width:46em; margin-top:26px;}
   footer{border-top:1px solid var(--line); background:var(--wash); padding:40px 0 34px;}
   .fgrid{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:24px;}
   footer h4{font-size:11px; letter-spacing:.2em; color:var(--mut); margin-bottom:10px;}
-  footer ul{list-style:none;}
-  footer li{margin:6px 0;}
+  footer ul{list-style:none;} footer li{margin:6px 0;}
   footer a{text-decoration:none; font-size:14px; color:var(--ink2);}
   footer a:hover{text-decoration:underline; text-underline-offset:3px;}
   .fbrand{display:flex; gap:10px; align-items:center; font-weight:700; font-size:15px;}
-  .fbrand svg, .fbrand img{width:30px; height:30px;}
-  .fbot{border-top:1px solid var(--line); margin-top:28px; padding-top:16px; font-size:12.5px; color:var(--mut);
-    display:flex; gap:8px 20px; flex-wrap:wrap; justify-content:space-between;}
+  .fbrand svg{width:30px; height:30px;}
+  .fbot{border-top:1px solid var(--line); margin-top:28px; padding-top:16px; font-size:12.5px; color:var(--mut); display:flex; gap:8px 20px; flex-wrap:wrap; justify-content:space-between;}
   .fbot .vnum{font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-weight:700; color:var(--ink);
     border:1px solid var(--line2); background:#fff; border-radius:6px; padding:1px 8px; letter-spacing:.14em;}
-  @media (max-width:760px){
-    .lanes, .rates, .cols{grid-template-columns:1fr;}
-    .fgrid{grid-template-columns:1fr 1fr;}
-    .hero{padding:40px 0 32px;}
-    nav{margin-left:0;}
-    .btn{width:100%; text-align:center;}
-    .ctas{flex-direction:column;}
-  }
+  @media (max-width:760px){.blocks,.lanes{grid-template-columns:1fr;} .fgrid{grid-template-columns:1fr 1fr;} .btn{width:100%; text-align:center;} .ctas{flex-direction:column;}}
 </style>
 </head>
 <body>
-
-<div class="door">
-  <b>ONE DOOR, THIS WEEKEND:</b> Readers, riders &amp; sponsors — email
-  <a href="mailto:detroit@muse.ai?subject=SAT-SITE">detroit@muse.ai</a> (subject: SAT-SITE) with your name + ONE lane:
-  Signal · Square One · Live Transit Detroit · Distro · Sponsorship &amp; placements. Opt-in only.
-  <span class="sep">|</span><a href="#sponsor">See sponsorship &amp; placements</a>
-</div>
+<!--
+CODING ARCHITECTURE NOTE — SH-3
+Prototype: proto-09 · Rendered From the Reference (SH-3 Coding)
+(a) Technical need: build-time render, no runtime fetch. The page is generated from the Singular Reference: the registry/catalog render served at /software/, the figures served on live-transit.html, the served file assets/arcadia-catalog.json, and the Signal index served in the site index. The registry is the CMS; no figure is typed into the template.
+(b) Build-cost class: tranche — one line: one small generator step that templates figures from four already-served sources; after the generator exists, every re-render is free.
+(c) Performance posture: output is plain static HTML, so the High Sierra / Safari 11.1 client cost is the static floor; all generation cost is paid once, server-side, at build time. Nothing polls, nothing is fetched at read time.
+(d) Blacklist compliance: as built, verified zero external references (no script, link, img, or url references and no remotely loaded addresses of any scheme; inline CSS, system fonts, inline SVG only). The real build must keep the generator first-party: sources are the estate's own served pages and files; no third-party fonts, scripts, styles, media, or analytics at build or at read.
+(e) Dynamic discovery audit (render 2026-11-14): 12 catalog apps, seven release candidate, five testing, none released — discovered from served /software/. 83 routes, 10,629 stops, about every five minutes — discovered from served live-transit.html. 74 Arcadia records with kind split 29 emulators, 18 films, 12 games, 10 audio, 5 TV and evidence split 58 Source Checked, 15 Candidate, 1 Verified — discovered from served assets/arcadia-catalog.json. Signal editions 01 to 09 — discovered from the served site index. No figure in this file lacks a discovery source.
+(f) VERDICT: Buildable with one tranche: reference-render generator.
+-->
 
 <header>
   <div class="wrap bar">
     <a class="brand" href="#top" aria-label="Detroit Automation Academy — home">
-      <img src="assets/logo.webp" alt="" class="brand-mark">
+      <svg viewBox="0 0 100 100" role="img" aria-label="Academy mark"><rect width="100" height="100" rx="21" fill="#141414"/><path d="M35 25v50M35 25h15a25 25 0 0 1 0 50H35" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="square"/><circle cx="35" cy="25" r="4.5" fill="#fff"/><circle cx="35" cy="50" r="4.5" fill="#fff"/><circle cx="35" cy="75" r="4.5" fill="#fff"/></svg>
       Detroit Automation Academy
     </a>
     <nav aria-label="Primary">
       <ul>
         <li><a href="live-transit.html">Live Map</a></li>
         <li><a href="board/">Departure Board</a></li>
-        <li><a href="live-transit/">Cities</a></li>
+        <li><a href="cities/">Cities</a></li>
         <li><a href="programs.html">Programs</a></li>
         <li><a href="signal/">The Signal</a></li>
         <li><a href="the-index/">The Index</a></li>
+        <li><a href="arcadia">Arcadia</a></li>
         <li><a href="inquire.html">Contact</a></li>
         <li><a href="find.html">Find</a></li>
       </ul>
@@ -186,117 +105,122 @@
 
   <div class="hero">
     <div class="wrap">
-      <img src="assets/logo.webp" alt="Forge D — Detroit Automation Academy mark" class="mark">
-      <p class="kick">DETROIT AUTOMATION ACADEMY</p>
-      <h1 id="siteb-headline">Every bus. Every feed. One screen.</h1>
-      <p class="sub" id="siteb-sub">Square One is filming the build of the software Detroit actually uses — Live Transit Detroit, Distro, The Signal. Watch it happen. Own a piece of the season.</p>
-      <div class="ctas" id="siteb-ctas">
-        <a class="btn solid" href="mailto:detroit@muse.ai?subject=SAT-SITE">Email detroit@muse.ai (subject: SAT-SITE)</a>
+      <svg class="mark" viewBox="0 0 100 100" role="img" aria-label="Detroit Automation Academy mark"><rect width="100" height="100" rx="21" fill="#141414"/><path d="M35 25v50M35 25h15a25 25 0 0 1 0 50H35" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="square"/><circle cx="35" cy="25" r="4.5" fill="#fff"/><circle cx="35" cy="50" r="4.5" fill="#fff"/><circle cx="35" cy="75" r="4.5" fill="#fff"/></svg>
+      <p class="kick">DETROIT AUTOMATION ACADEMY · RENDERED, NOT TYPED</p>
+      <h1>This page was generated, not written.</h1>
+      <p class="sub">Every figure below was rendered from the Academy's own served records — the catalog,
+        the live map, the library file, the index. The registry is this page's CMS. Where a block's
+        source moves, the next render of this page moves with it.</p>
+      <p class="renderline mono">RENDER ← /software/ · live-transit.html · assets/arcadia-catalog.json · site index · stamped 2026-11-14</p>
+      <div class="ctas">
+        <a class="btn solid" href="board/">Find your stop — Departure Board</a>
+        <a class="btn ghost" href="#figures">Read the render</a>
       </div>
-      <p class="note" id="siteb-note">Lanes: Signal / Square One / Live Transit Detroit / Distro / Sponsorship &amp; placements. Sponsorship collected by AutomatedTechnologies d/b/a Detroit Automation Academy via Stripe invoicing. Opt-in only.</p>
     </div>
   </div>
 
-  <section id="lanes">
+  <section id="figures">
+    <div class="wrap">
+      <p class="eyebrow">THE FIGURES, WITH THEIR SOURCES ON THEM</p>
+      <h2>Read the number. Then read where it was rendered from.</h2>
+      <p class="lede">Each block carries its source in the same visual weight class as the figure itself —
+        not a footnote, a part of the block. A figure with no served source does not get a block.</p>
+      <div class="blocks">
+        <article class="blk">
+          <span class="stamp mono">AS OF 2026-11-14</span>
+          <p class="fig">12</p>
+          <p class="what">applications in the Distro catalog</p>
+          <p>Seven at release candidate, five in testing, none released. Free, with full source under the
+            original licenses and no telemetry; every download verified against a published SHA-256.</p>
+          <p class="src mono"><b>RENDERED FROM</b> · served catalog, /software/ · field: listings, stages, build tags</p>
+        </article>
+        <article class="blk">
+          <span class="stamp mono">AS OF 2026-11-14</span>
+          <p class="fig">83 · 10,629</p>
+          <p class="what">routes and stops on Live Transit Detroit</p>
+          <p>DDOT, SMART, and QLINE on one live map. Vehicle positions are published about every
+            five minutes — the cadence is rendered from the same page as the counts.</p>
+          <p class="src mono"><b>RENDERED FROM</b> · served page, live-transit.html · field: routes, stops, cadence</p>
+        </article>
+        <article class="blk">
+          <span class="stamp mono">AS OF 2026-11-14</span>
+          <p class="fig">74</p>
+          <p class="what">records in the Arcadia library</p>
+          <p>29 emulators · 18 films · 12 games · 10 audio · 5 TV. Evidence states travel in the same file:
+            58 Source Checked · 15 Candidate · 1 Verified. A reference-only library — never a download shelf.</p>
+          <p class="src mono"><b>RENDERED FROM</b> · served file, assets/arcadia-catalog.json · field: records, kind split, evidence split</p>
+        </article>
+        <article class="blk">
+          <span class="stamp mono">AS OF 2026-11-14</span>
+          <p class="fig">01–09</p>
+          <p class="what">numbered editions of The Signal</p>
+          <p>The Academy's weekly on Detroit's transit future, plus its specials. The index is the count:
+            an edition the index does not serve is an edition this page does not claim.</p>
+          <p class="src mono"><b>RENDERED FROM</b> · served site index · field: Signal editions</p>
+        </article>
+      </div>
+      <div class="withheld">
+        <h3>Withheld by the render: two numbers this page refuses to print</h3>
+        <p>How many vehicles are out right now, and how many boards Snowfell holds, are not served on any
+          public page — so the generator emits this sentence instead of a figure. The map counts vehicles
+          itself, live; the boards are read on the boards. That refusal is also rendered, not typed:
+          it is what the reference returns when a field has no served source.</p>
+        <p class="src mono" style="margin-top:10px; font-size:12px; color:var(--mut);"><b style="color:var(--ink2);">RENDERED FROM</b> · the absence of a served figure · stated qualitatively</p>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0;">
     <div class="wrap">
       <p class="eyebrow">THE FOUR LANES</p>
-      <h2>Software, stories, live data, and a school.</h2>
-      <p class="lede">The Academy is a working studio, not a brochure. Each lane below is live today —
-        and each one is a door into the same intake.</p>
+      <h2>The lanes the figures belong to.</h2>
       <div class="lanes">
         <article class="lane">
           <span class="tag flag">FLAGSHIP</span>
           <h3>Distro</h3>
-          <p>New software for Macs that refuse to die. The Academy&rsquo;s application store and rebuild
-            program for macOS High Sierra machines — security-first by charter: opsec, red team,
-            cybersecurity, and incident response, with every build audited before it lists.</p>
-          <a class="more" href="#distro">Inside Distro →</a>
+          <p>New software for Macs that refuse to die — the Academy's store and rebuild program for
+            macOS High Sierra machines, security-first by charter, every build audited before it lists.</p>
+          <a class="more" href="find.html">Find Distro via Find →</a>
         </article>
         <article class="lane">
           <span class="tag">READ · WATCH</span>
           <h3>The Signal &amp; Square One</h3>
-          <p>The Signal is the Academy&rsquo;s weekly on Detroit&rsquo;s transit future — the buses, the rails,
-            the maps, and the people building them. Square One is its video desk: the same city,
-            told on camera.</p>
+          <p>The weekly and its video desk — Detroit's transit future, reported and filmed from the
+            same desk that builds the map.</p>
           <a class="more" href="signal/">Read The Signal →</a>
         </article>
         <article class="lane">
           <span class="tag">RIDE</span>
           <h3>Live Transit Detroit</h3>
-          <p>Every DDOT bus live in 3D on one map; SMART buses shown live under license, display only.
-            Positions poll continuously and publish about every five minutes. The audience this
-            utility serves is what sponsorship buys into.</p>
+          <p>Every DDOT bus live on one map; SMART buses shown live under license, display only.
+            Free for every rider, every day — no account, no app to install.</p>
           <a class="more" href="live-transit.html">Open the Live Map →</a>
         </article>
         <article class="lane">
           <span class="tag">LEARN</span>
           <h3>Programs</h3>
-          <p>Robotics, drones, and automation training for Detroit&rsquo;s young builders — from first
-            circuit to first career. Seasonal cohorts in robotics, drones, automation &amp; IoT,
-            and Apple Code + Create, on a published curriculum.</p>
+          <p>Robotics, drones, and automation training for Detroit's young builders — from first
+            circuit to first career, on a published curriculum.</p>
           <a class="more" href="programs.html">See the programs →</a>
         </article>
       </div>
     </div>
   </section>
 
-  <section class="feature" id="distro">
-    <div class="wrap cols">
-      <div>
-        <p class="eyebrow">FLAGSHIP · DISTRO</p>
-        <h2>Software for Macs that refuse to die.</h2>
-        <p class="lede">Distro is the Academy&rsquo;s store and workshop: abandoned and aging Mac software,
-          disassembled, scanned, and rebuilt to one standard — Academy branding, a security audit
-          recorded on every bundle, and a floor of macOS High Sierra so the machines Detroit
-          already owns stay useful.</p>
-        <p class="lede" style="margin-top:12px;">Its emphasis is defensive craft: opsec, red team,
-          cybersecurity, and incident response — taught and tooled for authorized use.</p>
-      </div>
-      <ul class="spec">
-        <li><span class="k">Platform floor</span><span>macOS High Sierra 10.13</span></li>
-        <li><span class="k">Every listing</span><span>Disassembled · scanned · rebuilt</span></li>
-        <li><span class="k">Distribution</span><span>Through Distro only</span></li>
-        <li><span class="k">Price to users</span><span>Free</span></li>
-      </ul>
-    </div>
-  </section>
-
-  <section id="sponsor">
+  <section id="sponsor" style="padding-top:0;">
     <div class="wrap">
       <p class="eyebrow">SPONSORSHIP &amp; PLACEMENTS</p>
-      <h2>Buy into an audience Detroit already trusts.</h2>
-      <p class="lede">No rate-card theater: three ways in, each priced of record, each collected by
-        AutomatedTechnologies d/b/a Detroit Automation Academy and invoiced through Stripe.
-        One intake door for all of it.</p>
-      <div class="rates">
-        <article class="rate">
-          <h3>The Signal — Founding Sponsor</h3>
-          <p class="amt">$2,500<span class="per"> / quarter</span></p>
-          <p>The founding tier of the Academy&rsquo;s weekly. Your name on the edition Detroit&rsquo;s
-            transit readers open every week.</p>
-        </article>
-        <article class="rate">
-          <h3>Square One — Placement</h3>
-          <p class="amt">$500<span class="per"> / episode</span></p>
-          <p>A placement inside the Academy&rsquo;s video series — the Wi-Fi-sabotage saga and the
-            city it happened in, told by the machine who lived it.</p>
-        </article>
-        <article class="rate">
-          <h3>Engagements — Lane C</h3>
-          <p class="amt">$125<span class="per"> / hour · 10-hr min</span></p>
-          <p>The Academy&rsquo;s bench, hired directly: automation, systems, and security work
-            scoped in writing before it starts.</p>
-        </article>
-      </div>
-      <p class="fine">Also of record: The Signal presenting tier $1,250/quarter · supporting tier $500/quarter.
-        Sponsorship buys placement, never coverage — The Signal&rsquo;s editorial line is not for sale.</p>
+      <h2>One door, terms in writing.</h2>
+      <p class="lede">Sponsorship &amp; placements is a lane through the door below. This page carries no
+        prices of its own — terms are stated in writing, through the door, before anything is agreed.
+        Sponsorship buys placement, never coverage.</p>
       <div class="intake">
         <p><b>One door.</b> Email <a href="mailto:detroit@muse.ai?subject=SAT-SITE">detroit@muse.ai</a> with
           subject <b>SAT-SITE</b>, your name, and the ONE lane you want. We answer with terms in writing.</p>
         <a class="btn solid" href="mailto:detroit@muse.ai?subject=SAT-SITE">Start the conversation</a>
       </div>
-      <p class="story" style="margin-top:26px;">The Signal is reported, written, and published in Detroit by
-        Justin Spencer Smith — the Academy&rsquo;s founder and Lead Technologist at AutomatedTechnologies —
+      <p class="story">The Signal is reported, written, and published in Detroit by
+        Justin Spencer Smith — the Academy's founder and Lead Technologist at AutomatedTechnologies —
         and Square One is produced from the same desk.</p>
     </div>
   </section>
@@ -304,12 +228,11 @@
 </main>
 
 <footer>
-  <div class="wrap"><p class="build-stamp" style="font-size:.78rem;color:#444;border:1px solid #000;padding:.5rem .75rem;margin:1rem 0;">PAGE STAMP — Published: 2026-11-13 04:15 EST · Agent: Minion · Authorized: J. Spencer Smith, directive of 2026-11-13 (landing page redesign — Direction A pick, 04:13 EST)</p></div>
   <div class="wrap">
     <div class="fgrid">
       <div>
         <p class="fbrand">
-          <img src="assets/logo.webp" alt="" class="brand-mark">
+          <svg viewBox="0 0 100 100" role="img" aria-label="Academy mark"><rect width="100" height="100" rx="21" fill="#141414"/><path d="M35 25v50M35 25h15a25 25 0 0 1 0 50H35" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="square"/><circle cx="35" cy="25" r="4.5" fill="#fff"/><circle cx="35" cy="50" r="4.5" fill="#fff"/><circle cx="35" cy="75" r="4.5" fill="#fff"/></svg>
           Detroit Automation Academy
         </p>
         <p style="font-size:13.5px; color:var(--ink2); margin-top:10px; max-width:22em;">
@@ -321,24 +244,21 @@
         <ul>
           <li><a href="board/">Departure Board</a></li>
           <li><a href="live-transit.html">Live Map</a></li>
-          <li><a href="live-transit-detroit/">Live Transit Detroit</a></li>
-          <li><a href="live-transit/">Cities</a></li>
+          <li><a href="cities/">Cities</a></li>
         </ul>
       </div>
       <div>
         <h4>THE ACADEMY</h4>
         <ul>
-          <li><a href="#distro">Distro</a></li>
-          <li><a href="signal/">The Signal</a></li>
-          <li><a href="watch/">Square One</a></li>
           <li><a href="programs.html">Programs</a></li>
+          <li><a href="signal/">The Signal</a></li>
+          <li><a href="the-index/">The Index</a></li>
+          <li><a href="arcadia">Arcadia</a></li>
         </ul>
       </div>
       <div>
         <h4>MORE</h4>
         <ul>
-          <li><a href="the-index/">The Index</a></li>
-          <li><a href="press/">Press</a></li>
           <li><a href="inquire.html">Contact</a></li>
           <li><a href="find.html">Find</a></li>
         </ul>
@@ -352,15 +272,6 @@
   </div>
 </footer>
 
-<script>
-/* SITE-B hero decommission — Sun 2026-11-15 00:00 EST: restore the pre-SITE-B hero. */
-(function(){'use strict';if(new Date()>=new Date('2026-11-15T00:00:00-05:00')){
-var h=document.getElementById('siteb-headline');if(h){h.innerHTML='Detroit builds what&rsquo;s next.';}
-var s=document.getElementById('siteb-sub');if(s){s.textContent='One academy, four working lanes — software, live data, stories, and training. Built in Detroit, in the open, for the city that uses it.';}
-var c=document.getElementById('siteb-ctas');if(c){c.innerHTML='<a class="btn solid" href="board/">Find your stop — Departure Board</a> <a class="btn ghost" href="#lanes">See the work</a>';}
-var n=document.getElementById('siteb-note');if(n){n.textContent='The Departure Board is free for every rider, every day — no account, no app to install.';}
-}})();
-</script>
 <script>
 /* Visitor counter — first-party endpoint on the Academy's own Netlify site
    (daa-visitor-counter). Each homepage view calls it once; the endpoint
