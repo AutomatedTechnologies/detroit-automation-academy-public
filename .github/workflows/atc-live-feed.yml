@@ -1,0 +1,68 @@
+name: ATC live feed (real ADS-B traffic)
+
+# ATC production promotion (2026-11-15): polls real ADS-B traffic around
+# KDTW from keyless public sources (adsb.lol primary, OpenSky fallback —
+# see tools/atc/live_feed.py) and commits atc/live.json, which the /atc/
+# production page consumes same-origin. Deploy is dispatched explicitly
+# with feed_only=true: GITHUB_TOKEN pushes trigger no workflows, and the
+# deploy's data-only fast path covers atc/live.json.
+#
+# Cadence follows the estate feed pattern (feed-collect.yml, Project 30):
+# GitHub's scheduler delivers only a small fraction of frequent crons in
+# this account, so the */15 schedule is a floor/backstop and the cadence
+# owner is the self-dispatch chain below (~3 min per cycle: 150 s dwell +
+# poll/commit/dispatch). Overlap is safe: the concurrency group serializes
+# runs and the commit step no-ops on a byte-identical feed.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: atc-live-feed
+  cancel-in-progress: false
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Poll sources and build atc/live.json
+        run: python3 tools/atc/live_feed.py atc/live.json
+
+      - name: Commit feed if changed
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add atc/live.json
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "feed unchanged; no commit"
+          else
+            git commit -m "ATC live feed $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Dispatch Pages deploy (data-only fast path)
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run deploy-pages.yml --ref main -f feed_only=true
+
+      - name: Chain next poll (cadence owner; cron is only the floor)
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sleep 150
+          gh workflow run atc-live-feed.yml --ref main
