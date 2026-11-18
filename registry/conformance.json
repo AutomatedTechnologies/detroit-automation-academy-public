@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:f20c72eaee20af0cd33ee024b23d55302232289e400553648664abf2a10bce5a",
+    "stateFingerprint": "sha256:16792da8523133b389776a5bd8e269db4df595b342c3396c9cd8fb22f1f2177b",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 11,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-13",
   "counts": {
     "apps": 14,
-    "builds": 53,
+    "builds": 54,
     "catalog_state": 12,
     "audits": 1,
     "findings": 17,
@@ -65,26 +65,26 @@
       "appStatus": "release-candidate",
       "minMacOS": "10.13",
       "tagline": "Move and resize windows with the keyboard, maintained for High Sierra.",
-      "description": "The Academy's maintained build of Spectacle, the keyboard-driven window manager. The inherited Sparkle 1.22/DSA update channel is replaced under the Academy Update Infrastructure Standard (Sparkle 2.9.6, EdDSA, Academy appcast) at packaging. Academy bundle identity and the Academy audit entry are verified in the shipped bundle. The app icon is cut to the amended SDS-3 construction — white tile, ink glyph, no black field; the earlier color-icon gap is closed. Current builds are signed with the Academy's self-signed code-signing identity (CN \"Academy Code Signing (Self-Signed)\"), so each build carries one stable designated requirement — identifier \"com.detroitautomationacademy.spectacle\" and certificate leaf = H\"6b6f0c224d90f67ce4331368e5156f3e02ea182a\" — and a macOS permission grant such as Accessibility stays attached to the app across updates instead of being asked for again on every build. This is not an Apple Developer ID signature and the build is not notarized. Run on the High Sierra rig: the previous build's Accessibility re-prompt after a grant is the defect of record this signed line fixes; the grant-persistence verdict on the signed build is the owner's, at his next sitting. The bundled Sparkle updater stays at 1.22.0 in this candidate; the 2.9.6 + EdDSA step is a packaging-tranche decision.",
+      "description": "The Academy's maintained build of Spectacle, the keyboard-driven window manager. The inherited Sparkle 1.22/DSA update channel is replaced under the Academy Update Infrastructure Standard (Sparkle 2.9.6, EdDSA, Academy appcast) at packaging. Academy bundle identity and the Academy audit entry are verified in the shipped bundle. The app icon is cut to the amended SDS-3 construction — white tile, ink glyph, no black field; the earlier color-icon gap is closed. Current builds are signed with the Academy's self-signed code-signing identity (CN \"Academy Code Signing (Self-Signed)\"), so each build carries one stable designated requirement — identifier \"com.detroitautomationacademy.spectacle\" and certificate leaf = H\"6b6f0c224d90f67ce4331368e5156f3e02ea182a\" — and a macOS permission grant such as Accessibility stays attached to the app across updates instead of being asked for again on every build. Every Mach-O executable in the bundle — including Sparkle's fileop helper, which shipped with an upstream ad-hoc signature in the previous build — is signed with that same identity, and CI deep-verifies the whole bundle (codesign --verify --deep --strict) and asserts the identity on every Mach-O before the build can publish. If Spectacle is launched from outside /Applications or from a translocated path, it now names that install-location problem directly instead of showing the Accessibility prompt, because a grant cannot follow such a copy; the Accessibility check itself is unchanged for a correctly installed copy. This is not an Apple Developer ID signature and the build is not notarized. Run on the High Sierra rig: the previous build's Accessibility re-prompt at every launch is the defect of record this build repairs; the grant-persistence verdict is the owner's, at his next sitting (checklist in Distro files/46). The bundled Sparkle updater stays at 1.22.0 in this candidate; the 2.9.6 + EdDSA step is a packaging-tranche decision.",
       "catalogStatus": "release-candidate",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/spectacle.png",
-      "buildNotes": "Now signed. This build carries the Academy's self-signed code-signing identity with one stable designated requirement, so an Accessibility grant made once stays attached to Spectacle across updates — the previous build asked again on every launch after a grant, and removing that behavior is what this build is for; the owner's grant-persistence verdict on the High Sierra rig is the remaining check. Everything before it carries over: SDS-10 conformance (the build identifier is read from the bundle's own Info.plist at runtime and shown in the About panel and the status-item menu; the standard startup sound plays once at first presentation), LICENSE-ACADEMY.txt + NOTICE.txt bundled (Academy layer only). Signed with a self-signed identity — not an Apple Developer ID signature, and not notarized.",
+      "buildNotes": "Repair build for the Accessibility re-prompt defect: the signed identity from the previous build is unchanged — same designated requirement, so an existing grant's anchor does not move — and now every executable in the bundle, including Sparkle's fileop helper (which previously kept an upstream ad-hoc signature), is signed with the Academy identity and the whole bundle is deep-verified in CI before it can publish. Launched from Downloads or a translocated path, Spectacle now explains that it must live in /Applications instead of asking for Accessibility a grant cannot satisfy. Everything before it carries over: SDS-10 conformance (the build identifier is read from the bundle's own Info.plist at runtime and shown in the About panel and the status-item menu; the standard startup sound plays once at first presentation), LICENSE-ACADEMY.txt + NOTICE.txt bundled (Academy layer only). The owner's grant-persistence verdict on the High Sierra rig (checklist v2, Distro files/46) is the remaining check. Signed with a self-signed identity — not an Apple Developer ID signature, and not notarized.",
       "audits": [],
       "currentBuild": {
-        "tag": "spectacle-test-11",
-        "sizeBytes": 2751248,
-        "sha256": "bec0d73aec88286c3f6fb6732c174b5a9edddfd1346e3d814d44014caeab8d32",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/spectacle/releases/download/spectacle-test-11/Spectacle-test.zip",
+        "tag": "spectacle-test-18",
+        "sizeBytes": 2753551,
+        "sha256": "f110eb06205eaea07374d80fc821c6676532cc82bd0f63fff9e9f445cfd3491e",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/spectacle/releases/download/spectacle-test-18/Spectacle-test.zip",
         "floor": "10.13",
-        "builtAt": "2026-11-14",
-        "releasePublishedAt": "2026-11-14T16:31:17Z",
-        "ciRun": "43615973600",
+        "builtAt": "2026-11-18",
+        "releasePublishedAt": "2026-11-18T14:54:16Z",
+        "ciRun": "44329123570",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule) attested on the shipped artifact's own Info.plist (audit dict all-true, dated 2026-11-10; SDS-10 conformance dict complete on its own schema — Standard SDS-10, Logo / VersionAtStartup / StartupSound / MenuBar true), plus THIS pass (the TCC signing fix, Distro goal files/45): the bundle is signed with the Academy self-signed identity (CN \"Academy Code Signing (Self-Signed)\", cert SHA-256 6A:9E:DC:89:7A:11:1E:75:A0:E7:18:3A:92:B8:8E:DD:07:01:D4:20:D1:67:CF:83:92:6E:C9:BA:D1:0F:C1:12) nested-first by estate CI (run 43615973600, macos-15, x86_64, LSMinimumSystemVersion 10.13); fresh-download verification 2026-11-14: bundle com.detroitautomationacademy.spectacle, CFBundleVersion spectacle-test-11, Contents/_CodeSignature present on app, Sparkle.framework, and Autoupdate.app, thin x86_64 Mach-O with embedded signature superblob whose Requirements blob carries the identifier and the certificate leaf hash 6b6f0c224d90f67ce4331368e5156f3e02ea182a; designated requirement extracted from the shipped bundle: identifier \"com.detroitautomationacademy.spectacle\" and certificate leaf = H\"6b6f0c224d90f67ce4331368e5156f3e02ea182a\"; double-build proof: run 43616151178 (spectacle-test-12, proof only, unregistered) extracted a byte-identical requirement file; startup-sound.wav byte-identical to the SDS-10 master (07a11324...); the app's accessibility trust check is unmodified in source"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) attested on the shipped artifact's own Info.plist (audit dict all-true, dated 2026-11-10; SDS-10 conformance dict complete on its own schema — Standard SDS-10, Logo / VersionAtStartup / StartupSound / MenuBar true), plus THIS pass (the TCC re-prompt repair, Distro goal files/46): the bundle is signed with the Academy self-signed identity (CN \"Academy Code Signing (Self-Signed)\", cert SHA-256 6A:9E:DC:89:7A:11:1E:75:A0:E7:18:3A:92:B8:8E:DD:07:01:D4:20:D1:67:CF:83:92:6E:C9:BA:D1:0F:C1:12) by estate CI (run 44329123570, macos-15-intel, x86_64, LSMinimumSystemVersion 10.13) with loose Mach-O executables discovered dynamically and signed inside-out (fileop included, upstream get-task-allow entitlement stripped) and a CI gate of codesign --verify --deep --strict plus a per-Mach-O Academy-leaf assertion, both green on the runner; fresh-download verification 2026-11-18: bundle com.detroitautomationacademy.spectacle, CFBundleVersion spectacle-test-18, exactly 4 Mach-O files, all carrying the certificate leaf hash 6b6f0c224d90f67ce4331368e5156f3e02ea182a in their Requirements blob with non-empty CMS, fileop entitlements empty, main-app CodeResources 57 files 0 mismatches; designated requirement extracted from the shipped bundle: identifier \"com.detroitautomationacademy.spectacle\" and certificate leaf = H\"6b6f0c224d90f67ce4331368e5156f3e02ea182a\"; double-build proof: run 44329540925 (spectacle-test-19, proof only, unregistered) extracted a byte-identical requirement file and identical signing-verification outputs; startup-sound.wav byte-identical to the SDS-10 master (07a11324...); the app's accessibility trust check is unmodified for correctly installed copies — a launch-path guard (translocation / outside /Applications) now shows an install-location dialog instead of the Accessibility dialog for copies that cannot hold a grant"
         }
       }
     },
