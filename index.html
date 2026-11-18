@@ -75,7 +75,7 @@ Prototype: proto-09 · Rendered From the Reference (SH-3 Coding)
 (b) Build-cost class: tranche — one line: one small generator step that templates figures from four already-served sources; after the generator exists, every re-render is free.
 (c) Performance posture: output is plain static HTML, so the High Sierra / Safari 11.1 client cost is the static floor; all generation cost is paid once, server-side, at build time. Nothing polls, nothing is fetched at read time.
 (d) Blacklist compliance: as built, verified zero external references (no script, link, img, or url references and no remotely loaded addresses of any scheme; inline CSS, system fonts, inline SVG only). The real build must keep the generator first-party: sources are the estate's own served pages and files; no third-party fonts, scripts, styles, media, or analytics at build or at read.
-(e) Dynamic discovery audit (render 2026-11-14): 12 catalog apps, seven release candidate, five testing, none released — discovered from served /software/. 83 routes, 10,629 stops, about every five minutes — discovered from served live-transit.html. 74 Arcadia records with kind split 29 emulators, 18 films, 12 games, 10 audio, 5 TV and evidence split 58 Source Checked, 15 Candidate, 1 Verified — discovered from served assets/arcadia-catalog.json. Signal editions 01 to 09 — discovered from the served site index. No figure in this file lacks a discovery source.
+(e) Dynamic discovery audit (render 2026-11-17): 12 catalog apps, seven release candidate, five testing, none released — discovered from served /software/. 83 routes, 10,629 stops, about every five minutes — discovered from served live-transit.html. 74 Arcadia records with kind split 29 emulators, 18 films, 12 games, 10 audio, 5 TV and evidence split 58 Source Checked, 15 Candidate, 1 Verified — discovered from served assets/arcadia-catalog.json. Signal editions 01 to 09 — discovered from the served site index. No figure in this file lacks a discovery source.
 (f) VERDICT: Buildable with one tranche: reference-render generator.
 -->
 
@@ -111,7 +111,7 @@ Prototype: proto-09 · Rendered From the Reference (SH-3 Coding)
       <p class="sub">Every figure below was rendered from the Academy's own served records — the catalog,
         the live map, the library file, the index. The registry is this page's CMS. Where a block's
         source moves, the next render of this page moves with it.</p>
-      <p class="renderline mono">RENDER ← /software/ · live-transit.html · assets/arcadia-catalog.json · site index · stamped 2026-11-14</p>
+      <p class="renderline mono">RENDER ← /software/ · live-transit.html · assets/arcadia-catalog.json · site index · stamped 2026-11-17</p>
       <div class="ctas">
         <a class="btn solid" href="board/">Find your stop — Departure Board</a>
         <a class="btn ghost" href="#figures">Read the render</a>
@@ -127,7 +127,7 @@ Prototype: proto-09 · Rendered From the Reference (SH-3 Coding)
         not a footnote, a part of the block. A figure with no served source does not get a block.</p>
       <div class="blocks">
         <article class="blk">
-          <span class="stamp mono">AS OF 2026-11-14</span>
+          <span class="stamp mono">AS OF 2026-11-17</span>
           <p class="fig">12</p>
           <p class="what">applications in the Distro catalog</p>
           <p>Seven at release candidate, five in testing, none released. Free, with full source under the
@@ -135,7 +135,7 @@ Prototype: proto-09 · Rendered From the Reference (SH-3 Coding)
           <p class="src mono"><b>RENDERED FROM</b> · served catalog, /software/ · field: listings, stages, build tags</p>
         </article>
         <article class="blk">
-          <span class="stamp mono">AS OF 2026-11-14</span>
+          <span class="stamp mono">AS OF 2026-11-17</span>
           <p class="fig">83 · 10,629</p>
           <p class="what">routes and stops on Live Transit Detroit</p>
           <p>DDOT, SMART, and QLINE on one live map. Vehicle positions are published about every
@@ -143,7 +143,7 @@ Prototype: proto-09 · Rendered From the Reference (SH-3 Coding)
           <p class="src mono"><b>RENDERED FROM</b> · served page, live-transit.html · field: routes, stops, cadence</p>
         </article>
         <article class="blk">
-          <span class="stamp mono">AS OF 2026-11-14</span>
+          <span class="stamp mono">AS OF 2026-11-17</span>
           <p class="fig">74</p>
           <p class="what">records in the Arcadia library</p>
           <p>29 emulators · 18 films · 12 games · 10 audio · 5 TV. Evidence states travel in the same file:
@@ -151,7 +151,7 @@ Prototype: proto-09 · Rendered From the Reference (SH-3 Coding)
           <p class="src mono"><b>RENDERED FROM</b> · served file, assets/arcadia-catalog.json · field: records, kind split, evidence split</p>
         </article>
         <article class="blk">
-          <span class="stamp mono">AS OF 2026-11-14</span>
+          <span class="stamp mono">AS OF 2026-11-17</span>
           <p class="fig">01–09</p>
           <p class="what">numbered editions of The Signal</p>
           <p>The Academy's weekly on Detroit's transit future, plus its specials. The index is the count:
@@ -160,12 +160,11 @@ Prototype: proto-09 · Rendered From the Reference (SH-3 Coding)
         </article>
       </div>
       <div class="withheld">
-        <h3>Withheld by the render: two numbers this page refuses to print</h3>
-        <p>How many vehicles are out right now, and how many boards Snowfell holds, are not served on any
-          public page — so the generator emits this sentence instead of a figure. The map counts vehicles
-          itself, live; the boards are read on the boards. That refusal is also rendered, not typed:
-          it is what the reference returns when a field has no served source.</p>
-        <p class="src mono" style="margin-top:10px; font-size:12px; color:var(--mut);"><b style="color:var(--ink2);">RENDERED FROM</b> · the absence of a served figure · stated qualitatively</p>
+        <h3>How many vehicles are out right now?</h3>
+        <p>That number changes by the minute, so this page does not print it — any figure here would be
+          stale on arrival. The Live Map counts DDOT, SMART, and QLINE vehicles as they run, with
+          positions refreshed about every five minutes.</p>
+        <p style="margin-top:10px;"><a href="live-transit.html">Open the Live Map →</a></p>
       </div>
     </div>
   </section>
