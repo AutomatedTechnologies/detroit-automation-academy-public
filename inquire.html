@@ -117,7 +117,7 @@
         <input type="text" name="company_url" tabindex="-1" autocomplete="off">
       </label>
       <button type="submit" class="btn btn-primary">Send inquiry</button>
-      <p class="inq-status" id="inquiryStatus">Prefer email? Write to <a href="mailto:detroit@muse.ai">detroit@muse.ai</a> — every inquiry is read.</p>
+      <p class="inq-status" id="inquiryStatus">Every inquiry is read.</p>
     </form>
   </div>
 
@@ -165,9 +165,8 @@
       var body = encodeURIComponent(
         'Name: ' + data.name + '\nOrganization: ' + (data.organization || '(none)') +
         '\nEmail: ' + data.email + '\n\n' + data.message);
-      status.innerHTML = 'Opening your email with the inquiry pre-written — ' +
-        'or copy it to <a href="mailto:detroit@muse.ai">detroit@muse.ai</a>.';
-      window.location.href = 'mailto:detroit@muse.ai?subject=' + subject + '&body=' + body;
+      status.innerHTML = 'Opening your email with the inquiry pre-written.';
+      window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
     }
     if (!INQUIRY_ENDPOINT) { viaEmail(); return; }
     status.textContent = 'Sending…';
@@ -177,7 +176,7 @@
       body: JSON.stringify(data)
     }).then(function (r) {
       if (!r.ok) throw new Error('send failed');
-      status.textContent = 'Received — thank you. We reply from a human inbox; if two business days pass without an answer, write to detroit@muse.ai and say so.';
+      status.textContent = 'Received — thank you. We reply from a human inbox; if two business days pass without an answer, send a follow-up here and say so.';
       form.reset();
     }).catch(viaEmail);
   });
