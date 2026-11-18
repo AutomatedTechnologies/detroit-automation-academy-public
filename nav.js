@@ -1,22 +1,36 @@
 /* Detroit Automation Academy — platform navigation, single source.
- * v4.0 (2026-10-31): the nav markup is inlined in every page's static HTML
- * (domain fix program T4), so the static/no-JS link graph is complete.
- * This script now ENHANCES the static markup — mobile toggle + active-lane
- * state — and renders from scratch only as a fallback for a page whose
- * mount is empty. data-audience hooks (viewer|reader|user|visitor|
- * subscriber) are stable attributes for future personalization. No auth.
+ * v4.1 (2026-11-18, SITE CHROME UNIFICATION): the nav markup in every
+ * page is GENERATED from the Singular Reference registry
+ * (tools/generate_chrome.py renders nav_items / footer_lanes from
+ * registry.db, schema v11) and stamped into the pages — the static
+ * markup is no longer hand-kept "in sync" with this file. The LANES
+ * list below mirrors registry nav_items exactly and is enforced by
+ * tools/check_chrome.py in the Singular Reference cadence: if the
+ * two disagree, the cadence FAILS. This script ENHANCES the static
+ * markup — mobile toggle + active-lane state — and renders from
+ * scratch only as a fallback for a page whose mount is empty.
+ * The v4.0-era SAT banner + contact-strip block is REMOVED: it
+ * injected the detroit@muse.ai address (dead since 2026-11-14) into
+ * every page at runtime. Removing a dead link is cleanup; naming a
+ * replacement address is the owner's alone.
+ * data-audience hooks (viewer|reader|user|visitor|subscriber) are
+ * stable attributes for future personalization. No auth.
  */
 (function () {
   'use strict';
 
     /* Audience lanes. Order is the nav order. Flat — no dropdown layers.
    * Keep in sync with the static markup inlined in the pages. */
+  /* Mirrors registry nav_items (schema v11) exactly — enforced by
+   * tools/check_chrome.py. Change the registry, never this list. */
   var LANES = [
     { label: 'Live Map', href: '/live-transit.html', audience: 'user' },
-    { label: 'Cities', href: '/live-transit/', audience: 'user' },
+    { label: 'Departure Board', href: '/board/', audience: 'user' },
+    { label: 'Cities', href: '/cities/', audience: 'user' },
     { label: 'Programs', href: '/programs.html', audience: 'visitor' },
     { label: 'The Signal', href: '/signal/', audience: 'reader' },
     { label: 'The Index', href: '/the-index/', audience: 'reader' },
+    { label: 'Arcadia', href: '/arcadia', audience: 'visitor' },
     { label: 'Contact', href: '/inquire.html', audience: 'visitor' },
     { label: 'Find', href: '/find.html', audience: 'visitor' }
   ];
@@ -69,8 +83,10 @@
 
   /* Map the current path to its lane for the active state. */
   function activeLane(path) {
-    if (/^\/live-transit\.html/.test(path) || /^\/board\//.test(path)) return 'Live Map';
-    if (/^\/live-transit\//.test(path)) return 'Cities';
+    if (/^\/live-transit\.html/.test(path)) return 'Live Map';
+    if (/^\/board\//.test(path)) return 'Departure Board';
+    if (/^\/cities\//.test(path) || /^\/live-transit\//.test(path)) return 'Cities';
+    if (/^\/arcadia/.test(path)) return 'Arcadia';
     if (/^\/programs\.html/.test(path) || /^\/curriculum\//.test(path)) return 'Programs';
     if (/^\/signal\//.test(path)) return 'The Signal';
     if (/^\/the-index\//.test(path)) return 'The Index';
@@ -160,46 +176,5 @@
     document.addEventListener('DOMContentLoaded', build);
   } else {
     build();
-  }
-})();
-
-/* SAT weekend banner (SITE-A) + contact strip (SITE-C) — added 2026-11-12,
- * campaign-detroit-at-muse-ai-2026-11-14 repair run. Copy verbatim.
- * Banner self-expires Sun 2026-11-15 00:00 EST. */
-(function () {
-  'use strict';
-  function satBuild() {
-    if (new Date() < new Date('2026-11-15T00:00:00-05:00') &&
-        !document.getElementById('sat-banner')) {
-      var banner = document.createElement('div');
-      banner.id = 'sat-banner';
-      banner.setAttribute('role', 'note');
-      banner.setAttribute('style', 'background:#000;color:#fff;padding:10px 16px;' +
-        'text-align:center;font:500 14px/1.5 Inter,system-ui,sans-serif');
-      banner.innerHTML = 'ONE DOOR, THIS WEEKEND: Readers, riders &amp; sponsors — email ' +
-        '<a href="mailto:detroit@muse.ai?subject=SAT-SITE" style="color:#fff;text-decoration:underline">detroit@muse.ai</a> ' +
-        '(subject: SAT-SITE) with your name + ONE lane: Signal · Square One · ' +
-        'Live Transit Detroit · Distro · Sponsorship &amp; placements. Opt-in only.';
-      document.body.insertBefore(banner, document.body.firstChild);
-    }
-    if (!document.getElementById('sat-contact-strip')) {
-      var strip = document.createElement('div');
-      strip.id = 'sat-contact-strip';
-      strip.setAttribute('style', 'background:#000;color:#fff;padding:18px 16px;' +
-        'text-align:center;font:400 14px/1.6 Inter,system-ui,sans-serif');
-      strip.innerHTML =
-        '<p style="margin:0 0 6px;font-weight:600">Contact of record: ' +
-        '<a href="mailto:detroit@muse.ai" style="color:#fff;text-decoration:underline">detroit@muse.ai</a></p>' +
-        '<p style="margin:0">For Signal, Square One, Live Transit Detroit, Distro, and Sponsorship &amp; placements — email ' +
-        '<a href="mailto:detroit@muse.ai" style="color:#fff;text-decoration:underline">detroit@muse.ai</a> ' +
-        'with your name + ONE lane. Subject SAT-SITE if you came from this site. We reply within 48 hours. ' +
-        'Opt-in only; reply "stop" to end contact.</p>';
-      document.body.appendChild(strip);
-    }
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', satBuild);
-  } else {
-    satBuild();
   }
 })();

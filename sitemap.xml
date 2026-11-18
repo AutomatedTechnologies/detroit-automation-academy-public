@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- GENERATED — Singular Reference sitemap render (DAADV5 V5-T1). Source: AutomatedTechnologies/academy-registry registry.db (page_checks) via tools/generate_sitemap.py. Do not hand-edit; regenerate. -->
-<!-- Rule: INCLUDE http_status = 200 AND design_observed <> 'redirect-stub' AND final path segment <> 'feed-diag.html' (diagnostics class). Reconciliation: population 355 - non-200 0 - redirect-stub 289 - diagnostics 1 = 65 URLs. page_checks.in_sitemap remains the audit-time measurement; this render is derived data and the measurement updates only at the next census refresh. -->
+<!-- Rule: INCLUDE http_status = 200 AND design_observed <> 'redirect-stub' AND final path segment <> 'feed-diag.html' (diagnostics class) AND path not in pages WHERE status = 'archived' (v11 decommission class). Reconciliation: population 356 - non-200 0 - redirect-stub 289 - diagnostics 1 - archived 2 = 64 URLs. page_checks.in_sitemap remains the audit-time measurement; this render is derived data and the measurement updates only at the next census refresh. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://www.detroitautomationacademy.com/</loc>
@@ -16,6 +16,9 @@
   </url>
   <url>
     <loc>https://www.detroitautomationacademy.com/board/</loc>
+  </url>
+  <url>
+    <loc>https://www.detroitautomationacademy.com/cities/</loc>
   </url>
   <url>
     <loc>https://www.detroitautomationacademy.com/curriculum/online-safety/</loc>
@@ -153,9 +156,6 @@
     <loc>https://www.detroitautomationacademy.com/signal/edition-08/</loc>
   </url>
   <url>
-    <loc>https://www.detroitautomationacademy.com/signal/edition-09/</loc>
-  </url>
-  <url>
     <loc>https://www.detroitautomationacademy.com/signal/special-accessibility/</loc>
   </url>
   <url>
@@ -190,12 +190,6 @@
   </url>
   <url>
     <loc>https://www.detroitautomationacademy.com/the-index/</loc>
-  </url>
-  <url>
-    <loc>https://www.detroitautomationacademy.com/voter-guide.html</loc>
-  </url>
-  <url>
-    <loc>https://www.detroitautomationacademy.com/voter-guide/geography/</loc>
   </url>
   <url>
     <loc>https://www.detroitautomationacademy.com/watch/</loc>
