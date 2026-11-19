@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "index-inventory",
     "generator": "tools/generate_inventory.py",
-    "stateFingerprint": "sha256:f9d7c8658bad3e3b3ddb76e8f7421b2ea0adcb4c04c68f7181c0d96a1f697f02",
+    "stateFingerprint": "sha256:54681c9d2f9d50c592a647c33e3c4ef2261b01e1b174c59cd2dbc85b461d3893",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "apps": [
@@ -155,6 +155,19 @@
       "displayName": "Arcadia",
       "catalogStatus": "testing",
       "buildTag": "arcadia-test-1",
+      "conformance": {
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": false,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      }
+    },
+    {
+      "appId": "googlephotos",
+      "displayName": "Photos — Academy Build",
+      "catalogStatus": "testing",
+      "buildTag": "googlephotos-test-1",
       "conformance": {
         "gapsDispositioned": true,
         "depsClear": true,
