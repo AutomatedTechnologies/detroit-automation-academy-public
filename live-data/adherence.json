@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-19T06:38:27.107Z",
+  "generated_at": "2026-11-19T06:41:10.366Z",
   "smart": {
     "method": "tu-static-join",
     "static_feed": "S1000147",
@@ -10,25 +10,25 @@
         "vehicle_id": "4017",
         "headsign": "23 Mile",
         "state": "late",
-        "delay_sec": 112,
+        "delay_sec": 118,
         "next_stop_id": "3147",
-        "next_stop_eta": "2026-11-19T06:40:52.000Z",
+        "next_stop_eta": "2026-11-19T06:40:58.000Z",
         "in_service": true,
         "method": "tu-static-join",
-        "updated_at": "2026-11-19T06:38:08.000Z"
+        "updated_at": "2026-11-19T06:40:58.000Z"
       },
       "471020": {
         "route_id": "462",
         "direction_id": 1,
         "vehicle_id": "3618",
         "headsign": "Auburn Mile via Pontiac",
-        "state": "on-time",
-        "delay_sec": 0,
-        "next_stop_id": "7152",
-        "next_stop_eta": "2026-11-19T06:38:00.000Z",
+        "state": "late",
+        "delay_sec": 99,
+        "next_stop_id": "4823",
+        "next_stop_eta": "2026-11-19T06:42:17.000Z",
         "in_service": true,
         "method": "tu-static-join",
-        "updated_at": "2026-11-19T06:37:49.000Z"
+        "updated_at": "2026-11-19T06:40:59.000Z"
       },
       "2858020": {
         "route_id": "610",
@@ -41,23 +41,13 @@
         "next_stop_eta": "2026-11-19T10:23:00.000Z",
         "in_service": true,
         "method": "tu-static-join",
-        "updated_at": "2026-11-19T06:37:36.000Z"
+        "updated_at": "2026-11-19T06:40:48.000Z"
       }
     }
   },
   "ddot": {
     "method": "track-dwell",
     "missed_stops": [
-      {
-        "agency": "ddot",
-        "route_id": "6",
-        "direction_id": 1,
-        "stop_id": "938",
-        "vehicle_id": "1807",
-        "detected_at": "2026-11-18T18:40:19.953Z",
-        "method": "track-dwell",
-        "inference": true
-      },
       {
         "agency": "ddot",
         "route_id": "13",
