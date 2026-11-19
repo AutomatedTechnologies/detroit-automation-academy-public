@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Periodical — Detroit Automation Academy</title>
+<meta name="description" content="Detroit's daily front page: local weather, live transit, The Signal, classifieds and events — in late-1800s newspaper form, monochrome.">
+<style>
+:root{--ink:#111;--paper:#f4f4f4;--rule:#111}
+*{box-sizing:border-box}
+body{margin:0;background:#c9c9c9;color:var(--ink);font-family:Georgia,'Times New Roman',serif;text-shadow:0 1px 0 rgba(255,255,255,.55),0 0 1px rgba(0,0,0,.10)}
+a{color:var(--ink)}
+.sheet{position:relative;max-width:1100px;margin:26px auto;padding:22px 20px 44px;background-color:var(--paper);border:1px solid #8f8f8f;border-radius:2px 3px 2px 4px/4px 2px 3px 2px;box-shadow:0 1px 2px rgba(0,0,0,.38),0 2px 7px rgba(0,0,0,.20)}
+.paper-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.sheet>*:not(.paper-canvas){position:relative;z-index:1}
+@media(max-width:760px){.sheet{margin:10px}}
+.folio{display:flex;justify-content:space-between;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:6px 2px;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+h1.masthead{font-family:'Playfair Display',Georgia,serif;text-align:center;font-size:clamp(44px,9vw,96px);margin:10px 0 2px;letter-spacing:.01em;font-weight:900;text-shadow:0 1px 0 #fff,0 2px 1px rgba(0,0,0,.30),0 3px 6px rgba(0,0,0,.14),0 -1px 1px rgba(0,0,0,.18)}
+.orn{display:flex;align-items:center;gap:10px;margin:2px 0 0;color:var(--ink)}
+.orn::before,.orn::after{content:"";flex:1;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);height:3px}
+.orn span{font-size:13px;letter-spacing:.3em;text-transform:uppercase}
+.dropcap::first-letter{font-size:2.6em;float:left;line-height:.82;padding:3px 7px 0 0;font-weight:900;text-shadow:0 1px 0 #fff,0 2px 1px rgba(0,0,0,.26),0 -1px 1px rgba(0,0,0,.14)}
+.tagline{text-align:center;font-style:italic;border-bottom:3px double var(--ink);padding-bottom:10px;margin:0}
+.cols{display:grid;grid-template-columns:repeat(12,1fr);gap:18px;margin-top:18px}
+section{border-top:2px solid var(--ink);padding-top:8px}
+section h2{font-size:15px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 8px;text-align:center;background-color:#e7e7e7;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);padding:5px 2px;text-shadow:0 1px 0 rgba(255,255,255,.65),0 0 3px rgba(0,0,0,.16)}
+.wx{grid-column:span 4}.tx{grid-column:span 4}.news{grid-column:span 4}
+.classifieds{grid-column:span 8}.events{grid-column:span 4}.comics{grid-column:1/-1}.games{grid-column:1/-1}.finance{grid-column:1/-1}
+@media(max-width:760px){.wx,.tx,.news,.classifieds,.events{grid-column:1/-1}}
+/* Games — the daily cross-word, set in the sheet's own type */
+.xw-wrap{display:grid;grid-template-columns:264px 1fr;gap:22px;align-items:start}
+@media(max-width:760px){.xw-wrap{grid-template-columns:1fr}}
+.xw-grid{display:grid;grid-template-columns:repeat(4,1fr);border:2px solid var(--ink);background:var(--ink);gap:2px;max-width:264px}
+.xw-cell{position:relative;background:var(--paper)}
+.xw-cell input{width:100%;aspect-ratio:1;border:0;background:transparent;font:inherit;font-size:26px;font-weight:900;text-align:center;text-transform:uppercase;color:var(--ink);padding:0}
+.xw-cell input:focus{outline:2px solid var(--ink);outline-offset:-2px;background:#e7e7e7}
+.xw-cell .no{position:absolute;top:1px;left:3px;font-size:9px;font-weight:700;pointer-events:none}
+.xw-cell.wrong input{background:#d6d6d6}
+.xw-clues{display:grid;grid-template-columns:1fr 1fr;gap:0 22px}
+@media(max-width:760px){.xw-clues{grid-template-columns:1fr}}
+.xw-clues h3{font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin:2px 0 4px}
+.xw-clues ol{margin:0 0 8px;padding-left:20px;font-size:13px;line-height:1.45}
+.xw-verdict{font-style:italic;font-size:13px;min-height:18px;margin:8px 0}
+.big{font-size:44px;text-align:center;margin:4px 0;text-shadow:0 1px 0 rgba(255,255,255,.6),0 2px 3px rgba(0,0,0,.18)}
+.center{text-align:center}.small{font-size:13px;line-height:1.45}
+ul{margin:6px 0;padding-left:18px}li{margin:5px 0;font-size:14px;line-height:1.4}
+.rule{border:0;border-top:1px solid var(--ink);margin:10px 0}
+.empty{border:1px dashed var(--ink);padding:10px;text-align:center;font-style:italic;font-size:13px}
+button{background:var(--paper);border:1px solid var(--ink);font:inherit;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;cursor:pointer}
+/* Comics carousel — fluid motion, monochrome filter */
+.carousel{overflow:hidden;border:2px solid var(--ink);outline:6px solid #e2e2e2;outline-offset:3px;background-image:radial-gradient(circle,#4d4d4d 1px,transparent 1.3px);background-size:6px 6px;background-color:#d9d9d9;padding:8px}
+.track,.slide figcaption{background:var(--paper)}
+.track{display:flex;transition:transform .8s cubic-bezier(.22,.9,.28,1)}
+.slide{min-width:100%;position:relative}
+.slide video{width:100%;display:block;filter:grayscale(1) contrast(1.08);aspect-ratio:16/9;object-fit:cover;background:#000}
+.slide figcaption{padding:8px 10px;font-size:13px;font-style:italic;border-top:1px solid var(--ink);display:flex;justify-content:space-between}
+.dots{text-align:center;margin-top:8px}.dots button{border:0;border-radius:50%;width:28px;height:28px;padding:0;margin:0 2px;background:radial-gradient(circle,#8a8a8a 5px,transparent 6.5px)}
+.dots button[aria-current="true"]{background:radial-gradient(circle,var(--ink) 6px,transparent 7.5px)}
+footer{border-top:3px double var(--ink);margin-top:26px;padding-top:10px;font-size:12px;text-align:center}
+.fade{animation:fade .6s ease both}@keyframes fade{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+<!-- SR-CHROME:HEADER schema-v11 -->
+<div id="daa-nav" class="sr-chrome">
+<style>
+.sr-chrome{color-scheme:light;background:#ffffff;color:#111111;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.sr-chrome .sr-header{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:.6rem 1rem;border-bottom:2px solid #111111}
+.sr-chrome .sr-brand{display:flex;align-items:center;gap:.55rem;color:#111111;text-decoration:none;font-weight:700;font-size:1.02rem;letter-spacing:.01em}
+.sr-chrome .sr-brand svg{width:30px;height:30px;flex:none;display:block}
+.sr-chrome .sr-nav{display:flex;gap:.45rem;flex-wrap:wrap;margin-left:auto}
+.sr-chrome .sr-pill{display:inline-block;padding:.42rem .95rem;border:1.5px solid #111111;border-radius:999px;color:#111111;text-decoration:none;font-size:.92rem;font-weight:600;line-height:1.2;background:#ffffff}
+.sr-chrome .sr-pill:hover{background:#111111;color:#ffffff}
+.sr-chrome-foot{color-scheme:light;background:#ffffff;color:#111111;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.sr-chrome-foot .sr-lanegrid{display:flex;gap:1.5rem;flex-wrap:wrap;padding:.5rem 0}
+.sr-chrome-foot .sr-lane{min-width:9rem}
+.sr-chrome-foot .sr-lane h3{margin:.2rem 0 .35rem;font-size:.95rem;letter-spacing:.02em}
+.sr-chrome-foot .sr-lane p{margin:0;font-size:.88rem;line-height:1.55}
+.sr-chrome-foot .sr-lane a{color:#111111;text-decoration:underline}
+.sr-chrome-foot .sr-fine{font-size:.82rem;color:#333333;line-height:1.55;margin:.45rem 0}
+.sr-chrome-foot .sr-fine a{color:#111111}
+</style>
+<header class="sr-header"><a class="sr-brand" href="/" aria-label="Detroit Automation Academy — home"><svg viewBox="0 0 100 100" role="img" aria-label="Academy mark"><rect width="100" height="100" rx="21" fill="#141414"/><path d="M35 25v50M35 25h15a25 25 0 0 1 0 50H35" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="square"/><circle cx="35" cy="25" r="4.5" fill="#fff"/><circle cx="35" cy="50" r="4.5" fill="#fff"/><circle cx="35" cy="75" r="4.5" fill="#fff"/></svg><span>Detroit Automation Academy</span></a><nav class="sr-nav" aria-label="Primary"><a class="sr-pill" href="/live-transit.html">Live Map</a><a class="sr-pill" href="/board/">Departure Board</a><a class="sr-pill" href="/cities/">Cities</a><a class="sr-pill" href="/programs.html">Programs</a><a class="sr-pill" href="/signal/">The Signal</a><a class="sr-pill" href="/the-index/">The Index</a><a class="sr-pill" href="/arcadia">Arcadia</a><a class="sr-pill" href="/inquire.html">Contact</a><a class="sr-pill" href="/find.html">Find</a></nav></header>
+</div>
+<!-- /SR-CHROME:HEADER -->
+<div class="sheet fade">
+<canvas class="paper-canvas" id="paperCanvas" aria-hidden="true"></canvas>
+  <div class="folio"><span>Detroit, Michigan</span><span>Wednesday, November 18, 2026</span><span>Price: Free</span></div>
+  <h1 class="masthead">The Periodical</h1>
+  <p class="center small" style="letter-spacing:.18em;text-transform:uppercase">Vol. I · No. 1 — Morning Edition</p>
+  <div class="orn" aria-hidden="true"><span>✦ Est. MMXXVI ✦</span></div>
+  <p class="tagline">Weather, transit, news, classifieds &amp; events — one front page, from one record.</p>
+
+  <div class="cols">
+    <section class="wx" aria-label="Local Weather">
+      <h2>Local Weather</h2>
+      <p class="big">47&deg;F</p>
+      <p class="center"><strong>Sunny</strong> &middot; Detroit &middot; feels 43&deg;F</p>
+      <p class="small center">High 58&deg;F &middot; Low 39&deg;F &middot; Wind SW 7 mph<br>
+      Sunrise 7:26 AM &middot; Sunset 5:07 PM &middot; No weather alerts issued.</p>
+      <hr class="rule">
+      <p class="small center">To-day: 53&deg;F by noon, 56&deg;F mid-afternoon, mostly sunny; partly cloudy this evening, 45&deg;F by 11 PM. To-morrow: high 63&deg;F, partly cloudy. <em>Observed 10:21 AM EST.</em></p>
+      <p class="center"><button id="locBtn" type="button">Use my location</button></p>
+      <p class="small center" id="locOut">Default edition: Detroit. Location is used only in your browser, never sent or stored.</p>
+    </section>
+
+    <section class="tx" aria-label="Local Transit">
+      <h2>Local Transit</h2>
+      <p class="big">305</p>
+      <p class="center"><strong>vehicles live</strong> on the one Detroit network</p>
+      <hr class="rule">
+      <p class="small"><strong>Service bulletin —</strong> Please board outside of closure area: WB Michigan between Washington &amp; Cass — alternative boarding at RPTC or Cass &amp; Lafayette.</p>
+      <p class="small center"><a href="/board/">Open the Departure Board &rarr;</a> &middot; <a href="/live-transit-detroit/">Live Transit Detroit &rarr;</a></p>
+      <p class="small center">Feed read 10:21 AM EST, Nov 18 — live count, not a schedule.</p>
+    </section>
+
+    <section class="news" aria-label="Local News">
+      <h2>Local News — The Signal</h2>
+      <ul>
+        <li><strong>Latest —</strong> <a href="/signal/edition-09/">The Route Home</a> <span class="small">(Edition 9, for Veterans Day, Nov 11)</span></li>
+        <li><a href="/signal/edition-01/">BIOBUZZ Is Here: What the New FTC Season Demands</a></li>
+        <li><a href="/signal/edition-02/">BIOBUZZ, Week Two: The Three Bets That Win This Season</a></li>
+        <li><a href="/signal/edition-03/">Your Ballot, Decoded: The Detroit Voter Guide Is Live</a></li>
+      </ul>
+      <p class="small center"><a href="/signal/">All editions of The Signal &rarr;</a></p>
+      <hr class="rule">
+      <h2>Local Office</h2>
+      <p class="empty">No office notices in the record yet. Notices appear here only when entered in the single site record with a named source.</p>
+    </section>
+
+    <section class="classifieds" aria-label="Classifieds">
+      <h2>Classifieds — Vacancies &amp; For Sale</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div><h2 style="font-size:13px">Vacancies</h2><p class="empty">No verified vacancies in the record yet — this frame fills from the single site record, never from invention.</p></div>
+        <div><h2 style="font-size:13px">For Sale</h2><p class="empty">No verified listings in the record yet. A listing needs a seller, a price and a date in the record before it prints.</p></div>
+      </div>
+      <p class="small center">Classified rates are not yet set. Nothing is charged, and no rate is quoted, until the Academy sets one.</p>
+    </section>
+
+    <section class="events" aria-label="Local Events">
+      <h2>Local Events</h2>
+      <ul>
+        <li><strong>To-night, Wed Nov 18, 6–9 PM</strong> — Wisdom Wednesdays chess, Valade Park. After dark (sunset 5:07 PM); Thomas Magee's after 9.</li>
+      </ul>
+      <p class="small">Events print only from dated estate records. An event with no date in the record does not print.</p>
+    </section>
+
+    <section class="classifieds" aria-label="Sporting">
+      <h2>Sporting — The House</h2>
+      <p class="small dropcap">The sports section that explains how the house always wins — sportsbook economics in real arithmetic on real games. <strong>No picks. No advice. Nothing wagered.</strong> The recurring features:</p>
+      <ul>
+        <li><strong>The Juice</strong> — the vig: a standard −110 market breaks even at 52.38%; the two-sided book prices 104.76%, a 4.55% hold on balanced handle.</li>
+        <li><strong>The Hook</strong> — half points, pushes, and the key numbers 3 and 7.</li>
+        <li><strong>The Parlay</strong> — payouts priced below true odds, leg by leg.</li>
+        <li><strong>Props &amp; Same-Game Parlays</strong> · <strong>Teasers</strong> · <strong>Cash-Out &amp; “Free” Bets</strong> · <strong>The Close</strong> — closing-line movement · <strong>Futures</strong> — the hold on the long board.</li>
+      </ul>
+      <p class="small center">The founding piece is in the press room. The section launches only on the publisher's word — until then, this roster is the whole of it in print. <em>(Board of record: The House — Sports Section, project 64.)</em></p>
+    </section>
+
+    <section class="events" aria-label="The Press">
+      <h2>The Press — Just the Facts</h2>
+      <p class="small">The Academy's fact wire: articles reviewed, unsubstantiated claims removed, only supported facts summarized. <strong>248 briefs</strong> in the archive. Newest in the archive (Reuters, Oct 15):</p>
+      <ul>
+        <li>Air India sets up a dedicated cost-savings team and tightens spending approvals, its chief executive tells employees in a memo.</li>
+        <li>The rand trades at 16.5575 against the dollar, about 0.3% firmer than its previous close.</li>
+      </ul>
+      <p class="center"><a href="/press/"><strong>Read The Press &rarr;</strong></a></p>
+      <p class="small center">Search runs over every brief, full text, on The Press page — try “Amazonas”, “Ann Arbor”, “attorneys general”.</p>
+    </section>
+
+    <section class="finance" aria-label="Finance">
+      <h2>Finance — The Single Pane</h2>
+      <p class="small dropcap">The paper's finance desk, promoted from the publisher's private single-pane design of this same day: one pane, every figure carrying its source, nothing printed without one. The public desk prints the market's figures only — <strong>no picks, no advice, nothing of any reader's money.</strong></p>
+      <p class="small"><strong>The closes — Wednesday, November 18, 2026</strong> (closing reports, cross-checked on two wires):</p>
+      <ul>
+        <li>Dow Jones Industrial Average — <strong>50,198.17</strong>, down 561.25 (−1.11%), a third straight loss.</li>
+        <li>S&amp;P 500 — <strong>7,323.63</strong>, down 16.90 (−0.23%), a fifth straight decline.</li>
+        <li>Nasdaq Composite — <strong>24,429.89</strong>, up 101.50 (+0.42%), as the Nvidia beat faded and the tech names steadied.</li>
+        <li>Russell 2000 — <strong>2,714.31</strong>, up 0.46%. Ten-year Treasury — <strong>5.07%</strong>. Dollar index — <strong>103.76</strong>.</li>
+      </ul>
+      <p class="small"><strong>From the desk:</strong> the Federal Reserve released the minutes of its October 27–28 meeting today; almost all participants judged further rate increases likely appropriate. The next decision lands <strong>December 9</strong>. The desk's standing rule, borrowed from the private pane it descends from: a figure without a source does not print, and a rate nobody has paid is not information.</p>
+    </section>
+
+    <section class="games" aria-label="Games">
+      <h2>Games — The Daily Cross-Word</h2>
+      <p class="small center">No. 1 — a four-by-four puzzle. Every row and every column is a word; the across and down clues are the same sixteen letters read two ways.</p>
+      <div class="xw-wrap">
+        <div>
+          <div class="xw-grid" id="xwGrid" role="grid" aria-label="Crossword grid"></div>
+          <p class="xw-verdict" id="xwVerdict"></p>
+          <p class="center"><button type="button" id="xwCheck">Check answers</button> <button type="button" id="xwClear">Clear puzzle</button></p>
+        </div>
+        <div class="xw-clues">
+          <div>
+            <h3>Across</h3>
+            <ol>
+              <li>Detroit winter weather</li>
+              <li>A point where a network branches</li>
+              <li>The chances the house always prices in</li>
+              <li>The compass point opposite east</li>
+            </ol>
+          </div>
+          <div>
+            <h3>Down</h3>
+            <ol>
+              <li>Frozen precipitation</li>
+              <li>A lump, or a computing endpoint</li>
+              <li>Probability, stated as a ratio</li>
+              <li>Direction of the sunset</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+      <p class="small center">Set by the publisher, 2026-11-18. A fresh puzzle prints with each morning edition.</p>
+    </section>
+
+    <section class="comics" aria-label="Comics">
+      <h2>The Comics — Moving Pictures, in Monochrome</h2>
+      <div class="carousel" id="carousel">
+        <div class="track" id="track">
+          <figure class="slide" style="margin:0"><video src="/assets/intro-sequence.mp4" muted loop playsinline preload="metadata" aria-label="Academy introduction sequence"></video><figcaption><span>No. 1 — The Academy Introduces Itself</span><span>Estate film</span></figcaption></figure>
+          <figure class="slide" style="margin:0"><video src="/assets/virtual-tour.mp4" muted loop playsinline preload="metadata" aria-label="Academy virtual tour"></video><figcaption><span>No. 2 — A Tour of the Premises</span><span>Estate film</span></figcaption></figure>
+        </div>
+      </div>
+      <div class="dots" id="dots"></div>
+      <p class="small center">Curated estate films only, shown through a monochrome filter. The carousel moves on its own; touch or hover pauses it.</p>
+    </section>
+  </div>
+
+  <footer>
+    The Periodical &middot; Detroit Automation Academy &middot; One record behind every section: weather, departures, articles, offices, vacancies, listings, events, games and films are views of the same site record, never copies.<br>
+    PAGE STAMP — Built: 2026-11-18 22:10 EST · Build: periodical-production-testing-1 (paper per JOBS.md — the five-cause laid-paper grammar: chain lines, fiber flecks, deckle &amp; wear, folds, letterpress impression; generated procedurally in-page from a seeded grammar, zero external references, true grayscale; deployed to production for testing on the publisher's directive of 2026-11-18) · Games section added 2026-11-18 18:46 EST on the publisher's directive — Cross-Word No. 1, playable in the sheet · Finance section promoted 2026-11-18 19:37 EST on the publisher's directive — the single-pane finance design becomes the paper's public finance desk (market figures only; no picks, no advice) · Agent: Minion · Authorized: J. Spencer Smith, directive of 2026-11-18 (THE PERIODICAL, SH-2) · Prototyping transferred to SH-8 Design — Henchman Corp, 2026-11-18 · Every item on this page is one record in the Singular Reference registry (schema v12 cross-references); nothing prints without a source
+  </footer>
+</div>
+<!-- SR-CHROME:FOOTER schema-v11 -->
+<div class="sr-chrome-foot">
+<nav class="sr-lanegrid" aria-label="Site"><div class="sr-lane"><h3>Ride</h3><p><a href="/live-transit.html">Live Map</a> · <a href="/board/">Departure Board</a> · <a href="/cities/">Cities</a> · <a href="/live-transit-detroit/">Live Transit Detroit stories</a> · <a href="/live-transit/terms/">Live Transit Terms</a></p></div><div class="sr-lane"><h3>Read</h3><p><a href="/signal/">The Signal</a> · <a href="/notes/">Notes</a> · <a href="/press/">The Press</a> · <a href="/feed/">Latest</a> · <a href="/watch/">Watch</a> · <a href="/the-index/">The Index</a></p></div><div class="sr-lane"><h3>Software</h3><p><a href="/software/">Software</a> · <a href="/arcadia">Arcadia</a> · <a href="/api.html">API</a> · <a href="/registry/">Registry</a></p></div><div class="sr-lane"><h3>Learn & work</h3><p><a href="/programs.html">Programs</a> · <a href="/curriculum/online-safety/">Online Safety</a> · <a href="/apple-learning-coach/">Coach Profile</a> · <a href="/partners.html">Partners</a> · <a href="/services.html">Services</a> · <a href="/press/media-kit.html">Media Kit</a></p></div><div class="sr-lane"><h3>Trust</h3><p><a href="/inquire.html">Contact</a> · <a href="/find.html">Find</a> · <a href="/dashboard.html">Status</a> · <a href="/privacy.html">Privacy Policy</a> · <a href="/terms.html">Terms of Service</a></p></div></nav>
+<p class="sr-fine"><a href="/find.html">Find</a> (search) · <a href="/inquire.html">Contact</a></p>
+<p class="sr-fine">© 2026 AutomatedTechnologies d/b/a Detroit Automation Academy</p>
+<p class="sr-fine">© 2026 Detroit Automation Academy / Automated Technologies. All rights reserved. Detroit Automation Academy, Automated Technologies, Distro, Workbench, Live Transit Detroit, The Signal, and the Academy monochrome logo are marks of the Academy, used under the founder's permission. Academy-original works are licensed under the Academy License (revocable); upstream open-source components remain under their own licenses.</p>
+</div>
+<!-- /SR-CHROME:FOOTER -->
+<script>
+(function(){
+  // Location: browser-only, coarse, never transmitted.
+  var btn=document.getElementById('locBtn'),out=document.getElementById('locOut');
+  btn.addEventListener('click',function(){
+    if(!navigator.geolocation){out.textContent='This browser offers no location. Detroit edition stands.';return;}
+    out.textContent='Asking your browser…';
+    navigator.geolocation.getCurrentPosition(function(p){
+      out.textContent='Location granted in your browser ('+p.coords.latitude.toFixed(2)+', '+p.coords.longitude.toFixed(2)+'). Nearest edition: Detroit. Nothing was sent or stored.';
+    },function(){out.textContent='Location declined. Detroit edition stands.';},{timeout:8000});
+  });
+  // Comics carousel: fluid transform motion, autoplay, pause on interaction.
+  var track=document.getElementById('track'),slides=track.children.length,i=0,timer=null,dots=document.getElementById('dots');
+  for(var d=0;d<slides;d++){var b=document.createElement('button');b.type='button';b.setAttribute('aria-label','Comic '+(d+1));(function(n){b.addEventListener('click',function(){go(n);restart();});})(d);dots.appendChild(b);}
+  function paint(){track.style.transform='translateX(-'+(i*100)+'%)';for(var d=0;d<dots.children.length;d++)dots.children[d].setAttribute('aria-current',d===i?'true':'false');
+    for(var v=0;v<track.children.length;v++){var vid=track.children[v].querySelector('video');if(v===i){vid.play&&vid.play().catch(function(){});}else{vid.pause&&vid.pause();}}}
+  function go(n){i=(n+slides)%slides;paint();}
+  function restart(){clearInterval(timer);timer=setInterval(function(){go(i+1);},6000);}
+  var c=document.getElementById('carousel');
+  c.addEventListener('pointerenter',function(){clearInterval(timer);});
+  c.addEventListener('pointerleave',restart);
+  paint();restart();
+  // Games — the daily cross-word. Solution lives in the sheet, as it must to be checked.
+  var SOL=['SNOW','NODE','ODDS','WEST'],grid=document.getElementById('xwGrid'),verdict=document.getElementById('xwVerdict'),cells=[];
+  for(var r=0;r<4;r++){cells.push([]);for(var c=0;c<4;c++){
+    var cell=document.createElement('div');cell.className='xw-cell';
+    if(r===0&&c===0||c===0||r===0){var no=document.createElement('span');no.className='no';no.textContent=(c===0?r+1:c+1);cell.appendChild(no);}
+    var inp=document.createElement('input');inp.maxLength=1;inp.setAttribute('aria-label','Row '+(r+1)+', column '+(c+1));inp.autocomplete='off';
+    (function(rr,cc,el){el.addEventListener('input',function(){el.value=el.value.toUpperCase().replace(/[^A-Z]/g,'');cell.classList.remove('wrong');if(el.value&&cc<3)cells[rr][cc+1].focus();});el.addEventListener('keydown',function(e){if(e.key==='Backspace'&&!el.value&&cc>0)cells[rr][cc-1].focus();if(e.key==='ArrowRight'&&cc<3)cells[rr][cc+1].focus();if(e.key==='ArrowLeft'&&cc>0)cells[rr][cc-1].focus();if(e.key==='ArrowDown'&&rr<3)cells[rr+1][cc].focus();if(e.key==='ArrowUp'&&rr>0)cells[rr-1][cc].focus();});})(r,c,inp);
+    cell.appendChild(inp);grid.appendChild(cell);cells[r].push(inp);
+  }}
+  document.getElementById('xwCheck').addEventListener('click',function(){
+    var right=0;
+    for(var r=0;r<4;r++)for(var c=0;c<4;c++){var v=cells[r][c].value;var ok=v===SOL[r][c];if(ok)right++;cells[r][c].parentElement.classList.toggle('wrong',v!==''&&!ok);}
+    verdict.textContent=right===16?'Solved — every word checks out. Nicely done.':right+' of 16 letters right so far.';
+  });
+  document.getElementById('xwClear').addEventListener('click',function(){
+    for(var r=0;r<4;r++)for(var c=0;c<4;c++){cells[r][c].value='';cells[r][c].parentElement.classList.remove('wrong');}
+    verdict.textContent='';cells[0][0].focus();
+  });
+})();
+</script>
+
+<script>
+(function(){
+  // THE PAPER — generated in code from the JOBS.md grammar. Five causes,
+  // nothing else: chain lines, fiber flecks, deckle & wear, folds, and the
+  // light field the sheet lies in (ink impression is in the stylesheet).
+  // Seeded from the page identifier: this page rebuilds to this same sheet
+  // on any machine, forever. No images, no imports, no external assets.
+  var PAGE_ID = 'periodical';
+  function xmur3(str){for(var i=0,h=1779033703^str.length;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19;}return function(){h=Math.imul(h^(h>>>16),2246822507);h=Math.imul(h^(h>>>13),3266489909);return (h^=h>>>16)>>>0;};}
+  function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+  var rand = mulberry32(xmur3(PAGE_ID)());
+  // The sheet's random facts, fixed once, in normalized coordinates so the
+  // same sheet survives a resize: 460 flecks (a bounded count — findable by
+  // looking, never shown to you) and the deckle's jitter along each edge.
+  var flecks=[], NF=460, i;
+  for(i=0;i<NF;i++){flecks.push({x:rand(),y:rand(),len:2+rand()*4.5,ang:rand()*Math.PI,dark:rand()<0.62,a:0.08+rand()*0.09,w:rand()<0.18?1.6:1});}
+  function edgeJitter(n){var a=[],k;for(k=0;k<=n;k++){var e=Math.min(k,n-k);var boost=e<8?(1.8-0.1*e):1;a.push((rand()-0.5)*3.0*boost);}return a;}
+  var deckTop=edgeJitter(110), deckRight=edgeJitter(110), deckBottom=edgeJitter(110), deckLeft=edgeJitter(110);
+  var canvas=document.getElementById('paperCanvas'), sheet=canvas.parentElement, ctx=canvas.getContext('2d');
+  function line(x1,y1,x2,y2){ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);}
+  function draw(){
+    var W=sheet.offsetWidth, H=sheet.offsetHeight;
+    if(!W||!H){return;}
+    if(canvas.width!==W||canvas.height!==H){canvas.width=W;canvas.height=H;}
+    var k, x, y, g;
+    // Base sheet.
+    ctx.fillStyle='#f4f4f4'; ctx.fillRect(0,0,W,H);
+    // The light field: lit from the upper left; everything else is read
+    // through this. Chain lines show strongest where the sheet is thinnest-lit.
+    g=ctx.createRadialGradient(W*0.16,H*0.02,40,W*0.16,H*0.02,Math.max(W,H)*1.15);
+    g.addColorStop(0,'rgba(255,255,255,0.10)'); g.addColorStop(0.55,'rgba(255,255,255,0.0)'); g.addColorStop(1,'rgba(0,0,0,0.05)');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    // Cause 1 — chain lines: the mould's wires, ~25 mm apart down the sheet,
+    // with the finer laid lines between them at ~1 mm. In the sheet, not on
+    // it: a dark whisper and its pale companion, never darker than that.
+    ctx.lineWidth=1; ctx.beginPath();
+    ctx.strokeStyle='rgba(0,0,0,0.050)';
+    for(x=47;x<W;x+=94.5){line(x+0.5,0,x+0.5,H);}
+    ctx.stroke(); ctx.beginPath();
+    ctx.strokeStyle='rgba(255,255,255,0.045)';
+    for(x=48;x<W;x+=94.5){line(x+0.5,0,x+0.5,H);}
+    ctx.stroke(); ctx.beginPath();
+    ctx.strokeStyle='rgba(0,0,0,0.016)';
+    for(y=2;y<H;y+=3.78){line(0,y+0.5,W,y+0.5);}
+    ctx.stroke();
+    // Cause 4 — folds: one vertical, one horizontal crease. Each reads
+    // highlight-then-shadow in the fixed light: the facet toward the upper
+    // left catches it, the valley line is darkest, the far facet falls off.
+    var cx=W*0.5, cy=H*0.36;
+    g=ctx.createLinearGradient(cx-30,0,cx+30,0);
+    g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(0.42,'rgba(255,255,255,0.10)'); g.addColorStop(0.5,'rgba(0,0,0,0.10)'); g.addColorStop(0.58,'rgba(0,0,0,0.06)'); g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g; ctx.fillRect(cx-30,0,60,H);
+    g=ctx.createLinearGradient(0,cy-26,0,cy+26);
+    g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(0.40,'rgba(255,255,255,0.10)'); g.addColorStop(0.5,'rgba(0,0,0,0.13)'); g.addColorStop(0.60,'rgba(0,0,0,0.07)'); g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g; ctx.fillRect(0,cy-26,W,52);
+    // Wear rides the fold lines (cause 3): hands open the sheet there.
+    g=ctx.createLinearGradient(cx-9,0,cx+9,0);
+    g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(0.5,'rgba(0,0,0,0.035)'); g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g; ctx.fillRect(cx-9,0,18,H);
+    g=ctx.createLinearGradient(0,cy-9,0,cy+9);
+    g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(0.5,'rgba(0,0,0,0.035)'); g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g; ctx.fillRect(0,cy-9,W,18);
+    // Cause 2 — fiber flecks: the pulp. Short, sparse, darker and lighter,
+    // seated uniformly — denser nowhere, patterned never.
+    for(i=0;i<flecks.length;i++){var f=flecks[i],fx=f.x*W,fy=f.y*H,dx=Math.cos(f.ang)*f.len,dy=Math.sin(f.ang)*f.len;
+      ctx.strokeStyle=f.dark?('rgba(0,0,0,'+f.a+')'):('rgba(255,255,255,'+(f.a+0.05)+')');
+      ctx.lineWidth=f.w; ctx.beginPath(); line(fx,fy,fx+dx,fy+dy); ctx.stroke();}
+    // Cause 3 — deckle & wear: edges darker where hands hold the sheet,
+    // strongest along the bottom and at the lower outer corner (the thumb).
+    function band(x0,y0,x1,y1,fx,fy,tx,ty,a){var gr=ctx.createLinearGradient(fx,fy,tx,ty);gr.addColorStop(0,'rgba(0,0,0,'+a+')');gr.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gr;ctx.fillRect(x0,y0,x1-x0,y1-y0);}
+    band(0,0,W,26, 0,0,0,26, 0.05);
+    band(0,H-30,W,H, 0,H,0,H-30, 0.09);
+    band(0,0,24,H, 0,0,24,0, 0.05);
+    band(W-28,0,W,H, W,0,W-28,0, 0.07);
+    function corner(px,py,r,a){var gr=ctx.createRadialGradient(px,py,0,px,py,r);gr.addColorStop(0,'rgba(0,0,0,'+a+')');gr.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gr;ctx.fillRect(px-r,py-r,r*2,r*2);}
+    corner(0,0,120,0.10); corner(W,0,120,0.10); corner(0,H,150,0.12); corner(W,H,210,0.16);
+    // The deckle itself: the sheet's edge, irregular by fractions of a
+    // millimetre, drawn as the perimeter line the eye actually catches.
+    ctx.strokeStyle='rgba(0,0,0,0.30)'; ctx.lineWidth=1; ctx.beginPath();
+    var n=110, s;
+    for(s=0;s<=n;s++){x=(W-2)*(s/n)+1; y=1+deckTop[s]; if(s===0){ctx.moveTo(x,y);}else{ctx.lineTo(x,y);}}
+    for(s=0;s<=n;s++){y=(H-2)*(s/n)+1; x=W-1+deckRight[s]; ctx.lineTo(x,y);}
+    for(s=n;s>=0;s--){x=(W-2)*(s/n)+1; y=H-1+deckBottom[s]; ctx.lineTo(x,y);}
+    for(s=n;s>=0;s--){y=(H-2)*(s/n)+1; x=1+deckLeft[s]; ctx.lineTo(x,y);}
+    ctx.closePath(); ctx.stroke();
+  }
+  var pending=null;
+  function schedule(){if(pending){return;}pending=setTimeout(function(){pending=null;draw();},180);}
+  window.addEventListener('resize',schedule);
+  window.addEventListener('load',draw);
+  draw(); setTimeout(draw,450);
+})();
+</script>
+</body>
+</html>
