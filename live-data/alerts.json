@@ -1,17 +1,35 @@
 {
-  "generated_at": "2026-11-20T09:07:56.413Z",
-  "count": 0,
-  "alerts": [],
+  "generated_at": "2026-11-20T10:03:44.488Z",
+  "count": 1,
+  "alerts": [
+    {
+      "id": "ddot-3eb416223e",
+      "agency": "ddot",
+      "header": "DDOT service bulletin",
+      "description": "Please board outside of closure area: WB Michigan between Washington & Cass- alternative boarding at RPTC or Cass & Lafayette.",
+      "effect": null,
+      "cause": null,
+      "active_period": {
+        "start": null,
+        "end": null
+      },
+      "routes": [],
+      "stops": [],
+      "url": null,
+      "source": "bustime",
+      "fetched_at": "2026-11-20T10:03:44.488Z",
+      "kind": "realtime"
+    }
+  ],
   "sources": [
     {
       "agency": "ddot",
       "kind": "realtime",
       "via": "bustime",
-      "fetched_at": "2026-11-20T09:07:56.413Z",
-      "ok": false,
-      "status": "error",
-      "alerts": 0,
-      "reason": "The operation was aborted due to timeout"
+      "fetched_at": "2026-11-20T10:03:44.488Z",
+      "ok": true,
+      "status": "ok",
+      "alerts": 1
     }
   ]
 }
