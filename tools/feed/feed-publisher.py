@@ -724,7 +724,12 @@ def run_replay(builder_path, bundle_dir, out_dir):
     # ER-FIX-FEED-01 standing alarm: the builder's named unmatched-
     # vehicle warnings must reach this run's log, not die in the
     # captured stdout (only the last line is returned as the summary).
-    alarms = [ln for ln in lines if "UNMATCHED_VEHICLES_ALARM" in ln]
+    # 2026-11-20: ROUTE_WITHOUT_TRIP_ALARM joins the surfaced set —
+    # plain no-trip vehicles are NIS fleet state now and no longer
+    # alarm; the route-without-trip mismatch shape does.
+    alarms = [ln for ln in lines
+              if "UNMATCHED_VEHICLES_ALARM" in ln
+              or "ROUTE_WITHOUT_TRIP_ALARM" in ln]
     for ln in alarms:
         log(ln)
     summary = lines[-1] if lines else ""

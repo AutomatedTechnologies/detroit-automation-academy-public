@@ -1065,6 +1065,16 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   // bare id; a non-numeric id renders name only (the code-registered
   // Detroit People Mover pseudo-route carries no route number). Every
   // surface that names a route goes through this one formatter.
+  // Not in service (2026-11-20): the builder (build-feed.mjs,
+  // stampServiceStatus) stamps every vehicle whose feed record
+  // carries no trip assignment — deadhead / garage moves, an expected
+  // fleet state per the Swiftly resolution of 2026-11-20 — with
+  // service_status 'not_in_service' + service_label 'Not in service'.
+  // Every surface that presents a vehicle reads the class through
+  // this one test.
+  function isNIS(v) { return !!v && v.service_status === 'not_in_service'; }
+  var NIS_COLOR = new THREE.Color(0x8a8a8a);
+  var NIS_HEX = '#8A8A8A';
   function routeLabel(rid) {
     var name = routeNames[rid];
     if (!name) return String(rid);
@@ -1114,6 +1124,38 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     t = { tex: tex, aspect: c.width / c.height };
     badgeTexCache[rid] = t;
     return t;
+  }
+  // The NIS badge: the route badge's silhouette with no route in it —
+  // hollow body, dashed gray stroke, 'NIS' where the route number
+  // would sit. One cached texture serves the whole class.
+  var nisBadgeTex = null;
+  function nisBadgeTexture() {
+    if (nisBadgeTex) return nisBadgeTex;
+    var c = document.createElement('canvas');
+    var W = 168, H = 84;
+    c.width = W; c.height = H;
+    var x = c.getContext('2d');
+    x.fillStyle = 'rgba(5,7,10,0.95)';
+    x.fillRect(18, 0, 16, 10);
+    x.fillRect(W - 34, 0, 16, 10);
+    x.fillRect(18, H - 10, 16, 10);
+    x.fillRect(W - 34, H - 10, 16, 10);
+    x.fillStyle = 'rgba(9,13,17,0.55)';
+    x.beginPath();
+    if (x.roundRect) x.roundRect(8, 6, W - 16, H - 12, 14); else x.rect(8, 6, W - 16, H - 12);
+    x.fill();
+    x.lineWidth = 4; x.strokeStyle = '#8A8A8A';
+    if (x.setLineDash) x.setLineDash([10, 7]);
+    x.stroke();
+    if (x.setLineDash) x.setLineDash([]);
+    x.fillStyle = '#B4B4B4';
+    x.font = '700 30px system-ui, -apple-system, sans-serif';
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText('NIS', W / 2, H / 2 + 8);
+    var tex = new THREE.CanvasTexture(c);
+    tex.anisotropy = 4;
+    nisBadgeTex = { tex: tex, aspect: c.width / c.height };
+    return nisBadgeTex;
   }
   var badgePool = [];
   for (var _bi = 0; _bi < BUS_MAX; _bi++) {
@@ -1418,9 +1460,10 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     return formatDest(v.route_id, (b && b.trip.h) ? b.trip.h : v.destination);
   }
   function drawBusInfo(v) {
-    var col = routeColors[v.route_id] ? '#' + routeColors[v.route_id].getHexString() : '#9F9F9F';
-    var dest = displayDest(v);
-    var line1 = routeLabel(v.route_id) + (dest ? ' → ' + dest : '');
+    var nis = isNIS(v);
+    var col = nis ? NIS_HEX : (routeColors[v.route_id] ? '#' + routeColors[v.route_id].getHexString() : '#9F9F9F');
+    var dest = nis ? '' : displayDest(v);
+    var line1 = nis ? 'Not in service' : (routeLabel(v.route_id) + (dest ? ' → ' + dest : ''));
     var spd = (v.speed_mph != null && !isNaN(v.speed_mph)) ? Math.round(v.speed_mph) + ' mph' : '–';
     var line2 = 'Bus ' + (v.vehicle_id || '–') + ' · ' + spd + ' · ' + busAgeText(v);
     var c = document.createElement('canvas');
@@ -1831,7 +1874,8 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
           sp.visible = false;
           continue;
         }
-        var bt = markerStale(bs, performance.now()) ? staleBadgeTexture(bs) : routeBadgeTexture(bs.vehicle.route_id);
+        var bt = isNIS(bs.vehicle) ? nisBadgeTexture()
+          : (markerStale(bs, performance.now()) ? staleBadgeTexture(bs) : routeBadgeTexture(bs.vehicle.route_id));
         if (sp.material.map !== bt.tex) { sp.material.map = bt.tex; sp.material.needsUpdate = true; }
         sp.userData.aspect = bt.aspect;
         sp.userData.slot = bi;
@@ -3271,19 +3315,20 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     selectedVehicleId = v.vehicle_id;
     renderBusInstances(); // expand the selected indicator
     var sn = v.route_id;
-    var dest = displayDest(v);
-    var chipBg = routeColors[sn] ? '#' + routeColors[sn].getHexString() : '#F2F2F2';
+    var nis = isNIS(v);
+    var dest = nis ? '' : displayDest(v);
+    var chipBg = nis ? NIS_HEX : (routeColors[sn] ? '#' + routeColors[sn].getHexString() : '#F2F2F2');
     $('bus-chip').style.background = chipBg;
     var chipC = $('bus-chip-c'); // compact bar (staging Phase 2 HTML); guard for HTML without it
     if (chipC) chipC.style.background = chipBg;
-    var compactTitle = routeLabel(sn) + (dest ? ' → ' + dest : '');
+    var compactTitle = nis ? 'Not in service' : (routeLabel(sn) + (dest ? ' → ' + dest : ''));
     $('bus-title').textContent = compactTitle;
     var cTitle = $('bus-compact-title');
     if (cTitle) cTitle.textContent = compactTitle;
     var cId = $('bus-compact-id');
     if (cId) cId.textContent = 'Vehicle ' + (v.vehicle_id || '–');
     $('bus-id').textContent = v.vehicle_id || '–';
-    $('bus-dest').textContent = dest || '–';
+    $('bus-dest').textContent = nis ? 'Not in service' : (dest || '–');
     $('bus-speed').textContent = (v.speed_mph != null && !isNaN(v.speed_mph)) ? Math.round(v.speed_mph) + ' mph' : '–';
     $('bus-heading').textContent = compass(v.bearing);
     var fi = fleetLookup(v.vehicle_id);
@@ -3373,7 +3418,9 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     if (!selectedVehicleId || !lastVehicles) return;
     for (var i = 0; i < lastVehicles.length; i++) {
       if (lastVehicles[i].vehicle_id === selectedVehicleId) {
-        if (routeShown(lastVehicles[i].route_id)) return;
+        // NIS vehicles have no route for routeShown to pass; an open
+        // NIS card stays open (the class renders always — updateBuses).
+        if (isNIS(lastVehicles[i]) || routeShown(lastVehicles[i].route_id)) return;
         var vid = selectedVehicleId;
         hideBus();
         // The card is presentation and closes; an active RIDE on
@@ -3544,16 +3591,17 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     var v = slot.vehicle;
     var li = document.createElement('li');
     var b = document.createElement('button');
-    var dest = displayDest(v);
-    b.setAttribute('aria-label', 'Bus ' + (v.vehicle_id || '') + ', ' + routeLabel(v.route_id) + (dest ? ', to ' + dest : ''));
+    var nis = isNIS(v);
+    var dest = nis ? '' : displayDest(v);
+    b.setAttribute('aria-label', 'Bus ' + (v.vehicle_id || '') + (nis ? ', not in service' : (', ' + routeLabel(v.route_id) + (dest ? ', to ' + dest : ''))));
     var dot = document.createElement('i'); dot.className = 'b-dot';
     var rc = routeColors[v.route_id];
-    dot.style.background = rc ? '#' + rc.getHexString() : '#F2F2F2';
+    dot.style.background = nis ? NIS_HEX : (rc ? '#' + rc.getHexString() : '#F2F2F2');
     var main = document.createElement('span'); main.className = 'b-main';
     var name = document.createElement('b');
-    name.textContent = routeLabel(v.route_id) + ' · Bus ' + (v.vehicle_id || '');
+    name.textContent = nis ? ('Not in service · Bus ' + (v.vehicle_id || '')) : (routeLabel(v.route_id) + ' · Bus ' + (v.vehicle_id || ''));
     var sub = document.createElement('span');
-    sub.textContent = dest ? 'to ' + dest : (routeNames[v.route_id] || 'DDOT');
+    sub.textContent = nis ? 'Not in service' : (dest ? 'to ' + dest : (routeNames[v.route_id] || 'DDOT'));
     main.appendChild(name); main.appendChild(sub);
     if (typeof alertsForRoute === 'function' && typeof alertFx === 'function' && alertsState.ok && alertsForRoute(v.route_id).length) {
       var rList = alertsForRoute(v.route_id);
@@ -3745,6 +3793,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     ['\u27F3', 'Two-finger twist', 'Rotate the view. Tilt to see the elevated route guideways — each route floats at its own height so crossings read as clean overpasses.'],
     ['\u25CF', 'Tap a bus', 'Opens the bus card: vehicle number, route, destination, speed, heading, and how fresh the position reading is. Tap Follow to track it.'],
     ['\u25A0', 'Bus badges', 'Each bus carries a bus-shaped badge showing its route number, bordered in the route\u2019s color. Badges declutter automatically when buses cluster.'],
+    ['NIS', 'Not in service', 'A gray bus with an NIS badge has no trip assignment \u2014 it is traveling to or from the garage or between trips. It is a real bus, not missing data.'],
     ['\u29E9', 'Routes', 'Filter by group (DDOT, SMART, QLINE, People Mover) or individual route. Routes with no live buses are dimmed or hidden automatically.'],
     ['\u25C8', 'Plan trip', 'Enter two points and get a transit itinerary with real routes, transfers, and walking legs — built on the same schedule data as the map.'],
     ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops from the rider\u2019s seat, ordered by travel direction. If a bus is already selected it rides that bus; selecting a bus on the map while Ride along is open rides it too, and the camera follows it.'],
@@ -3759,6 +3808,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     ['\u2194', 'Right-drag', 'Pan across the city. Tilt to see the elevated route guideways — each route floats at its own height so crossings read as clean overpasses.'],
     ['\u25CF', 'Click a bus', 'Opens the bus card: vehicle number, route, destination, speed, heading, and how fresh the position reading is. Click Follow to track it.'],
     ['\u25A0', 'Bus badges', 'Each bus carries a bus-shaped badge showing its route number, bordered in the route\u2019s color. Badges declutter automatically when buses cluster.'],
+    ['NIS', 'Not in service', 'A gray bus with an NIS badge has no trip assignment \u2014 it is traveling to or from the garage or between trips. It is a real bus, not missing data.'],
     ['\u29E9', 'Routes', 'Filter by group (DDOT, SMART, QLINE, People Mover) or individual route. Routes with no live buses are dimmed or hidden automatically.'],
     ['\u25C8', 'Plan trip', 'Enter two points and get a transit itinerary with real routes, transfers, and walking legs — built on the same schedule data as the map.'],
     ['\u25C9', 'Ride along', 'Pick any live bus and see its upcoming stops from the rider\u2019s seat, ordered by travel direction. If a bus is already selected it rides that bus; selecting a bus on the map while Ride along is open rides it too, and the camera follows it.'],
@@ -9939,6 +9989,15 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
       // count, and every pick surface stay gate-clean while the
       // ride keeps its live position.
       var gateHidden = !grp || !grp.visible;
+      // Not in service (2026-11-20): an NIS vehicle has no route, so
+      // no route group exists for it and the group gate would hide
+      // the whole class as if it were an unknown route. The class is
+      // always presentable — the buses are real and moving; they
+      // render with the NIS treatment (gray slot, NIS badge, "Not in
+      // service" labels) instead of a route's. (Agency filter groups
+      // operate per route, so they cannot reach this route-less
+      // class; NIS vehicles render regardless of group toggles.)
+      if (isNIS(v)) gateHidden = false;
       if (gateHidden && !(rideWidget && rideWidget.currentVehicleId === v.vehicle_id)) continue; // unknown or filtered route: skip
       var p = project(v.lat, v.lon);
       // Reconcile the per-vehicle tracker: new buses start one, existing
@@ -10030,7 +10089,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
         vehicle: v,
         x: pt ? pt.x : p[0], z: pt ? pt.z : p[1],
         rotY: rotY,
-        color: routeColors[v.route_id] || new THREE.Color(0xf2f2f2),
+        color: isNIS(v) ? NIS_COLOR : (routeColors[v.route_id] || new THREE.Color(0xf2f2f2)),
         tracker: tr
       };
       if (gateHidden) rideShadowSlot = slotRec; else busSlots.push(slotRec);

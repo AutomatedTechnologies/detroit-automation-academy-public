@@ -91,7 +91,10 @@
  *  vehicles.json: {generated_at, count, vehicles[], sources:{ddot, smart, qline}}
  *  alerts.json:   {generated_at, count, alerts[], sources:[ddotState]}
  * Vehicle record: {agency, route_id, vehicle_id, lat, lon, bearing,
- * speed_mph, destination, updated_at}. Alert record: see mapDdotBulletins.
+ * speed_mph, destination, updated_at, service_status} — plus
+ * service_label "Not in service" on not-in-service records (see the
+ * NOT IN SERVICE note in the FULL INTEGRATION section). Alert
+ * record: see mapDdotBulletins.
  *
  * Write policy (history hygiene): a file is rewritten only when its
  * content changed materially — vehicle set/positions, alert set, or any
@@ -148,6 +151,23 @@
  * covers every agency. See the FULL INTEGRATION section in the body.
  * smart-display.json keeps publishing through the consumer migration
  * as a compatibility copy; its removal is a later, verified step.
+ *
+ * NOT IN SERVICE (2026-11-20, owner directive; resolution of the
+ * Nov 19–20 SMART trip-assignment inquiry): a vehicle whose VP record
+ * carries no trip assignment is deadheading — garage↔route or between
+ * trips — by the feed's own design. Swiftly Support (Dante') confirmed
+ * 2026-11-20 that every vehicle ID sent to them was matched to such a
+ * movement (e.g. 3606 started its first trip 04:12 EST Nov 19; 3652
+ * finished downtown Nov 20 and returned to the garage), and the
+ * owner's same-bundle check proved the empty trip arrives empty in
+ * the raw VP — this pipeline drops nothing. Such vehicles are stamped
+ * at build time by stampServiceStatus: service_status
+ * "not_in_service" + service_label "Not in service"; trip-assigned
+ * vehicles carry service_status "in_service". The stamp rides
+ * vehicles.json (every agency — the identical no-attribution state)
+ * and the SMART display payload. A vehicle carrying a route but no
+ * trip is NOT stamped NIS: that shape is the tripwire and stays in
+ * the alarm path (ROUTE_WITHOUT_TRIP_ALARM).
  */
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
@@ -800,8 +820,29 @@ function finalizeSmartVehicles(smartVehicles, smartTrips, headsigns, routeMeta) 
       hs = metaRoutes[out.route_id].long_name || metaRoutes[out.route_id].short_name || null;
     }
     if (hs) out.destination = hs;
-    return out;
+    return stampServiceStatus(out);
   });
+}
+
+/* NOT IN SERVICE stamping (2026-11-20 — see the header note). The
+ * rule is the feed's own shape on the FINAL record: no route AND no
+ * trip. Route-without-trip is deliberately not stamped — it is the
+ * tripwire shape (VP/TU mismatch) and stays in the alarm path. DDOT
+ * and QLINE records carry no trip_id field; for them the identical
+ * state is the empty route alone. */
+function stampServiceStatus(v) {
+  const nis = !v.route_id && !v.trip_id;
+  const out = { ...v, service_status: nis ? 'not_in_service' : 'in_service' };
+  if (nis) out.service_label = 'Not in service';
+  return out;
+}
+
+function nisCount(vehicles) {
+  return (vehicles || []).filter((v) => v.service_status === 'not_in_service').length;
+}
+
+function routeWithoutTripCount(vehicles) {
+  return (vehicles || []).filter((v) => v.route_id && !v.trip_id).length;
 }
 
 /* ER-FIX-FEED-01 (2026-11-13) — routes_dark + unmatched accounting.
@@ -1738,7 +1779,18 @@ async function main() {
   const smartTripList = smartActive && smartTu ? smartTu.trips : [];
   const smartFinal = smartActive && smart ? finalizeSmartVehicles(smart.vehicles, smartTripList, smartHeadsigns, routeMeta) : [];
   const delaysByTrip = computeSmartTripDelays(smartTripList, smartSched);
-  const allVehicles = [...ddot.vehicles, ...qline.vehicles, ...smartFinal];
+  /* NOT IN SERVICE (2026-11-20): DDOT/QLINE records are stamped here
+   * (SMART records are stamped inside finalizeSmartVehicles, after
+   * TU adoption settles their final attribution). */
+  const ddotFinal = ddot.vehicles.map(stampServiceStatus);
+  const qlineFinal = qline.vehicles.map(stampServiceStatus);
+  const allVehicles = [...ddotFinal, ...qlineFinal, ...smartFinal];
+  const nisByAgency = {
+    ddot: nisCount(ddotFinal),
+    smart: smartActive ? nisCount(smartFinal) : 0,
+    qline: nisCount(qlineFinal),
+  };
+  const routeNoTripSmart = smartActive ? routeWithoutTripCount(smartFinal) : 0;
 
   /* ER-FIX-FEED-01 (2026-11-13): per-agency unmatched accounting +
    * the routes_dark list, both computed from this cycle's own data
@@ -1825,7 +1877,7 @@ async function main() {
     const displayBody = {
       generated_at: nowIso,
       count: smart.vehicles.length,
-      vehicles: smart.vehicles,
+      vehicles: smart.vehicles.map(stampServiceStatus),
       source: smart.state,
     };
     const s = writeIfChanged(smartDisplayPath, displayBody);
@@ -1899,18 +1951,31 @@ async function main() {
   console.log(`track-state: ${trackStats.tracked} vehicles (teleport=${trackStats.teleport}, speed-mismatch=${trackStats.mismatch}, stale=${trackStats.stale}, missed-detected=${trackStats.missed})`);
   console.log(`vehicles.json: ${v} (ddot=${ddot.vehicles.length} ok=${ddot.state.ok}, qline=${qline.vehicles.length} ok=${qline.state.ok}, smart=${smartFinal.length} ok=${smartActive ? smart.state.ok : false})`);
   console.log(
+    `not in service (no trip assignment; expected fleet state — deadhead / garage moves): `
+    + `ddot=${nisByAgency.ddot}/${ddot.vehicles.length} `
+    + `smart=${nisByAgency.smart}/${smartFinal.length} qline=${nisByAgency.qline}/${qline.vehicles.length}`
+  );
+  console.log(
     `unmatched vehicles: ddot=${unmatchedByAgency.ddot}/${ddot.vehicles.length} `
     + `smart=${unmatchedByAgency.smart}/${smartFinal.length} qline=${unmatchedByAgency.qline}/${qline.vehicles.length}`
   );
-  for (const [agency, n] of Object.entries(unmatchedByAgency)) {
-    const total = agency === 'ddot' ? ddot.vehicles.length
-      : agency === 'smart' ? smartFinal.length : qline.vehicles.length;
-    if (n > UNMATCHED_ALARM_THRESHOLD) {
-      console.log(
-        `::warning::UNMATCHED_VEHICLES_ALARM agency=${agency} unmatched=${n} total=${total} `
-        + `threshold=${UNMATCHED_ALARM_THRESHOLD} — vehicles served without route attribution`
-      );
-    }
+  /* Tripwires (2026-11-20 reclassification): plain no-trip vehicles
+   * are NIS fleet state and no longer alarm. What still alarms: DDOT
+   * vehicles without route attribution (BusTime always attributes a
+   * route — a route-less DDOT vehicle is a genuine anomaly), and
+   * SMART vehicles carrying a route but no trip (a VP/TU mismatch
+   * shape). */
+  if (unmatchedByAgency.ddot > UNMATCHED_ALARM_THRESHOLD) {
+    console.log(
+      `::warning::UNMATCHED_VEHICLES_ALARM agency=ddot unmatched=${unmatchedByAgency.ddot} total=${ddot.vehicles.length} `
+      + `threshold=${UNMATCHED_ALARM_THRESHOLD} — vehicles served without route attribution`
+    );
+  }
+  if (routeNoTripSmart > 0) {
+    console.log(
+      `::warning::ROUTE_WITHOUT_TRIP_ALARM agency=smart count=${routeNoTripSmart} total=${smartFinal.length} `
+      + `— vehicles carrying a route but no trip (VP/TU mismatch shape)`
+    );
   }
   console.log(
     `routes_dark: ${routesDark.length} route(s) with scheduled trips today and no live vehicle`
