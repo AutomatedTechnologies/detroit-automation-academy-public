@@ -1,6 +1,6 @@
 {
   "kind": "feed-raw-bundle/v1",
-  "collected_at": "2026-11-20T09:05:16.868Z",
+  "collected_at": "2026-11-20T09:07:56.413Z",
   "ddot": {
     "configured": true,
     "vehicle_batches": [
@@ -17,10 +17,8 @@
           "9",
           "10"
         ],
-        "ok": true,
-        "file": "ddot-vehicles-0.json",
-        "bytes": 7874,
-        "sha256": "37d60aef0d2ffcd434d5fccc2a58b679baf4fc491e13757e8bd54adb10ce0240"
+        "ok": false,
+        "error": "fetch failed"
       },
       {
         "routes": [
@@ -35,10 +33,8 @@
           "23",
           "27"
         ],
-        "ok": true,
-        "file": "ddot-vehicles-1.json",
-        "bytes": 2782,
-        "sha256": "d54ac387a51423ddc33f63aec3dc354cccb2f17e0d6c5b541393bc1dfbe062ba"
+        "ok": false,
+        "error": "fetch failed"
       },
       {
         "routes": [
@@ -53,10 +49,8 @@
           "42",
           "43"
         ],
-        "ok": true,
-        "file": "ddot-vehicles-2.json",
-        "bytes": 1116,
-        "sha256": "80c12ea520fe55a680d4d3c96e0e6ebcd1a411b3c3f863aa9ea1781ab433bd4c"
+        "ok": false,
+        "error": "fetch failed"
       },
       {
         "routes": [
@@ -68,36 +62,184 @@
           "67",
           "68"
         ],
-        "ok": true,
-        "file": "ddot-vehicles-3.json",
-        "bytes": 521,
-        "sha256": "392936b74947dc880d4437f20f22cd9ad878766d9cd0bafa1b218e309a170eb7"
+        "ok": false,
+        "error": "fetch failed"
       }
     ],
     "bulletins": {
-      "mode": "reuse",
-      "fetched_at": "2026-11-20T08:12:50.897Z"
+      "mode": "fresh",
+      "fetched_at": "2026-11-20T09:07:56.413Z",
+      "routes": {
+        "1": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "2": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "3": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "4": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "5": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "6": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "7": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "8": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "9": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "10": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "11": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "12": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "13": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "15": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "16": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "17": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "18": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "19": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "23": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "27": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "29": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "30": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "31": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "32": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "38": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "39": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "40": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "41": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "42": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "43": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "46": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "47": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "52": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "54": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "60": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "67": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        },
+        "68": {
+          "ok": false,
+          "error": "The operation was aborted due to timeout"
+        }
+      }
     }
   },
   "qline": {
     "ok": true,
     "file": "qline-vp.pb",
     "bytes": 15,
-    "sha256": "601ac34d172208648de1a62ee0e44a510cd3eb88a7240b9be93e2bd86e2c7310"
+    "sha256": "469fe31e104a64b50beccd8f7e966154fb2afbc47042c3c6efd07b237f1698aa"
   },
   "smart": {
     "active": true,
     "vp": {
       "ok": true,
       "file": "smart-vp.pb",
-      "bytes": 4028,
-      "sha256": "b39cfa32617f445024f7ad9315908bee8e6c7995ee1957bffb6f2ffbb07c5d51"
+      "bytes": 4213,
+      "sha256": "74db6a69d458de74ba9eaeb080a485f86481d52d530bb5e27e377b0ea9ac267f"
     },
     "tu": {
       "ok": true,
       "file": "smart-tu.pb",
-      "bytes": 123017,
-      "sha256": "46c71e7ec2a514946a0d53f04c6ba70b865ff65513b5d13eb24e343282503b15"
+      "bytes": 135241,
+      "sha256": "50a5b7e08445fd763908588eee4534d53b0d4bbfef7a782dfa55fdd0604c55bb"
     }
   }
 }
