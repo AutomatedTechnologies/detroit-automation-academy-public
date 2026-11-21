@@ -2,38 +2,17 @@
 	"bustime-response": {
 		"vehicle": [
 			{
-				"vid": "2541",
-				"tmstmp": "20261120 22:43",
-				"lat": "42.38643304377346",
-				"lon": "-83.05098210409943",
-				"hdg": "151",
-				"pid": 502481,
-				"rt": "52",
-				"des": "Rosa Parks Transit Center",
-				"pdist": 29011,
-				"dly": false,
-				"spd": 19,
-				"tatripid": "1203",
-				"origtatripno": "1325793",
-				"tablockid": "52-200",
-				"zone": "",
-				"mode": 1,
-				"psgld": "N/A",
-				"stst": 79200,
-				"stsd": "2026-11-20"
-			},
-			{
 				"vid": "1827",
-				"tmstmp": "20261120 22:43",
-				"lat": "42.42964925571325",
-				"lon": "-83.23891727182391",
-				"hdg": "183",
+				"tmstmp": "20261120 22:46",
+				"lat": "42.41534376947741",
+				"lon": "-83.23823369053989",
+				"hdg": "178",
 				"pid": 1197,
 				"rt": "60",
 				"des": "Fairlane",
-				"pdist": 16192,
+				"pdist": 21394,
 				"dly": false,
-				"spd": 15,
+				"spd": 0,
 				"tatripid": "5661",
 				"origtatripno": "1323271",
 				"tablockid": "60-1",
@@ -45,7 +24,7 @@
 			},
 			{
 				"vid": "1404",
-				"tmstmp": "20261120 22:43",
+				"tmstmp": "20261120 22:46",
 				"lat": "42.41936412324025",
 				"lon": "-82.91587141717615",
 				"hdg": "298",
@@ -63,6 +42,27 @@
 				"psgld": "N/A",
 				"stst": 79200,
 				"stsd": "2026-11-20"
+			},
+			{
+				"vid": "1812",
+				"tmstmp": "20261120 22:46",
+				"lat": "42.330544542354936",
+				"lon": "-83.05049343170225",
+				"hdg": "316",
+				"pid": 502477,
+				"rt": "67",
+				"des": "Rosa Parks Transit Center",
+				"pdist": 64875,
+				"dly": false,
+				"spd": 7,
+				"tatripid": "1152",
+				"origtatripno": "1325252",
+				"tablockid": "900-5",
+				"zone": "",
+				"mode": 1,
+				"psgld": "N/A",
+				"stst": 79200,
+				"stsd": "2026-11-20"
 			}
 		],
 		"error": [
@@ -72,6 +72,10 @@
 			},
 			{
 				"rt": "47",
+				"msg": "No data found for parameter"
+			},
+			{
+				"rt": "52",
 				"msg": "No data found for parameter"
 			},
 			{
