@@ -157,30 +157,78 @@ export function stopsWithinRadius(stops, proj, lat, lon, radiusM) {
  * any order — so "North Park & Providence", "Providence & North Park"
  * and "North Park Providence Dr" all find the same stop. An exact
  * stop-id match (full id or the part after the agency prefix) also
- * qualifies. Registry order and the caller's cap are preserved. */
+ * qualifies. (Ordering superseded by FIX-C2 below, 2026-11-21.) */
 var SUFFIX_EXPAND = { dr: 'drive', st: 'street', ave: 'avenue', av: 'avenue',
   blvd: 'boulevard', rd: 'road', ln: 'lane', ct: 'court', pl: 'place',
   hwy: 'highway', ter: 'terrace', cir: 'circle', sq: 'square' };
+/* FIX-C1 (2026-11-21, field defect): number words normalise to digits
+ * on BOTH sides of the matcher, so a typed "9 mile" matches the route
+ * named "Nine Mile Crosstown" (SMART 710) and a spelled "nine mile"
+ * matches stops named "9 Mile …". Fused tokens split at digit/letter
+ * boundaries ("9mile" -> 9, mile). Cardinals zero..twenty. */
+var NUMBER_WORDS = { zero: '0', one: '1', two: '2', three: '3', four: '4',
+  five: '5', six: '6', seven: '7', eight: '8', nine: '9', ten: '10',
+  eleven: '11', twelve: '12', thirteen: '13', fourteen: '14', fifteen: '15',
+  sixteen: '16', seventeen: '17', eighteen: '18', nineteen: '19', twenty: '20' };
 export function normalizeSearchText(v) {
-  return String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').split(/\s+/)
-    .filter(Boolean).map(function (t) { return SUFFIX_EXPAND[t] || t; }).join(' ');
+  var toks = String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').split(/\s+/).filter(Boolean);
+  var out = [];
+  toks.forEach(function (t) {
+    t = SUFFIX_EXPAND[t] || t;
+    var parts = t.match(/[a-z]+|[0-9]+/g) || [t];
+    parts.forEach(function (p) { out.push(NUMBER_WORDS[p] || p); });
+  });
+  return out.join(' ');
 }
-export function searchStops(stops, q, limit) {
+/* FIX-C2 (2026-11-21, field defect): result ORDER. Matches are
+ * collected in full before the cap applies — the old loop capped in
+ * registry order, so the DDOT segment filled all 12 rows and SMART
+ * name matches (e.g. the 710's 9 Mile stops) fell below the fold.
+ * Exact stop-id matches pin first. With a known user position
+ * (nearXY, projected metres — the stop records' own x/z space) the
+ * rest sort nearest-first. Without one, matches interleave by
+ * segment (registry order kept inside each segment) so no agency
+ * segment alone can bury a name match. */
+function interleaveSegs(hits) {
+  var bySeg = {}, order = [];
+  hits.forEach(function (s) {
+    var seg = s.seg || '';
+    if (!bySeg[seg]) { bySeg[seg] = []; order.push(seg); }
+    bySeg[seg].push(s);
+  });
+  if (order.length < 2) return hits;
+  var out = [], added = true;
+  while (added) {
+    added = false;
+    order.forEach(function (seg) {
+      if (bySeg[seg].length) { out.push(bySeg[seg].shift()); added = true; }
+    });
+  }
+  return out;
+}
+export function searchStops(stops, q, limit, nearXY) {
   var raw = String(q || '').trim().toLowerCase();
   if (!raw) return [];
   var tokens = normalizeSearchText(raw).split(' ').filter(Boolean);
   if (!tokens.length) return [];
-  var out = [];
-  for (var i = 0; i < stops.length && out.length < (limit || 12); i++) {
+  var cap = limit || 12, exact = [], hits = [];
+  for (var i = 0; i < stops.length; i++) {
     var s = stops[i];
-    if (String(s.id).toLowerCase() === raw || smartStopKey(s.id).toLowerCase() === raw) { out.push(s); continue; }
+    if (String(s.id).toLowerCase() === raw || smartStopKey(s.id).toLowerCase() === raw) { exact.push(s); continue; }
     if (!s.n) continue;
     var name = ' ' + normalizeSearchText(s.n) + ' ';
     var ok = true;
     for (var t = 0; t < tokens.length; t++) if (name.indexOf(tokens[t]) < 0) { ok = false; break; }
-    if (ok) out.push(s);
+    if (ok) hits.push(s);
   }
-  return out;
+  if (nearXY && isFinite(nearXY.x) && isFinite(nearXY.z)) {
+    var wrapped = hits.map(function (s) {
+      return { s: s, d: (s.x == null || s.z == null) ? Infinity : Math.hypot(s.x - nearXY.x, s.z - nearXY.z) };
+    });
+    wrapped.sort(function (a, b) { return (a.d - b.d) || (a.s.idx - b.s.idx); });
+    return exact.concat(wrapped.map(function (w) { return w.s; })).slice(0, cap);
+  }
+  return exact.concat(interleaveSegs(hits)).slice(0, cap);
 }
 
 /* FIX-B U4 (2026-11-11): route-first search. A query matches a route
