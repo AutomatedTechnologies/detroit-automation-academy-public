@@ -284,10 +284,21 @@ async function fetchRawJson(url, timeoutMs = 15000) {
 /* ---------------- lib/mappers.js port ---------------- */
 
 function toIsoBusTime(tmstmp) {
-  // BusTime v3 tmstmp: "YYYYMMDD HH:MM" (agency local, America/Detroit)
+  // BusTime v3 tmstmp: "YYYYMMDD HH:MM" (agency local, America/Detroit).
+  // Timezone hygiene (2026-11-21, Relevant View build): the published
+  // updated_at is a true instant (Z-suffixed UTC), resolved through
+  // detroitOffsetSec like every other Detroit wall time in this file.
+  // The previous naive form ("2026-11-21T12:01:00", no designator)
+  // parsed as the READER's local time, so every consumer outside
+  // America/Detroit computed a wrong position age — the Relevant View
+  // rule-7 threshold (180 s) made that a correctness defect, not a
+  // cosmetic one. feedEpochSec still accepts the naive form for
+  // legacy files.
   const m = /^(\d{4})(\d{2})(\d{2}) (\d{2}):(\d{2})/.exec(String(tmstmp || ''));
   if (!m) return null;
-  return `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:00`;
+  let guess = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], 0) / 1000;
+  for (let i = 0; i < 3; i++) guess = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], 0) / 1000 - detroitOffsetSec(guess);
+  return new Date(guess * 1000).toISOString();
 }
 
 function num(v) {
