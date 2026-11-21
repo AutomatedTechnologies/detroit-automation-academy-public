@@ -180,7 +180,7 @@
   <!-- shared picker -->
   <div class="picker" id="picker">
     <div class="row">
-      <input type="search" id="stop-search" placeholder="Search a stop — try “Warren” or “Woodward”" aria-label="Search a stop">
+      <input type="search" id="stop-search" placeholder="Search a stop or route — try “9 Mile” or “Woodward”" aria-label="Search a stop or route">
       <button type="button" class="btn" id="locate-btn">Use my location</button>
     </div>
     <ul class="results" id="results"></ul>
@@ -210,7 +210,7 @@
   </section>
 
   <footer class="fine">
-<p class="build-stamp">PAGE STAMP — Published: 2026-11-13 05:34 EST · Agent: Minion · Authorized: J. Spencer Smith, directive of 2026-11-13 (Departure Board V2 — Direction B pick, 05:31 EST)</p>
+<p class="build-stamp">PAGE STAMP — Published: 2026-11-21 17:28 EST · Agent: Minion · Authorized: J. Spencer Smith, directive of 2026-11-21 (field defect fix — search ranks by distance and matches number words, so SMART 710 Nine Mile Crosstown surfaces)</p>
 <p class="note">Times: DDOT and SMART from the published timetables (DDOT feed S1000182 · SMART feed S1000147);
       SMART live estimates from Swiftly trip updates and the publisher&rsquo;s trip-delay join, checked against the
       published SMART schedule. Positions: DDOT via Clever Devices BusTime, SMART via Swiftly, QLINE via its public
@@ -856,25 +856,103 @@ function pickPlace(place, distM){
 /* ---------- search + locate (V1 behavior, carried) ---------- */
 var SUFFIX_EXPAND = { dr:'drive', st:'street', ave:'avenue', av:'avenue', blvd:'boulevard',
   rd:'road', ln:'lane', ct:'court', pl:'place', hwy:'highway', ter:'terrace', cir:'circle', sq:'square' };
+/* FIX-C (2026-11-21, field defect — SMART 710 invisible in search):
+ * kept in sync with board-core.js. C1: number words normalise to
+ * digits on both sides of the matcher ("9 mile" finds the route
+ * named "Nine Mile Crosstown"; "nine mile" finds "9 Mile" stops);
+ * fused tokens split at digit/letter boundaries. C2: matches are
+ * collected in full before the cap — with a known location they
+ * sort nearest-first, without one they interleave by segment, so
+ * the DDOT registry segment can no longer fill every row and bury
+ * a SMART name match below the fold. */
+var NUMBER_WORDS = { zero:'0', one:'1', two:'2', three:'3', four:'4', five:'5',
+  six:'6', seven:'7', eight:'8', nine:'9', ten:'10', eleven:'11', twelve:'12',
+  thirteen:'13', fourteen:'14', fifteen:'15', sixteen:'16', seventeen:'17',
+  eighteen:'18', nineteen:'19', twenty:'20' };
 function normalizeSearchText(v){
-  return String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').split(/\s+/)
-    .filter(Boolean).map(function(t){ return SUFFIX_EXPAND[t] || t; }).join(' ');
+  var toks = String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').split(/\s+/).filter(Boolean);
+  var out = [];
+  toks.forEach(function(t){
+    t = SUFFIX_EXPAND[t] || t;
+    var parts = t.match(/[a-z]+|[0-9]+/g) || [t];
+    parts.forEach(function(p){ out.push(NUMBER_WORDS[p] || p); });
+  });
+  return out.join(' ');
+}
+function interleaveSegs(hits){
+  var bySeg = {}, order = [];
+  hits.forEach(function(s){
+    var seg = s.seg || '';
+    if (!bySeg[seg]){ bySeg[seg] = []; order.push(seg); }
+    bySeg[seg].push(s);
+  });
+  if (order.length < 2) return hits;
+  var out = [], added = true;
+  while (added){
+    added = false;
+    order.forEach(function(seg){
+      if (bySeg[seg].length){ out.push(bySeg[seg].shift()); added = true; }
+    });
+  }
+  return out;
 }
 function searchStops(q, limit){
   var raw = String(q || '').trim().toLowerCase();
   if (!raw) return [];
   var tokens = normalizeSearchText(raw).split(' ').filter(Boolean);
   if (!tokens.length) return [];
-  var out = [];
-  for (var i = 0; i < S.reg.stops.length && out.length < (limit || 12); i++){
+  var cap = limit || 12, exact = [], hits = [];
+  for (var i = 0; i < S.reg.stops.length; i++){
     var s = S.reg.stops[i];
-    if (String(s.id).toLowerCase() === raw || smartStopKey(s.id).toLowerCase() === raw){ out.push(s); continue; }
+    if (String(s.id).toLowerCase() === raw || smartStopKey(s.id).toLowerCase() === raw){ exact.push(s); continue; }
     if (!s.n) continue;
     var name = ' ' + normalizeSearchText(s.n) + ' ', ok = true;
     for (var t = 0; t < tokens.length; t++) if (name.indexOf(tokens[t]) < 0){ ok = false; break; }
-    if (ok) out.push(s);
+    if (ok) hits.push(s);
   }
-  return out;
+  if (S.userLatLon){
+    var p = projectLatLon(S.userLatLon.lat, S.userLatLon.lon);
+    var wrapped = hits.map(function(s){
+      return { s:s, d:(s.x == null || s.z == null) ? Infinity : Math.hypot(s.x - p[0], s.z - p[1]) };
+    });
+    wrapped.sort(function(a,b){ return (a.d - b.d) || (a.s.idx - b.s.idx); });
+    return exact.concat(wrapped.map(function(w){ return w.s; })).slice(0, cap);
+  }
+  return exact.concat(interleaveSegs(hits)).slice(0, cap);
+}
+/* FIX-B U4 route-first search (board-core.js searchRoutes, ported):
+ * exact route id first, then every-token name matches. */
+function searchRoutes(q, limit){
+  var raw = String(q || '').trim().toLowerCase();
+  if (!raw || !S.reg || !S.reg.routesById) return [];
+  var tokens = normalizeSearchText(raw).split(' ').filter(Boolean);
+  var exact = [], named = [];
+  Object.keys(S.reg.routesById).forEach(function(id){
+    var rec = S.reg.routesById[id];
+    var item = { id:rec.id, name:rec.name, seg:rec.seg, label:routeLabel(rec.id) };
+    if (String(rec.id).toLowerCase() === raw){ exact.push(item); return; }
+    if (!tokens.length) return;
+    var name = ' ' + normalizeSearchText(rec.name) + ' ', ok = true;
+    for (var t = 0; t < tokens.length; t++) if (name.indexOf(tokens[t]) < 0){ ok = false; break; }
+    if (ok) named.push(item);
+  });
+  return exact.concat(named).slice(0, limit || 3);
+}
+function pickRoutePlace(rid){
+  var served = S.reg.stops.filter(function(s){ return (s.r || []).map(String).indexOf(String(rid)) >= 0; });
+  if (!served.length) return;
+  var st = served[0], distM = null;
+  if (S.userLatLon){
+    var p = projectLatLon(S.userLatLon.lat, S.userLatLon.lon), bd = Infinity;
+    served.forEach(function(s){
+      if (s.x == null || s.z == null) return;
+      var d = Math.hypot(s.x - p[0], s.z - p[1]);
+      if (d < bd){ bd = d; st = s; }
+    });
+    if (bd < Infinity) distM = bd;
+  }
+  var place = S.placeByStopIdx[st.idx];
+  if (place) pickPlace(place, distM);
 }
 function wirePicker(){
   var inp = $('stop-search'), ul = $('results');
@@ -882,14 +960,34 @@ function wirePicker(){
     ul.innerHTML = '';
     var q = inp.value;
     if (!String(q || '').trim()) return;
-    var hits = searchStops(q, 12), n = 0;
+    var n = 0;
+    /* FIX-B U4: route results keep the first position, above stops. */
+    searchRoutes(q, 3).forEach(function(rt){
+      var li = document.createElement('li');
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.innerHTML = '<span>' + esc(rt.label) + '<span class="rsub">Route · ' + esc(agencyName(rt.seg)) +
+        '</span></span><span class="sid">Route ' + esc(rt.id) + '</span>';
+      b.addEventListener('click', function(){
+        ul.innerHTML = ''; inp.value = '';
+        pickRoutePlace(rt.id);
+      });
+      li.appendChild(b); ul.appendChild(li); n++;
+    });
+    var hits = searchStops(q, 12);
     hits.forEach(function(st){
       var li = document.createElement('li');
       var b = document.createElement('button');
       b.type = 'button';
       var sub = (st.r || []).map(function(rid){ return routeLabel(rid); }).join(' · ');
+      var distTxt = '';
+      if (S.userLatLon && st.x != null && st.z != null){
+        var pp = projectLatLon(S.userLatLon.lat, S.userLatLon.lon);
+        var dd = Math.hypot(st.x - pp[0], st.z - pp[1]);
+        distTxt = ' · ' + (dd < 1000 ? Math.round(dd) + ' m' : (dd/1609.34).toFixed(1) + ' mi');
+      }
       b.innerHTML = '<span>' + esc(st.n || 'Stop') + (sub ? '<span class="rsub">' + esc(sub) + '</span>' : '') +
-        '</span><span class="sid">' + agencyName(st.seg) + ' · Stop ' + esc(smartStopKey(st.id)) + '</span>';
+        '</span><span class="sid">' + agencyName(st.seg) + ' · Stop ' + esc(smartStopKey(st.id)) + distTxt + '</span>';
       b.addEventListener('click', function(){
         ul.innerHTML = ''; inp.value = '';
         pickPlace(S.placeByStopIdx[st.idx], null);
@@ -898,7 +996,7 @@ function wirePicker(){
     });
     if (!n){
       var li = document.createElement('li');
-      li.innerHTML = '<button type="button" disabled>No stop matches that search — try a street name or a stop number.</button>';
+      li.innerHTML = '<button type="button" disabled>No stop or route matches that search — try a street name, a route, or a stop number.</button>';
       ul.appendChild(li);
     }
   });
