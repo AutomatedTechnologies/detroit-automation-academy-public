@@ -1,8 +1,8 @@
 # deploy-manifest.txt — GENERATED render of the Singular Reference (DAADV5 V5-T5c; absorbs V4-T8 R6).
 # Source: AutomatedTechnologies/academy-registry registry.db (page_checks census) + site tree snapshot (tools/site_tree_snapshot.json),
 # via tools/generate_deploy_manifest.py. Do not hand-edit; regenerate.
-# Registry state: schema v9 · census pages 356 · page-bearing directories 19 (computed from page_checks).
-# Site state: AutomatedTechnologies/detroit-automation-academy-public @ 85567a0af8de147a323e91d3ee442de8eead049a · tree entries 1175 · tree directories 35 = deploy 28 + excluded 7.
+# Registry state: schema v11 · census pages 360 · page-bearing directories 23 (computed from page_checks).
+# Site state: AutomatedTechnologies/detroit-automation-academy-public @ 7d75c35d51f3ca2029ece3bbb9dd5c7fd8f44762 · tree entries 1261 · tree directories 39 = deploy 32 + excluded 7.
 # Rule: root *.html/*.css/*.js by glob; root .json by the reviewed allowlist (security class, R2 2026-10-23); named root files;
 # directories = page-bearing (computed) + named non-page classes (metadata / shared assets / feed data / generated endpoints).
 # A tree directory in neither the deploy set nor the exclude set fails generation and fails the deploy check — no silent drift.
@@ -32,6 +32,7 @@ file sitemap.xml
 file feed.xml
 file feed.xsl
 dir .well-known
+dir Periodical
 dir apple-learning-coach
 dir assets
 dir atc
@@ -48,13 +49,13 @@ dir live-data
 dir live-transit
 dir live-transit-detroit
 dir notes
-dir planner
-dir Periodical
 dir periodical
+dir planner
 dir press
 dir qr_codes
 dir registry
 dir releases
+dir route-finder
 dir signal
 dir software
 dir store
