@@ -1883,7 +1883,8 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
         sp.scale.set(h * bt.aspect, h, 1);
         sp.position.set(bs.x, yBase, bs.z);
         // Itinerary focus: dim badges for routes not in the active trip.
-        sp.material.opacity = itineraryDims(bs.vehicle.route_id) ? 0.2 : 1;
+        sp.material.opacity = itineraryDims(bs.vehicle.route_id) ? 0.2
+          : (rvStale(bs.vehicle) ? 0.35 : 1); // rule 7: stale positions dim, age rides the bus label
         sp.visible = true;
       } else {
         sp.visible = false;
@@ -4563,12 +4564,19 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
       } catch (e2) {}
     }
     if (pendingNearMe) {
-      setNearMe(true);
+      setNearMe(true, RV_RADIUS_M);
+      rvEngage();
     } else if (filterState.nearMe) {
       computeNearMe();
       applyFilters();
       syncFilterUI();
       refreshFilterCounts();
+      if (rvState.active) rvEngage();
+    } else {
+      // Relevant View (owner directive 2026-11-20, pick 2026-11-21):
+      // location granted makes the relevant view the default state.
+      setNearMe(true, RV_RADIUS_M);
+      rvEngage();
     }
   }
   locateBtn.addEventListener('click', function () {
@@ -6559,7 +6567,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
         var tm = document.createElement('span');
         tm.className = 'trip-leg-time';
         tm.textContent = tripClock(l.boardSec) + ' → ' + tripClock(l.alightSec) + ' · ' + tripProvLabel(l) +
-          (l.interp ? ' · estimated' : '') + (l.liveVehicles > 0 ? ' · ' + l.liveVehicles + ' live' : '');
+          (l.interp ? ' · estimated' : '') + (l.liveVehicles > 0 ? ' · ' + l.liveVehicles + ' live' : (l.liveStaleOnly ? ' · LIVE POSITION STALE' : ''));
         body.appendChild(tm);
         if (l.provenance === 'live' || l.disrupted) {
           var badge = document.createElement('span');
@@ -7765,6 +7773,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   var filterState = { groups: {}, routes: {}, hideIdle: true, nearMe: false };
   var NEAR_ME_M = 1250;
   var nearMeSet = null;   // rid -> true, rebuilt when you move or toggle
+  var nearMeRadiusM = NEAR_ME_M; // active radius; Relevant View sets 500
   var userXZ = null;      // your projected position, set by onLocated
   var pendingNearMe = false;
 
@@ -7804,7 +7813,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   function computeNearMe() {
     nearMeSet = {};
     if (!userXZ || !stopData) return;
-    var r2 = NEAR_ME_M * NEAR_ME_M;
+    var r2 = nearMeRadiusM * nearMeRadiusM;
     for (var i = 0; i < stopData.length; i++) {
       var s = stopData[i];
       var dx = s.x - userXZ[0], dz = s.z - userXZ[1];
@@ -7824,8 +7833,11 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   var nearMeSnapshot = null; // filterState.routes copy taken when near-me engages
   var nearMeAdded = {};      // rids whose on-state is attributable to near-me
 
-  function setNearMe(on) {
+  function setNearMe(on, radiusM) {
     filterState.nearMe = on;
+    nearMeRadiusM = radiusM || NEAR_ME_M;
+    var nsub = $('nearme-sub');
+    if (nsub) nsub.textContent = nearMeRadiusM + ' m';
     pendingNearMe = false;
     var t = $('nearme-toggle');
     if (t) t.setAttribute('aria-pressed', String(on));
@@ -7851,6 +7863,203 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
       hideToast();
     }
   }
+
+
+  // === RELEVANT VIEW (owner directive 2026-11-20 21:07 EST; pick
+  // 2026-11-21 11:47 EST: "Build both as written") =====================
+  // Spec: RELEVANT-VIEW-DESIGN-2026-11-20.md, rules 1-7. When location
+  // is granted, the default state is relevant to the rider: centered on
+  // the rider (onLocated's standing glide), nearest stops inside
+  // RV_RADIUS_M with the nearest leading as YOUR STOP, only the next
+  // departures from those stops (standing LIVE / SCHEDULED basis
+  // labels) and the vehicles on the routes serving them (the near-me
+  // route set at RV_RADIUS_M). Not-in-service vehicles are never shown
+  // (updateBuses gate above). The full network is one tap away (the
+  // panel's Explore button, or the standing Explore handle). The
+  // no-location state is unchanged. Location stays on-device: this
+  // section reads only userXZ, which onLocated sets locally.
+  // Rule 7 (data age): the header always shows feed age (rvFeedAgeText,
+  // wired into the poll path); a position whose presented age exceeds
+  // RV_STALE_S renders dimmed (badge opacity in updateBusBadges) with
+  // its age printed on the bus label (busAgeText in drawBusInfo), never
+  // as live; fuseJourneys counts only positions inside RV_STALE_S as
+  // live, and a route with only stale positions reads LIVE POSITION
+  // STALE on planner legs and in this panel.
+  var RV_RADIUS_M = 500;
+  var RV_STALE_S = 180;
+  var rvState = { active: false, stops: [], lead: null };
+  var rvFeedGenMs = null;
+  var rvTimer = null;
+
+  function rvAgeS(v, nowMs) {
+    if (!v || !v.updated_at) return Infinity;
+    var t = new Date(v.updated_at).getTime();
+    if (isNaN(t)) return Infinity;
+    return Math.max(0, (nowMs - t) / 1000);
+  }
+  function rvStale(v) { return rvAgeS(v, Date.now()) > RV_STALE_S; }
+  function rvFeedAgeText() {
+    if (!rvFeedGenMs) return null;
+    var ageMin = Math.max(0, Math.round((Date.now() - rvFeedGenMs) / 60000));
+    return 'updated ' + fmtTime(new Date(rvFeedGenMs)) + ' · ' +
+      (ageMin < 1 ? '<1 min old' : ageMin + ' min old');
+  }
+  setInterval(function () {
+    if (rvFeedGenMs && !lastHeaderWarn) setHeader(lastTotal, rvFeedAgeText(), false);
+  }, 30000);
+
+  function rvComputeStops() {
+    rvState.stops = [];
+    rvState.lead = null;
+    if (!userXZ || !stopData) return;
+    var r2 = RV_RADIUS_M * RV_RADIUS_M, out = [];
+    for (var i = 0; i < stopData.length; i++) {
+      var s = stopData[i];
+      if (!s || s.place || s.mogo || s.pm) continue;
+      var dx = s.x - userXZ[0], dz = s.z - userXZ[1];
+      var d2 = dx * dx + dz * dz;
+      if (d2 <= r2) out.push({ st: s, idx: i, dist: Math.sqrt(d2) });
+    }
+    out.sort(function (a, b) { return a.dist - b.dist; });
+    rvState.stops = out;
+    rvState.lead = out.length ? out[0] : null;
+  }
+
+  function rvEngage() {
+    rvComputeStops();
+    rvState.active = true;
+    var panel = $('rv-panel');
+    if (panel) panel.hidden = false;
+    if (typeof ensureTripEngine === 'function') ensureTripEngine();
+    rvRenderPanel();
+    if (!rvTimer) rvTimer = setInterval(function () { if (rvState.active) rvRenderPanel(); }, 30000);
+  }
+  function rvDisengage() {
+    rvState.active = false;
+    var panel = $('rv-panel');
+    if (panel) panel.hidden = true;
+    if (filterState.nearMe) setNearMe(false);
+  }
+
+  function rvRowEl(rid, head, live, whenText, title) {
+    var row = document.createElement('div');
+    row.className = 'rv-row';
+    var b = document.createElement('b');
+    b.textContent = routeLabel(rid) + (head ? ' · ' + head : '');
+    row.appendChild(b);
+    var tag = document.createElement('span');
+    tag.className = 'rv-tag' + (live ? ' live' : '');
+    tag.textContent = live ? 'LIVE' : 'SCHEDULED';
+    row.appendChild(tag);
+    var t = document.createElement('span');
+    t.className = 'rv-when';
+    t.textContent = whenText;
+    if (title) t.title = title;
+    row.appendChild(t);
+    return row;
+  }
+  // Departures for one stop in the panel's unified shape. Scheduled and
+  // trip-matched-live rows come from computeStopArrivals (the stop
+  // card's own engine); a SMART-only stop falls back to its Swiftly
+  // trip-update rows, exactly as the stop card does.
+  function rvStopRows(entry, nowMs) {
+    var out = [];
+    var res = computeStopArrivals(entry.idx, nowMs);
+    if (res.state === 'ready') {
+      var nowSec = detroitParts(nowMs).sec;
+      res.rows.forEach(function (r) {
+        var dSec = r.eta - nowSec;
+        out.push({ rid: r.rid, head: r.head, live: r.live, dSec: dSec,
+          when: dSec < 45 ? 'now' : (dSec <= 5400 ? 'in ' + Math.round(dSec / 60) + 'm' : tripClock(r.eta)),
+          title: 'Scheduled arrival ' + tripClock(r.eta) + (r.live ? ' — live estimate for bus ' + r.bus : '') });
+      });
+    } else if (res.state === 'na') {
+      var tu = (typeof smartTuRowsForStop === 'function') ? smartTuRowsForStop(entry.st, nowMs) : null;
+      if (tu) tu.forEach(function (r) {
+        var dSec = r.time - nowMs / 1000;
+        if (dSec < -30) return;
+        out.push({ rid: r.rid, head: '', live: true, dSec: dSec,
+          when: dSec < 45 ? 'now' : (dSec <= 5400 ? 'in ' + Math.round(dSec / 60) + 'm' : formatClock12(r.time * 1000)),
+          title: 'Live trip update' + (r.bus ? ' — bus ' + r.bus : '') });
+      });
+    }
+    return out;
+  }
+  function rvRouteStaleNote(rids) {
+    // A relevant route whose only positions are stale reads
+    // LIVE POSITION STALE (rule 7), printed once in the panel note.
+    if (!lastVehicles) return '';
+    var stale = [];
+    rids.forEach(function (rid) {
+      var any = false, fresh = false;
+      lastVehicles.forEach(function (v) {
+        if (!v || String(v.route_id) !== String(rid) || isNIS(v)) return;
+        any = true;
+        if (!rvStale(v)) fresh = true;
+      });
+      if (any && !fresh) stale.push(routeLabel(rid));
+    });
+    return stale.length ? stale.join(', ') + ': LIVE POSITION STALE. ' : '';
+  }
+  function rvRenderPanel() {
+    var panel = $('rv-panel');
+    if (!panel || !rvState.active) return;
+    var leadEl = $('rv-lead'), leadList = $('rv-lead-list'),
+        list = $('rv-list'), note = $('rv-note');
+    if (!leadEl || !leadList || !list || !note) return;
+    leadList.innerHTML = '';
+    list.innerHTML = '';
+    var nowMs = Date.now();
+    if (!rvState.lead) {
+      leadEl.textContent = 'No stops within ' + RV_RADIUS_M + ' m of you.';
+      note.textContent = 'Your location stays on this device.';
+      return;
+    }
+    var lead = rvState.lead;
+    leadEl.textContent = (lead.st.n || 'Stop') + ' — stop ' +
+      (lead.st.code || lead.st.id || '–') + ' · ' + formatStopDistM(lead.dist) + ' away';
+    var leadRows = rvStopRows(lead, nowMs);
+    if (!leadRows.length) {
+      var p = document.createElement('p');
+      p.className = 'rv-none';
+      p.textContent = 'No more departures are scheduled at your stop today.';
+      leadList.appendChild(p);
+    }
+    leadRows.slice(0, 3).forEach(function (r) {
+      leadList.appendChild(rvRowEl(r.rid, r.head, r.live, r.when, r.title));
+    });
+    var rest = [];
+    var rids = {};
+    rvState.stops.slice(0, 6).forEach(function (entry) {
+      (entry.st.r || []).forEach(function (rid) { rids[rid] = true; });
+      if (entry === lead) return;
+      rvStopRows(entry, nowMs).forEach(function (r) {
+        r.stopName = entry.st.n || 'Stop';
+        rest.push(r);
+      });
+    });
+    rest.sort(function (a, b) { return a.dSec - b.dSec; });
+    rest.slice(0, 6).forEach(function (r) {
+      var el = rvRowEl(r.rid, (r.head ? r.head + ' — ' : '') + 'from ' + r.stopName, r.live, r.when, r.title);
+      list.appendChild(el);
+    });
+    if (!rest.length) {
+      var p2 = document.createElement('p');
+      p2.className = 'rv-none';
+      p2.textContent = 'No other departures from stops near you in the next few hours.';
+      list.appendChild(p2);
+    }
+    note.textContent = rvRouteStaleNote(Object.keys(rids)) +
+      'Times are scheduled unless marked LIVE. Not-in-service buses are not shown. Your location stays on this device.';
+  }
+  var rvExploreBtn = $('rv-explore');
+  if (rvExploreBtn) rvExploreBtn.addEventListener('click', function () {
+    rvDisengage();
+    fvSetSheet(false, { persist: true });
+  });
+  var rvCloseBtn = $('rv-close');
+  if (rvCloseBtn) rvCloseBtn.addEventListener('click', function () { rvDisengage(); });
+  // === RELEVANT VIEW END ===
 
   // --- route selection (owner directive 2026-11-05) -------------------
   // Route labels and guideway lines are pick targets: a tap that no bus
@@ -9998,6 +10207,8 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
       // operate per route, so they cannot reach this route-less
       // class; NIS vehicles render regardless of group toggles.)
       if (isNIS(v)) gateHidden = false;
+      // Relevant View rule 3: not-in-service vehicles are never shown.
+      if (rvState.active && isNIS(v)) continue;
       if (gateHidden && !(rideWidget && rideWidget.currentVehicleId === v.vehicle_id)) continue; // unknown or filtered route: skip
       var p = project(v.lat, v.lon);
       // Reconcile the per-vehicle tracker: new buses start one, existing
@@ -10315,7 +10526,9 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
         refreshFilterCounts();
         if (selectedRoute) renderRouteCard(selectedRoute);
         lastTotal = n;
-        setHeader(n, 'updated ' + fmtTime(d.generated_at ? new Date(d.generated_at) : null), false);
+        rvFeedGenMs = d.generated_at ? new Date(d.generated_at).getTime() : null;
+        setHeader(n, rvFeedAgeText() || ('updated ' + fmtTime(d.generated_at ? new Date(d.generated_at) : null)), false);
+        if (rvState.active) rvRenderPanel();
         svcFeedOk(d); // service degradation notice: evaluate source states + freshness
         // SMART freshness surfaces track every successful poll (S6).
         applySmartAgeUI();
@@ -11236,12 +11449,14 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   function fvNearLocation() {
     if (filterState.nearMe) {
       fvSetSheet(false, { persist: true });
+      rvEngage();
       showToast('Routes near you are on.', false);
       return;
     }
     fvCenterRoutes = null;
     if (userXZ) {
-      setNearMe(true);
+      setNearMe(true, RV_RADIUS_M);
+      rvEngage();
       fvSetSheet(false, { persist: true });
       return;
     }

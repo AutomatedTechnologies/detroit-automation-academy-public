@@ -40,16 +40,27 @@
  */
 
 export function fuseJourneys(journeys, vehicles) {
+  // Relevant View rule 7 (2026-11-21): a position counts as live only
+  // while its presented age is <= 180 s; a not-in-service vehicle never
+  // counts. A route with vehicles reporting but none fresh is flagged
+  // liveStaleOnly so surfaces read LIVE POSITION STALE, never a count.
   var counts = Object.create(null);
+  var reporting = Object.create(null);
   (vehicles || []).forEach(function (v) {
-    if (v && v.route_id != null) {
-      var rid = String(v.route_id);
-      counts[rid] = (counts[rid] || 0) + 1;
-    }
+    if (!v || v.route_id == null) return;
+    if (v.service_status === 'not_in_service') return;
+    var rid = String(v.route_id);
+    reporting[rid] = (reporting[rid] || 0) + 1;
+    var ageS = v.updated_at ? (Date.now() - new Date(v.updated_at).getTime()) / 1000 : 0;
+    if (isNaN(ageS) || ageS > 180) return;
+    counts[rid] = (counts[rid] || 0) + 1;
   });
   (journeys || []).forEach(function (j) {
     (j.legs || []).forEach(function (l) {
-      if (l.type === 'bus') l.liveVehicles = counts[String(l.routeId)] || 0;
+      if (l.type === 'bus') {
+        l.liveVehicles = counts[String(l.routeId)] || 0;
+        l.liveStaleOnly = !l.liveVehicles && (reporting[String(l.routeId)] || 0) > 0;
+      }
     });
   });
   return journeys;
