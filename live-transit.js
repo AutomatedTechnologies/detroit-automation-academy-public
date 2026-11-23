@@ -4666,7 +4666,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
       if (tripTT || !R || !R.loadTimetable) return;
       return R.loadTimetable('https://www.detroitautomationacademy.com/planner-timetable-S1000182-S1000147.json?v=' + STAMP).then(function (tt) { ltAssertPairing(R, tt); tripTT = tt; });
     }).catch(function () { /* engine unavailable: times degrade to the named notes (S4) */ })
-      .then(function () { rideEngineLoading = false; if (rideWidget) rideWidget.refresh(); if (selectedStop) renderStopLive(); });
+      .then(function () { rideEngineLoading = false; if (rideWidget) rideWidget.refresh(); if (selectedStop) renderStopLive(); if (rvState.active) rvRenderPanel(); });
   }
 
   // Ride Along stop-times provider (the widget's setTimesProvider).
@@ -7962,6 +7962,11 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   // trip-matched-live rows come from computeStopArrivals (the stop
   // card's own engine); a SMART-only stop falls back to its Swiftly
   // trip-update rows, exactly as the stop card does.
+  // V5-G1 (2026-11-23): the arrivals state propagates with the rows as
+  // { state, rows } — 'loading' and 'nosvc' must never reach the panel
+  // as a bare empty array, which rvRenderPanel used to print as a
+  // definitive "no more departures" while the timetable was still
+  // loading (field defect, stop 1959, 2026-11-23 12:24 EST).
   function rvStopRows(entry, nowMs) {
     var out = [];
     var res = computeStopArrivals(entry.idx, nowMs);
@@ -7983,7 +7988,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
           title: 'Live trip update' + (r.bus ? ' — bus ' + r.bus : '') });
       });
     }
-    return out;
+    return { state: res.state, rows: out };
   }
   function rvRouteStaleNote(rids) {
     // A relevant route whose only positions are stale reads
@@ -8018,8 +8023,24 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     var lead = rvState.lead;
     leadEl.textContent = (lead.st.n || 'Stop') + ' — stop ' +
       (lead.st.code || lead.st.id || '–') + ' · ' + formatStopDistM(lead.dist) + ' away';
-    var leadRows = rvStopRows(lead, nowMs);
-    if (!leadRows.length) {
+    // V5-G1: an indeterminate lead state renders as itself, never as
+    // the established-empty copy. 'loading' = the timetable check has
+    // not completed; 'nosvc' = it completed and found no service day.
+    // Only an established state ('ready', or 'na' after the SMART
+    // fallback) with zero rows may print the no-departures copy.
+    var leadRes = rvStopRows(lead, nowMs);
+    var leadRows = leadRes.rows;
+    if (leadRes.state === 'loading') {
+      var pl = document.createElement('p');
+      pl.className = 'rv-none';
+      pl.textContent = 'Loading departures…';
+      leadList.appendChild(pl);
+    } else if (leadRes.state === 'nosvc') {
+      var pn = document.createElement('p');
+      pn.className = 'rv-none';
+      pn.textContent = 'No service is scheduled today.';
+      leadList.appendChild(pn);
+    } else if (!leadRows.length) {
       var p = document.createElement('p');
       p.className = 'rv-none';
       p.textContent = 'No more departures are scheduled at your stop today.';
@@ -8030,10 +8051,13 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     });
     var rest = [];
     var rids = {};
+    var restLoading = false;
     rvState.stops.slice(0, 6).forEach(function (entry) {
       (entry.st.r || []).forEach(function (rid) { rids[rid] = true; });
       if (entry === lead) return;
-      rvStopRows(entry, nowMs).forEach(function (r) {
+      var entryRes = rvStopRows(entry, nowMs);
+      if (entryRes.state === 'loading') restLoading = true;
+      entryRes.rows.forEach(function (r) {
         r.stopName = entry.st.n || 'Stop';
         rest.push(r);
       });
@@ -8046,7 +8070,11 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     if (!rest.length) {
       var p2 = document.createElement('p');
       p2.className = 'rv-none';
-      p2.textContent = 'No other departures from stops near you in the next few hours.';
+      // V5-G1: any contributing stop still loading renders the list as
+      // loading; the no-other-departures copy requires every
+      // contributing stop's check to have completed empty.
+      p2.textContent = restLoading ? 'Loading departures…' :
+        'No other departures from stops near you in the next few hours.';
       list.appendChild(p2);
     }
     note.textContent = rvRouteStaleNote(Object.keys(rids)) +
