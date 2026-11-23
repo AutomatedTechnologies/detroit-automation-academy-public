@@ -12,11 +12,21 @@
   Apple-signed builds, and this project is compiled and signed on
   the owner's Mac with free provisioning (see README in the zip).
 -->
-<style>
+<link rel="stylesheet" href="/assets/udla-tokens.css">
+<style>/* UDLA-3 M7 (2026-11-23): this surface links the one shared token
+   sheet (above), so the Inter its stack has always named is now
+   actually loaded — Rule F-1 (before this link the name was
+   declared with no @font-face on the surface). Tokenized where a
+   token carries the value exactly: #f2f2f2 = --gray-20 · #333 =
+   --gray-200 (as #333333). Gaps left literal: #000 · #9a9a9a ·
+   #cfcfcf · #777. The stack stays as written (it is not the
+   --font-data stack; no letterforms change beyond the named face
+   now loading). A static page: no data states, no §5 frames. */
+
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
   body {
-    margin: 0; background: #000; color: #f2f2f2;
+    margin: 0; background: #000; color: var(--gray-20);
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     line-height: 1.55;
   }
@@ -27,13 +37,13 @@
   p, li { color: #cfcfcf; font-size: .98rem; }
   .install {
     display: block; text-align: center; margin: 2rem 0 1rem;
-    background: #f2f2f2; color: #000; text-decoration: none;
+    background: var(--gray-20); color: #000; text-decoration: none;
     font-weight: 700; font-size: 1.1rem; padding: 1rem 1.5rem; border-radius: 999px;
   }
-  .note { border: 1px solid #333; border-radius: 12px; padding: 1rem 1.25rem; margin-top: 2rem; }
+  .note { border: var(--rule-hair) var(--gray-200); border-radius: 12px; padding: 1rem 1.25rem; margin-top: 2rem; }
   .note p { margin: .25rem 0; font-size: .9rem; }
   footer { margin-top: 3rem; color: #777; font-size: .82rem; }
-  a { color: #f2f2f2; }
+  a { color: var(--gray-20); }
 </style>
 </head>
 <body>
