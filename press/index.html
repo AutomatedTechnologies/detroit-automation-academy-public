@@ -35,21 +35,24 @@
 <!-- SR-CHROME:HEADER schema-v11 -->
 <div id="daa-nav" class="sr-chrome">
 <style>
-.sr-chrome{color-scheme:light;background:#ffffff;color:#111111;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-.sr-chrome .sr-header{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:.6rem 1rem;border-bottom:2px solid #111111}
-.sr-chrome .sr-brand{display:flex;align-items:center;gap:.55rem;color:#111111;text-decoration:none;font-weight:700;font-size:1.02rem;letter-spacing:.01em}
+.sr-chrome{color:inherit;background:transparent;font-family:inherit}
+.sr-chrome .sr-header{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:.6rem 0;border-bottom:2px solid currentColor}
+.sr-chrome .sr-brand{display:flex;align-items:center;gap:.55rem;color:inherit;text-decoration:none;font-weight:700;font-size:1.02rem;letter-spacing:.01em}
 .sr-chrome .sr-brand svg{width:30px;height:30px;flex:none;display:block}
 .sr-chrome .sr-nav{display:flex;gap:.45rem;flex-wrap:wrap;margin-left:auto}
-.sr-chrome .sr-pill{display:inline-block;padding:.42rem .95rem;border:1.5px solid #111111;border-radius:999px;color:#111111;text-decoration:none;font-size:.92rem;font-weight:600;line-height:1.2;background:#ffffff}
-.sr-chrome .sr-pill:hover{background:#111111;color:#ffffff}
-.sr-chrome-foot{color-scheme:light;background:#ffffff;color:#111111;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-.sr-chrome-foot .sr-lanegrid{display:flex;gap:1.5rem;flex-wrap:wrap;padding:.5rem 0}
-.sr-chrome-foot .sr-lane{min-width:9rem}
-.sr-chrome-foot .sr-lane h3{margin:.2rem 0 .35rem;font-size:.95rem;letter-spacing:.02em}
-.sr-chrome-foot .sr-lane p{margin:0;font-size:.88rem;line-height:1.55}
-.sr-chrome-foot .sr-lane a{color:#111111;text-decoration:underline}
-.sr-chrome-foot .sr-fine{font-size:.82rem;color:#333333;line-height:1.55;margin:.45rem 0}
-.sr-chrome-foot .sr-fine a{color:#111111}
+.sr-chrome .sr-pill{display:inline-block;padding:.42rem .95rem;border:1.5px solid currentColor;border-radius:999px;color:inherit;text-decoration:none;font-size:.92rem;font-weight:600;line-height:1.2;background:transparent}
+.sr-chrome .sr-pill:hover{background:rgba(127,127,127,.18)}
+.sr-chrome-foot{color:inherit;background:transparent;font-family:inherit;border-top:3px solid currentColor;margin-top:22px;padding:22px 0 4px}
+.sr-chrome-foot .sr-lanegrid{display:grid;grid-template-columns:repeat(5,1fr);gap:1.5rem;padding:0}
+.sr-chrome-foot .sr-lane h3{margin:0 0 .5rem;font-size:.82rem;letter-spacing:.09em;text-transform:uppercase;border-bottom:1px solid currentColor;padding-bottom:.35rem}
+.sr-chrome-foot .sr-lane ul{list-style:none;margin:0;padding:0}
+.sr-chrome-foot .sr-lane li{margin:.3rem 0;font-size:.88rem;line-height:1.4}
+.sr-chrome-foot .sr-lane a{color:inherit;text-decoration:none}
+.sr-chrome-foot .sr-lane a:hover{text-decoration:underline}
+.sr-chrome-foot .sr-fine{font-size:.82rem;line-height:1.55;margin:.45rem 0;opacity:.72}
+.sr-chrome-foot .sr-fine a{color:inherit}
+.sr-chrome-foot p.sr-fine:first-of-type{border-top:1px solid currentColor;margin-top:14px;padding-top:.7rem}
+@media (max-width:640px){.sr-chrome-foot .sr-lanegrid{grid-template-columns:repeat(2,1fr)}}
 </style>
 <header class="sr-header"><a class="sr-brand" href="/" aria-label="Detroit Automation Academy — home"><svg viewBox="0 0 100 100" role="img" aria-label="Academy mark"><rect width="100" height="100" rx="21" fill="#141414"/><path d="M35 25v50M35 25h15a25 25 0 0 1 0 50H35" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="square"/><circle cx="35" cy="25" r="4.5" fill="#fff"/><circle cx="35" cy="50" r="4.5" fill="#fff"/><circle cx="35" cy="75" r="4.5" fill="#fff"/></svg><span>Detroit Automation Academy</span></a><nav class="sr-nav" aria-label="Primary"><a class="sr-pill" href="/live-transit.html">Live Map</a><a class="sr-pill" href="/board/">Departure Board</a><a class="sr-pill" href="/cities/">Cities</a><a class="sr-pill" href="/programs.html">Programs</a><a class="sr-pill" href="/signal/">The Signal</a><a class="sr-pill" href="/the-index/">The Index</a><a class="sr-pill" href="/arcadia">Arcadia</a><a class="sr-pill" href="/inquire.html">Contact</a><a class="sr-pill" href="/find.html">Find</a></nav></header>
 </div>
@@ -2332,7 +2335,7 @@
 <div class="wrap"><p class="build-stamp" style="font-size:.78rem;color:#444;border:1px solid #000;padding:.5rem .75rem;margin:1rem 0;">PAGE STAMP — Published: 2026-11-05 20:27 EST · Agent: Forge · Authorized: J. Spencer Smith, directive of 2026-11-07</p></div>
 <!-- SR-CHROME:FOOTER schema-v11 -->
 <div class="sr-chrome-foot">
-<nav class="sr-lanegrid" aria-label="Site"><div class="sr-lane"><h3>Ride</h3><p><a href="/live-transit.html">Live Map</a> · <a href="/board/">Departure Board</a> · <a href="/cities/">Cities</a> · <a href="/live-transit-detroit/">Live Transit Detroit stories</a> · <a href="/live-transit/terms/">Live Transit Terms</a></p></div><div class="sr-lane"><h3>Read</h3><p><a href="/signal/">The Signal</a> · <a href="/notes/">Notes</a> · <a href="/press/">The Press</a> · <a href="/feed/">Latest</a> · <a href="/watch/">Watch</a> · <a href="/the-index/">The Index</a></p></div><div class="sr-lane"><h3>Software</h3><p><a href="/software/">Software</a> · <a href="/arcadia">Arcadia</a> · <a href="/api.html">API</a> · <a href="/registry/">Registry</a></p></div><div class="sr-lane"><h3>Learn & work</h3><p><a href="/programs.html">Programs</a> · <a href="/curriculum/online-safety/">Online Safety</a> · <a href="/apple-learning-coach/">Coach Profile</a> · <a href="/partners.html">Partners</a> · <a href="/services.html">Services</a> · <a href="/press/media-kit.html">Media Kit</a></p></div><div class="sr-lane"><h3>Trust</h3><p><a href="/inquire.html">Contact</a> · <a href="/find.html">Find</a> · <a href="/dashboard.html">Status</a> · <a href="/privacy.html">Privacy Policy</a> · <a href="/terms.html">Terms of Service</a></p></div></nav>
+<nav class="sr-lanegrid" aria-label="Site"><div class="sr-lane"><h3>Ride</h3><ul><li><a href="/live-transit.html">Live Map</a></li><li><a href="/board/">Departure Board</a></li><li><a href="/cities/">Cities</a></li><li><a href="/live-transit-detroit/">Live Transit Detroit stories</a></li><li><a href="/live-transit/terms/">Live Transit Terms</a></li></ul></div><div class="sr-lane"><h3>Read</h3><ul><li><a href="/signal/">The Signal</a></li><li><a href="/notes/">Notes</a></li><li><a href="/press/">The Press</a></li><li><a href="/feed/">Latest</a></li><li><a href="/watch/">Watch</a></li><li><a href="/the-index/">The Index</a></li></ul></div><div class="sr-lane"><h3>Software</h3><ul><li><a href="/software/">Software</a></li><li><a href="/arcadia">Arcadia</a></li><li><a href="/api.html">API</a></li><li><a href="/registry/">Registry</a></li></ul></div><div class="sr-lane"><h3>Learn & work</h3><ul><li><a href="/programs.html">Programs</a></li><li><a href="/curriculum/online-safety/">Online Safety</a></li><li><a href="/apple-learning-coach/">Coach Profile</a></li><li><a href="/partners.html">Partners</a></li><li><a href="/services.html">Services</a></li><li><a href="/press/media-kit.html">Media Kit</a></li></ul></div><div class="sr-lane"><h3>Trust</h3><ul><li><a href="/inquire.html">Contact</a></li><li><a href="/find.html">Find</a></li><li><a href="/dashboard.html">Status</a></li><li><a href="/privacy.html">Privacy Policy</a></li><li><a href="/terms.html">Terms of Service</a></li></ul></div></nav>
 <p class="sr-fine"><a href="/find.html">Find</a> (search) · <a href="/inquire.html">Contact</a></p>
 <p class="sr-fine">© 2026 AutomatedTechnologies d/b/a Detroit Automation Academy</p>
 <p class="sr-fine">© 2026 Detroit Automation Academy / Automated Technologies. All rights reserved. Detroit Automation Academy, Automated Technologies, Distro, Workbench, Live Transit Detroit, The Signal, and the Academy monochrome logo are marks of the Academy, used under the founder's permission. Academy-original works are licensed under the Academy License (revocable); upstream open-source components remain under their own licenses.</p>
