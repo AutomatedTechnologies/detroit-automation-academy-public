@@ -131,3 +131,115 @@
   --radius-panel: 12px;
   --radius-sheet: 2px;
 }
+
+/* ——— Amendment 1 (UDLA-2, 2026-11-23): the live register's
+   working-gray extension — 79 tokens, extended from the surfaces'
+   actual bytes (live-transit.html, route-finder/index.html,
+   route-finder/app.js; counted 2026-11-23). Every value is carried
+   verbatim: no rounding, no merging, no substitution. The original
+   35 tokens above are byte-unchanged; the sheet now carries 114.
+   Naming: --gray-N is an ordinal ramp (light → dark); --alpha-<base
+   hex>-<step> names a translucent value by its exact base and its
+   alpha step as a two-digit percent, only steps actually used;
+   --exception-* is a chromatic value retained verbatim under the
+   draft §2 exception mechanism. */
+:root {
+  /* Working grays — 20 tokens (Amendment 1 §A1.2). */
+  --gray-10: #F5F5F5;
+  --gray-20: #F2F2F2;
+  --gray-30: #E9E9E9;
+  --gray-40: #DEDEDE;
+  --gray-50: #D9D9D9;
+  --gray-60: #CDCDCD;
+  --gray-70: #C7C7C7;
+  --gray-80: #B4B4B4;
+  --gray-90: #B0B0B0;
+  --gray-100: #A4A4A4;
+  --gray-110: #A2A2A2;
+  --gray-120: #9F9F9F;
+  --gray-130: #8E8E8E;
+  --gray-140: #7D7D7D;
+  --gray-150: #767676;
+  --gray-160: #757575;
+  --gray-170: #666666;
+  --gray-180: #555555;
+  --gray-190: #434343;
+  --gray-200: #333333;
+
+  /* Translucent families — 58 tokens (Amendment 1 §A1.3). */
+  /* base 101010 = --stage: stage grounds */
+  --alpha-101010-60: rgba(16,16,16,.6);
+  --alpha-101010-70: rgba(16,16,16,.7);
+  --alpha-101010-82: rgba(16,16,16,.82);
+  --alpha-101010-85: rgba(16,16,16,.85);
+  --alpha-101010-90: rgba(16,16,16,.9);
+  --alpha-101010-94: rgba(16,16,16,.94);
+  --alpha-101010-95: rgba(16,16,16,.95);
+  --alpha-101010-96: rgba(16,16,16,.96);
+  --alpha-101010-97: rgba(16,16,16,.97);
+  /* base f2f2f2 = --gray-20: hairlines + washes on the dark register */
+  --alpha-f2f2f2-04: rgba(242,242,242,.04);
+  --alpha-f2f2f2-05: rgba(242,242,242,.05);
+  --alpha-f2f2f2-06: rgba(242,242,242,.06);
+  --alpha-f2f2f2-08: rgba(242,242,242,.08);
+  --alpha-f2f2f2-10: rgba(242,242,242,.1);
+  --alpha-f2f2f2-12: rgba(242,242,242,.12);
+  --alpha-f2f2f2-14: rgba(242,242,242,.14);
+  --alpha-f2f2f2-16: rgba(242,242,242,.16);
+  --alpha-f2f2f2-18: rgba(242,242,242,.18);
+  --alpha-f2f2f2-20: rgba(242,242,242,.2);
+  --alpha-f2f2f2-25: rgba(242,242,242,.25);
+  --alpha-f2f2f2-35: rgba(242,242,242,.35);
+  --alpha-f2f2f2-40: rgba(242,242,242,.4);
+  --alpha-f2f2f2-45: rgba(242,242,242,.45);
+  --alpha-f2f2f2-55: rgba(242,242,242,.55);
+  /* base 767676 = --gray-150 */
+  --alpha-767676-08: rgba(118,118,118,.08);
+  --alpha-767676-10: rgba(118,118,118,.1);
+  --alpha-767676-12: rgba(118,118,118,.12);
+  --alpha-767676-14: rgba(118,118,118,.14);
+  --alpha-767676-16: rgba(118,118,118,.16);
+  --alpha-767676-20: rgba(118,118,118,.2);
+  --alpha-767676-35: rgba(118,118,118,.35);
+  --alpha-767676-45: rgba(118,118,118,.45);
+  --alpha-767676-50: rgba(118,118,118,.5);
+  --alpha-767676-55: rgba(118,118,118,.55);
+  --alpha-767676-60: rgba(118,118,118,.6);
+  /* base b4b4b4 = --gray-80 */
+  --alpha-b4b4b4-10: rgba(180,180,180,.1);
+  --alpha-b4b4b4-12: rgba(180,180,180,.12);
+  --alpha-b4b4b4-14: rgba(180,180,180,.14);
+  --alpha-b4b4b4-45: rgba(180,180,180,.45);
+  --alpha-b4b4b4-50: rgba(180,180,180,.5);
+  --alpha-b4b4b4-55: rgba(180,180,180,.55);
+  --alpha-b4b4b4-60: rgba(180,180,180,.6);
+  --alpha-b4b4b4-65: rgba(180,180,180,.65);
+  /* base 949494: alpha-only base (never renders opaque here) */
+  --alpha-949494-55: rgba(148,148,148,.55);
+  --alpha-949494-65: rgba(148,148,148,.65);
+  --alpha-949494-75: rgba(148,148,148,.75);
+  /* base 8e8e8e = --gray-130 */
+  --alpha-8e8e8e-12: rgba(142,142,142,.12);
+  --alpha-8e8e8e-14: rgba(142,142,142,.14);
+  --alpha-8e8e8e-60: rgba(142,142,142,.6);
+  /* base 434343 = --gray-190 */
+  --alpha-434343-16: rgba(67,67,67,.16);
+  --alpha-434343-22: rgba(67,67,67,.22);
+  --alpha-434343-70: rgba(67,67,67,.7);
+  /* base 939393: alpha-only base (never renders opaque here) */
+  --alpha-939393-12: rgba(147,147,147,.12);
+  --alpha-939393-50: rgba(147,147,147,.5);
+  /* base 000000: box-shadows (--line is a different step, .15) */
+  --alpha-000000-40: rgba(0,0,0,.4);
+  --alpha-000000-45: rgba(0,0,0,.45);
+  /* base 06090c: .nav-overlay ground */
+  --alpha-06090c-72: rgba(6,9,12,.72);
+  /* base 111111 = --ink-800: Route Finder canvas */
+  --alpha-111111-20: rgba(17,17,17,.2);
+
+  /* Chromatic exception — 1 token (Amendment 1 §A1.4). #C9CDCF is
+     blue-gray; retained verbatim under the draft §2 exception
+     mechanism. Nearest neutral --gray-60 (#CDCDCD) NOT substituted:
+     the swap is a named COLOR change for UDLA-4 to approve. */
+  --exception-sa-band: #C9CDCF;
+}
