@@ -1,0 +1,133 @@
+/* Detroit Automation Academy — UDLA token sheet (UDLA-3, 2026-11-23)
+   The Language's one shared CSS source: 35 tokens, exactly as drafted
+   in UDLA-2 (files/UDLA-2-LANGUAGE-DRAFT-2026-11-23.md) and picked by
+   the owner 2026-11-23 (Option B — TWO REGISTERS). Values are carried
+   from what renders today (styles.css :root, the Periodical sheet,
+   /atc/); only the names were fixed. No external references — the two
+   faces below are the estate's own OFL files, self-hosted (estate
+   blacklist: 0 third-party loads).
+
+   The @font-face rules live here because the Language assigns font
+   loading to the one shared sheet (UDLA-2 §1): a surface that loads
+   this sheet may name Inter / Space Grotesk (Rule F-1 — a stack may
+   name only faces with a shipped @font-face in the shared sheet, or
+   system faces). styles.css carries the same rules until its own
+   migration tranche folds them into this sheet; both resolve to the
+   same /assets/fonts/ files. */
+
+/* Self-hosted fonts (SIL Open Font License 1.1 — see
+   assets/fonts/OFL-*.txt). Same files, weights, and unicode-range as
+   the @font-face block styles.css has shipped since 2026-10-18. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/assets/fonts/inter-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(/assets/fonts/inter-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(/assets/fonts/inter-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/assets/fonts/space-grotesk-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(/assets/fonts/space-grotesk-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(/assets/fonts/space-grotesk-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(/assets/fonts/space-grotesk-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  /* Type — 4 stacks (UDLA-2 §1). Every named face is loaded above or
+     is a system face (Rule F-1). 'Playfair Display' is retired: no
+     file ever existed; Georgia holds the editorial display role. */
+  --font-data: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-editorial: Georgia, 'Times New Roman', Times, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Type scale — 5 steps, carried verbatim from styles.css
+     (fallback declaration, then the clamp() it upgrades to). */
+  --step--1: 0.83rem; --step--1: clamp(0.83rem, 0.81rem + 0.12vw, 0.9rem);
+  --step-0: 1rem; --step-0:  clamp(1rem,   0.97rem + 0.18vw, 1.06rem);
+  --step-1: 1.22rem; --step-1:  clamp(1.22rem, 1.12rem + 0.5vw,  1.44rem);
+  --step-2: 1.75rem; --step-2:  clamp(1.75rem, 1.42rem + 1.65vw, 2.9rem);
+  --step-3: 2.6rem; --step-3:  clamp(2.6rem,  1.85rem + 3.75vw, 4.8rem);
+
+  /* Color — 13 tokens, monochrome (UDLA-2 §2). Names tell the truth:
+     the ramp runs paper (grounds) to ink (text/rules). Retired names:
+     --midnight, --midnight-2, --amber, --forge, --forge-deep,
+     --concrete, and --paper in its inverted (dark) sense. */
+  --paper-0: #ffffff;
+  --paper-1: #f4f4f4;
+  --paper-2: #e7e7e7;
+  --paper-3: #c9c9c9;
+  --ink-400: #8a8a8a;
+  --ink-500: #5a5a5a;
+  --ink-700: #222222;
+  --ink-800: #111111;
+  --ink-900: #0a0a0a;
+  --stage: #101010;
+  --line: rgba(0,0,0,0.15);
+  --line-dark: rgba(255,255,255,0.16);
+  --accent: #111111;
+
+  /* Spacing — 6 tokens (UDLA-2 §3). */
+  --page-margin: 16px;
+  --panel-pad: 12px;
+  --gap: 12px;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-6: 24px;
+
+  /* Rules — 4 tokens (UDLA-2 §3). Width + style only; the color is
+     supplied at the point of use. --rule-dashed is the indeterminate
+     rule: dashed = not established, solid = established (§5). */
+  --rule-hair: 1px solid;
+  --rule: 2px solid;
+  --rule-double: 3px double;
+  --rule-dashed: 1px dashed;
+
+  /* Radii — 3 tokens (UDLA-2 §3). */
+  --radius: 14px;
+  --radius-panel: 12px;
+  --radius-sheet: 2px;
+}
