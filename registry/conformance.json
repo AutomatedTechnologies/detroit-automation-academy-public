@@ -3,19 +3,19 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:54681c9d2f9d50c592a647c33e3c4ef2261b01e1b174c59cd2dbc85b461d3893",
+    "stateFingerprint": "sha256:dfcb576de9e984ba63510d4da8b221228bdf67f4be8a1d1857e98a01bc651776",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 11,
   "catalogVersion": 1,
   "catalogGenerated": "2026-11-13",
   "counts": {
-    "apps": 15,
-    "builds": 56,
-    "catalog_state": 13,
+    "apps": 16,
+    "builds": 57,
+    "catalog_state": 14,
     "audits": 1,
     "findings": 17,
-    "catalogApps": 13
+    "catalogApps": 14
   },
   "apps": [
     {
@@ -472,6 +472,41 @@
           "ref": "bundle-carried audit entry (Distro files/08 rule) attested on the shipped artifact's own Info.plist (audit dict all-true, dated 2026-11-19), plus THIS pass: fresh-download dissection of the shipped zip (43498 B, SHA-256 == GitHub release asset, downloaded back and hashed locally) — bundle com.detroitautomationacademy.googlephotos, 1.0 (googlephotos-test-1), LSMinimumSystemVersion 10.13, CFBundleIconFile Photos with Photos.icns (75,026 B) built by iconutil from the committed monochrome iconset, executable Mach-O 64-bit x86_64, zip census 7 entries; build-line record (AutomatedTechnologies/googlephotos @ eb887f5bf458, google-photos-academy BUILD-NOTES.md tranches 1–2): complete source tree (8 files, Academy-original clean-room code) dissected — WKWebView shell over photos.google.com, persistent default WKWebsiteDataStore, desktop Safari user agent, google.com-only in-view navigation policy with all other hosts handed to the default browser, SDS-8 welcome on first launch; scanned: no third-party hosts/fonts/scripts/analytics in the tree, the only network destination in the source is the Google Photos service the app is a client for; syntax-clean under the clang / MacOSX 10.13 SDK recipe (4/4 at the scaffold gate and again on the repo tree, ALL SYNTAX OK); recompiled from that source by estate CI (run 44524299201, macos-15, SUCCESS) into the shipped artifact. No SDS-10 conformance entry attested (SDS-8 welcome only in this build)"
         }
       }
+    },
+    {
+      "id": "macos-catalina-upgrade",
+      "displayName": "macOS Catalina Upgrade — MacBookAir5,2",
+      "repoUrl": "https://github.com/AutomatedTechnologies/catalina-upgrade",
+      "sourceUrl": "https://github.com/AutomatedTechnologies/catalina-upgrade",
+      "bundleId": "com.detroitautomationacademy.catalina-upgrade",
+      "category": "Utilities",
+      "license": "Academy License (revocable)",
+      "kind": "catalog",
+      "appStatus": "testing",
+      "minMacOS": "10.13",
+      "tagline": "One click from High Sierra to Catalina — on a new volume, High Sierra untouched.",
+      "description": "macOS Catalina Upgrade — MacBookAir5,2 is the Detroit Automation Academy's one-click upgrade tooling for the MacBook Air (13-inch, Mid 2012) running macOS High Sierra 10.13.6. Catalina 10.15.7 is the newest macOS Apple supports on this model (final patch Security Update 2022-005, July 2022); Big Sur drops it. Double-click Upgrade-to-Catalina.command: the first run is a dry run — model, AC power, APFS, at least 40 GB free, a Time Machine backup under 7 days old (or a typed override), and the list of 32-bit apps Catalina will not run. Type ARM and it fetches the official Catalina installer from Apple's own catalog through a pinned, hash-verified copy of installinstallmacos.py (Apache License 2.0, Greg Neagle; pin record in PIN.md), verifies Apple's signature on the installer, and installs to a NEW APFS volume named Catalina. The High Sierra volume is never overwritten — reboot holding Option to go back — because this machine class is the Academy's High Sierra rig and the dual-volume install is what keeps it one. No patcher, SIP intact. Academy-original tooling under the Academy License (revocable); the bundled fetcher is upstream open source under its own license. Unsigned test build; not yet run on the rig — the S4 verdict is the owner's.",
+      "catalogStatus": "testing",
+      "iconUrl": "https://detroitautomationacademy.com/store/icons/macos-catalina-upgrade.png",
+      "buildNotes": "macOS Catalina Upgrade — MacBookAir5,2, test-1 — first Distro listing. One click from High Sierra 10.13.6 to Catalina 10.15.7, the newest macOS this 2012 Air supports, installed on a new APFS volume named Catalina — your High Sierra system is never overwritten, and Option-boot takes you back. The first run changes nothing: it checks the model, power, disk space and backup, and prints the 32-bit apps Catalina cannot run, before you type ARM. Honest state: this build has not yet been run on the rig — the install verdict is the owner's, at the Air sitting; the listing is the test.",
+      "audits": [],
+      "currentBuild": {
+        "tag": "test-1",
+        "sizeBytes": 42428,
+        "sha256": "0b6274249acd0575d9c0517de489fd8d9938516cfcd0663fe9f2fe0536e71485",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/catalina-upgrade/releases/download/test-1/CatalinaUpgrade-test-1.zip",
+        "floor": "10.13",
+        "builtAt": "2026-11-23",
+        "releasePublishedAt": "2026-11-23T20:15:54Z",
+        "ciRun": "45257534962",
+        "auditFlags": {
+          "disassembled": false,
+          "scanned": false,
+          "recompiled": false,
+          "complete": false,
+          "ref": null
+        }
+      }
     }
   ],
   "pipelineAudits": [
@@ -570,6 +605,14 @@
         "gapsDispositioned": true,
         "depsClear": true,
         "gateFiled": true,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      },
+      {
+        "appId": "macos-catalina-upgrade",
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": false,
         "uatRecorded": false,
         "attestationState": "not attested"
       },
