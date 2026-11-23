@@ -243,3 +243,23 @@
      the swap is a named COLOR change for UDLA-4 to approve. */
   --exception-sa-band: #C9CDCF;
 }
+
+/* ——— Absorbed 2026-11-23 (UDLA-3 M4): branding/palette.css — the
+   curriculum pair's Forge palette (BRAND_GUIDELINES.md), carried into
+   the one shared sheet per UDLA-2 §6 disposition 5. Names and values
+   byte-identical to the absorbed sheet; the pair's pages now link
+   this sheet. SDS-9 glass tints ride with the family, as before. */
+:root {
+  /* Forge palette (BRAND_GUIDELINES.md / styles.css) */
+  --daa-bg: #101010;        /* Midnight */
+  --daa-fg: #f2f2f2;        /* Paper */
+  --daa-primary: #767676;   /* Forge */
+  --daa-accent: #b4b4b4;    /* Amber */
+  --daa-muted: #9f9f9f;     /* Concrete */
+  /* SDS-9 Liquid Glass cues (V5-T5b, 2026-11-09): the specular-edge
+     tint and a one-step-deeper layer tint for this family's surfaces,
+     in its dark ramp (bg #101010 -> layer #1a1a1a). Flat tints; no
+     backdrop-filter dependency. */
+  --daa-glass-edge: #ffffff;
+  --daa-glass-layer: #1a1a1a;
+}
