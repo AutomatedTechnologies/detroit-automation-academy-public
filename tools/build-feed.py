@@ -373,21 +373,21 @@ def render_html(items: list[dict]) -> str:
   .feedp-hero {{ padding: 72px 0 8px; text-align: center; }}
   .feedp-sub {{
     max-width: 760px; margin: 26px auto 0; text-align: left;
-    background: var(--card); border: 1px solid var(--line);
+    background: var(--paper-0); border: 1px solid var(--line);
     border-radius: var(--radius); padding: 20px 22px;
   }}
   .feedp-sub h2 {{ margin-top: 0; font-size: 1.15rem; }}
   .feedp-btns {{ display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }}
   .feedp-btn {{
     font: inherit; font-weight: 600; text-decoration: none;
-    background: var(--midnight-2); color: var(--paper);
+    background: var(--gray-20); color: var(--ink-700);
     border: 1px solid var(--line); border-radius: 999px; padding: 6px 16px;
   }}
-  .feedp-btn:hover {{ border-color: var(--amber); }}
+  .feedp-btn:hover {{ border-color: var(--ink-800); }}
   .feedp-url {{
     display: block; overflow-x: auto; white-space: nowrap;
-    background: var(--midnight); border: 1px solid var(--line);
-    border-radius: 8px; padding: 10px 12px; color: var(--amber);
+    background: var(--paper-0); border: 1px solid var(--line);
+    border-radius: 8px; padding: 10px 12px; color: var(--ink-800);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: .92rem;
   }}
@@ -396,20 +396,20 @@ def render_html(items: list[dict]) -> str:
     display: grid; gap: 14px;
   }}
   .feedp-card {{
-    background: var(--card); border: 1px solid var(--line);
+    background: var(--paper-0); border: 1px solid var(--line);
     border-radius: var(--radius); padding: 20px 22px;
   }}
   .feedp-card h2 {{ margin: 8px 0; font-size: 1.3rem; }}
-  .feedp-card h2 a {{ color: var(--paper); text-decoration: none; }}
-  .feedp-card h2 a:hover {{ color: var(--amber); }}
-  .feedp-meta {{ color: var(--concrete); margin: 0; font-size: var(--step--1); }}
+  .feedp-card h2 a {{ color: var(--ink-700); text-decoration: none; }}
+  .feedp-card h2 a:hover {{ color: var(--ink-800); }}
+  .feedp-meta {{ color: var(--ink-500); margin: 0; font-size: var(--step--1); }}
   .feedp-chip {{
-    color: var(--paper); text-decoration: none; font-weight: 600;
+    color: var(--ink-700); text-decoration: none; font-weight: 600;
     border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px;
     margin-right: 8px;
   }}
-  .feedp-chip:hover {{ border-color: var(--amber); }}
-  .feedp-read {{ color: var(--amber); font-weight: 600; text-decoration: none; }}
+  .feedp-chip:hover {{ border-color: var(--ink-800); }}
+  .feedp-read {{ color: var(--ink-800); font-weight: 600; text-decoration: none; }}
   .feedp-read:hover {{ text-decoration: underline; }}
 </style>
 </head>
