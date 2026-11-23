@@ -64,7 +64,7 @@
    * with the standing site-wide stamp bump (design §5). */
   var CSS = [
     '.daa-ad{margin:2.5rem 0 0;border:1px solid var(--line,rgba(245,242,234,.09));',
-    'background:var(--paper-0,#131a21);border-radius:14px;padding:22px 24px;}',
+    'background:var(--paper-0,#ffffff);border-radius:14px;padding:22px 24px;}',
     '.daa-ad-label{display:inline-block;font-size:.72rem;font-weight:600;',
     'letter-spacing:.08em;text-transform:uppercase;color:var(--ink-800,#FFB000);',
     'border:1px solid var(--line,rgba(245,242,234,.09));border-radius:999px;',
