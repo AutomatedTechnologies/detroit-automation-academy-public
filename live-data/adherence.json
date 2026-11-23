@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-23T03:58:52.383Z",
+  "generated_at": "2026-11-23T04:01:24.254Z",
   "smart": {
     "method": "tu-static-join",
     "static_feed": "S1000147",
@@ -15,20 +15,20 @@
         "next_stop_eta": "2026-11-23T04:04:00.000Z",
         "in_service": true,
         "method": "tu-static-join",
-        "updated_at": "2026-11-23T03:58:16.000Z"
+        "updated_at": "2026-11-23T04:00:50.000Z"
       },
       "1636010": {
         "route_id": "460",
         "direction_id": 1,
         "vehicle_id": "3770",
         "headsign": "Somerset via Royal Oak",
-        "state": "early",
-        "delay_sec": -146,
-        "next_stop_id": "1982",
-        "next_stop_eta": "2026-11-23T03:56:58.000Z",
+        "state": "on-time",
+        "delay_sec": 0,
+        "next_stop_id": "2073",
+        "next_stop_eta": "2026-11-23T04:02:00.000Z",
         "in_service": true,
         "method": "tu-static-join",
-        "updated_at": "2026-11-23T03:58:39.000Z"
+        "updated_at": "2026-11-23T04:00:42.000Z"
       },
       "1694010": {
         "route_id": "200",
@@ -36,12 +36,12 @@
         "vehicle_id": "3765",
         "headsign": "Fairlane",
         "state": "on-time",
-        "delay_sec": -6,
-        "next_stop_id": "708",
-        "next_stop_eta": "2026-11-23T03:58:18.000Z",
+        "delay_sec": 27,
+        "next_stop_id": "7161",
+        "next_stop_eta": "2026-11-23T04:02:54.000Z",
         "in_service": true,
         "method": "tu-static-join",
-        "updated_at": "2026-11-23T03:58:15.000Z"
+        "updated_at": "2026-11-23T04:00:49.000Z"
       },
       "1962010": {
         "route_id": "261",
@@ -49,12 +49,12 @@
         "vehicle_id": "3602",
         "headsign": "DTW",
         "state": "late",
-        "delay_sec": 111,
+        "delay_sec": 110,
         "next_stop_id": "578",
-        "next_stop_eta": "2026-11-23T04:01:19.000Z",
+        "next_stop_eta": "2026-11-23T04:01:18.000Z",
         "in_service": true,
         "method": "tu-static-join",
-        "updated_at": "2026-11-23T03:58:37.000Z"
+        "updated_at": "2026-11-23T04:01:04.000Z"
       },
       "2689010": {
         "route_id": "200",
@@ -67,20 +67,7 @@
         "next_stop_eta": "2026-11-23T04:15:00.000Z",
         "in_service": true,
         "method": "tu-static-join",
-        "updated_at": "2026-11-23T03:58:15.000Z"
-      },
-      "3040010": {
-        "route_id": "210",
-        "direction_id": 0,
-        "vehicle_id": "3714",
-        "headsign": "Westland",
-        "state": "early",
-        "delay_sec": -89,
-        "next_stop_id": "839",
-        "next_stop_eta": "2026-11-23T03:57:31.000Z",
-        "in_service": true,
-        "method": "tu-static-join",
-        "updated_at": "2026-11-23T03:57:24.000Z"
+        "updated_at": "2026-11-23T04:00:49.000Z"
       },
       "3061010": {
         "route_id": "461",
@@ -88,12 +75,12 @@
         "vehicle_id": "4010",
         "headsign": "Troy Park & Ride via Somerset",
         "state": "late",
-        "delay_sec": 557,
-        "next_stop_id": "1991",
-        "next_stop_eta": "2026-11-23T03:59:16.000Z",
+        "delay_sec": 547,
+        "next_stop_id": "7147",
+        "next_stop_eta": "2026-11-23T04:01:07.000Z",
         "in_service": true,
         "method": "tu-static-join",
-        "updated_at": "2026-11-23T03:58:33.000Z"
+        "updated_at": "2026-11-23T04:01:04.000Z"
       },
       "3229010": {
         "route_id": "460",
@@ -106,33 +93,13 @@
         "next_stop_eta": "2026-11-23T04:30:00.000Z",
         "in_service": true,
         "method": "tu-static-join",
-        "updated_at": "2026-11-23T03:58:39.000Z"
+        "updated_at": "2026-11-23T04:00:42.000Z"
       }
     }
   },
   "ddot": {
     "method": "track-dwell",
     "missed_stops": [
-      {
-        "agency": "ddot",
-        "route_id": "16",
-        "direction_id": 0,
-        "stop_id": "3912",
-        "vehicle_id": "2506",
-        "detected_at": "2026-11-22T16:00:13.788Z",
-        "method": "track-dwell",
-        "inference": true
-      },
-      {
-        "agency": "ddot",
-        "route_id": "16",
-        "direction_id": 0,
-        "stop_id": "3351",
-        "vehicle_id": "2304",
-        "detected_at": "2026-11-22T16:00:13.788Z",
-        "method": "track-dwell",
-        "inference": true
-      },
       {
         "agency": "ddot",
         "route_id": "8",
