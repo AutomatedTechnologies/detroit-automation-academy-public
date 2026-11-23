@@ -6,9 +6,22 @@
 <title>Apple Learning Coach — Justin Spencer Smith</title>
 <meta name="description" content="Justin Spencer Smith's Apple Learning Coach certification work: Apple's professional learning program for coaching educators on Apple technology. A personal domain, separate from Detroit Automation Academy business.">
 <link rel="icon" type="image/webp" href="../assets/logo.webp">
-<style>
+<link rel="stylesheet" href="/assets/udla-tokens.css">
+<style>/* UDLA-3 M7 (2026-11-23): this surface links the one shared token
+   sheet (above); its legacy light styling names Language tokens
+   where a token carries the value exactly: #fff = --paper-0 ·
+   #f5f5f5 = --gray-10 · #666666 = --gray-170. Gaps left literal:
+   #1d1d1d · #616161 · #6e6e6e · #f1f1f1 · #d2d2d2 · #868686 ·
+   #000 · rgba(255,255,255,.72) · rgba(0,0,0,.1) · rgba(0,0,0,.08).
+   The -apple-system stack names system faces only (F-1 clean)
+   and stays as written. styles.css itself was not adopted: its
+   global element rules would restyle this page beyond palette,
+   which this tranche's fences forbid — recorded as the M7 gap.
+   Stepper done/current marks are content progress, not data
+   states; no §5 frames. */
+
   /* Apple-inspired personal-domain treatment. Scoped under .apl — does not leak into site chrome. */
-  .apl { background: #fff; color: #1d1d1d; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+  .apl { background: var(--paper-0); color: #1d1d1d; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
   .apl *, .apl *::before, .apl *::after { box-sizing: border-box; }
   .apl-wrap { max-width: 1020px; margin: 0 auto; padding: 0 1.5rem; }
   .apl section { padding: 4.5rem 0; }
@@ -24,16 +37,16 @@
   .apl-nav-links { display: flex; gap: 1.4rem; margin-left: auto; }
   .apl-nav-links a { font-size: .82rem; color: #1d1d1d !important; opacity: .75; white-space: nowrap; }
   .apl-nav-links a:hover { opacity: 1; text-decoration: none; }
-  .apl-nav-cta { background: #616161; color: #fff !important; border-radius: 999px; padding: .42rem 1rem; font-size: .82rem; font-weight: 500; white-space: nowrap; }
-  .apl-nav-cta:hover { background: #666666; text-decoration: none; }
+  .apl-nav-cta { background: #616161; color: var(--paper-0) !important; border-radius: 999px; padding: .42rem 1rem; font-size: .82rem; font-weight: 500; white-space: nowrap; }
+  .apl-nav-cta:hover { background: var(--gray-170); text-decoration: none; }
 
   /* Hero */
-  .apl-hero { text-align: center; padding: 5.5rem 0 4.5rem !important; background: #fff; }
+  .apl-hero { text-align: center; padding: 5.5rem 0 4.5rem !important; background: var(--paper-0); }
   .apl-eyebrow { font-size: .8rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #6e6e6e; margin-bottom: 1rem; }
   .apl-hero h1 { font-size: clamp(3rem, 8vw, 5.25rem); font-weight: 600; letter-spacing: -.03em; line-height: 1.05; color: #1d1d1d; }
   .apl-hero .sub { font-size: clamp(1.15rem, 2.4vw, 1.5rem); color: #6e6e6e; max-width: 42rem; margin: 1.25rem auto 0; line-height: 1.45; letter-spacing: -.01em; }
   .apl-pills { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; margin-top: 1.75rem; }
-  .apl-pill { display: inline-flex; align-items: center; gap: .4rem; background: #f5f5f5; color: #1d1d1d; border-radius: 999px; padding: .5rem 1rem; font-size: .85rem; font-weight: 500; }
+  .apl-pill { display: inline-flex; align-items: center; gap: .4rem; background: var(--gray-10); color: #1d1d1d; border-radius: 999px; padding: .5rem 1rem; font-size: .85rem; font-weight: 500; }
   .apl-pill.done { background: #f1f1f1; color: #616161; }
   .apl-pill a { color: inherit; font-weight: 600; }
   .apl-pill a:hover { text-decoration: underline; }
@@ -43,14 +56,14 @@
   .apl-lede { text-align: center; color: #6e6e6e; font-size: 1.05rem; max-width: 44rem; margin: 0 auto 2.75rem; line-height: 1.6; }
 
   /* Status stepper */
-  .apl-status { background: #f5f5f5; }
+  .apl-status { background: var(--gray-10); }
   .apl-steps { display: flex; align-items: flex-start; justify-content: space-between; max-width: 880px; margin: 0 auto; }
   .apl-step { flex: 1; text-align: center; position: relative; padding: 0 .5rem; }
   .apl-step::before { content: ""; position: absolute; top: 15px; left: -50%; width: 100%; height: 2px; background: #d2d2d2; z-index: 0; }
   .apl-step:first-child::before { display: none; }
   .apl-step.done::before { background: #616161; }
-  .apl-dot { width: 32px; height: 32px; border-radius: 50%; margin: 0 auto .75rem; display: flex; align-items: center; justify-content: center; font-size: .9rem; font-weight: 600; position: relative; z-index: 1; background: #fff; border: 2px solid #d2d2d2; color: #6e6e6e; }
-  .apl-step.done .apl-dot { background: #616161; border-color: #616161; color: #fff; }
+  .apl-dot { width: 32px; height: 32px; border-radius: 50%; margin: 0 auto .75rem; display: flex; align-items: center; justify-content: center; font-size: .9rem; font-weight: 600; position: relative; z-index: 1; background: var(--paper-0); border: 2px solid #d2d2d2; color: #6e6e6e; }
+  .apl-step.done .apl-dot { background: #616161; border-color: #616161; color: var(--paper-0); }
   .apl-step.current .apl-dot { border-color: #616161; color: #616161; }
   .apl-beyond { text-align: center; font-size: .9rem; color: #6e6e6e; margin: 2.2rem auto 0; max-width: 640px; }
   .apl-step h3 { font-size: .95rem; font-weight: 600; color: #1d1d1d; margin-bottom: .25rem; }
@@ -59,23 +72,23 @@
 
   /* Portfolio cards */
   .apl-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
-  .apl-card { background: #f5f5f5; border-radius: 18px; padding: 1.75rem; display: flex; flex-direction: column; min-height: 190px; }
+  .apl-card { background: var(--gray-10); border-radius: 18px; padding: 1.75rem; display: flex; flex-direction: column; min-height: 190px; }
   .apl-card h3 { font-size: 1.2rem; font-weight: 600; letter-spacing: -.01em; color: #1d1d1d; margin-bottom: .5rem; }
   .apl-card p { font-size: .92rem; color: #6e6e6e; line-height: 1.55; flex: 1; }
   .apl-tag { margin-top: 1.25rem; font-size: .72rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #868686; }
 
   /* Black contrast block */
   .apl-black { background: #000 !important; text-align: center; }
-  .apl-black .creds { font-size: clamp(1.4rem, 3.4vw, 2.4rem); font-weight: 600; letter-spacing: -.02em; line-height: 1.35; color: #f5f5f5; max-width: 56rem; margin: 0 auto; }
+  .apl-black .creds { font-size: clamp(1.4rem, 3.4vw, 2.4rem); font-weight: 600; letter-spacing: -.02em; line-height: 1.35; color: var(--gray-10); max-width: 56rem; margin: 0 auto; }
   .apl-black .creds span { color: #868686; }
 
   /* Journals + about */
-  .apl-alt { background: #f5f5f5; }
+  .apl-alt { background: var(--gray-10); }
   .apl-prose { max-width: 44rem; margin: 0 auto; color: #1d1d1d; font-size: 1.02rem; line-height: 1.7; }
   .apl-prose p + p { margin-top: 1rem; }
   .apl-prose .dim { color: #6e6e6e; }
   .apl-topics { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; margin-top: 1.5rem; }
-  .apl-topic { background: #fff; border: 1px solid rgba(0,0,0,.08); border-radius: 999px; padding: .45rem .95rem; font-size: .83rem; color: #1d1d1d; }
+  .apl-topic { background: var(--paper-0); border: 1px solid rgba(0,0,0,.08); border-radius: 999px; padding: .45rem .95rem; font-size: .83rem; color: #1d1d1d; }
 
   /* Contact */
   .apl-contact { text-align: center; }
