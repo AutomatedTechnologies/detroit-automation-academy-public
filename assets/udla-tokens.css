@@ -1,7 +1,9 @@
 /* Detroit Automation Academy — UDLA token sheet (UDLA-3, 2026-11-23)
-   The Language's one shared CSS source: 35 tokens, exactly as drafted
-   in UDLA-2 (files/UDLA-2-LANGUAGE-DRAFT-2026-11-23.md) and picked by
-   the owner 2026-11-23 (Option B — TWO REGISTERS). Values are carried
+   The Language's one shared CSS source: 159 tokens by enumeration —
+   the 35 exactly as drafted in UDLA-2 (files/UDLA-2-LANGUAGE-DRAFT-
+   2026-11-23.md) and picked by the owner 2026-11-23 (Option B — TWO
+   REGISTERS), + 79 (Amendment 1) + 7 absorbed (UDLA-3 M4) + 38
+   (Amendment 2). Values are carried
    from what renders today (styles.css :root, the Periodical sheet,
    /atc/); only the names were fixed. No external references — the two
    faces below are the estate's own OFL files, self-hosted (estate
@@ -137,7 +139,9 @@
    actual bytes (live-transit.html, route-finder/index.html,
    route-finder/app.js; counted 2026-11-23). Every value is carried
    verbatim: no rounding, no merging, no substitution. The original
-   35 tokens above are byte-unchanged; the sheet now carries 114.
+   35 tokens above are byte-unchanged; the sheet carried 114 after
+   this amendment — 121 after the M4 absorption below, 159 after
+   Amendment 2.
    Naming: --gray-N is an ordinal ramp (light → dark); --alpha-<base
    hex>-<step> names a translucent value by its exact base and its
    alpha step as a two-digit percent, only steps actually used;
@@ -262,4 +266,73 @@
      backdrop-filter dependency. */
   --daa-glass-edge: #ffffff;
   --daa-glass-layer: #1a1a1a;
+}
+
+/* ——— Amendment 2 (UDLA-2, 2026-11-23): the counted residue pass —
+   38 tokens, extended from the estate's actual bytes (styles.css,
+   the flagship renderer, and the per-page inline residues UDLA-4's
+   hex census found outside Amendment 1's live-register survey;
+   counted 2026-11-23). Every value is carried verbatim: no rounding,
+   no merging, no substitution. The 121 tokens above are
+   byte-unchanged; the sheet now carries 159. Naming follows
+   Amendment 1 §A1.1: --alpha-<base hex>-<step>, only steps actually
+   used. styles.css mirrors the 19 of these its own declarations
+   consume (the subset pattern UDLA-4 hook 2 records); the rest are
+   consumed where their surfaces already load this sheet, or stand
+   as token-valued literals in JS and inline blocks (the Amendment 1
+   app.js precedent). */
+:root {
+  /* base 000000: styles.css working shadows/washes + the flagship
+     renderer's overlay step (--line is this base's step 15 under its
+     own name; steps 40/45 were tokenized in Amendment 1) */
+  --alpha-000000-04: rgba(0,0,0,.04);
+  --alpha-000000-10: rgba(0,0,0,.1);
+  --alpha-000000-12: rgba(0,0,0,.12);
+  --alpha-000000-18: rgba(0,0,0,.18);
+  --alpha-000000-25: rgba(0,0,0,.25);
+  --alpha-000000-35: rgba(0,0,0,.35);
+  --alpha-000000-50: rgba(0,0,0,.5);
+  --alpha-000000-55: rgba(0,0,0,.55);
+  --alpha-000000-85: rgba(0,0,0,.85);
+  /* base ffffff: the .prose pre family, notes, styles.css highlights */
+  --alpha-ffffff-04: rgba(255,255,255,.04);
+  --alpha-ffffff-05: rgba(255,255,255,.05);
+  --alpha-ffffff-06: rgba(255,255,255,.06);
+  --alpha-ffffff-08: rgba(255,255,255,.08);
+  --alpha-ffffff-10: rgba(255,255,255,.1);
+  --alpha-ffffff-18: rgba(255,255,255,.18);
+  --alpha-ffffff-55: rgba(255,255,255,.55);
+  --alpha-ffffff-90: rgba(255,255,255,.9);
+  /* base 0d0d0d: styles.css grounds */
+  --alpha-0d0d0d-02: rgba(13,13,13,.02);
+  --alpha-0d0d0d-03: rgba(13,13,13,.03);
+  /* base 898989: styles.css grid lines + glow */
+  --alpha-898989-05: rgba(137,137,137,.05);
+  --alpha-898989-06: rgba(137,137,137,.06);
+  --alpha-898989-12: rgba(137,137,137,.12);
+  --alpha-898989-35: rgba(137,137,137,.35);
+  /* base efefef: styles.css washes */
+  --alpha-efefef-78: rgba(239,239,239,.78);
+  --alpha-efefef-88: rgba(239,239,239,.88);
+  /* base f2f2f2 = --gray-20: two steps Amendment 1's survey didn't reach */
+  --alpha-f2f2f2-75: rgba(242,242,242,.75);
+  --alpha-f2f2f2-94: rgba(242,242,242,.94);
+  /* base 101010 = --stage: two steps Amendment 1's survey didn't reach */
+  --alpha-101010-88: rgba(16,16,16,.88);
+  --alpha-101010-92: rgba(16,16,16,.92);
+  /* base b4b4b4 = --gray-80: the find.html step */
+  --alpha-b4b4b4-28: rgba(180,180,180,.28);
+  /* base 767676 = --gray-150: the api.html step */
+  --alpha-767676-07: rgba(118,118,118,.07);
+  /* base 9f9f9f = --gray-120: dashboard family */
+  --alpha-9f9f9f-40: rgba(159,159,159,.4);
+  /* base a7a7a7: dashboard family (its opaque is exceptioned, §A2.6) */
+  --alpha-a7a7a7-08: rgba(167,167,167,.08);
+  --alpha-a7a7a7-50: rgba(167,167,167,.5);
+  /* base c9c9c9 = --paper-3: dashboard family */
+  --alpha-c9c9c9-08: rgba(201,201,201,.08);
+  --alpha-c9c9c9-50: rgba(201,201,201,.5);
+  /* base 585858: notes family (its opaque is exceptioned, §A2.6) */
+  --alpha-585858-10: rgba(88,88,88,.1);
+  --alpha-585858-20: rgba(88,88,88,.2);
 }
