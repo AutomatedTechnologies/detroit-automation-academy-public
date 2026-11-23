@@ -9,7 +9,7 @@
 <link rel="icon" type="image/webp" href="/assets/logo.webp">
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-<link rel="stylesheet" href="/styles.css?v=20261102-1818">
+<link rel="stylesheet" href="/styles.css?v=20261123-1427">
 <link rel="canonical" href="https://www.detroitautomationacademy.com/software/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Detroit Automation Academy">
@@ -43,21 +43,24 @@
 <!-- SR-CHROME:HEADER schema-v11 -->
 <div id="daa-nav" class="sr-chrome">
 <style>
-.sr-chrome{color-scheme:light;background:#ffffff;color:#111111;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-.sr-chrome .sr-header{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:.6rem 1rem;border-bottom:2px solid #111111}
-.sr-chrome .sr-brand{display:flex;align-items:center;gap:.55rem;color:#111111;text-decoration:none;font-weight:700;font-size:1.02rem;letter-spacing:.01em}
+.sr-chrome{color:inherit;background:transparent;font-family:inherit}
+.sr-chrome .sr-header{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:.6rem 0;border-bottom:2px solid currentColor}
+.sr-chrome .sr-brand{display:flex;align-items:center;gap:.55rem;color:inherit;text-decoration:none;font-weight:700;font-size:1.02rem;letter-spacing:.01em}
 .sr-chrome .sr-brand svg{width:30px;height:30px;flex:none;display:block}
 .sr-chrome .sr-nav{display:flex;gap:.45rem;flex-wrap:wrap;margin-left:auto}
-.sr-chrome .sr-pill{display:inline-block;padding:.42rem .95rem;border:1.5px solid #111111;border-radius:999px;color:#111111;text-decoration:none;font-size:.92rem;font-weight:600;line-height:1.2;background:#ffffff}
-.sr-chrome .sr-pill:hover{background:#111111;color:#ffffff}
-.sr-chrome-foot{color-scheme:light;background:#ffffff;color:#111111;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-.sr-chrome-foot .sr-lanegrid{display:flex;gap:1.5rem;flex-wrap:wrap;padding:.5rem 0}
-.sr-chrome-foot .sr-lane{min-width:9rem}
-.sr-chrome-foot .sr-lane h3{margin:.2rem 0 .35rem;font-size:.95rem;letter-spacing:.02em}
-.sr-chrome-foot .sr-lane p{margin:0;font-size:.88rem;line-height:1.55}
-.sr-chrome-foot .sr-lane a{color:#111111;text-decoration:underline}
-.sr-chrome-foot .sr-fine{font-size:.82rem;color:#333333;line-height:1.55;margin:.45rem 0}
-.sr-chrome-foot .sr-fine a{color:#111111}
+.sr-chrome .sr-pill{display:inline-block;padding:.42rem .95rem;border:1.5px solid currentColor;border-radius:999px;color:inherit;text-decoration:none;font-size:.92rem;font-weight:600;line-height:1.2;background:transparent}
+.sr-chrome .sr-pill:hover{background:rgba(127,127,127,.18)}
+.sr-chrome-foot{color:inherit;background:transparent;font-family:inherit;border-top:3px solid currentColor;margin-top:22px;padding:22px 0 4px}
+.sr-chrome-foot .sr-lanegrid{display:grid;grid-template-columns:repeat(5,1fr);gap:1.5rem;padding:0}
+.sr-chrome-foot .sr-lane h3{margin:0 0 .5rem;font-size:.82rem;letter-spacing:.09em;text-transform:uppercase;border-bottom:1px solid currentColor;padding-bottom:.35rem}
+.sr-chrome-foot .sr-lane ul{list-style:none;margin:0;padding:0}
+.sr-chrome-foot .sr-lane li{margin:.3rem 0;font-size:.88rem;line-height:1.4}
+.sr-chrome-foot .sr-lane a{color:inherit;text-decoration:none}
+.sr-chrome-foot .sr-lane a:hover{text-decoration:underline}
+.sr-chrome-foot .sr-fine{font-size:.82rem;line-height:1.55;margin:.45rem 0;opacity:.72}
+.sr-chrome-foot .sr-fine a{color:inherit}
+.sr-chrome-foot p.sr-fine:first-of-type{border-top:1px solid currentColor;margin-top:14px;padding-top:.7rem}
+@media (max-width:640px){.sr-chrome-foot .sr-lanegrid{grid-template-columns:repeat(2,1fr)}}
 </style>
 <header class="sr-header"><a class="sr-brand" href="/" aria-label="Detroit Automation Academy — home"><svg viewBox="0 0 100 100" role="img" aria-label="Academy mark"><rect width="100" height="100" rx="21" fill="#141414"/><path d="M35 25v50M35 25h15a25 25 0 0 1 0 50H35" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="square"/><circle cx="35" cy="25" r="4.5" fill="#fff"/><circle cx="35" cy="50" r="4.5" fill="#fff"/><circle cx="35" cy="75" r="4.5" fill="#fff"/></svg><span>Detroit Automation Academy</span></a><nav class="sr-nav" aria-label="Primary"><a class="sr-pill" href="/live-transit.html">Live Map</a><a class="sr-pill" href="/board/">Departure Board</a><a class="sr-pill" href="/cities/">Cities</a><a class="sr-pill" href="/programs.html">Programs</a><a class="sr-pill" href="/signal/">The Signal</a><a class="sr-pill" href="/the-index/">The Index</a><a class="sr-pill" href="/arcadia">Arcadia</a><a class="sr-pill" href="/inquire.html">Contact</a><a class="sr-pill" href="/find.html">Find</a></nav></header>
 </div>
@@ -72,7 +75,7 @@
       <h1>Academy <span class="accent">Software</span></h1>
 
       <div class="prose">
-        <p>The Detroit Automation Academy maintains useful open-source Mac software that its original authors no longer do. Each application is audited for security issues, remediated, branded, and verified running on <strong>macOS High Sierra (10.13)</strong> — the floor for every Academy build — before anything is offered for download. Every application is free, ships with its full source under its original open-source license, and contacts no update, crash-report, or telemetry service the Academy does not operate.</p>
+        <p>The Detroit Automation Academy maintains useful open-source Mac software that its original authors no longer do. Each application offered for download is audited for security issues, remediated, branded, and verified running on <strong>macOS High Sierra (10.13)</strong> — the floor for every Academy build — on real hardware before it is offered. Applications still in testing carry their true status in the catalog and are not offered as verified downloads. Every application is free, ships with its full source under its original open-source license, and contacts no update, crash-report, or telemetry service the Academy does not operate.</p>
         <p>Statuses below state exactly where each application stands. Nothing is listed as available until a verified build exists.</p>
       </div>
 
@@ -87,8 +90,8 @@
         <div class="sw-item">
           <span class="sw-status">Release candidate</span>
           <h2>Spectacle — window manager</h2>
-          <p>Move and resize windows with the keyboard, maintained for High Sierra. Current build spectacle-test-22 is a release candidate in the Distro catalog.</p>
-          <p><a href="https://github.com/AutomatedTechnologies/spectacle/releases/download/spectacle-test-22/Spectacle-test.zip">Download Spectacle (spectacle-test-22) →</a></p>
+          <p>Move and resize windows with the keyboard, maintained for High Sierra. Current build spectacle-test-11 is a release candidate in the Distro catalog.</p>
+          <p><a href="https://github.com/AutomatedTechnologies/spectacle/releases/download/spectacle-test-11/Spectacle-test.zip">Download Spectacle (spectacle-test-11) →</a></p>
         </div>
 
         <div class="sw-item">
@@ -160,24 +163,10 @@
           <p>The High Sierra emulation library — verified emulator pins and a public-domain shelf, license traced per title. Current build arcadia-test-1 is in testing through Distro.</p>
           <p><a href="https://github.com/AutomatedTechnologies/arcadia/releases/download/arcadia-test-1/Arcadia-test.zip">Download Arcadia (arcadia-test-1) →</a></p>
         </div>
-
-        <div class="sw-item">
-          <span class="sw-status">Testing</span>
-          <h2>Photos — Academy Build — photo library client</h2>
-          <p>A client for Google Photos — the library in its own native window. Current build googlephotos-test-1 is in testing through Distro.</p>
-          <p><a href="https://github.com/AutomatedTechnologies/googlephotos/releases/download/googlephotos-test-1/Photos-test.zip">Download Photos — Academy Build (googlephotos-test-1) →</a></p>
-        </div>
-
-        <div class="sw-item">
-          <span class="sw-status">Testing</span>
-          <h2>macOS Catalina Upgrade — MacBookAir5,2 — macOS upgrade tooling</h2>
-          <p>One click from High Sierra to Catalina — on a new volume, High Sierra untouched. Current build test-1 is in testing through Distro.</p>
-          <p><a href="https://github.com/AutomatedTechnologies/catalina-upgrade/releases/download/test-1/CatalinaUpgrade-test-1.zip">Download macOS Catalina Upgrade — MacBookAir5,2 (test-1) →</a></p>
-        </div>
       </div>
 
       <div class="prose">
-        <p>Questions: <a href="https://www.detroitautomationacademy.com/inquire.html">Contact page</a>.</p>
+        <p>Questions: <a href="/inquire.html">Contact page</a>.</p>
       </div>
 
     </div>
@@ -186,10 +175,10 @@
 </main>
 
 <footer class="footer">
-<div class="wrap"><p class="build-stamp" style="font-size:.78rem;color:#444;border:1px solid #000;padding:.5rem .75rem;margin:1rem 0;">GENERATED — rendered from the Academy Registry (Singular Reference) by tools/generate_software_pages.py · schema v11 · ledger 0075 · state fingerprint sha256:dfcb576de9e984ba63510d4da8b221228bdf67f4be8a1d1857e98a01bc651776 · Change the registry, never this page.</p></div>
+<div class="wrap"><p class="build-stamp" style="font-size:.78rem;color:#444;border:1px solid #000;padding:.5rem .75rem;margin:1rem 0;">GENERATED — rendered from the Academy Registry (Singular Reference) by tools/generate_software_pages.py · schema v11 · ledger 0066 · state fingerprint sha256:f20c72eaee20af0cd33ee024b23d55302232289e400553648664abf2a10bce5a · Change the registry, never this page.</p></div>
 <!-- SR-CHROME:FOOTER schema-v11 -->
 <div class="sr-chrome-foot">
-<nav class="sr-lanegrid" aria-label="Site"><div class="sr-lane"><h3>Ride</h3><p><a href="/live-transit.html">Live Map</a> · <a href="/board/">Departure Board</a> · <a href="/cities/">Cities</a> · <a href="/live-transit-detroit/">Live Transit Detroit stories</a> · <a href="/live-transit/terms/">Live Transit Terms</a></p></div><div class="sr-lane"><h3>Read</h3><p><a href="/signal/">The Signal</a> · <a href="/notes/">Notes</a> · <a href="/press/">The Press</a> · <a href="/feed/">Latest</a> · <a href="/watch/">Watch</a> · <a href="/the-index/">The Index</a></p></div><div class="sr-lane"><h3>Software</h3><p><a href="/software/">Software</a> · <a href="/arcadia">Arcadia</a> · <a href="/api.html">API</a> · <a href="/registry/">Registry</a></p></div><div class="sr-lane"><h3>Learn & work</h3><p><a href="/programs.html">Programs</a> · <a href="/curriculum/online-safety/">Online Safety</a> · <a href="/apple-learning-coach/">Coach Profile</a> · <a href="/partners.html">Partners</a> · <a href="/services.html">Services</a> · <a href="/press/media-kit.html">Media Kit</a></p></div><div class="sr-lane"><h3>Trust</h3><p><a href="/inquire.html">Contact</a> · <a href="/find.html">Find</a> · <a href="/dashboard.html">Status</a> · <a href="/privacy.html">Privacy Policy</a> · <a href="/terms.html">Terms of Service</a></p></div></nav>
+<nav class="sr-lanegrid" aria-label="Site"><div class="sr-lane"><h3>Ride</h3><ul><li><a href="/live-transit.html">Live Map</a></li><li><a href="/board/">Departure Board</a></li><li><a href="/cities/">Cities</a></li><li><a href="/live-transit-detroit/">Live Transit Detroit stories</a></li><li><a href="/live-transit/terms/">Live Transit Terms</a></li></ul></div><div class="sr-lane"><h3>Read</h3><ul><li><a href="/signal/">The Signal</a></li><li><a href="/notes/">Notes</a></li><li><a href="/press/">The Press</a></li><li><a href="/feed/">Latest</a></li><li><a href="/watch/">Watch</a></li><li><a href="/the-index/">The Index</a></li></ul></div><div class="sr-lane"><h3>Software</h3><ul><li><a href="/software/">Software</a></li><li><a href="/arcadia">Arcadia</a></li><li><a href="/api.html">API</a></li><li><a href="/registry/">Registry</a></li></ul></div><div class="sr-lane"><h3>Learn & work</h3><ul><li><a href="/programs.html">Programs</a></li><li><a href="/curriculum/online-safety/">Online Safety</a></li><li><a href="/apple-learning-coach/">Coach Profile</a></li><li><a href="/partners.html">Partners</a></li><li><a href="/services.html">Services</a></li><li><a href="/press/media-kit.html">Media Kit</a></li></ul></div><div class="sr-lane"><h3>Trust</h3><ul><li><a href="/inquire.html">Contact</a></li><li><a href="/find.html">Find</a></li><li><a href="/dashboard.html">Status</a></li><li><a href="/privacy.html">Privacy Policy</a></li><li><a href="/terms.html">Terms of Service</a></li></ul></div></nav>
 <p class="sr-fine"><a href="/find.html">Find</a> (search) · <a href="/inquire.html">Contact</a></p>
 <p class="sr-fine">© 2026 AutomatedTechnologies d/b/a Detroit Automation Academy</p>
 <p class="sr-fine">© 2026 Detroit Automation Academy / Automated Technologies. All rights reserved. Detroit Automation Academy, Automated Technologies, Distro, Workbench, Live Transit Detroit, The Signal, and the Academy monochrome logo are marks of the Academy, used under the founder's permission. Academy-original works are licensed under the Academy License (revocable); upstream open-source components remain under their own licenses.</p>
