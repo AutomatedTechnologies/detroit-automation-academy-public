@@ -115,7 +115,7 @@ function renderJourney(j, idx) {
   arriveAt.textContent = 'ARRIVE ' + j.arriveClock.toUpperCase();
   let html = `<p class="summary"><b>${j.departClock} → ${j.arriveClock}</b> · ${j.durationMin} min · ${j.transfers} transfer${j.transfers === 1 ? '' : 's'} · ${j.walkMin} min walking</p>`;
   html += '<ol class="steps">' + steps.map(s =>
-    `<li><span class="n" aria-hidden="true"></span><span class="step-main"><span class="verb">${esc(s.verb)}</span> — ${esc(s.text)}${s.note ? ` <span style="color:var(--faint)">(${esc(s.note)})</span>` : ''}</span><span class="basis ${s.cls}">${esc(s.basis)}</span></li>`).join('') + '</ol>';
+    `<li><span class="n" aria-hidden="true"></span><span class="step-main"><span class="verb">${esc(s.verb)}</span> — ${esc(s.text)}${s.note ? ` <span style="color:var(--ink-400)">(${esc(s.note)})</span>` : ''}</span><span class="basis ${s.cls}">${esc(s.basis)}</span></li>`).join('') + '</ol>';
   html += `<p class="honesty">Times marked LIVE come from a vehicle reporting now. SCHEDULED times are the published timetable. “Live on route” counts vehicles reporting on that route this minute — it confirms the route is running, it is not a promise about your bus.</p>`;
   if (currentJourneys.length > 1) {
     html += '<div class="alts"><h3>OTHER WAYS</h3>' + currentJourneys.map((a, i) =>
@@ -421,6 +421,11 @@ function drawMap() {
   mapTag.textContent = liveStamp
     ? `LIVE MAP — ${liveVehicles.length} vehicles reporting · ${new Date(liveStamp).toLocaleTimeString()}${j ? ' · your route in black' : ''}`
     : 'LIVE MAP — feed unavailable; steps are timetable only';
+  /* UDLA-3 M3 state grammar (UDLA-2 section 5): no live stamp = not
+   * established (feed loading, or pollLive could not read it) — the
+   * tag takes the dashed frame. Rendering hook only: liveStamp is
+   * computed exactly as before; copies unchanged. */
+  mapTag.classList.toggle('pending', !liveStamp);
 }
 
 /* ---------- live feed ---------- */
