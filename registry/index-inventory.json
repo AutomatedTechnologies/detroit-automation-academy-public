@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "index-inventory",
     "generator": "tools/generate_inventory.py",
-    "stateFingerprint": "sha256:54681c9d2f9d50c592a647c33e3c4ef2261b01e1b174c59cd2dbc85b461d3893",
+    "stateFingerprint": "sha256:dfcb576de9e984ba63510d4da8b221228bdf67f4be8a1d1857e98a01bc651776",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "apps": [
@@ -168,6 +168,19 @@
       "displayName": "Photos — Academy Build",
       "catalogStatus": "testing",
       "buildTag": "googlephotos-test-1",
+      "conformance": {
+        "gapsDispositioned": true,
+        "depsClear": true,
+        "gateFiled": false,
+        "uatRecorded": false,
+        "attestationState": "not attested"
+      }
+    },
+    {
+      "appId": "macos-catalina-upgrade",
+      "displayName": "macOS Catalina Upgrade — MacBookAir5,2",
+      "catalogStatus": "testing",
+      "buildTag": "test-1",
       "conformance": {
         "gapsDispositioned": true,
         "depsClear": true,
