@@ -8042,16 +8042,20 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     // 'tu-pending' = the SMART TU plane has not reported (R-1). Only
     // an established state ('ready', or 'na' after the SMART fallback)
     // with zero rows may print the no-departures copy.
+    // UDLA-3 M2: the same discipline wears the Language's frame —
+    // 'rv-ind' (dashed) on the indeterminate paragraphs, 'rv-est'
+    // (solid) on the established ones (UDLA-2 §5). Class only; the
+    // states, copies, and transitions are unchanged.
     var leadRes = rvStopRows(lead, nowMs);
     var leadRows = leadRes.rows;
     if (leadRes.state === 'loading') {
       var pl = document.createElement('p');
-      pl.className = 'rv-none';
+      pl.className = 'rv-none rv-ind';
       pl.textContent = 'Loading departures…';
       leadList.appendChild(pl);
     } else if (leadRes.state === 'nosvc') {
       var pn = document.createElement('p');
-      pn.className = 'rv-none';
+      pn.className = 'rv-none rv-est';
       pn.textContent = 'No service is scheduled today.';
       leadList.appendChild(pn);
     } else if (leadRes.state === 'tu-pending') {
@@ -8059,12 +8063,12 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
       // card's sentence for the same condition, minus its "see the
       // live vehicles below" tail — the panel sits on the map itself.
       var pt = document.createElement('p');
-      pt.className = 'rv-none';
+      pt.className = 'rv-none rv-ind';
       pt.textContent = 'SMART live times are not reporting for this stop right now.';
       leadList.appendChild(pt);
     } else if (!leadRows.length) {
       var p = document.createElement('p');
-      p.className = 'rv-none';
+      p.className = 'rv-none rv-est';
       // V5-G1 R-2: the check establishes absence only inside its
       // 3-hour window, so the copy claims the window, not the day.
       p.textContent = 'No more departures are scheduled at your stop in the next few hours.';
@@ -8095,7 +8099,7 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     });
     if (!rest.length) {
       var p2 = document.createElement('p');
-      p2.className = 'rv-none';
+      p2.className = 'rv-none ' + ((restLoading || restTuPending) ? 'rv-ind' : 'rv-est');
       // V5-G1: any contributing stop still loading renders the list as
       // loading; a TU-pending contributor (R-1) renders it as the
       // not-reporting line; the no-other-departures copy requires
