@@ -79,6 +79,34 @@
   --gap: 12px;
 }
 
+/* Amendment 2 mirror (UDLA-2, 2026-11-23): the 19 Amendment 2 alpha
+   tokens this sheet's own declarations consume, carried value-
+   identical from assets/udla-tokens.css — the same subset pattern
+   as the :root above (UDLA-4 hook 2). The token sheet is the source
+   of record; this mirror exists so every surface loading styles.css
+   resolves the re-pointed declarations below, sheet link or not. */
+:root {
+  --alpha-000000-04: rgba(0,0,0,.04);
+  --alpha-000000-10: rgba(0,0,0,.1);
+  --alpha-000000-12: rgba(0,0,0,.12);
+  --alpha-000000-18: rgba(0,0,0,.18);
+  --alpha-000000-25: rgba(0,0,0,.25);
+  --alpha-000000-35: rgba(0,0,0,.35);
+  --alpha-000000-50: rgba(0,0,0,.5);
+  --alpha-000000-55: rgba(0,0,0,.55);
+  --alpha-ffffff-55: rgba(255,255,255,.55);
+  --alpha-ffffff-90: rgba(255,255,255,.9);
+  --alpha-0d0d0d-02: rgba(13,13,13,.02);
+  --alpha-0d0d0d-03: rgba(13,13,13,.03);
+  --alpha-898989-05: rgba(137,137,137,.05);
+  --alpha-898989-06: rgba(137,137,137,.06);
+  --alpha-898989-12: rgba(137,137,137,.12);
+  --alpha-898989-35: rgba(137,137,137,.35);
+  --alpha-efefef-78: rgba(239,239,239,.78);
+  --alpha-efefef-88: rgba(239,239,239,.88);
+  --alpha-f2f2f2-94: rgba(242,242,242,.94);
+}
+
 /* Light-theme conformance (2026-11-02): explicit link + form-accent
    colors in the token grays, so no UA-default blue/purple can surface
    on any view that loads this sheet; all imagery renders grayscale. */
@@ -156,7 +184,7 @@ a { color: inherit; }
   position: sticky; top: 0; z-index: 50;
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px 24px;
-  background: rgba(239,239,239,0.88);
+  background: var(--alpha-efefef-88);
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
 }
@@ -178,8 +206,8 @@ a { color: inherit; }
   text-align: center;
   overflow: hidden;
   background-image:
-    linear-gradient(rgba(137,137,137,0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(137,137,137,0.05) 1px, transparent 1px);
+    linear-gradient(var(--alpha-898989-05) 1px, transparent 1px),
+    linear-gradient(90deg, var(--alpha-898989-05) 1px, transparent 1px);
   background-size: 44px 44px;
 }
 .hero::after {
@@ -231,7 +259,7 @@ a { color: inherit; }
 }
 .hero-mark-wrap .hero-mark { position: relative; z-index: 1; }
 
-.hero-mark { width: 132px; height: 132px; border-radius: 26px; box-shadow: 0 0 80px rgba(137,137,137,0.35); }
+.hero-mark { width: 132px; height: 132px; border-radius: 26px; box-shadow: 0 0 80px var(--alpha-898989-35); }
 .eyebrow {
   font-family: 'Space Grotesk', sans-serif;
   text-transform: uppercase; letter-spacing: 0.3em; font-size: 0.8rem;
@@ -250,7 +278,7 @@ a { color: inherit; }
 .btn-primary { background: var(--ink-500); color: var(--paper-0); }
 .btn-primary:visited { color: var(--paper-0); }
 .btn-primary:hover { background: var(--ink-800); }
-.btn-ghost { border: 1px solid var(--line); color: var(--ink-700); background: rgba(13,13,13,0.03); }
+.btn-ghost { border: 1px solid var(--line); color: var(--ink-700); background: var(--alpha-0d0d0d-03); }
 .btn-ghost:hover { border-color: var(--ink-500); color: var(--ink-500); }
 
 .hero-stats {
@@ -340,7 +368,7 @@ a { color: inherit; }
 .partner-list li {
   font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 1.02rem;
   border: 1px solid var(--line); border-radius: 999px; padding: 12px 24px;
-  color: var(--ink-700); background: rgba(13,13,13,0.02);
+  color: var(--ink-700); background: var(--alpha-0d0d0d-02);
   transition: border-color 0.2s, color 0.2s;
 }
 .partner-list li:hover { border-color: var(--ink-500); color: var(--ink-500); }
@@ -405,7 +433,7 @@ a { color: inherit; }
   background: var(--paper-0);
   border: 1px solid var(--ink-500);
   border-radius: var(--radius);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 12px 40px var(--alpha-000000-55);
   padding: 14px 16px;
 }
 .daac-head {
@@ -461,7 +489,7 @@ a { color: inherit; }
     background:
       linear-gradient(180deg,
         transparent var(--beam),
-        rgba(255, 255, 255, 0.55) calc(var(--beam) + 9%),
+        var(--alpha-ffffff-55) calc(var(--beam) + 9%),
         transparent calc(var(--beam) + 20%)),
       linear-gradient(var(--ink-500), var(--ink-800));
     animation: rail-beam 5s linear infinite;
@@ -549,8 +577,8 @@ a { color: inherit; }
   border-radius: var(--radius);
   overflow: hidden;
   background-image:
-    linear-gradient(rgba(137,137,137,0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(137,137,137,0.06) 1px, transparent 1px);
+    linear-gradient(var(--alpha-898989-06) 1px, transparent 1px),
+    linear-gradient(90deg, var(--alpha-898989-06) 1px, transparent 1px);
   background-size: 36px 36px;
 }
 .demo-stage::after {
@@ -563,7 +591,7 @@ a { color: inherit; }
 .demo-fullscreen {
   position: absolute; top: 10px; right: 10px; z-index: 5;
   padding: 6px 12px; font-size: 0.8rem; font-family: inherit; line-height: 1.4;
-  color: var(--ink-700); background: rgba(239,239,239,0.78);
+  color: var(--ink-700); background: var(--alpha-efefef-78);
   border: 1px solid var(--line); border-radius: 8px; cursor: pointer;
 }
 .demo-fullscreen:hover { border-color: var(--ink-500); color: var(--ink-500); }
@@ -581,8 +609,8 @@ a { color: inherit; }
 #demoFull.demo-pseudo .demo-term {
   position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 6;
   max-height: 44vh; max-height: 44dvh;
-  background: rgba(242,242,242,0.94);
-  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.55);
+  background: var(--alpha-f2f2f2-94);
+  box-shadow: 0 10px 36px var(--alpha-000000-55);
 }
 /* Safe-area: keep the floating terminal clear of the home indicator / notch
    in fullscreen and inside the WKWebView. Zero-op where insets are unsupported. */
@@ -638,7 +666,7 @@ body.demo-locked { overflow: hidden; }
 .world-card {
   position: absolute; left: 12px; bottom: 12px; z-index: 3;
   max-width: 240px; padding: 10px 12px;
-  background: rgba(239,239,239,0.88); border: 1px solid var(--line);
+  background: var(--alpha-efefef-88); border: 1px solid var(--line);
   border-radius: 10px; font-size: 0.85rem; line-height: 1.4;
   pointer-events: none;
 }
@@ -765,7 +793,7 @@ body.demo-locked { overflow: hidden; }
 .demo-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 18px 18px; }
 .demo-chip {
   font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.8rem;
-  background: rgba(13,13,13,0.03);
+  background: var(--alpha-0d0d0d-03);
   border: 1px solid var(--line); border-radius: 999px;
   color: var(--ink-500); padding: 6px 14px; cursor: pointer;
   transition: border-color 0.2s, color 0.2s;
@@ -854,10 +882,10 @@ body.demo-locked { overflow: hidden; }
 .lane-label:hover, .lane-group:focus-within > .lane-label { color: var(--ink-700); }
 .lane-label[data-active="true"] { color: var(--ink-500); }
 .lane-label:focus-visible { outline: 2px solid var(--ink-800); outline-offset: 3px; border-radius: 4px; }
-.lane-items { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); min-width: 250px; margin: 0; padding: 8px; list-style: none; background: var(--gray-20); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,.5); z-index: 60; }
+.lane-items { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); min-width: 250px; margin: 0; padding: 8px; list-style: none; background: var(--gray-20); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 16px 40px var(--alpha-000000-50); z-index: 60; }
 .lane-group:hover .lane-items, .lane-group:focus-within .lane-items, .lane-group.open .lane-items { display: block; }
 .lane-items a { display: block; padding: 11px 16px; border-radius: 8px; white-space: nowrap; text-decoration: none; color: var(--ink-500); font-weight: 500; font-size: .95rem; }
-.lane-items a:hover { background: rgba(137,137,137,.12); color: var(--ink-700); }
+.lane-items a:hover { background: var(--alpha-898989-12); color: var(--ink-700); }
 .lane-items a:focus-visible { outline: 2px solid var(--ink-800); outline-offset: -2px; }
 
 @media (max-width: 760px) {
@@ -882,15 +910,15 @@ body.demo-locked { overflow: hidden; }
    file remains an enhancement over its flat tint, never the meaning. */
 .card, .principle, #b5b5b5-commentary {
   border-top: 1px solid #ffffff;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.18), 0 10px 30px rgba(0,0,0,0.10);
+  box-shadow: inset 0 1px 0 var(--alpha-ffffff-90), inset 0 -1px 0 var(--alpha-000000-18), 0 10px 30px var(--alpha-000000-10);
 }
 .lane-items {
   border-top: 1px solid #ffffff;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 16px 40px rgba(0,0,0,.5);
+  box-shadow: inset 0 1px 0 var(--alpha-ffffff-90), 0 16px 40px var(--alpha-000000-50);
 }
 .footer {
   border-top: 1px solid #ffffff;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.15);
+  box-shadow: inset 0 1px 0 var(--alpha-ffffff-90), inset 0 -1px 0 rgba(0,0,0,0.15);
 }
 
 /* ---------- UDLA-3 M4 fold (2026-11-23): the press sheets ----------
@@ -950,7 +978,7 @@ body.v2-press .boardhead { display: flex; justify-content: space-between; align-
 body.v2-press .boardhead h3 { font-size: 12px; font-weight: 800; letter-spacing: .3em; text-transform: uppercase; font-family: 'Inter', sans-serif; }
 body.v2-press .boardhead span { font-size: 11px; color: var(--dim); }
 body.v2-press .irow { display: flex; gap: 12px; align-items: baseline; padding: 8px 0; min-height: 44px; border-bottom: 1px solid #e8e8e8; width: 100%; color: #222222; text-decoration: none; }
-body.v2-press .irow:hover { background: rgba(0,0,0,.04); }
+body.v2-press .irow:hover { background: var(--alpha-000000-04); }
 body.v2-press .irow .no { font-family: var(--mono); font-size: 11px; color: var(--dim); min-width: 30px; }
 body.v2-press .irow .g { flex: 1; }
 body.v2-press .irow .g b { font-size: 15px; display: block; }
@@ -1006,7 +1034,7 @@ body.v2-press img { filter: grayscale(1); }
 body.v2-press .feature, body.v2-press .subbox, body.v2-press .kit, body.v2-press .fact-card {
   border-top: 1px solid #ffffff;
   border-radius: 14px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.12);
+  box-shadow: inset 0 1px 0 var(--alpha-ffffff-90), inset 0 -1px 0 var(--alpha-000000-12);
 }
 body.v2-press button.fsmini { border-radius: 999px; }
 
@@ -1019,7 +1047,7 @@ body.v2-press button.fsmini { border-radius: 999px; }
    page's own stylesheets. */
 html { background: #ffffff !important; }
 body.v2-article { background: #ffffff !important; color: #222222 !important; }
-body.v2-article * { border-color: rgba(0,0,0,.25) !important; }
+body.v2-article * { border-color: var(--alpha-000000-25) !important; }
 body.v2-article h1, body.v2-article h2, body.v2-article h3, body.v2-article h4, body.v2-article strong, body.v2-article b { color: #111111 !important; }
 body.v2-article a { color: #111111 !important; }
 body.v2-article a:visited { color: #5a5a5a !important; }
@@ -1027,7 +1055,7 @@ body.v2-article a:hover { color: #111111 !important; text-decoration: underline 
 body.v2-article img, body.v2-article video, body.v2-article picture { filter: grayscale(1) !important; }
 body.v2-article header, body.v2-article footer, body.v2-article nav, body.v2-article section, body.v2-article article, body.v2-article main, body.v2-article aside, body.v2-article div, body.v2-article li, body.v2-article td, body.v2-article th { background-color: transparent !important; }
 body.v2-article code, body.v2-article pre { background: #f2f2f2 !important; color: #222222 !important; }
-body.v2-article input, body.v2-article button, body.v2-article select, body.v2-article textarea { background: #ffffff !important; color: #222222 !important; border: 1px solid rgba(0,0,0,.35) !important; }
+body.v2-article input, body.v2-article button, body.v2-article select, body.v2-article textarea { background: #ffffff !important; color: #222222 !important; border: 1px solid var(--alpha-000000-35) !important; }
 
 /* ---------- UDLA editorial components — The Signal (UDLA-3 M5, 2026-11-23) ----------
    Signal article pages carry class "ed-article" on <article> and adopt the
