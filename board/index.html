@@ -44,23 +44,31 @@
   A row is LIVE only when a real live source backs it; unattributed vehicles
   are never joined to a trip. No third-party loads (estate blacklist).
 -->
+<link rel="stylesheet" href="/assets/udla-tokens.css">
 <style>
-  :root{
-    --ink:#111; --mid:#555; --faint:#8a8a8a; --line:#111; --hair:#d9d9d9;
-    --paper:#fff; --slate:#f2f2f2; --dark:#111; --darkink:#f5f5f5;
-  }
+  /* UDLA-3 (2026-11-23): the Departure Board speaks the dark instrument
+     register — UDLA-2 Option B, owner pick 2026-11-23. All values come
+     from the one shared token sheet (/assets/udla-tokens.css, linked
+     above); this block keeps the Board's own layout exactly and names
+     token values only. Role map from the Board's retired private
+     tokens: --paper (ground) -> --stage · --ink (text/strong rules) ->
+     --paper-1 on dark, --ink-900 on filled chips · --mid/--faint
+     (muted) -> --ink-400 · --hair (hairlines) -> --line-dark ·
+     --slate/--dark (component grounds) -> --ink-900.
+     State grammar (UDLA-2 section 5): dashed = not established,
+     solid = established. */
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
-  body{margin:0;background:var(--paper);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  body{margin:0;background:var(--stage);color:var(--paper-1);
+    font-family:var(--font-data);
     line-height:1.45}
-  .wrap{max-width:760px;margin:0 auto;padding:0 16px}
-  a{color:var(--ink)}
+  .wrap{max-width:760px;margin:0 auto;padding:0 var(--page-margin)}
+  a{color:var(--paper-1)}
   button{font:inherit;cursor:pointer}
   .mono{font-variant-numeric:tabular-nums}
 
   /* ---------- site header (estate chrome) ---------- */
-  .sitebar{border-bottom:3px solid var(--line);padding:12px 0 10px}
+  .sitebar{border-bottom:3px solid var(--paper-1);padding:12px 0 10px}
   .sitebar .bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
   .sitebar .brand{display:flex;align-items:center;gap:10px;text-decoration:none}
   .sitebar .brand img{width:34px;height:34px}
@@ -70,76 +78,107 @@
   .sitebar nav a{text-decoration:none;font-size:.92rem}
   .sitebar nav a:hover{text-decoration:underline}
   .pagehead{margin:16px 0 2px}
-  .pagehead h1{margin:0;font-size:1.6rem;line-height:1.15}
-  .pagehead .s{color:var(--mid);font-size:.92rem;margin-top:.15rem}
+  .pagehead h1{margin:0;font-size:1.6rem;line-height:1.15;
+    font-family:var(--font-display);font-weight:600}
+  .pagehead .s{color:var(--ink-400);font-size:.92rem;margin-top:.15rem}
 
   /* ---------- shared board pieces ---------- */
-  .picker{border:2px solid var(--line);padding:14px;margin:14px 0}
+  .picker{border:var(--rule) var(--paper-1);background:var(--ink-900);
+    padding:14px;margin:14px 0}
   .picker .row{display:flex;gap:8px;flex-wrap:wrap}
-  .picker input[type="search"]{flex:1 1 220px;font:inherit;padding:.6rem .7rem;border:1.5px solid var(--ink)}
-  .btn{background:var(--ink);color:#fff;border:2px solid var(--ink);padding:.6rem .9rem;font-weight:600}
-  .btn.ghost{background:#fff;color:var(--ink)}
+  .picker input[type="search"]{flex:1 1 220px;font:inherit;padding:.6rem .7rem;
+    border:1.5px solid var(--line-dark);background:var(--stage);color:var(--paper-1)}
+  .btn{background:var(--paper-1);color:var(--ink-900);
+    border:var(--rule) var(--paper-1);padding:.6rem .9rem;font-weight:600}
+  .btn.ghost{background:transparent;color:var(--paper-1)}
   .results{list-style:none;margin:10px 0 0;padding:0}
-  .results li button{width:100%;text-align:left;background:#fff;border:1px solid var(--hair);
+  .results li button{width:100%;text-align:left;background:var(--ink-900);
+    border:1px solid var(--line-dark);
     border-top:none;padding:.55rem .7rem;display:flex;justify-content:space-between;gap:10px}
-  .results li:first-child button{border-top:1px solid var(--hair)}
-  .results .rsub{display:block;font-size:.8rem;color:var(--mid)}
-  .results .sid{font-size:.8rem;color:var(--mid);white-space:nowrap}
-  .feed-status{font-size:.85rem;color:#222;margin:.4rem 0}
-  .banner{border:2px solid var(--ink);background:var(--slate);padding:.6rem .8rem;
+  .results li:first-child button{border-top:1px solid var(--line-dark)}
+  .results .rsub{display:block;font-size:.8rem;color:var(--ink-400)}
+  .results .sid{font-size:.8rem;color:var(--ink-400);white-space:nowrap}
+  .feed-status{font-size:.85rem;color:var(--paper-2);margin:.4rem 0}
+  .banner{border:var(--rule) var(--paper-1);background:var(--ink-900);
+    padding:.6rem .8rem;
     font-weight:600;margin:.6rem 0}
-  .note{font-size:.85rem;color:var(--mid);margin:.5rem 0}
-  .alertline{border-left:4px solid var(--ink);background:var(--slate);
-    padding:.5rem .7rem;font-size:.9rem;margin:.6rem 0}
+  .note{font-size:.85rem;color:var(--ink-400);margin:.5rem 0}
+  /* alert-line (UDLA-2 component 4): a band with a rule above and
+     below. Established (an alert applies) = solid hairlines; not
+     established (checking / unavailable, the R-6 states) = dashed
+     rules in the muted ink, italic — the state grammar in CSS. The
+     kind class is set from alertsLine() in renderB. */
+  .alertline{background:var(--ink-900);
+    border-top:var(--rule-hair) var(--line-dark);
+    border-bottom:var(--rule-hair) var(--line-dark);
+    padding:.5rem .7rem;font-size:.9rem;margin:.6rem 0;text-align:center}
+  .alertline.checking,.alertline.unavailable{
+    border-top:var(--rule-dashed) var(--ink-400);
+    border-bottom:var(--rule-dashed) var(--ink-400);
+    color:var(--ink-400);font-style:italic}
   .tag{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.07em;
-    border:1.5px solid var(--ink);padding:.02rem .4rem;vertical-align:2px;white-space:nowrap}
-  .tag.live{background:var(--ink);color:#fff}
-  .tag.ag{background:#fff;color:var(--ink);border-color:var(--faint);color:#333}
-  .tag.dark{background:#e4e4e4;color:#333;border-color:#bbb}
-  .state-msg{border:2px dashed var(--faint);padding:1.2rem;text-align:center;color:var(--mid);margin:14px 0}
+    border:1.5px solid var(--paper-1);color:var(--paper-1);
+    padding:.02rem .4rem;vertical-align:2px;white-space:nowrap}
+  .tag.live{background:var(--paper-1);color:var(--ink-900)}
+  .tag.ag{background:transparent;color:var(--ink-400);border-color:var(--ink-500)}
+  .tag.dark{background:transparent;color:var(--ink-400);border-color:var(--ink-500)}
+  .state-msg{border:var(--rule-dashed) var(--ink-400);padding:1.2rem;
+    text-align:center;color:var(--ink-400);margin:14px 0}
 
   .dot{display:inline-block;width:.62em;height:.62em;border-radius:50%;
-    background:#111;margin-right:.35em;vertical-align:0}
-  .dot.smart{background:#8a8a8a}.dot.qline{background:#cfcfcf;border:1px solid #999}
+    background:var(--paper-1);margin-right:.35em;vertical-align:0}
+  .dot.smart{background:var(--ink-400)}
+  .dot.qline{background:var(--paper-2);border:1px solid var(--ink-400)}
   .nearby{margin:16px 0}
   .nearby h3{font-size:.95rem;margin:0 0 .4rem}
   .nearby ul{list-style:none;margin:0;padding:0}
-  .nearby li button{width:100%;text-align:left;background:#fff;border:1px solid var(--hair);
+  .nearby li button{width:100%;text-align:left;background:var(--ink-900);
+    border:1px solid var(--line-dark);
     border-top:none;padding:.5rem .7rem;display:flex;justify-content:space-between;gap:10px}
-  .nearby li:first-child button{border-top:1px solid var(--hair)}
-  .nearby .nx{font-size:.83rem;color:var(--mid);white-space:nowrap}
+  .nearby li:first-child button{border-top:1px solid var(--line-dark)}
+  .nearby .nx{font-size:.83rem;color:var(--ink-400);white-space:nowrap}
 
   /* ---------- Direction B ---------- */
-  .b-band{background:var(--dark);color:var(--darkink);padding:16px;margin:14px 0 0}
-  .b-band h1{margin:0;font-size:1.55rem;line-height:1.15}
-  .b-band .meta{color:#bbb;font-size:.88rem;margin-top:.2rem}
+  .b-band{background:var(--ink-900);color:var(--paper-1);
+    border:1px solid var(--line-dark);padding:16px;margin:14px 0 0}
+  .b-band h1{margin:0;font-size:1.55rem;line-height:1.15;
+    font-family:var(--font-display);font-weight:600}
+  .b-band .meta{color:var(--ink-400);font-size:.88rem;margin-top:.2rem}
   .b-band .clockline{display:flex;justify-content:space-between;align-items:baseline;margin-top:.6rem}
   .b-band .bigclock{font-size:1.9rem;font-weight:700;font-variant-numeric:tabular-nums}
   .b-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));
     gap:8px;margin:10px 0}
-  .b-tile{border:2px solid var(--ink);padding:.55rem .6rem}
+  .b-tile{border:var(--rule) var(--paper-1);background:var(--ink-900);
+    padding:.55rem .6rem}
   .b-tile .rt{font-weight:700;font-size:.92rem}
   .b-tile .nx{font-size:1.45rem;font-weight:700;font-variant-numeric:tabular-nums}
-  .b-tile .sub{font-size:.78rem;color:var(--mid)}
-  .b-tile.dark{border-color:#bbb;background:#f4f4f4;color:#666}
-  .b-group{border-top:3px solid var(--ink);margin-top:14px}
+  .b-tile .sub{font-size:.78rem;color:var(--ink-400)}
+  .b-tile.dark{border-color:var(--ink-500);background:var(--ink-900);color:var(--ink-400)}
+  /* established-empty (UDLA-2 section 5): the check completed inside
+     its window and nothing remains — a solid hairline frame, never
+     the dashed frame of a pending state. */
+  .b-tile.state-empty{border:var(--rule-hair) var(--line-dark)}
+  .b-group{border-top:3px solid var(--paper-1);margin-top:14px}
   .b-group .ghead{display:flex;justify-content:space-between;gap:10px;
     align-items:baseline;padding:.5rem .1rem .3rem;flex-wrap:wrap}
   .b-group .ghead .rt{font-weight:700;font-size:1.05rem}
-  .b-group.dark{border-top-color:#bbb;color:#666}
-  .b-group.dark .ghead .rt{color:#666}
+  .b-group.dark{border-top-color:var(--ink-500);color:var(--ink-400)}
+  .b-group.dark .ghead .rt{color:var(--ink-400)}
   .b-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;padding:.2rem 0 .5rem}
-  .b-col{border:1px solid var(--hair);padding:.5rem .6rem}
+  .b-col{border:1px solid var(--line-dark);background:var(--ink-900);
+    padding:.5rem .6rem}
   .b-col .cd{font-size:1.3rem;font-weight:700;font-variant-numeric:tabular-nums}
-  .b-col .ck{font-size:.83rem;color:var(--mid)}
-  .b-col.canceled{color:var(--faint);text-decoration:line-through}
+  .b-col .ck{font-size:.83rem;color:var(--ink-400)}
+  .b-col.canceled{color:var(--ink-400);text-decoration:line-through}
   .b-bays{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
-  .b-bay{flex:1 1 200px;border:1.5px solid var(--ink);padding:.55rem .7rem;font-size:.88rem}
+  .b-bay{flex:1 1 200px;border:1.5px solid var(--paper-1);
+    background:var(--ink-900);padding:.55rem .7rem;font-size:.88rem}
   .b-bay b{display:block;font-size:.75rem;letter-spacing:.08em}
 
   /* ---------- footer (full estate navigation, both directions) ---------- */
-  footer.fine{border-top:3px solid var(--line);margin-top:26px;padding:14px 0 30px}
-  .build-stamp{font-size:.78rem;color:#444;border:1px solid #000;
+  footer.fine{border-top:3px solid var(--paper-1);margin-top:26px;padding:14px 0 30px}
+  .build-stamp{font-size:.78rem;color:var(--ink-400);
+    border:1px solid var(--line-dark);
     padding:.5rem .75rem;margin:1rem 0}
   footer nav{font-size:.88rem;line-height:1.9}
 </style>
@@ -254,7 +293,7 @@ var S = {
   reg: null, proj: null, places: [], placeByStopIdx: {},
   ddotTt: null, ddotByStop: {}, smartEx: null, smartByStop: {},
   smartHeads: {}, vehicles: null, tuIndex: null, tuByRoute: {},
-  adherence: null, alerts: null, place: null, nearby: [],
+  adherence: null, alerts: null, alertsTried: false, place: null, nearby: [],
   userLatLon: null, view: 'B', pollCount: 0, booted: false
 };
 
@@ -664,6 +703,26 @@ function alertsFor(place){
   });
   return hits;
 }
+/* R-6 (V5-G1, 2026-11-23): the alerts plane has three states and the
+ * line says which one it is in. Before this, alertsFor's [] covered
+ * both "alerts not yet loaded" and "loaded, none apply", and renderB
+ * hid the line for both — an unestablished absence. Loaded is the
+ * predicate alertsFor itself uses; S.alertsTried records that a fetch
+ * has settled, so a failed fetch reads unavailable, not checking.
+ * UDLA-3 (2026-11-23): the return also carries kind ('active' |
+ * 'checking' | 'unavailable') so renderB can frame the line by the
+ * state grammar — dashed while not established, solid once an alert
+ * applies. The state logic and copies above are unchanged. */
+function alertsLine(place){
+  var hits = alertsFor(place);
+  if (hits.length)
+    return { hidden:false, kind:'active', text:'Service alert — ' + (hits[0].description || hits[0].header || '') };
+  if (!S.alerts || !Array.isArray(S.alerts.alerts))
+    return { hidden:false, kind: S.alertsTried ? 'unavailable' : 'checking',
+             text: S.alertsTried ? 'Service alerts are unavailable right now.'
+                                 : 'Checking for service alerts…' };
+  return { hidden:true, text:'' };
+}
 function feedStatus(nowMs){
   if (!S.vehicles) return { text:'Positions are unavailable right now; scheduled times still show.', delayed:false };
   var counts = { ddot:0, smart:0, qline:0 };
@@ -738,9 +797,9 @@ function renderB(place, distM, nowMs){
   $('b-clock').textContent = fmtClock(nowMs);
   var banner = $('b-banner');
   if (fs.delayed){ banner.textContent = fs.delayedText; banner.hidden = false; } else banner.hidden = true;
-  var hits = alertsFor(place), al = $('b-alert');
-  if (hits.length){ al.hidden = false; al.textContent = 'Service alert — ' + (hits[0].description || hits[0].header || ''); }
-  else { al.hidden = true; al.textContent = ''; }
+  var aline = alertsLine(place), al = $('b-alert');
+  al.hidden = aline.hidden; al.textContent = aline.text;
+  al.className = 'alertline' + (aline.kind ? ' ' + aline.kind : '');
 
   // group by agency|route|headsign, in first-departure order
   var groups = {}, order = [];
@@ -765,8 +824,8 @@ function renderB(place, distM, nowMs){
     strip.appendChild(tile);
   });
   if (!order.length){
-    strip.innerHTML = '<div class="b-tile"><div class="rt">No more service today</div>' +
-      '<div class="sub">Nothing further is scheduled at this stop.</div></div>';
+    strip.innerHTML = '<div class="b-tile state-empty"><div class="rt">No more service in the next few hours</div>' +
+      '<div class="sub">Nothing further is scheduled at this stop in the next few hours.</div></div>';
   }
   var host = $('b-groups'); host.innerHTML = '';
   order.forEach(function(k){
@@ -835,7 +894,7 @@ function renderNearby(hostId, listId, nowMs){
     if (p === S.place) b.setAttribute('aria-current', 'true');
     b.innerHTML = '<span>' + esc(p.name) + '</span><span class="nx">' +
       (nx ? esc(routeLabel(nx.rid)) + ' ' + esc(timeText(nx.effSec - detroitParts(nowMs).sec, fmtClockSec(nx.effSec))) +
-        (nx.state === 'live' ? ' · live' : '') : 'no more service today') +
+        (nx.state === 'live' ? ' · live' : '') : 'no more service in the next few hours') +
       ' · ' + (entry.distM < 1000 ? Math.round(entry.distM) + ' m' : (entry.distM/1609.34).toFixed(1) + ' mi') + '</span>';
     b.addEventListener('click', function(){ pickPlace(p, entry.distM); });
     li.appendChild(b); ul.appendChild(li);
@@ -1071,7 +1130,8 @@ function loadLive(){
     fetchLiveOrNull('/live-data/adherence.json').then(function(a){ if (a) S.adherence = a; })
   ];
   if (S.pollCount % 2 === 1)
-    jobs.push(fetchLiveOrNull('/live-data/alerts.json').then(function(a){ if (a) S.alerts = a; }));
+    jobs.push(fetchLiveOrNull('/live-data/alerts.json').then(function(a){
+      S.alertsTried = true; if (a) S.alerts = a; }));
   return Promise.all(jobs).then(function(){
     if (S.place) return ensureTuForPlace(S.place);
   });
