@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:dfcb576de9e984ba63510d4da8b221228bdf67f4be8a1d1857e98a01bc651776",
+    "stateFingerprint": "sha256:264aa70ae175a8c46348395080a46989b610a85819da6c3b5e00858fc856182c",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 11,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-13",
   "counts": {
     "apps": 16,
-    "builds": 57,
+    "builds": 58,
     "catalog_state": 14,
     "audits": 1,
     "findings": 17,
@@ -491,14 +491,14 @@
       "buildNotes": "macOS Catalina Upgrade — MacBookAir5,2, test-1 — first Distro listing. One click from High Sierra 10.13.6 to Catalina 10.15.7, the newest macOS this 2012 Air supports, installed on a new APFS volume named Catalina — your High Sierra system is never overwritten, and Option-boot takes you back. The first run changes nothing: it checks the model, power, disk space and backup, and prints the 32-bit apps Catalina cannot run, before you type ARM. Honest state: this build has not yet been run on the rig — the install verdict is the owner's, at the Air sitting; the listing is the test.",
       "audits": [],
       "currentBuild": {
-        "tag": "test-1",
-        "sizeBytes": 42428,
-        "sha256": "0b6274249acd0575d9c0517de489fd8d9938516cfcd0663fe9f2fe0536e71485",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/catalina-upgrade/releases/download/test-1/CatalinaUpgrade-test-1.zip",
+        "tag": "test-2",
+        "sizeBytes": 16397,
+        "sha256": "1ed8a767b136980da9240e88767440322438cdcab424fc377373ebfe00e5b3e4",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/catalina-upgrade/releases/download/test-2/CatalinaUpgrade-test-2.zip",
         "floor": "10.13",
         "builtAt": "2026-11-23",
-        "releasePublishedAt": "2026-11-23T20:15:54Z",
-        "ciRun": "45257534962",
+        "releasePublishedAt": "2026-11-23T22:19:13Z",
+        "ciRun": "45278481908",
         "auditFlags": {
           "disassembled": false,
           "scanned": false,
