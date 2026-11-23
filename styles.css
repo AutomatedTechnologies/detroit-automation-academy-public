@@ -1028,3 +1028,68 @@ body.v2-article img, body.v2-article video, body.v2-article picture { filter: gr
 body.v2-article header, body.v2-article footer, body.v2-article nav, body.v2-article section, body.v2-article article, body.v2-article main, body.v2-article aside, body.v2-article div, body.v2-article li, body.v2-article td, body.v2-article th { background-color: transparent !important; }
 body.v2-article code, body.v2-article pre { background: #f2f2f2 !important; color: #222222 !important; }
 body.v2-article input, body.v2-article button, body.v2-article select, body.v2-article textarea { background: #ffffff !important; color: #222222 !important; border: 1px solid rgba(0,0,0,.35) !important; }
+
+/* ---------- UDLA editorial components — The Signal (UDLA-3 M5, 2026-11-23) ----------
+   Signal article pages carry class "ed-article" on <article> and adopt the
+   Language's editorial register (UDLA-2 draft §4, components 5–6; owner pick
+   Option B, 2026-11-23). article-head: folio line → headline → byline.
+   article-body: editorial text column, section heads as ruled bands.
+   Values trace to the draft and the picked prototype's article context;
+   the band is the Periodical's own section band. Tokens resolve from
+   assets/udla-tokens.css, linked first on the Signal article pages. */
+
+/* article-head — folio line (the page's .kicker: publication · edition · date) */
+.ed-article .kicker {
+  font-family: var(--font-editorial);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--ink-800);
+  border-top: var(--rule-double) var(--ink-800);
+  border-bottom: var(--rule-hair) var(--ink-800);
+  padding: 6px 2px;
+}
+
+/* article-head — headline (h1 on thirteen editions, h2 on five) */
+.ed-article h1, .ed-article h2 {
+  font-family: var(--font-editorial);
+  font-weight: 900;
+  font-size: var(--step-3);
+  line-height: 1.08;
+  text-align: center;
+  margin: 18px 0 10px;
+}
+.ed-article h1 .accent, .ed-article h2 .accent { color: inherit; }
+
+/* article-head — byline / dateline (the .fine line under the headline) */
+.ed-article h1 + .fine, .ed-article h2 + .fine {
+  font-family: var(--font-editorial);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--ink-800);
+  border-top: var(--rule-hair) var(--ink-800);
+  margin-top: 16px;
+  padding-top: 8px;
+}
+
+/* article-body — editorial text column */
+.ed-article .prose {
+  font-family: var(--font-editorial);
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+/* article-body — section heads as ruled bands (the Periodical's band) */
+.ed-article .prose h3 {
+  font-family: var(--font-editorial);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+  background: var(--paper-2);
+  border-top: var(--rule-hair) var(--ink-800);
+  border-bottom: var(--rule-hair) var(--ink-800);
+  padding: 5px 2px;
+}
