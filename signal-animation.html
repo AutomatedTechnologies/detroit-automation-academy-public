@@ -4,7 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Signal — Forge D Animation</title>
-<style>
+<link rel="stylesheet" href="/assets/udla-tokens.css">
+<style>/* UDLA-3 M7 (2026-11-23): this surface links the one shared token
+   sheet (above), so the Space Grotesk the wordmark stack names is
+   now actually loaded — Rule F-1. Tokenized where value-exact:
+   #f5f5f5 = --gray-10. Gaps left literal: #0d0d0d · #2e2e2e ·
+   #9a9a9a · #232323 · #3d3d3d · #e8e8e8 (one unit from
+   --paper-2 #e7e7e7 — not a match) · rgba(255,255,255,.75).
+   The stack stays as written. Keyframes are timing, not data
+   states; no §5 frames. */
+
   html, body { margin: 0; padding: 0; height: 100%; background: #0d0d0d; overflow: hidden; }
   svg { display: block; width: 100%; height: 100%; }
 
@@ -29,7 +38,7 @@
   }
   @keyframes lightUp {
     0%, 46%   { fill: #2e2e2e; filter: none; }
-    58%, 85%  { fill: #f5f5f5; filter: drop-shadow(0 0 18px rgba(255,255,255,.75)); }
+    58%, 85%  { fill: var(--gray-10); filter: drop-shadow(0 0 18px rgba(255,255,255,.75)); }
     96%, 100% { fill: #2e2e2e; filter: none; }
   }
 
@@ -63,7 +72,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .beam { animation: none; transform: rotate(0deg); opacity: .85; }
-    .forge-d { animation: none; fill: #f5f5f5; filter: drop-shadow(0 0 18px rgba(255,255,255,.75)); }
+    .forge-d { animation: none; fill: var(--gray-10); filter: drop-shadow(0 0 18px rgba(255,255,255,.75)); }
     .traces { animation: none; stroke: #9a9a9a; }
     .wordmark { animation: none; fill: #e8e8e8; }
     .star { animation: none; opacity: .5; }
