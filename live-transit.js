@@ -5269,7 +5269,9 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
       return;
     }
     if (!res.rows.length) {
-      note.textContent = 'No more buses are scheduled at this stop today.';
+      // V5-G1 R-2: absence here is established only inside the
+      // engine's 3-hour window; the copy claims the window.
+      note.textContent = 'No more buses are scheduled at this stop in the next few hours.';
       note.hidden = false;
       return;
     }
@@ -7967,6 +7969,8 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
   // as a bare empty array, which rvRenderPanel used to print as a
   // definitive "no more departures" while the timetable was still
   // loading (field defect, stop 1959, 2026-11-23 12:24 EST).
+  // R-1 (same day): the 'na' branch's TU lookup can itself be pending —
+  // see the 'tu-pending' return below.
   function rvStopRows(entry, nowMs) {
     var out = [];
     var res = computeStopArrivals(entry.idx, nowMs);
@@ -7987,6 +7991,15 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
           when: dSec < 45 ? 'now' : (dSec <= 5400 ? 'in ' + Math.round(dSec / 60) + 'm' : formatClock12(r.time * 1000)),
           title: 'Live trip update' + (r.bus ? ' — bus ' + r.bus : '') });
       });
+      // V5-G1 R-1 (2026-11-23): a null TU lookup splits two ways. When
+      // the payload itself is absent (smartTuAtMs == null — not yet
+      // ingested on cold load, or dropped at ingest as stale), NEITHER
+      // plane has reported for this stop, so the state propagates as
+      // 'tu-pending' and rvRenderPanel renders it indeterminate — the
+      // same distinction renderStopArrivals draws in its 'na' branch.
+      // A null with the payload live means the stop is not
+      // SMART-served: an established 'na' with zero rows.
+      if (!tu && smartTuAtMs == null) return { state: 'tu-pending', rows: out };
     }
     return { state: res.state, rows: out };
   }
@@ -8025,9 +8038,10 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
       (lead.st.code || lead.st.id || '–') + ' · ' + formatStopDistM(lead.dist) + ' away';
     // V5-G1: an indeterminate lead state renders as itself, never as
     // the established-empty copy. 'loading' = the timetable check has
-    // not completed; 'nosvc' = it completed and found no service day.
-    // Only an established state ('ready', or 'na' after the SMART
-    // fallback) with zero rows may print the no-departures copy.
+    // not completed; 'nosvc' = it completed and found no service day;
+    // 'tu-pending' = the SMART TU plane has not reported (R-1). Only
+    // an established state ('ready', or 'na' after the SMART fallback)
+    // with zero rows may print the no-departures copy.
     var leadRes = rvStopRows(lead, nowMs);
     var leadRows = leadRes.rows;
     if (leadRes.state === 'loading') {
@@ -8040,10 +8054,20 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
       pn.className = 'rv-none';
       pn.textContent = 'No service is scheduled today.';
       leadList.appendChild(pn);
+    } else if (leadRes.state === 'tu-pending') {
+      // V5-G1 R-1: neither plane has reported for this stop. The stop
+      // card's sentence for the same condition, minus its "see the
+      // live vehicles below" tail — the panel sits on the map itself.
+      var pt = document.createElement('p');
+      pt.className = 'rv-none';
+      pt.textContent = 'SMART live times are not reporting for this stop right now.';
+      leadList.appendChild(pt);
     } else if (!leadRows.length) {
       var p = document.createElement('p');
       p.className = 'rv-none';
-      p.textContent = 'No more departures are scheduled at your stop today.';
+      // V5-G1 R-2: the check establishes absence only inside its
+      // 3-hour window, so the copy claims the window, not the day.
+      p.textContent = 'No more departures are scheduled at your stop in the next few hours.';
       leadList.appendChild(p);
     }
     leadRows.slice(0, 3).forEach(function (r) {
@@ -8052,11 +8076,13 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
     var rest = [];
     var rids = {};
     var restLoading = false;
+    var restTuPending = false;
     rvState.stops.slice(0, 6).forEach(function (entry) {
       (entry.st.r || []).forEach(function (rid) { rids[rid] = true; });
       if (entry === lead) return;
       var entryRes = rvStopRows(entry, nowMs);
       if (entryRes.state === 'loading') restLoading = true;
+      if (entryRes.state === 'tu-pending') restTuPending = true;
       entryRes.rows.forEach(function (r) {
         r.stopName = entry.st.n || 'Stop';
         rest.push(r);
@@ -8071,9 +8097,11 @@ import { OrbitControls } from './assets/three-addons/controls/OrbitControls.js';
       var p2 = document.createElement('p');
       p2.className = 'rv-none';
       // V5-G1: any contributing stop still loading renders the list as
-      // loading; the no-other-departures copy requires every
-      // contributing stop's check to have completed empty.
+      // loading; a TU-pending contributor (R-1) renders it as the
+      // not-reporting line; the no-other-departures copy requires
+      // every contributing stop's check to have completed empty.
       p2.textContent = restLoading ? 'Loading departures…' :
+        restTuPending ? 'SMART live times are not reporting for a stop near you right now.' :
         'No other departures from stops near you in the next few hours.';
       list.appendChild(p2);
     }
