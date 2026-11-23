@@ -3,7 +3,7 @@
   "provenance": {
     "renderClass": "conformance",
     "generator": "tools/generate_conformance.py",
-    "stateFingerprint": "sha256:264aa70ae175a8c46348395080a46989b610a85819da6c3b5e00858fc856182c",
+    "stateFingerprint": "sha256:62a79031ec0fdd87f3fcce0ebe49e83f20c207afdbccace564d0e4d558b42b2b",
     "rights": "Academy-original IP (c) 2026 Detroit Automation Academy / Automated Technologies - licensed under the Academy License (revocable); see LICENSE-ACADEMY.md and NOTICE (RIGHTS at the registry repo root). Upstream open-source components remain under their own licenses. Do not duplicate this infrastructure or its generated renders as a substitute for the Academy's own distribution."
   },
   "schemaVersion": 11,
@@ -11,7 +11,7 @@
   "catalogGenerated": "2026-11-13",
   "counts": {
     "apps": 16,
-    "builds": 58,
+    "builds": 59,
     "catalog_state": 14,
     "audits": 1,
     "findings": 17,
@@ -453,23 +453,23 @@
       "description": "Photos — Academy Build is the Detroit Automation Academy's native macOS client for Google Photos, for Intel Macs running macOS High Sierra (10.13). Google ships no macOS application for Google Photos; this build gives the service a window, a session, and a shelf of its own: a WKWebView on photos.google.com with a desktop Safari user agent and the persistent default website data store, so the Google session survives relaunches. Google hosts stay in the window; every other link opens in the default browser. An SDS-8 welcome shows on first launch and returns from the Help menu. Academy-original clean-room code — no Google code, no Google assets, no upstream; \"Google Photos\" is named only to say what the application is a client for, and the icon is the Academy's own monochrome pictogram. One risk is named plainly: Google sign-in inside embedded web views is sometimes refused (\"this browser or app may not be secure\"); this build's mitigations are the desktop Safari user agent, the persistent data store, and no request interception — the rig session decides whether they hold. Academy-original software under the Academy License (revocable). Unsigned test build.",
       "catalogStatus": "testing",
       "iconUrl": "https://detroitautomationacademy.com/store/icons/googlephotos.png",
-      "buildNotes": "Photos — Academy Build, googlephotos-test-1 — first Distro listing. Your Google Photos library in a native window on High Sierra: sign in once and the session is kept on the Mac between launches; Google links stay in the window, everything else opens in your default browser. One honest caution: Google sometimes refuses sign-in inside embedded web views (\"this browser or app may not be secure\") — if that happens here, the listing will say so and the approach re-opens. Unsigned test build; the runtime verdict is the owner's, at the Air sitting — install Photos from this listing; the install is the test.",
+      "buildNotes": "Photos — Academy Build, googlephotos-test-2 — the install fix. Test-1 shipped a bundle named Photos.app, which is also the name of Apple's own Photos on every High Sierra Mac, so the install stopped rather than touch Apple's app. This build installs as \"Academy Photos\" — a different name that can never collide — while keeping the same bundle identity underneath, so your sign-in session and library window carry over exactly as before. Apple's Photos is never moved, renamed, or touched. Everything else stands from test-1: your Google Photos library in a native window, sign in once and the session is kept. One honest caution, unchanged: Google sometimes refuses sign-in inside embedded web views (\"this browser or app may not be secure\") — if that happens here, the listing will say so and the approach re-opens. Unsigned test build; the runtime verdict is the owner's, at the Air sitting — install Photos from this listing; the install is the test.",
       "audits": [],
       "currentBuild": {
-        "tag": "googlephotos-test-1",
-        "sizeBytes": 43498,
-        "sha256": "97e6d310ac257894bbc1e2526ff1e56df62457c08208cf7d0cfa4528675e3f6f",
-        "downloadUrl": "https://github.com/AutomatedTechnologies/googlephotos/releases/download/googlephotos-test-1/Photos-test.zip",
+        "tag": "googlephotos-test-2",
+        "sizeBytes": 43630,
+        "sha256": "0e070f607a8a044813abc160c530b9c45f33495983f4879089f87de81bd7c2a5",
+        "downloadUrl": "https://github.com/AutomatedTechnologies/googlephotos/releases/download/googlephotos-test-2/Photos-test.zip",
         "floor": "10.13",
-        "builtAt": "2026-11-19",
-        "releasePublishedAt": "2026-11-19T12:50:20Z",
-        "ciRun": "44524299201",
+        "builtAt": "2026-11-23",
+        "releasePublishedAt": "2026-11-23T22:21:26Z",
+        "ciRun": "45278814200",
         "auditFlags": {
           "disassembled": true,
           "scanned": true,
           "recompiled": true,
           "complete": true,
-          "ref": "bundle-carried audit entry (Distro files/08 rule) attested on the shipped artifact's own Info.plist (audit dict all-true, dated 2026-11-19), plus THIS pass: fresh-download dissection of the shipped zip (43498 B, SHA-256 == GitHub release asset, downloaded back and hashed locally) — bundle com.detroitautomationacademy.googlephotos, 1.0 (googlephotos-test-1), LSMinimumSystemVersion 10.13, CFBundleIconFile Photos with Photos.icns (75,026 B) built by iconutil from the committed monochrome iconset, executable Mach-O 64-bit x86_64, zip census 7 entries; build-line record (AutomatedTechnologies/googlephotos @ eb887f5bf458, google-photos-academy BUILD-NOTES.md tranches 1–2): complete source tree (8 files, Academy-original clean-room code) dissected — WKWebView shell over photos.google.com, persistent default WKWebsiteDataStore, desktop Safari user agent, google.com-only in-view navigation policy with all other hosts handed to the default browser, SDS-8 welcome on first launch; scanned: no third-party hosts/fonts/scripts/analytics in the tree, the only network destination in the source is the Google Photos service the app is a client for; syntax-clean under the clang / MacOSX 10.13 SDK recipe (4/4 at the scaffold gate and again on the repo tree, ALL SYNTAX OK); recompiled from that source by estate CI (run 44524299201, macos-15, SUCCESS) into the shipped artifact. No SDS-10 conformance entry attested (SDS-8 welcome only in this build)"
+          "ref": "bundle-carried audit entry (Distro files/08 rule) attested on the shipped artifact's own Info.plist (audit dict all-true, dated 2026-11-23), plus THIS pass: fresh-download dissection of the shipped zip (43630 B, SHA-256 == GitHub release asset digest) — single bundle \"Academy Photos.app\" (renamed from Photos.app; the test-1 filename collided with Apple's own /Applications/Photos.app), bundle com.detroitautomationacademy.googlephotos UNCHANGED, CFBundleName/DisplayName/Executable \"Academy Photos\", version 1.0 (googlephotos-test-2), LSMinimumSystemVersion 10.13, CFBundleIconFile Photos with Photos.icns built by iconutil from the committed monochrome iconset, executable Mach-O 64-bit x86_64 (35,624 B), zip census 7 entries; source is the test-1 Academy-original tree with naming-only changes (Info.plist product fields, Makefile bundle assembly, workflow packaging, AppDelegate window/menu titles) — WKWebView shell, persistent WKWebsiteDataStore, desktop Safari user agent, SDS-8 welcome all unchanged from the changes/0071 dissection. No SDS-10 conformance entry attested (SDS-8 welcome only in this build line)"
         }
       }
     },
