@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weather — Four-Dimensional Map · Detroit Automation Academy</title>
+<meta name="description" content="A four-dimensional weather map for Detroit and the Great Lakes: longitude, latitude, pressure level, and time. Government data only — NOAA and Environment and Climate Change Canada.">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root { --ink:#1a1a1a; --line:#c9c9c9; --panel:#f6f4ef; --accent:#0b5394; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Georgia, 'Times New Roman', serif; color:var(--ink); background:#fff; }
+  header { background:#14202b; color:#f2efe9; padding:14px 18px; }
+  header h1 { margin:0; font-size:22px; font-weight:normal; letter-spacing:.02em; }
+  header p { margin:4px 0 0; font-size:13.5px; color:#cfd6dc; max-width:70em; }
+  header a { color:#9fc3e8; }
+  main { padding:12px 18px 6px; max-width:1200px; margin:0 auto; }
+  .controls { background:var(--panel); border:1px solid var(--line); padding:10px 12px; margin-bottom:10px; }
+  .controls .row { display:flex; flex-wrap:wrap; gap:14px 22px; align-items:center; margin:4px 0; }
+  .controls label { font-size:14px; }
+  .controls select, .controls button { font:inherit; font-size:14px; padding:2px 8px; }
+  #timeslider { flex:1 1 260px; }
+  #playbtn { min-width:84px; }
+  #readout { font-size:14.5px; border-top:1px solid var(--line); padding-top:7px; margin-top:7px; }
+  #readout strong { color:var(--accent); }
+  #status { font-size:13px; color:#7a3b00; min-height:1em; }
+  #map { height:68vh; min-height:380px; border:1px solid var(--line); }
+  .cols { display:flex; flex-wrap:wrap; gap:18px; margin-top:12px; }
+  .card { flex:1 1 300px; border:1px solid var(--line); background:#fff; padding:10px 14px; }
+  .card h2 { font-size:16px; margin:2px 0 8px; font-weight:normal; border-bottom:1px solid var(--line); padding-bottom:4px; }
+  .card p, .card li { font-size:14px; line-height:1.45; }
+  .card ul { margin:6px 0; padding-left:18px; }
+  .legendimg { max-width:100%; background:#fff; }
+  footer { border-top:1px solid var(--line); margin-top:14px; padding:10px 18px 18px; font-size:13px; color:#444; max-width:1200px; margin-left:auto; margin-right:auto; }
+  .leaflet-popup-content { font-family: Georgia, serif; font-size:13.5px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Weather — a four-dimensional map</h1>
+  <p>Detroit and the Great Lakes, drawn only from government data. The four dimensions:
+     <strong>longitude × latitude × pressure level × time</strong> — move through the atmosphere
+     vertically with the pressure-level selector, and through time with the slider.
+     A Detroit Automation Academy surface. <a href="/">Back to the Academy</a></p>
+</header>
+<main>
+  <div class="controls" role="group" aria-label="Map controls">
+    <div class="row">
+      <label>Pressure level
+        <select id="level">
+          <option value="sfc">Surface (2 m)</option>
+          <option value="850" selected>850 hPa</option>
+          <option value="700">700 hPa</option>
+          <option value="500">500 hPa</option>
+          <option value="250">250 hPa</option>
+        </select>
+      </label>
+      <label><input type="checkbox" id="tgl-model" checked> Model temperature (GDPS)</label>
+      <label><input type="checkbox" id="tgl-radar" checked> Radar (NEXRAD mosaic)</label>
+      <label><input type="checkbox" id="tgl-alerts" checked> Michigan alerts</label>
+    </div>
+    <div class="row">
+      <span>Time axis:</span>
+      <label><input type="radio" name="axis" value="forecast" checked> Forecast — GDPS</label>
+      <label><input type="radio" name="axis" value="radar"> Radar — nowCoast</label>
+      <button id="playbtn" type="button">▶ Play</button>
+      <button id="stepback" type="button" aria-label="Step back">‹</button>
+      <input type="range" id="timeslider" min="0" max="80" step="1" value="4" aria-label="Time">
+      <button id="stepfwd" type="button" aria-label="Step forward">›</button>
+    </div>
+    <div id="readout">Loading data services…</div>
+    <div id="status"></div>
+  </div>
+
+  <div id="map"></div>
+
+  <div class="cols">
+    <section class="card" id="obs-card">
+      <h2>Detroit — latest observation</h2>
+      <p id="obs">Reading api.weather.gov…</p>
+    </section>
+    <section class="card">
+      <h2>Legend — model temperature (°C)</h2>
+      <img class="legendimg" id="legend-model" alt="Legend for GDPS air temperature">
+      <h2 style="margin-top:12px;">Legend — radar reflectivity</h2>
+      <img class="legendimg" id="legend-radar" alt="Legend for NEXRAD base reflectivity">
+    </section>
+    <section class="card">
+      <h2>How the four dimensions work</h2>
+      <ul>
+        <li><strong>Longitude × latitude</strong> — the map itself; pan and zoom freely.</li>
+        <li><strong>Pressure level</strong> — MSC GeoMet publishes each GDPS pressure level as its own
+            WMS layer (verified in its GetCapabilities, 2026-11-26: there is no ELEVATION-dimension layer),
+            so the selector switches the layer of one WMS request — surface (2 m), 850, 700, 500, 250 hPa.</li>
+        <li><strong>Time</strong> — the slider sets the WMS <em>TIME</em> parameter. On the forecast axis it steps
+            3-hourly through the current GDPS run (+0 to +240 h, 81 steps). On the radar axis it steps through
+            the exact times listed in nowCoast's capabilities (about every 4 minutes; the most recent 30 are loaded).</li>
+      </ul>
+      <p>Data: Environment and Climate Change Canada, MSC GeoMet (GDPS 15 km) ·
+         NOAA nowCoast (NEXRAD base reflectivity mosaic) · NOAA National Weather Service, api.weather.gov
+         (Michigan alerts, Detroit observation). Base map © OpenStreetMap contributors.
+         No advertising, no tracking, no third-party calls beyond these services and the Leaflet CDN.</p>
+    </section>
+  </div>
+</main>
+<footer>
+  Detroit Automation Academy · Weather. Data remain the property of their government sources and are
+  credited above. Forecasts are model output, not observations; for life-safety decisions use
+  <a href="https://www.weather.gov">weather.gov</a> and Environment and Climate Change Canada directly.<br>
+  Agent: Muse · Authorized: Justin Spencer Smith, Authorizing Director
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+(function () {
+  'use strict';
+
+  var GEOMET = 'https://geo.weather.gc.ca/geomet/';
+  var NOWCOAST = 'https://nowcoast.noaa.gov/geoserver/observations/weather_radar/wms';
+  var NWS = 'https://api.weather.gov';
+  var DETROIT = [42.3314, -83.0458];
+
+  // Pressure level -> verified GeoMet layer name (GetCapabilities, 2026-11-26).
+  var LEVELS = {
+    'sfc': { layer: 'GDPS_15km_AirTemp_2m',    label: 'Surface (2 m)' },
+    '850': { layer: 'GDPS_15km_AirTemp_850mb', label: '850 hPa' },
+    '700': { layer: 'GDPS_15km_AirTemp_700mb', label: '700 hPa' },
+    '500': { layer: 'GDPS_15km_AirTemp_500mb', label: '500 hPa' },
+    '250': { layer: 'GDPS_15km_AirTemp_250mb', label: '250 hPa' }
+  };
+
+  var map = L.map('map').setView(DETROIT, 7);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  var modelLayer = L.tileLayer.wms(GEOMET, {
+    layers: LEVELS['850'].layer, format: 'image/png', transparent: true,
+    version: '1.3.0', opacity: 0.75,
+    attribution: 'Model: Environment and Climate Change Canada (MSC GeoMet, GDPS)'
+  }).addTo(map);
+
+  var radarLayer = L.tileLayer.wms(NOWCOAST, {
+    layers: 'base_reflectivity_mosaic', format: 'image/png', transparent: true,
+    version: '1.3.0', opacity: 0.85,
+    attribution: 'Radar: NOAA nowCoast (NEXRAD)'
+  }).addTo(map);
+
+  L.marker(DETROIT).addTo(map).bindPopup('Detroit, Michigan');
+
+  // ---------- time handling ----------
+  var fmtEST = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Detroit', weekday: 'short', month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit', timeZoneName: 'short'
+  });
+  function isoUTC(d) { return d.toISOString().replace(/\.\d{3}Z$/, 'Z'); }
+
+  // GDPS runs 00Z/12Z; the verified axis is 81 times, 3-hourly, run+0h .. run+240h.
+  // Anchor to the most recent run plausibly published, then probe it (below).
+  function candidateRunStart(now) {
+    var d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours()));
+    d.setUTCHours(d.getUTCHours() - 3);            // publication latency
+    d.setUTCMinutes(0, 0, 0);
+    d.setUTCHours(Math.floor(d.getUTCHours() / 12) * 12);
+    return d;
+  }
+  var forecastTimes = [];
+  function buildForecastAxis(runStart) {
+    forecastTimes = [];
+    for (var i = 0; i < 81; i++) forecastTimes.push(new Date(runStart.getTime() + i * 3 * 3600 * 1000));
+  }
+  buildForecastAxis(candidateRunStart(new Date()));
+
+  var radarTimes = null; // filled from nowCoast GetCapabilities (exact listed times)
+
+  var state = {
+    axis: 'forecast',
+    idx: { forecast: 4, radar: 29 },
+    playing: false,
+    timer: null,
+    alertCount: null
+  };
+
+  var slider = document.getElementById('timeslider');
+  var readout = document.getElementById('readout');
+  var statusEl = document.getElementById('status');
+  var levelSel = document.getElementById('level');
+
+  function axisTimes() { return state.axis === 'forecast' ? forecastTimes : (radarTimes || []); }
+
+  function currentTime() {
+    var t = axisTimes();
+    if (!t.length) return null;
+    return t[Math.min(state.idx[state.axis], t.length - 1)];
+  }
+
+  function updateReadout() {
+    var t = currentTime();
+    var lvl = LEVELS[levelSel.value].label;
+    var when = t ? fmtEST.format(t) + '  (' + isoUTC(t) + ')' : '—';
+    var axisLabel = state.axis === 'forecast' ? 'Forecast (GDPS)' : 'Radar (nowCoast)';
+    var alerts = state.alertCount === null ? '' :
+      ' · Michigan alerts: ' + (state.alertCount === 0 ? 'none active' : state.alertCount + ' active');
+    readout.innerHTML = 'Level: <strong>' + lvl + '</strong> · Axis: <strong>' + axisLabel +
+      '</strong> · Valid: <strong>' + when + '</strong>' + alerts;
+  }
+
+  function applyTime() {
+    var t = currentTime();
+    if (!t) { updateReadout(); return; }
+    if (state.axis === 'forecast') modelLayer.setParams({ time: isoUTC(t) });
+    else radarLayer.setParams({ time: t.toISOString() }); // nowCoast lists times with .000Z
+    updateReadout();
+  }
+
+  function syncSlider() {
+    var t = axisTimes();
+    slider.max = Math.max(t.length - 1, 0);
+    slider.value = Math.min(state.idx[state.axis], Math.max(t.length - 1, 0));
+    slider.disabled = t.length === 0;
+  }
+
+  function setIndex(i) {
+    var t = axisTimes();
+    if (!t.length) return;
+    state.idx[state.axis] = ((i % t.length) + t.length) % t.length;
+    syncSlider();
+    applyTime();
+  }
+
+  slider.addEventListener('input', function () { setIndex(parseInt(slider.value, 10)); });
+  document.getElementById('stepback').addEventListener('click', function () { setIndex(state.idx[state.axis] - 1); });
+  document.getElementById('stepfwd').addEventListener('click', function () { setIndex(state.idx[state.axis] + 1); });
+
+  var playBtn = document.getElementById('playbtn');
+  function stopPlay() {
+    state.playing = false;
+    if (state.timer) { clearInterval(state.timer); state.timer = null; }
+    playBtn.textContent = '▶ Play';
+  }
+  playBtn.addEventListener('click', function () {
+    if (state.playing) { stopPlay(); return; }
+    if (!axisTimes().length) return;
+    state.playing = true;
+    playBtn.textContent = '⏸ Pause';
+    state.timer = setInterval(function () { setIndex(state.idx[state.axis] + 1); }, 900);
+  });
+
+  document.querySelectorAll('input[name="axis"]').forEach(function (r) {
+    r.addEventListener('change', function () {
+      stopPlay();
+      state.axis = r.value;
+      syncSlider();
+      applyTime();
+    });
+  });
+
+  // ---------- pressure level ----------
+  var legendModel = document.getElementById('legend-model');
+  function applyLevel() {
+    var L = LEVELS[levelSel.value];
+    modelLayer.setParams({ layers: L.layer });
+    legendModel.src = GEOMET + '?service=WMS&version=1.3.0&request=GetLegendGraphic&format=image/png&layer=' + encodeURIComponent(L.layer);
+    updateReadout();
+  }
+  levelSel.addEventListener('change', applyLevel);
+
+  document.getElementById('legend-radar').src =
+    NOWCOAST + '?service=WMS&version=1.3.0&request=GetLegendGraphic&format=image/png&layer=base_reflectivity_mosaic';
+
+  // ---------- layer toggles ----------
+  function bindToggle(id, layer) {
+    document.getElementById(id).addEventListener('change', function (e) {
+      if (e.target.checked) layer.addTo(map); else map.removeLayer(layer);
+    });
+  }
+  bindToggle('tgl-model', modelLayer);
+  bindToggle('tgl-radar', radarLayer);
+
+  // ---------- radar time axis from nowCoast capabilities ----------
+  function loadRadarTimes() {
+    fetch(NOWCOAST + '?service=WMS&version=1.3.0&request=GetCapabilities')
+      .then(function (r) { return r.text(); })
+      .then(function (xml) {
+        var doc = new DOMParser().parseFromString(xml, 'text/xml');
+        var layers = doc.getElementsByTagName('Layer');
+        for (var i = 0; i < layers.length; i++) {
+          var nm = layers[i].getElementsByTagName('Name')[0];
+          if (nm && nm.textContent === 'base_reflectivity_mosaic') {
+            var dims = layers[i].getElementsByTagName('Dimension');
+            for (var j = 0; j < dims.length; j++) {
+              if (dims[j].getAttribute('name') === 'time') {
+                var all = dims[j].textContent.split(',').map(function (s) { return new Date(s.trim()); });
+                radarTimes = all.slice(-30);
+                state.idx.radar = radarTimes.length - 1;
+                if (state.axis === 'radar') { syncSlider(); applyTime(); }
+                return;
+              }
+            }
+          }
+        }
+        throw new Error('time dimension not found');
+      })
+      .catch(function () {
+        statusEl.textContent = 'Radar time list could not be read from nowCoast; radar shows its latest image and the radar time axis is disabled.';
+        if (state.axis === 'radar') { slider.disabled = true; }
+      });
+  }
+
+  // ---------- model run probe: confirm the anchored run exists on the server ----------
+  function probeRun(runStart, shiftsLeft) {
+    var url = GEOMET + '?service=WMS&version=1.3.0&request=GetMap&layers=GDPS_15km_AirTemp_850mb' +
+      '&crs=EPSG:3857&bbox=-9250000,5200000,-9249000,5201000&width=1&height=1&format=image/png' +
+      '&transparent=true&time=' + encodeURIComponent(isoUTC(runStart));
+    fetch(url).then(function (r) {
+      var ct = r.headers.get('content-type') || '';
+      if (ct.indexOf('image/png') === -1) throw new Error('not an image');
+      buildForecastAxis(runStart);
+      // default: first forecast time at or after now (the service default sits near there)
+      var now = Date.now(), k = 0;
+      while (k < forecastTimes.length - 1 && forecastTimes[k].getTime() < now) k++;
+      state.idx.forecast = k;
+      if (state.axis === 'forecast') { syncSlider(); applyTime(); }
+    }).catch(function () {
+      if (shiftsLeft > 0) {
+        probeRun(new Date(runStart.getTime() + 12 * 3600 * 1000), shiftsLeft - 1);
+      } else {
+        statusEl.textContent = 'GDPS run could not be confirmed against GeoMet; showing the anchored run, and tiles may be blank if the server has moved to a newer run.';
+        if (state.axis === 'forecast') { syncSlider(); applyTime(); }
+      }
+    });
+  }
+
+  // ---------- Michigan alerts (api.weather.gov) ----------
+  var alertsLayer = L.geoJSON(null, {
+    style: function (f) {
+      var sev = (f.properties && f.properties.severity) || '';
+      var c = sev === 'Extreme' ? '#7a0177' : sev === 'Severe' ? '#d7301f' : sev === 'Moderate' ? '#fc8d59' : '#4575b4';
+      return { color: c, weight: 2, fillColor: c, fillOpacity: 0.15 };
+    },
+    onEachFeature: function (f, layer) {
+      var p = f.properties || {};
+      var ends = p.ends || p.expires;
+      layer.bindPopup('<strong>' + (p.event || 'Alert') + '</strong><br>' + (p.headline || '') +
+        (ends ? '<br>Until: ' + fmtEST.format(new Date(ends)) : ''));
+    }
+  }).addTo(map);
+  bindToggle('tgl-alerts', alertsLayer);
+
+  function loadAlerts() {
+    fetch(NWS + '/alerts/active?area=MI', { headers: { 'Accept': 'application/geo+json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (gj) {
+        alertsLayer.clearLayers();
+        if (gj && gj.features && gj.features.length) alertsLayer.addData(gj);
+        state.alertCount = gj && gj.features ? gj.features.length : 0;
+        updateReadout();
+      })
+      .catch(function () {
+        state.alertCount = null;
+        statusEl.textContent = 'Michigan alerts could not be loaded from api.weather.gov.';
+      });
+  }
+
+  // ---------- Detroit observation (points -> stations -> latest) ----------
+  function loadObs() {
+    var el = document.getElementById('obs');
+    fetch(NWS + '/points/' + DETROIT[0] + ',' + DETROIT[1], { headers: { 'Accept': 'application/geo+json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (p) { return fetch(p.properties.observationStations, { headers: { 'Accept': 'application/geo+json' } }); })
+      .then(function (r) { return r.json(); })
+      .then(function (s) {
+        var id = s.features[0].properties.stationIdentifier;
+        return fetch(NWS + '/stations/' + id + '/observations/latest', { headers: { 'Accept': 'application/geo+json' } });
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (o) {
+        var p = o.properties;
+        function val(x, unit) { return (x && x.value !== null && x.value !== undefined) ? x.value : null; }
+        var tc = val(p.temperature);
+        var tf = tc === null ? null : (tc * 9 / 5 + 32).toFixed(1);
+        var hum = val(p.relativeHumidity);
+        var wsp = val(p.windSpeed);
+        var wdir = val(p.windDirection);
+        var when = p.timestamp ? fmtEST.format(new Date(p.timestamp)) : '';
+        el.innerHTML =
+          '<strong>' + (p.textDescription || '—') + '</strong> at ' + when + '<br>' +
+          'Temperature: ' + (tc === null ? '—' : tc + ' °C (' + tf + ' °F)') + '<br>' +
+          'Humidity: ' + (hum === null ? '—' : Math.round(hum) + ' %') + '<br>' +
+          'Wind: ' + (wsp === null ? '—' : Math.round(wsp) + ' km/h') +
+          (wdir === null ? '' : ' from ' + Math.round(wdir) + '°') +
+          '<br><span style="color:#555">Station: ' + String(p.station || '').replace('https://api.weather.gov/stations/', '') +
+          ' via api.weather.gov (NOAA NWS)</span>';
+      })
+      .catch(function () { el.textContent = 'Observation could not be loaded from api.weather.gov.'; });
+  }
+
+  modelLayer.on('tileerror', function () {
+    statusEl.textContent = 'A model tile failed to load for the selected level/time — the GeoMet run may have updated. Re-selecting the level usually clears it.';
+  });
+
+  // ---------- init ----------
+  applyLevel();
+  syncSlider();
+  applyTime();
+  loadRadarTimes();
+  probeRun(candidateRunStart(new Date()), 2);
+  loadAlerts();
+  loadObs();
+  setInterval(loadAlerts, 10 * 60 * 1000);
+})();
+</script>
+</body>
+</html>
