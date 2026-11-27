@@ -1,8 +1,8 @@
 # deploy-manifest.txt — GENERATED render of the Singular Reference (DAADV5 V5-T5c; absorbs V4-T8 R6).
 # Source: AutomatedTechnologies/academy-registry registry.db (page_checks census) + site tree snapshot (tools/site_tree_snapshot.json),
 # via tools/generate_deploy_manifest.py. Do not hand-edit; regenerate.
-# Registry state: schema v11 · census pages 360 · page-bearing directories 23 (computed from page_checks).
-# Site state: AutomatedTechnologies/detroit-automation-academy-public @ 7d75c35d51f3ca2029ece3bbb9dd5c7fd8f44762 · tree entries 1261 · tree directories 39 = deploy 32 + excluded 7.
+# Registry state: schema v11 · census pages 366 · page-bearing directories 25 (computed from page_checks).
+# Site state: AutomatedTechnologies/detroit-automation-academy-public @ 98911232d0548b2d4e7ee3cfa8297e6b5792b5a5 · tree entries 1277 · tree directories 40 = deploy 33 + excluded 7.
 # Rule: root *.html/*.css/*.js by glob; root .json by the reviewed allowlist (security class, R2 2026-10-23); named root files;
 # directories = page-bearing (computed) + named non-page classes (metadata / shared assets / feed data / generated endpoints).
 # A tree directory in neither the deploy set nor the exclude set fails generation and fails the deploy check — no silent drift.
@@ -63,6 +63,7 @@ dir the-index
 dir updates
 dir voter-guide
 dir watch
+dir weather
 exclude .git
 exclude .githooks
 exclude .github
