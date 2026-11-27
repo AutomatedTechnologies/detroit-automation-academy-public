@@ -1,6 +1,6 @@
 {
   "kind": "feed-raw-bundle/v1",
-  "collected_at": "2026-11-27T11:51:30.012Z",
+  "collected_at": "2026-11-27T20:28:12.072Z",
   "ddot": {
     "configured": true,
     "vehicle_batches": [
@@ -19,8 +19,8 @@
         ],
         "ok": true,
         "file": "ddot-vehicles-0.json",
-        "bytes": 28476,
-        "sha256": "ef06ee117e25d95ed176ca375c62811ab1dc77bc4dbed85065270e5368bd823f"
+        "bytes": 34464,
+        "sha256": "54adfc6894546e7de813a0940eec7548458f00921ff82ae32fa7292c93125bef"
       },
       {
         "routes": [
@@ -37,8 +37,8 @@
         ],
         "ok": true,
         "file": "ddot-vehicles-1.json",
-        "bytes": 15711,
-        "sha256": "8bb5cf144e7aa728fd57e9b4ecad9bf94a2c23abbc74168d7f278772febac985"
+        "bytes": 16695,
+        "sha256": "b3a0dc09da982b0f3a2564822195b0cacae70e60e5d4183d723ac9293dbd67ab"
       },
       {
         "routes": [
@@ -55,8 +55,8 @@
         ],
         "ok": true,
         "file": "ddot-vehicles-2.json",
-        "bytes": 10505,
-        "sha256": "ac0a5f82baf8203a228772e5da52b8b2617f640fbc918f94579a5eef65e83194"
+        "bytes": 10530,
+        "sha256": "bee1036070b538ae61ed373ea5bf5912a4afedbb22ab72f7643f7d65f268df95"
       },
       {
         "routes": [
@@ -70,13 +70,13 @@
         ],
         "ok": true,
         "file": "ddot-vehicles-3.json",
-        "bytes": 8317,
-        "sha256": "db64e31f5293b9556ac7df4f879cf0f8f19e44a060afa0487ce96ab963cf13a6"
+        "bytes": 7484,
+        "sha256": "23c2804c20781ec1b46ebb1dfe960fe62583d2e351a5fb8c202a548c82223d70"
       }
     ],
     "bulletins": {
       "mode": "fresh",
-      "fetched_at": "2026-11-27T11:51:30.012Z",
+      "fetched_at": "2026-11-27T20:28:12.072Z",
       "routes": {
         "1": {
           "ok": true,
@@ -153,8 +153,8 @@
         "13": {
           "ok": true,
           "file": "ddot-bulletins/13.json",
-          "bytes": 113,
-          "sha256": "bf42bf611545e7874ed8ac7cc1229ae004630812bd180eaf398394acbf73a949"
+          "bytes": 706,
+          "sha256": "f1a9bf2b0d6f074cb522fd05b223956cb48f04624521491854b13f329d695f84"
         },
         "15": {
           "ok": true,
@@ -306,22 +306,22 @@
   "qline": {
     "ok": true,
     "file": "qline-vp.pb",
-    "bytes": 15,
-    "sha256": "5701b73a887a2d2fa9edd924376ee87bc09241bd5ea9f969204052c657f334e6"
+    "bytes": 337,
+    "sha256": "2cbf942b45b2a868655aa256462488da9f9eb04edd6050e2f7aee75a54466117"
   },
   "smart": {
     "active": true,
     "vp": {
       "ok": true,
       "file": "smart-vp.pb",
-      "bytes": 13196,
-      "sha256": "3a3a0bbdc1ce3c5d0a10ccd572fcf4c89abbb63a22feb7ff62528a55eaa6047a"
+      "bytes": 13439,
+      "sha256": "27bb0eb1e6482eea2b74181f8b651f40d946ae190c8b0b92ebe2eacc37316019"
     },
     "tu": {
       "ok": true,
       "file": "smart-tu.pb",
-      "bytes": 280146,
-      "sha256": "8fb5f02a167a96a1c57434d1d0866085489057261277b60d35bcc26c9fbea10f"
+      "bytes": 274219,
+      "sha256": "e65c6b2879297cae8ef32bf722e8c40ddeb6de00d4467e1f951b67988386e31a"
     }
   }
 }
