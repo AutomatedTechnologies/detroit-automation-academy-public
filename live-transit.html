@@ -820,6 +820,7 @@
           <button class="filter-btn" id="filter-btn" aria-expanded="false" aria-controls="filter-panel"><span class="filter-ico">⧩</span><span class="fb-label">Routes</span></button>
           <button class="filter-btn" id="trip-btn" aria-pressed="false" aria-label="Plan trip"><span class="filter-ico">◈</span><span class="fb-label"><span class="fb-full">Plan trip</span><span class="fb-short" aria-hidden="true">Plan</span></span></button>
           <button class="filter-btn" id="ride-btn" aria-pressed="false" aria-label="Ride along"><span class="filter-ico">◉</span><span class="fb-label"><span class="fb-full">Ride along</span><span class="fb-short" aria-hidden="true">Ride</span></span></button>
+          <button class="filter-btn" id="wx-btn" aria-pressed="false" aria-label="Weather overlay"><span class="filter-ico">☁</span><span class="fb-label">Weather</span></button>
         </div>
       </div>
       <div class="svc-notice" id="svc-notice" role="region" aria-label="Live data notice" hidden>
@@ -1102,6 +1103,14 @@
           <div id="trip-search-results"></div>
         </div>
       </div>
+      <div id="wx-overlay" hidden role="region" aria-label="Weather overlay">
+        <div class="wx-head">
+          <div class="wx-cond"><span id="wx-cond"><strong>Detroit</strong> · loading…</span><br><span class="wx-sub" id="wx-cond-sub"></span></div>
+          <button id="wx-close" aria-label="Close weather overlay">✕</button>
+        </div>
+        <div id="wx-map" aria-label="NEXRAD radar over Detroit"></div>
+        <div class="wx-foot"><span>Radar: NOAA nowCoast (NEXRAD)</span><a href="/weather/">Full weather →</a></div>
+      </div>
       <div class="map-hint" id="map-hint">drag&nbsp;·&nbsp;orbit&nbsp;&nbsp;&nbsp;scroll&nbsp;·&nbsp;zoom&nbsp;&nbsp;&nbsp;tap bus or stop&nbsp;·&nbsp;details&nbsp;&nbsp;&nbsp;Tab to Browse for keyboard bus search · click the map: arrow keys move, +/− zoom, Home resets</div>
       <div class="map-tools" role="group" aria-label="Map navigation">
         <button id="nav-help" aria-label="Navigation help" aria-expanded="false">?</button>
@@ -1265,6 +1274,7 @@
 })();
 </script>
 <script type="module" src="live-transit.js?v=20261123-1321"></script>
+<script src="weather-overlay.js?v=20261127-1"></script>
 <script src="assets/measure.js?v=20261023-o2" defer></script>
 </body>
 </html>
