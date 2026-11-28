@@ -56,7 +56,22 @@
     return leafletPromise;
   }
 
-  var map = null, radarLayer = null, timer = null;
+  var map = null, radarLayer = null, timer = null, userFix = null, userMarker = null;
+
+  function centerOnUser() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      userFix = [pos.coords.latitude, pos.coords.longitude];
+      if (map) {
+        map.setView(userFix, 9);
+        if (userMarker) userMarker.setLatLng(userFix);
+        else if (window.L) userMarker = L.marker(userFix).addTo(map).bindPopup('You are here');
+      }
+    }, function () {
+      var subEl = document.getElementById('wx-cond-sub');
+      if (subEl && !userFix) subEl.textContent = 'Location off — showing Detroit. ' + (subEl.textContent || '');
+    }, { timeout: 5000 });
+  }
 
   function buildMap(L) {
     if (map) { map.invalidateSize(); return; }
@@ -72,10 +87,11 @@
       attribution: 'Radar: NOAA nowCoast (NEXRAD)'
     }).addTo(map);
     L.marker(DETROIT).addTo(map).bindPopup('Detroit, Michigan');
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function (pos) {
-        map.setView([pos.coords.latitude, pos.coords.longitude], 9);
-      }, function () { /* keep the Detroit view */ }, { timeout: 4000 });
+    if (userFix) {
+      map.setView(userFix, 9);
+      userMarker = L.marker(userFix).addTo(map).bindPopup('You are here');
+    } else {
+      centerOnUser();
     }
   }
 
@@ -153,4 +169,18 @@
   });
   var closeBtn = document.getElementById('wx-close');
   if (closeBtn) closeBtn.addEventListener('click', close);
+
+  /* Locate-me coupling (Director, 2026-11-27): tapping the map's
+     locate button also activates the weather overlay, centered on
+     the user's position once the fix resolves. The site's own
+     camera flight is the engine's job; this only mirrors the
+     intent into the overlay. */
+  var locateBtn = document.getElementById('view-locate');
+  if (locateBtn) {
+    locateBtn.addEventListener('click', function () {
+      centerOnUser();
+      if (panel.hidden) open();
+      else if (map && userFix) map.setView(userFix, 9);
+    });
+  }
 })();
